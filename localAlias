@@ -2,21 +2,20 @@
 
 LocalAlias () {
     FILE="./.localaliases"
-    ASK=0
     CMD=${1,}
 
     if [ -a $FILE ]; then
         NEWCMD=$(grep -i "$CMD" "$FILE")
-        if [ $? == 0 ]; then
-            : # CMD already exists in .args
+        if [ -n "$NEWCMD" ]; then
+            FOUND=1 # CMD already exists in .args
         else
-            ASK=1
+            FOUND=0
         fi
     else
-        ASK=1
+        FOUND=0
     fi
 
-    if [ $ASK -eq 1 ]; then
+    if [ $FOUND -eq 0 ]; then
         printf "Map the ${CMD^} command to the ${CMD} command? (y/n): "
         read -n 1 CHOICE
         echo
@@ -28,16 +27,6 @@ LocalAlias () {
         printf "${CMD^} --> ${CMD} "
         read ARGS
         printf "$CMD $ARGS" >> $FILE
-
-        # COUNT=1
-        # while [ "$ARG" != "000" ]; do
-        #     if [ -n "$ARG" ]; then
-        #         printf " $ARG" >> $FILE
-        #     fi
-        #     printf "Arg #${COUNT}: "
-        #     read ARG
-        #     COUNT=$((COUNT+1))
-        # done
 
         printf "\n" >> $FILE
     else

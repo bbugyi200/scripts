@@ -4,11 +4,13 @@
 # can be used to customize bash commands locally.
 
 LocalAlias () {
-    FILE="./.localaliases"
+    GLOBAL="$HOME/.globalaliases"
+    LOCAL="./.localaliases"
     CMD=${1,}
+    NEWCMD=
 
-    if [ -a $FILE ]; then
-        NEWCMD=$(grep -i "$CMD" "$FILE")
+    if [ -a $LOCAL ]; then
+        NEWCMD+=$(grep -i "$CMD" "$LOCAL")
         if [ -n "$NEWCMD" ]; then
             FOUND=1 # CMD already exists in .args
         else
@@ -17,6 +19,15 @@ LocalAlias () {
     else
         FOUND=0
     fi
+
+
+    if [ -a $GLOBAL ]; then
+        GGREP=$(grep -i "$CMD" "$GLOBAL")
+        NEWCMD+=${GGREP/$CMD}
+    else
+        : # GLOBAL doesn't exist and this script will not create it.
+    fi
+
 
     if [ $FOUND -eq 0 ]; then
         printf "Map the ${CMD^} command to the ${CMD} command? (y/n): "
@@ -29,10 +40,9 @@ LocalAlias () {
 
         printf "${CMD^} --> ${CMD} "
         read ARGS
-        printf "$CMD $ARGS" >> $FILE
-
-        printf "\n" >> $FILE
+        printf "$CMD $ARGS\n" >> $LOCAL
     else
+        printf "${CMD^} ---> $NEWCMD\n"
         eval $NEWCMD
     fi
 }

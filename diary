@@ -1,0 +1,34 @@
+#!/bin/bash
+
+DIR=~/Dropbox/notes/Diary/
+FILE=$DIR/$(date "+%Y").txt
+TITLE=$1
+BODY=
+FMT="\n\n    "
+START=
+COMMANDS=
+
+# Decides which file will be loaded.
+if [ "$1" == '--solutions' -o "$1" == '-s' ]; then
+    FILE=$DIR/solutions.txt
+    TITLE=$2
+    BODY="\n\n  Solution Steps\n\n    START\n\n  Preventative Measures"
+    START="/START"
+    COMMANDS="-c %s/START//g"
+fi
+
+
+if [ "$TITLE" == '' ]; then 
+        vim + $FILE
+    else
+        if [ -a $FILE ] ;
+            then
+                printf "\n\n" >> "$FILE"
+            else 
+                touch $FILE
+        fi
+
+        printf "${TITLE^^} [$(date '+%m/%d/%Y - %H:%M:%S')]$BODY$FMT" >> "$FILE"
+         vim +$START $COMMANDS -c "startinsert" $FILE
+
+ fi

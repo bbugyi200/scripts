@@ -1,0 +1,18 @@
+#!/bin/bash
+# Day Planner
+
+FILE=~/Dropbox/notes/dayplan.txt
+
+if [ "$1" == '--new' -o "$1" == '-n' ]
+then 
+    > $FILE
+    for ((i=0; i<=16; i++)); do
+        printf "$(date +'%I:00%p' --date="$i hours") - \n" >> "$FILE"
+        printf "$(date +'%I:30%p' --date="$i hours") - \n" >> "$FILE"
+    done
+elif [ "$1" == '--collapse' -o "$1" == '-c' ]
+then 
+    sed -i '/-\s*$/d' $FILE
+fi
+
+vim $FILE

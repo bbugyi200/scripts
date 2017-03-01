@@ -6,13 +6,14 @@
 LocalAlias () {
     GLOBAL="$HOME/.globalaliases"
     LOCAL="./.localaliases"
+    FILE=$LOCAL
     CMD=${1,}
     NEWCMD=
 
     if [ -a $LOCAL ]; then
         NEWCMD+=$(grep -i "$CMD" "$LOCAL")
-        if [ -n "$NEWCMD" ]; then
-            FOUND=1 # CMD already exists in .args
+        if [ -n "$NEWCMD" ]; then 
+            FOUND=1
         else
             FOUND=0
         fi
@@ -23,16 +24,32 @@ LocalAlias () {
 
     if [ -a $GLOBAL ]; then
         GGREP=$(grep -i "$CMD" "$GLOBAL")
-        NEWCMD+=${GGREP/$CMD}
+        if [ "$FOUND" -eq 1 ]; then
+            NEWCMD+=${GGREP/$CMD}
+        else
+            NEWCMD=$GGREP
+        fi
     else
         : # GLOBAL doesn't exist and this script will not create it.
     fi
 
 
-    if [ $FOUND -eq 0 ]; then
-        printf "Map the ${CMD^} command to the ${CMD} command? (y/n): "
+    if [ -n "$NEWCMD" ]; then
+        FOUND=1 # CMD already exists in .args
+    else
+        FOUND=0
+    fi
+
+
+    if [ "$FOUND" -eq 0 ]; then
+        printf "Map the ${CMD^} command to the ${CMD} command? (y/n/g): "
         read -n 1 CHOICE
         echo
+
+        if [ $CHOICE == "g" ]; then
+            FILE=$GLOBAL
+            CHOICE="y"
+        fi
 
         if [ $CHOICE != "y" ]; then
             exit 1
@@ -40,7 +57,7 @@ LocalAlias () {
 
         printf "${CMD^} --> ${CMD} "
         read ARGS
-        printf "$CMD $ARGS\n" >> $LOCAL
+        printf "$CMD $ARGS\n" >> $FILE
     else
         printf "${CMD^} ---> $NEWCMD\n"
         eval $NEWCMD

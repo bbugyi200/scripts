@@ -4,62 +4,27 @@
 # can be used to customize bash commands locally.
 
 LocalAlias () {
-    GLOBAL="$HOME/.globalaliases"
-    LOCAL="./.localaliases"
-    FILE=$LOCAL
-    CMD=${1,}
-    NEWCMD=
+    FILE="./.localaliases"
+    ALIAS=$1
+    GREP=$2
+    CMD=${GREP/"$ALIAS"" ---> "}
 
-    if [ -a $LOCAL ]; then
-        NEWCMD+=$(grep -i "$CMD" "$LOCAL")
-        if [ -n "$NEWCMD" ]; then 
-            FOUND=1
-        else
-            FOUND=0
-        fi
+    if [ -n "$CMD" ]; then
+        printf "$GREP\n$CMD"
+        eval "$CMD"
+        exit 1
     else
-        FOUND=0
-    fi
-
-
-    if [ -a $GLOBAL ]; then
-        GGREP=$(grep -i "$CMD" "$GLOBAL")
-        if [ "$FOUND" -eq 1 ]; then
-            NEWCMD+=${GGREP/$CMD}
-        else
-            NEWCMD=$GGREP
-        fi
-    else
-        : # GLOBAL doesn't exist and this script will not create it.
-    fi
-
-
-    if [ -n "$NEWCMD" ]; then
-        FOUND=1 # CMD already exists in .args
-    else
-        FOUND=0
-    fi
-
-
-    if [ "$FOUND" -eq 0 ]; then
-        printf "Map the ${CMD^} command to the ${CMD} command? (y/n/g): "
+        printf "Create a new local alias for $ALIAS? (y/n): "
         read -n 1 CHOICE
         echo
 
-        if [ $CHOICE == "g" ]; then
-            FILE=$GLOBAL
-            CHOICE="y"
-        fi
-
         if [ $CHOICE != "y" ]; then
-            exit 1
+            exit 0
         fi
 
-        printf "${CMD^} --> ${CMD} "
-        read ARGS
-        printf "$CMD $ARGS\n" >> $FILE
-    else
-        printf "${CMD^} ---> $NEWCMD\n"
-        eval $NEWCMD
+        printf "$ALIAS ---> "
+        read CMD
+        printf "$ALIAS ---> $CMD \n" >> $FILE
+        exit 1
     fi
 }

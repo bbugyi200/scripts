@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Allows me to have a .localaliases file in any directory that I want which
+# can be used to customize bash commands locally.
+
 LocalAlias () {
     FILE="./.localaliases"
     CMD=${1,}

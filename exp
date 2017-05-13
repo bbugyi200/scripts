@@ -1,0 +1,5 @@
+#!/bin/bash
+
+nautilus .
+sleep 0.1
+wmctrl -F -a $(basename `pwd`)

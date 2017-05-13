@@ -19,7 +19,7 @@ fi
 
 
 if [ "$TITLE" == '' ]; then 
-        vim + $FILE
+        vim + -c "set spell&" $FILE
     else
         if [ -a $FILE ] ;
             then
@@ -29,6 +29,6 @@ if [ "$TITLE" == '' ]; then
         fi
 
         printf "${TITLE^^} [$(date '+%m/%d/%Y - %H:%M:%S')]$BODY$FMT" >> "$FILE"
-         vim +$START $COMMANDS -c "startinsert" $FILE
+         vim +$START $COMMANDS -c "startinsert" -c "set spell&" $FILE
 
  fi

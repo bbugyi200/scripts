@@ -1,0 +1,5 @@
+#!/bin/bash
+
+rsync -av --delete /home/ /run/media/bryan/hercules/backup/root/home/
+rsync -av --delete /etc/ /run/media/bryan/hercules/backup/root/etc/
+rsync -av --delete /var/ /run/media/bryan/hercules/backup/root/var/

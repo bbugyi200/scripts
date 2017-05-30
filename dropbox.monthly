@@ -1,0 +1,5 @@
+#!/bin/bash
+
+mv /run/media/bryan/hercules/backup/dropbox/2months/ /run/media/bryan/hercules/backup/dropbox/3months/
+mv /run/media/bryan/hercules/backup/dropbox/monthly/ /run/media/bryan/hercules/backup/dropbox/2months/
+rsync -av --delete /home/bryan/Dropbox/ /run/media/bryan/hercules/backup/dropbox/monthly/

@@ -1,3 +1,0 @@
-start='sudo ./start'
-stop='sudo ./stop'
-list-rules='sudo iptables --list-rules'

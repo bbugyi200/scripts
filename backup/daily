@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# dropbox backup
+DROPBOX='/media/bryan/hercules/backup/dropbox/daily'
+rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
+date > $DROPBOX/backup.txt
+
+# package list backup
+pacman -Qqe > /media/bryan/hercules/backup/pacman/daily.txt

@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
+if [ "$1" == "start" ]; then
+    if pgrep "openvpn" > /dev/null; then
+        printf "\n\nPIA is already running!\n\n"
+        exit 1
+    fi
+    myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+    cp /etc/resolv.conf /etc/resolv.tmp
+    printf '%s\n%s' 'nameserver 209.222.18.222' 'nameserver 209.222.18.218' >> /etc/resolv.conf
+
+    printf "Public IP Address: %s\n\n" "${myip}"
+
+    case "$2" in 
+        nyc)
+            CONF="US-New-York-City.conf";;
+        east)
+            CONF="US-East.conf";;
+        west)
+            CONF="US-West.conf";;
+    esac
+    openvpn --mute-replay-warnings --config /etc/openvpn/client/$CONF &
+
+    sleep 7
+
+    myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+    printf "\nPublic IP Address: %s" "${myip}"
+    echo "%{c}PIA ($myip)" | lemonbar -b -p -B "#3a3a3a" -F "#74f442" &
+
+    iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    iptables -A INPUT -i lo -j ACCEPT
+    iptables -A INPUT -i tun+ -j ACCEPT
+    iptables -A OUTPUT -o lo -j ACCEPT
+    iptables -A OUTPUT -d 209.222.18.222/32 -j ACCEPT
+    iptables -A OUTPUT -d 209.222.18.218/32 -j ACCEPT
+    # iptables -A INPUT -s 192.168.0.0/24 -j ACCEPT
+    # iptables -A OUTPUT -d 192.168.0.0/24 -j ACCEPT
+    # iptables -A OUTPUT -d ${myip}/32 -j ACCEPT
+    iptables -A OUTPUT -p udp -m udp --dport 1197 -j ACCEPT
+    iptables -A OUTPUT -o tun+ -j ACCEPT
+    iptables -A OUTPUT -j REJECT --reject-with icmp-net-unreachable
+
+elif [ "$1" == "stop" ]; then
+    killall -9 openvpn
+
+    mv /etc/resolv.tmp /etc/resolv.conf
+
+    sleep 5
+
+    # Resets iptables
+    iptables -F
+    iptables -X
+    iptables -t nat -F
+    iptables -t nat -X
+    iptables -t mangle -F
+    iptables -t mangle -X
+    iptables -t raw -F
+    iptables -t raw -X
+    iptables -t security -F
+    iptables -t security -X
+    iptables -P INPUT ACCEPT
+    iptables -P FORWARD ACCEPT
+    iptables -P OUTPUT ACCEPT
+
+    pkill -f "lemonbar -b -p"
+fi

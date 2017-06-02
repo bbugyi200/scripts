@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ $(awk -F"[][]" '/dB/ { print $2 }' <(amixer sget Master)) == "0%" ]]; then 
+    for x in `amixer controls  | grep layback` ; do amixer cset "${x}" 70% ; done
+else
+    for x in `amixer controls  | grep layback` ; do amixer cset "${x}" on ; done
+fi

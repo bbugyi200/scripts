@@ -1,0 +1,76 @@
+#!/bin/bash
+
+function hlink {
+        if [ -h "$2" ]; then
+            printf "\n\n%s has already been linked. No further action needed." "$2"
+            return 0
+        else
+            if [ -f "$2" ] || [ -d "$2" ]; then
+                printf "\n\n%s already exists. Delete it? (y/n): " "$2"
+                read user_input
+                if [ "$user_input" == 'y' ]; then
+                    printf "%s has been deleted.\n" "$2"
+                    rm -R "$2"
+                else
+                    return 1
+                fi
+            else 
+                printf "\n\n"
+            fi
+        fi
+
+        ln -s "/home/bryan/Dropbox/config/$1" "$2"
+        printf "%s   --->   %s." "/home/bryan/Dropbox/config/$1" "$2"
+        return 0
+}
+
+# Dependencies: {Vundle}
+hlink 'vimrc.vim' '/home/bryan/.vimrc'
+
+# Dependencies: {mutt,elinks,urlview}
+hlink 'mutt' '/home/bryan/.mutt'
+
+# Dependencies: {urlview}
+hlink 'urlview' '/home/bryan/.urlview'
+
+# Dependencies: {}
+hlink 'vim-syntax' '/home/bryan/.vim/syntax'
+
+# Dependencies: {bspwm,sxhkd,lemonbar-xtf-git}
+hlink 'bspwm' '/home/bryan/.config/bspwm'
+
+# Dependencies: {sxhkd}
+hlink 'sxhkd' '/home/bryan/.config/sxhkd'
+
+# Dependencies: {termite,solarize}
+hlink 'termite-cfg' '/home/bryan/.config/termite'
+
+# Dependencies: {tmux,powerline}
+hlink 'tmux.conf' '/home/bryan/.tmux.conf'
+
+# Dependencies: {zsh,powerline}
+hlink 'profile' '/home/bryan/.zprofile'
+
+# Dependencies: {zsh,oh-my-zsh}
+hlink 'oh-my-zsh' '/home/bryan/.zshrc'
+
+# Dependencies: {xorg,xinit,numlockx,clipmenu,xbindkeys,xmodmap}
+hlink 'xinitrc' '/home/bryan/.xinitrc'
+
+# Dependencies: {compton}
+hlink 'compton.conf' '/home/bryan/.config/compton.conf'
+
+# Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
+hlink 'lemonbar/panel' '/usr/local/bin/panel'
+
+# Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
+hlink 'lemonbar/panel_bar' '/usr/local/bin/panel_bar'
+
+# Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
+hlink 'lemonbar/panel_colors' '/usr/local/bin/panel_colors'
+
+# Dependencies: {xbindkeys}
+hlink 'xbindkeysrc' '/home/bryan/.xbindkeysrc'
+
+# Dependencies: {xmodmap}
+hlink 'Xmodmap' '/home/bryan/.Xmodmap'

@@ -11,10 +11,10 @@ if [ "$1" == "start" ]; then
         exit 1
     fi
     myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
+    printf "Public IP Address: %s\n\n" "${myip}"
+
     cp /etc/resolv.conf /etc/resolv.tmp
     printf '%s\n%s' 'nameserver 209.222.18.222' 'nameserver 209.222.18.218' >> /etc/resolv.conf
-
-    printf "Public IP Address: %s\n\n" "${myip}"
 
     case "$2" in 
         nyc)
@@ -30,7 +30,7 @@ if [ "$1" == "start" ]; then
 
     myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
     printf "\nPublic IP Address: %s" "${myip}"
-    echo "%{c}PIA ($myip)" | lemonbar -b -p -B "#3a3a3a" -F "#74f442" &
+    # echo "%{c}PIA ($myip)" | lemonbar -b -p -B "#3a3a3a" -F "#74f442" &
 
     iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
     iptables -A INPUT -i lo -j ACCEPT
@@ -66,6 +66,4 @@ elif [ "$1" == "stop" ]; then
     iptables -P INPUT ACCEPT
     iptables -P FORWARD ACCEPT
     iptables -P OUTPUT ACCEPT
-
-    pkill -f "lemonbar -b -p"
 fi

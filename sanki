@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo anki
+bspc rule -a Anki -o desktop=^10 && anki

@@ -1,18 +1,34 @@
 #!/bin/bash
 # Day Planner
 
-FILE=~/Dropbox/notes/dayplan.txt
+DIR=~/Dropbox/notes/Dayplan
+FILE=$DIR/dayplan.txt
+DATE=$DIR/date.txt
+SCRATCH=$DIR/scratch.txt
 
-if [ "$1" == '--new' -o "$1" == '-n' ]
-then 
+if [[ "$(cat $DATE)" != "$(date +'%m/%d/%Y')" ]]; then
+    NEW=1
+else
+    NEW=0
+fi
+
+# Remove swap files
+if [ -f $DIR/.dayplan.txt.swp ]; then
+    rm $DIR/.dayplan.txt.swp
+fi
+if [ -f $DIR/.scratch.txt.swp ]; then
+    rm $DIR/.scratch.txt.swp
+fi
+
+if [ "$1" == '--new' -o "$1" == '-n' -o $NEW == 1 ]; then 
+    echo "$(date +'%m/%d/%Y')" > $DATE
     > $FILE
     for ((i=0; i<=16; i++)); do
         printf "$(date +'%I:00%p' --date="$i hours") - \n" >> "$FILE"
         printf "$(date +'%I:30%p' --date="$i hours") - \n" >> "$FILE"
     done
-elif [ "$1" == '--collapse' -o "$1" == '-c' ]
-then 
+elif [ "$1" == '--collapse' -o "$1" == '-c' ]; then 
     sed -i '/-\s*$/d' $FILE
 fi
 
-vim $FILE
+vim $FILE $SCRATCH

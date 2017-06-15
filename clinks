@@ -36,15 +36,6 @@ hlink 'urlview' '/home/bryan/.urlview'
 # Dependencies: {}
 hlink 'vim-syntax' '/home/bryan/.vim/syntax'
 
-# Dependencies: {bspwm,sxhkd,lemonbar-xtf-git}
-hlink 'bspwm' '/home/bryan/.config/bspwm'
-
-# Dependencies: {sxhkd}
-hlink 'sxhkd' '/home/bryan/.config/sxhkd'
-
-# Dependencies: {termite,solarize}
-hlink 'termite-cfg' '/home/bryan/.config/termite'
-
 # Dependencies: {tmux,powerline}
 hlink 'tmux.conf' '/home/bryan/.tmux.conf'
 
@@ -57,9 +48,6 @@ hlink 'oh-my-zsh' '/home/bryan/.zshrc'
 # Dependencies: {xorg,xinit,numlockx,clipmenu,xbindkeys,xmodmap}
 hlink 'xinitrc' '/home/bryan/.xinitrc'
 
-# Dependencies: {compton}
-hlink 'compton.conf' '/home/bryan/.config/compton.conf'
-
 # Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
 hlink 'lemonbar/panel' '/usr/local/bin/panel'
 
@@ -67,10 +55,28 @@ hlink 'lemonbar/panel' '/usr/local/bin/panel'
 hlink 'lemonbar/panel_bar' '/usr/local/bin/panel_bar'
 
 # Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
-hlink 'lemonbar/panel_colors' '/usr/local/bin/panel_colors'
+hlink 'lemonbar/panel_config' '/usr/local/bin/panel_config'
 
 # Dependencies: {xbindkeys}
 hlink 'xbindkeysrc' '/home/bryan/.xbindkeysrc'
 
 # Dependencies: {xmodmap}
 hlink 'Xmodmap' '/home/bryan/.Xmodmap'
+
+# Dependencies: {}
+hlink 'gpg-agent.conf' '/home/bryan/.gnupg/gpg-agent.conf'
+
+# Dependencies: {termite}
+hlink 'termite' '/home/bryan/.config/termite'
+
+# Dependencies: {bspwm}
+hlink 'bspwm' '/home/bryan/.config/bspwm'
+
+# Dependencies: {sxhkd}
+hlink 'sxhkd' '/home/bryan/.config/sxhkd'
+
+# Dependencies: {compton}
+hlink 'compton.conf' '/home/bryan/.config/compton.conf'
+
+# Dependencies: {Anaconda}
+hlink 'ipython' '/home/bryan/.ipython'

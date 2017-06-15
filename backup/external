@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# mount external drive
+mount /dev/sdc /media/bryan/perseus
+
+# root backup
+DROPBOX=/media/bryan/perseus/home/Dropbox
+rsync -av --delete /home/ /media/bryan/perseus/home/ && date > $DROPBOX/backup.txt
+rsync -av --delete /etc/ /media/bryan/perseus/etc/
+rsync -av --delete /var/ /media/bryan/perseus/var/
+
+
+
+# pacman package list backup
+pacman -Qqe > /media/bryan/perseus/pacman_pkgs.txt

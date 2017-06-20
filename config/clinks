@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
+stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R main
+stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R config
+stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R lemonbar
+stow -v --dir=/home/bryan/Dropbox --target=/home/bryan -R dotfiles
+
 function hlink {
         if [ -h "$2" ]; then
             printf "\n\n%s has already been linked. No further action needed." "$2"
@@ -19,22 +25,19 @@ function hlink {
             fi
         fi
 
-        ln -s "/home/bryan/Dropbox/config/$1" "$2"
-        printf "%s   --->   %s." "/home/bryan/Dropbox/config/$1" "$2"
+        ln -s "/home/bryan/Dropbox/dotfiles/$1" "$2"
+        printf "%s   --->   %s." "/home/bryan/Dropbox/dotfiles/$1" "$2"
         return 0
 }
 
 # Dependencies: {Vundle}
-hlink 'vimrc.vim' '/home/bryan/.vimrc'
+hlink 'vim' '/home/bryan/.vim'
 
 # Dependencies: {mutt,elinks,urlview}
 hlink 'mutt' '/home/bryan/.mutt'
 
 # Dependencies: {urlview}
 hlink 'urlview' '/home/bryan/.urlview'
-
-# Dependencies: {}
-hlink 'vim-syntax' '/home/bryan/.vim/syntax'
 
 # Dependencies: {tmux,powerline}
 hlink 'tmux.conf' '/home/bryan/.tmux.conf'
@@ -47,15 +50,6 @@ hlink 'oh-my-zsh' '/home/bryan/.zshrc'
 
 # Dependencies: {xorg,xinit,numlockx,clipmenu,xbindkeys,xmodmap}
 hlink 'xinitrc' '/home/bryan/.xinitrc'
-
-# Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
-hlink 'lemonbar/panel' '/usr/local/bin/panel'
-
-# Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
-hlink 'lemonbar/panel_bar' '/usr/local/bin/panel_bar'
-
-# Dependencies: {lemonbar-xtf-git,ttf-awesome-fonts}
-hlink 'lemonbar/panel_config' '/usr/local/bin/panel_config'
 
 # Dependencies: {xbindkeys}
 hlink 'xbindkeysrc' '/home/bryan/.xbindkeysrc'

@@ -55,6 +55,9 @@ for H in holidays:
     if delta.days <= MAX:
         path = '/home/bryan/Dropbox/photos/backgrounds/holidays/{}.jpg'.format(H[0])
         if os.path.exists(path):
+            with open('/home/bryan/Dropbox/photos/backgrounds/current_bg.txt', 'w+') as F:
+                F.write(path)
+
             os.system('feh --bg-fill {}'.format(path))
             sys.exit(0)
 

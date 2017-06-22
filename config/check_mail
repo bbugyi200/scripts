@@ -2,6 +2,12 @@
 
 # https://linuxconfig.org/check-your-gmail-inbox-for-new-emails-with-bash-script
 source <(gpg2 -dq ~/.my-pwds.gpg)
+if [[ -z "$my_rutgers_pwd" ]]; then
+    if [[ "$1" != '-q' ]]; then
+        echo "Decryption Failed"
+    fi
+    exit 2
+fi
 username="bmb181@scarletmail.rutgers.edu"
 password="$my_rutgers_pwd"
 subjects=$(curl -u $username:$password --silent "https://mail.google.com/mail/feed/atom" |  grep -oPm1 "(?<=<title>)[^<]+" | sed '1d')

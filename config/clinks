@@ -1,5 +1,4 @@
 #!/bin/bash
-
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R main
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R config
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R lemonbar

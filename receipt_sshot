@@ -1,0 +1,5 @@
+#!/bin/bash
+
+printf "Screenshot Filename?: "
+read filename
+scrot -s ~/Dropbox/Reference_Material/Receipts/$filename.png

@@ -26,10 +26,12 @@ if [[ "$(hostname)" == "athena" ]]; then
     cnt_pia=${upd_pia}
     cnt_batt=-3456000
     net_dev="enp2s0"
+    FONT_SIZE="12"
 elif [[ "$(hostname)" == "aphrodite" ]]; then
     cnt_pia=-3456000
     cnt_batt=${upd_batt}
     net_dev="wlo1"
+    FONT_SIZE="10"
 fi
 
 while true; do
@@ -130,7 +132,7 @@ while true; do
 done &
 
 # "$PANEL_FONT"
-panel_bar < "$PANEL_FIFO" | lemonbar -a 32 -n "$PANEL_WM_NAME" -g x$PANEL_HEIGHT -f "Inconsolata-12:Bold" -f "Font Awesome-12" -F "$COLOR_DEFAULT_FG" -B "$COLOR_DEFAULT_BG" | sh &
+panel_bar < "$PANEL_FIFO" | lemonbar -a 32 -n "$PANEL_WM_NAME" -g x$PANEL_HEIGHT -f "Inconsolata-$FONT_SIZE:Bold" -f "Font Awesome-$FONT_SIZE" -f "Font Awesome-12" -F "$COLOR_DEFAULT_FG" -B "$COLOR_DEFAULT_BG" | sh &
 
 wid=$(xdo id -a "$PANEL_WM_NAME")
 tries_left=20

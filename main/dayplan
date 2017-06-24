@@ -43,7 +43,7 @@ if [ "$1" == '--new' -o "$1" == '-n' -o $NEW == 1 ]; then
     fi
 
     while [[ $((N++)) -lt 5 ]]; do
-        date -d "$N days" +"%m/%d/%Y - " >> "$WEEK_FILE"
+        date -d "$((N - 1)) days" +"%m/%d/%Y - " >> "$WEEK_FILE"
     done
 
 elif [ "$1" == '--collapse' -o "$1" == '-c' ]; then

@@ -1,11 +1,14 @@
 #!/bin/bash
 
 focused=$(xprop -root _NET_CURRENT_DESKTOP | awk '{print $3+1}')
-if [[ $focused -le 5 ]]; then
-    D=$((focused + 5))
-else
-    D=$((focused - 5))
-fi
-bspc node -d "^$D"
+
+get_alt_desktop $focused
+ALT_D="$?"
+
+bspc node -d "^$ALT_D"
 bspc desktop -f next.occupied.local
-bspc desktop -f "^$D"
+if [[ "$1" == "swap" ]]; then
+    bspc monitor -f next
+    move-to-next-monitor
+fi
+bspc desktop -f "^$ALT_D"

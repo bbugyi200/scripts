@@ -1,0 +1,11 @@
+#!/bin/bash
+
+direction=$1
+
+if [[ $(bspc query --desktops --desktop focused) == "$(bspc query --desktops --node $direction)" ]]; then
+    M=$(bspc query --monitors --node $direction)
+    bspc node -s $direction
+    [[ $M != $(bspc query --monitors --monitor focused) ]] && bspc node --focus last
+else
+    move-to-next-monitor "swap"
+fi

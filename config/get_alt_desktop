@@ -1,0 +1,11 @@
+#!/bin/bash
+
+D=$1
+
+if [[ $D -le 5 ]]; then
+    ALT_D=$((D + 5))
+else
+    ALT_D=$((D - 5))
+fi
+
+exit $ALT_D

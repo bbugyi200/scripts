@@ -120,7 +120,7 @@ while true; do
             if [ $? -eq 0 ]; then
                 echo -e "X\uf118  " > "$PANEL_FIFO"
             else
-                captive-login -u http://www.google.com &
+                # captive-login -u http://www.google.com &
                 echo -e "X\uf11a  " > "$PANEL_FIFO"
             fi
         else

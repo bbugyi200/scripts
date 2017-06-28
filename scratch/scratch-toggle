@@ -1,0 +1,12 @@
+#!/bin/bash
+
+id=$(cat /tmp/scratchid)
+bspc node $id --flag hidden
+
+if [[ $? -eq 1 ]]; then
+    killall scratchpad
+    termite --class="scratchpad" -e ~/Dropbox/scripts/scratch/scratch-log-id &
+    sleep 0.5 && ~/Dropbox/scripts/scratch/scratch-toggle
+else
+    bspc node -f $id
+fi

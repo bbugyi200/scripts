@@ -21,6 +21,9 @@ fi
 if [ -f $DIR/.dayplan.txt.swp ]; then
     rm $DIR/.dayplan.txt.swp
 fi
+if [ -f $DIR/.weekplan.txt.swp ]; then
+    rm $DIR/.weekplan.txt.swp
+fi
 if [ -f $DIR/.scratch.txt.swp ]; then
     rm $DIR/.scratch.txt.swp
 fi

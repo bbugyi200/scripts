@@ -1,12 +1,24 @@
 #!/bin/bash
 
+NEW_WIN=0
 wmctrl -a $1
-
 if [[ $? -ne 0 ]]; then
+    NEW_WIN=1
+fi
+
+if [[ $1 == "REVERSE" ]]; then
+    N=-5
+    NEW_WIN=1
+else
+    N=5
+fi
+
+
+if [[ $NEW_WIN -eq 1 ]]; then
     focused=$(xprop -root _NET_CURRENT_DESKTOP | awk '{print $3+1}')
     D=$3
     if [[ $focused -ge 6 ]]; then
-        D="$((D+5))"
+        D="$((D+N))"
     fi
 
     bspc rule -a "*:*" -o desktop="^$D"

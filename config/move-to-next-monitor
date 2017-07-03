@@ -6,7 +6,7 @@ get_alt_desktop $focused
 ALT_D="$?"
 
 bspc node -d "^$ALT_D"
-bspc desktop -f next.occupied.local
+focus-local
 if [[ "$1" == "swap" ]]; then
     bspc monitor -f next
     move-to-next-monitor

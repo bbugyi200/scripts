@@ -1,0 +1,7 @@
+#!/bin/bash
+
+bspc node -f next.local
+
+if [[ $? -ne 0 ]]; then
+    bspc desktop -f next.occupied.local
+fi

@@ -1,12 +1,26 @@
 #!/bin/bash
 
-id=$(cat /tmp/scratchid)
-bspc node $id --flag hidden
+function make_scratchpad() {
+    if pgrep "scratch-run" > /dev/null; then
+        killall scratch-run
+    fi
+    termite --class="scratchpad" -e ~/Dropbox/scripts/scratch/scratch-run &
+}
+
+if [[ -f /tmp/scratchid ]]; then
+    id=$(cat /tmp/scratchid)
+else
+    make_scratchpad
+fi
+
+if [[ -z "$id" ]]; then
+    make_scratchpad
+else
+    bspc node $id --flag hidden
+fi
 
 if [[ $? -eq 1 ]]; then
-    killall scratchpad
-    termite --class="scratchpad" -e ~/Dropbox/scripts/scratch/scratch-log-id &
-    sleep 0.5 && ~/Dropbox/scripts/scratch/scratch-toggle
-else
-    bspc node -f $id
+    make_scratchpad
 fi
+
+bspc node -f $id

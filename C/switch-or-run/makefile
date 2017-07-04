@@ -1,4 +1,4 @@
-switch-or-run:
+dev:
 	gcc -g -Wall main.c switch.c
 
 prod:
@@ -7,4 +7,4 @@ prod:
 test:
 	./a.out chrome google-chrome-stable 2
 
-run: switch-or-run test
+run: dev test

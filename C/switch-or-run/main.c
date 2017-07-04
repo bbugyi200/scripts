@@ -14,7 +14,6 @@ int main(int argc, char *argv[])
     }
 
     // Assign arguments from argv
-    char full_cmd[50];
     windowp->name = *++argv;
     char *cmd = *++argv;
     windowp->desktop = (*++argv)[0] - '0';
@@ -23,6 +22,7 @@ int main(int argc, char *argv[])
     int num_open = count_titles(windowp->name);
     int focused_desktop = get_focused_desktop();
 
+    char full_cmd[50];
     int dt, main_focused, alt_focused;
 
     // The following assignments make clear whether or not the primary or

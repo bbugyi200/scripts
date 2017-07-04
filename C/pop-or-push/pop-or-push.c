@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
         remove(filename);
     }
     else {
-        fmt = "wmctrl -R %s && bspc node -f last; test %s";
+        fmt = "wmctrl -R %s && test %s";
 
         char cmd2[40];
         const char *fmt2 = "wmctrl -l | grep -i %s | tr -s ' ' | cut -d ' ' -f2";

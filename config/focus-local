@@ -4,4 +4,8 @@ bspc node -f next.local
 
 if [[ $? -ne 0 ]]; then
     bspc desktop -f next.occupied.local
+
+    if [[ $? -ne 0 && "$1" != "strict" ]]; then
+        bspc monitor -f next
+    fi
 fi

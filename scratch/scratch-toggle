@@ -4,7 +4,7 @@ function make_scratchpad() {
     if pgrep "scratch-run" > /dev/null; then
         killall scratch-run
     fi
-    termite --class="scratchpad" -e ~/Dropbox/scripts/scratch/scratch-run &
+    termite --class="scratchpad" --title="scratchpad" -e ~/Dropbox/scripts/scratch/scratch-run &
 }
 
 if [[ -f /tmp/scratchid ]]; then

@@ -5,9 +5,9 @@
 
 
 struct WIN {
-    char *name;
-    int desktop;
-    int alt_desktop;
+	char *name;
+	int desktop;
+	int alt_desktop;
 } window, *windowp = &window;
 
 
@@ -23,7 +23,7 @@ int count_titles(char *);
 
 // Formats command string
 static inline void get_full_cmd(char *cmd, char *full_cmd, int dt) {
-    sprintf(full_cmd, fmt, dt, cmd, dt);
+	sprintf(full_cmd, fmt, dt, cmd, dt);
 }
 
 

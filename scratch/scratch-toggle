@@ -4,23 +4,18 @@ function make_scratchpad() {
     if pgrep "scratch-run" > /dev/null; then
         killall scratch-run
     fi
-    termite --class="scratchpad" --title="scratchpad" -e ~/Dropbox/scripts/scratch/scratch-run &
+    termite --class="scratchpad" --title="scratchpad" -e $SHELL &
 }
 
-if [[ -f /tmp/scratchid ]]; then
-    id=$(cat /tmp/scratchid)
-else
-    make_scratchpad
-fi
+id=$(wmctrl -l | grep scratchpad | tr -s ' ' | cut -d ' ' -f1)
 
 if [[ -z "$id" ]]; then
     make_scratchpad
+    sleep 0.25 &&
+    id=$(wmctrl -l | grep scratchpad | tr -s ' ' | cut -d ' ' -f1)
+    bspc node $id --flag hidden
 else
     bspc node $id --flag hidden
-fi
-
-if [[ $? -eq 1 ]]; then
-    make_scratchpad
 fi
 
 bspc node -f $id

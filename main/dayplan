@@ -5,14 +5,13 @@ DIR=~/Dropbox/notes/Dayplan
 DAY_FILE=$DIR/dayplan.txt
 DATE_FILE=$DIR/date.txt
 WEEK_FILE=$DIR/weekplan.txt
-SCRATCH_FILE=$DIR/scratch.txt
+TQUEUE_FILE=$DIR/tqueue.txt
 
 DATE="$(cat $DATE_FILE)"
 if [[ "$DATE" != "$(date +'%m/%d/%Y')" ]]; then
     NEW=1
     DATE_DIFF_SECS=$(($(date -d "$(date +%m/%d/%Y)" +%s) - $(date -d "$DATE" +%s)))
     DATE_DIFF=$(($DATE_DIFF_SECS / 86400))
-    echo $DATE_DIFF
 else
     NEW=0
 fi
@@ -24,8 +23,8 @@ fi
 if [ -f $DIR/.weekplan.txt.swp ]; then
     rm $DIR/.weekplan.txt.swp
 fi
-if [ -f $DIR/.scratch.txt.swp ]; then
-    rm $DIR/.scratch.txt.swp
+if [ -f $DIR/.tqueue.txt.swp ]; then
+    rm $DIR/.tqueue.txt.swp
 fi
 
 if [ "$1" == '--new' -o "$1" == '-n' -o $NEW == 1 ]; then
@@ -53,4 +52,8 @@ elif [ "$1" == '--collapse' -o "$1" == '-c' ]; then
     sed -i '/-\s*$/d' $DAY_FILE
 fi
 
-vim $DAY_FILE $WEEK_FILE $SCRATCH_FILE
+if [[ NEW -eq 1 ]]; then
+    vim ~/Dropbox/notes/Onething/{body.txt,mind.txt,spirit.txt} && vim $DAY_FILE $WEEK_FILE $TQUEUE_FILE
+else
+    vim $DAY_FILE $WEEK_FILE $TQUEUE_FILE
+fi

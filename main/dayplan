@@ -1,12 +1,16 @@
 #!/bin/bash
 # Day Planner
 
+
+### Constants
 DIR=~/Dropbox/notes/Dayplan
 DAY_FILE=$DIR/dayplan.txt
 DATE_FILE=$DIR/date.txt
 WEEK_FILE=$DIR/weekplan.txt
 TQUEUE_FILE=$DIR/tqueue.txt
 
+
+### Set NEW Flag (1 or 0)
 DATE="$(cat $DATE_FILE)"
 if [[ "$DATE" != "$(date +'%m/%d/%Y')" ]]; then
     NEW=1
@@ -16,7 +20,8 @@ else
     NEW=0
 fi
 
-# Remove swap files
+
+### Remove swap files
 if [ -f $DIR/.dayplan.txt.swp ]; then
     rm $DIR/.dayplan.txt.swp
 fi
@@ -27,6 +32,8 @@ if [ -f $DIR/.tqueue.txt.swp ]; then
     rm $DIR/.tqueue.txt.swp
 fi
 
+
+### Handles Program Arguments
 if [ "$1" == '--new' -o "$1" == '-n' -o $NEW == 1 ]; then
 
     # dayplan.txt modifications
@@ -43,7 +50,6 @@ if [ "$1" == '--new' -o "$1" == '-n' -o $NEW == 1 ]; then
     if [[ $N -lt 0 ]]; then
         N=0
     fi
-
     while [[ $((N++)) -lt 5 ]]; do
         date -d "$((N - 1)) days" +"%m/%d/%Y - " >> "$WEEK_FILE"
     done
@@ -52,8 +58,10 @@ elif [ "$1" == '--collapse' -o "$1" == '-c' ]; then
     sed -i '/-\s*$/d' $DAY_FILE
 fi
 
+
+### Vim
 if [[ NEW -eq 1 ]]; then
-    vim ~/Dropbox/notes/Onething/{body.txt,mind.txt,spirit.txt} && vim $DAY_FILE $WEEK_FILE $TQUEUE_FILE
+    vim ~/Dropbox/notes/Onething/{body.txt,mind.txt,spirit.txt} && vim $DAY_FILE && dayplan -c
 else
     vim $DAY_FILE $WEEK_FILE $TQUEUE_FILE
 fi

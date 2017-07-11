@@ -13,55 +13,57 @@ TQUEUE_FILE=$DIR/tqueue.txt
 ### Set NEW Flag (1 or 0)
 DATE="$(cat $DATE_FILE)"
 if [[ "$DATE" != "$(date +'%m/%d/%Y')" ]]; then
-    NEW=1
-    DATE_DIFF_SECS=$(($(date -d "$(date +%m/%d/%Y)" +%s) - $(date -d "$DATE" +%s)))
-    DATE_DIFF=$(($DATE_DIFF_SECS / 86400))
+	NEW=1
+	DATE_DIFF_SECS=$(($(date -d "$(date +%m/%d/%Y)" +%s) - $(date -d "$DATE" +%s)))
+	DATE_DIFF=$(($DATE_DIFF_SECS / 86400))
 else
-    NEW=0
+	NEW=0
 fi
 
 
 ### Remove swap files
 if [ -f $DIR/.dayplan.txt.swp ]; then
-    rm $DIR/.dayplan.txt.swp
+	rm $DIR/.dayplan.txt.swp
 fi
 if [ -f $DIR/.weekplan.txt.swp ]; then
-    rm $DIR/.weekplan.txt.swp
+	rm $DIR/.weekplan.txt.swp
 fi
 if [ -f $DIR/.tqueue.txt.swp ]; then
-    rm $DIR/.tqueue.txt.swp
+	rm $DIR/.tqueue.txt.swp
 fi
 
 
 ### Handles Program Arguments
 if [ "$1" == '--new' -o "$1" == '-n' -o $NEW == 1 ]; then
 
-    # dayplan.txt modifications
-    echo "$(date +'%m/%d/%Y')" > $DATE_FILE
-    sed -i -e "2,$ d" "$DAY_FILE"
-    for ((i=0; i<=16; i++)); do
-        printf "$(date +'%I:00%p' --date="$i hours") - \n" >> "$DAY_FILE"
-        printf "$(date +'%I:30%p' --date="$i hours") - \n" >> "$DAY_FILE"
-    done
+	# Update date.txt
+	echo "$(date +'%m/%d/%Y')" > $DATE_FILE
 
-    # weekplan.txt modifications
-    sed -i -e "2,$(($DATE_DIFF + 1)) d" "$WEEK_FILE"
-    N=$((5 - DATE_DIFF))
-    if [[ $N -lt 0 ]]; then
-        N=0
-    fi
-    while [[ $((N++)) -lt 5 ]]; do
-        date -d "$((N - 1)) days" +"%m/%d/%Y - " >> "$WEEK_FILE"
-    done
+	# dayplan.txt modifications
+	sed -i -e "2,$ d" "$DAY_FILE"
+	for ((i=0; i<=16; i++)); do
+		printf "$(date +'%I:00%p' --date="$i hours") - \n" >> "$DAY_FILE"
+		printf "$(date +'%I:30%p' --date="$i hours") - \n" >> "$DAY_FILE"
+	done
+
+	# weekplan.txt modifications
+	sed -i -e "2,$(($DATE_DIFF + 1)) d" "$WEEK_FILE"
+	N=$((5 - DATE_DIFF))
+	if [[ $N -lt 0 ]]; then
+		N=0
+	fi
+	while [[ $((N++)) -lt 5 ]]; do
+		date -d "$((N - 1)) days" +"%m/%d/%Y - " >> "$WEEK_FILE"
+	done
 
 elif [ "$1" == '--collapse' -o "$1" == '-c' ]; then
-    sed -i '/-\s*$/d' $DAY_FILE
+	sed -i '/-\s*$/d' $DAY_FILE
 fi
 
 
 ### Vim
 if [[ NEW -eq 1 ]]; then
-    vim ~/Dropbox/notes/Onething/{body.txt,mind.txt,spirit.txt} && vim $DAY_FILE && dayplan -c
+	vim ~/Dropbox/notes/Onething/{body.txt,mind.txt,spirit.txt} && vim $DAY_FILE && dayplan -c
 else
-    vim $DAY_FILE $WEEK_FILE $TQUEUE_FILE
+	vim $DAY_FILE $WEEK_FILE $TQUEUE_FILE
 fi

@@ -6,16 +6,19 @@
 
 int main(int argc, char *argv[])
 {
+	WIN window, *windowp = &window;
+
+
 	// Validate arguments
 	if (argc < 4) {
 		fprintf(stderr, "%s\n%s\n", "ERROR: Not enough arguments!",
-				"switch-or-run {window} {cmd} {desktop}");
+				"switch-or-run {win-title} {app-init-cmd} {desktop#}");
 		return 1;
 	}
 
 	// Assign arguments from argv
 	windowp->name = *++argv;
-	char *cmd = *++argv;
+	windowp->cmd = *++argv;
 	windowp->desktop = (*++argv)[0] - '0';
 	windowp->alt_desktop = (windowp->desktop + 5) % 10;
 
@@ -41,16 +44,16 @@ int main(int argc, char *argv[])
 				dt = windowp->desktop;
 			}
 
-			get_full_cmd(cmd, full_cmd, dt);
+			get_full_cmd(windowp->cmd, full_cmd, dt);
 			system(full_cmd);
 			break;
 		case 1:
 			if (dt) {
-				get_full_cmd(cmd, full_cmd, dt);
+				get_full_cmd(windowp->cmd, full_cmd, dt);
 				system(full_cmd);
 			}
 			else {
-				char wmctrl_cmd[20] = "wmctrl -a ";
+				char wmctrl_cmd[] = "wmctrl -a ";
 				system(strcat(wmctrl_cmd, windowp->name));
 			}
 			break;

@@ -4,11 +4,12 @@
 #include <stdio.h>
 
 
-struct WIN {
+typedef struct {
 	char *name;
+	char *cmd;
 	int desktop;
 	int alt_desktop;
-} window, *windowp = &window;
+} WIN;
 
 
 const char *fmt = "bspc rule -a \"*:*\" -o desktop=^%d && %s &> /dev/null & bspc desktop -f ^%d";

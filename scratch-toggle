@@ -1,21 +1,16 @@
 #!/bin/bash
 
-function make_scratchpad() {
-    if pgrep "scratch-run" > /dev/null; then
-        killall scratch-run
-    fi
+function init_scratchpad() {
     termite --class="scratchpad" --title="scratchpad" -e $SHELL &
 }
 
 id=$(wmctrl -l | grep scratchpad | tr -s ' ' | cut -d ' ' -f1)
 
 if [[ -z "$id" ]]; then
-    make_scratchpad
+    init_scratchpad
     sleep 0.25 &&
     id=$(wmctrl -l | grep scratchpad | tr -s ' ' | cut -d ' ' -f1)
-    bspc node $id --flag hidden
-else
-    bspc node $id --flag hidden
 fi
 
+bspc node $id --flag hidden
 bspc node -f $id

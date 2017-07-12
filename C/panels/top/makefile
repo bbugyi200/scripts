@@ -1,5 +1,5 @@
-dev:
-	gcc panel.c
+dev: main.c
+	gcc main.c
 
 test:
 	./a.out

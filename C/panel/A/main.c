@@ -42,15 +42,17 @@ int main(void)
 
 
 	// Loop Variable Declarations
-	char	*icon,			cmdout[MAX_CMD], 	batt_val[4],
-			*batt_color,	*batt_icon, 		full_batt_icon[30],
-			*bolt;
-	int ecode, batt_nval;
+	char	*icon,			cmdout[MAX_CMD], 		batt_val[4],
+			*batt_color,	*batt_icon, 			full_batt_icon[30],
+			c,				*batt_valp = batt_val,	*bolt;
+
+	int ecode, batt_nval, volume;
+	u_int64_t diff;
 	FILE *po;
+	struct timespec start, end, sleep_time;
 
 	// Main Loop
 	for(;;) {
-        struct timespec start, end;
         clock_gettime(CLOCK_MONOTONIC, &start);
 
 		// OS Update Checker
@@ -73,7 +75,6 @@ int main(void)
 		if (cnt_batt++ >= upd_batt && is_laptop) {
 			if ((po = popen("acpi --battery | cut -d, -f2", "r")) == NULL)
 				err_ret("popen error: battery percentage");
-			char c, *batt_valp = batt_val;
 			while ((c = fgetc(po)) != EOF) {
 				*batt_valp++ = c;
 			}
@@ -102,7 +103,8 @@ int main(void)
 			else
 				bolt = "";
 
-			sprintf(full_batt_icon, "B%%{F%s}%s%s %d%%  \n", batt_color, bolt, batt_icon, batt_nval);
+			sprintf(full_batt_icon, "B%%{F%s}%s%s %d%%  \n", batt_color,
+					bolt, batt_icon, batt_nval);
 			write_fifo(full_batt_icon, fifo_fd);
 			pclose(po);
 			cnt_batt = 0;
@@ -114,7 +116,7 @@ int main(void)
 				err_ret("popen error: volume");
 			if (fgets(cmdout, 4, po) == NULL)
 				err_ret("fgets error: volume");
-			int volume = atoi(cmdout);
+			volume = atoi(cmdout);
 
 			if (volume == 0) {
 				icon = "V\uf026  \n";
@@ -163,8 +165,7 @@ int main(void)
 
 		// Sleep for (1 second) - (loop iteration time)
         clock_gettime(CLOCK_MONOTONIC, &end);
-        u_int64_t diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
-		struct timespec sleep_time;
+        diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
 		sleep_time.tv_sec = 0;
 		sleep_time.tv_nsec = (diff < BILLION) ? BILLION - diff : 0;
 

@@ -2,7 +2,7 @@ dev: main.c
 	gcc -g -Wall main.c
 
 prod: main.c
-	gcc -O2 -o ~/Dropbox/scripts/lemonbar/Apanel main.c
+	gcc -O2 -o ~/Dropbox/scripts/lemonbar/panel_a main.c
 
 test: a.out
 	./a.out

@@ -1,65 +1,54 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <string.h>
-#include <unistd.h>
 #include <time.h>
-
-#define upd_pia 5
-#define upd_batt 1
-#define upd_net 8
-#define upd_upd 86400
-#define upd_dbox 5
-#define upd_vol 1
-#define upd_mail 15
-
-#define MAX_CMD 200
-#define BILLION 1000000000L
-#define NEVER_DAY 3456000
-#define HNSIZE 10
+#include <stdbool.h>
+#include "A.h"
+#include "../panel.h"
 
 int 	cnt_pia = upd_pia,	cnt_batt = upd_batt,	cnt_net = upd_net,
     	cnt_upd = upd_upd,	cnt_dbox = upd_dbox,	cnt_vol = upd_vol,
     	cnt_mail = upd_mail;
 
-int fifo_fd;
-
 void err_ret(char *);
-void write_fifo(char *);
+void write_fifo(char *, int);
 
 int main(void)
 {
 	errno = 0;
 
 	// Filter counters and set constants based on hostname
-	char hostname[HNSIZE];
+	char hostname[HNSIZE], *net_dev;
 	gethostname(hostname, HNSIZE);
-	char *net_dev;
+	bool is_laptop = false;
 	if (strncmp(hostname, "athena", 6) == 0) {
-		cnt_batt = NEVER_DAY;
 		net_dev = "enp2s0";
 	} else {
-		cnt_pia = NEVER_DAY;
 		net_dev = "wlo1";
+		is_laptop = true;
 	}
+	char pcmd[20] = "ip link show "; 
+	strcat(pcmd, net_dev);
 
+
+	// Get FIFO Descriptor
 	const char *fifo_path = getenv("PANEL_FIFO");
-
 	struct stat sb;
-
+	int fifo_fd;
 	if (stat(fifo_path, &sb) != 0 || !S_ISFIFO(sb.st_mode)) {
 		fifo_fd = mkfifo(fifo_path, 0666);
 	} else {
 		fifo_fd = open(fifo_path, O_RDWR);
 	}
 
-	int ecode;
-	char *icon;
-	FILE *po;
-	char cmdout[MAX_CMD];
 
+	// Loop Variable Declarations
+	char	*icon,			cmdout[MAX_CMD], 	batt_val[4],
+			*batt_color,	*batt_icon, 		full_batt_icon[30],
+			*bolt;
+	int ecode, batt_nval;
+	FILE *po;
+
+	// Main Loop
 	for(;;) {
         struct timespec start, end;
         clock_gettime(CLOCK_MONOTONIC, &start);
@@ -67,74 +56,114 @@ int main(void)
 		// OS Update Checker
 		if (cnt_upd++ >= upd_upd) {
 			ecode = system("python ~/Dropbox/scripts/python/UpdtCheck.py");
-			icon = (ecode == 0) ? "U" : "U\uf0aa  ";
-			write_fifo(icon);
+			icon = (ecode == 0) ? "U\n" : "U\uf0aa  \n";
+			write_fifo(icon, fifo_fd);
 			cnt_upd = 0;
 		}
 
 		// New Mail
 		if (cnt_mail++ >= upd_mail) {
 			ecode = system("check_mail -q");
-			icon = (ecode == 0) ? "M" : "M\uf003  ";
-			write_fifo(icon);
+			icon = (ecode == 0) ? "M\n" : "M\uf003  \n";
+			write_fifo(icon, fifo_fd);
 			cnt_mail = 0;
+		}
+
+		// Battery
+		if (cnt_batt++ >= upd_batt && is_laptop) {
+			if ((po = popen("acpi --battery | cut -d, -f2", "r")) == NULL)
+				err_ret("popen error: battery percentage");
+			char c, *batt_valp = batt_val;
+			while ((c = fgetc(po)) != EOF) {
+				*batt_valp++ = c;
+			}
+			*(--batt_valp) = '\0';
+			batt_nval = atoi(batt_val);
+			if (batt_nval >= 70) {
+				batt_color = GREEN;
+				batt_icon = "\uf240";
+			} else if (batt_nval >= 35) {
+				batt_color = YELLOW;
+				batt_icon = "\uf242";
+			} else {
+				batt_color = RED;
+				batt_icon = "\uf243";
+			}
+
+			pclose(po);
+
+			if ((po = popen("acpi --battery", "r")) == NULL)
+				err_ret("popen error: battery power-check");
+			if (fgets(cmdout, MAX_CMD, po) == NULL)
+				err_ret("fgets error: battery power-check");
+
+			if (strstr(cmdout, "Discharging") == NULL)
+				bolt = "\uf0e7 ";
+			else
+				bolt = "";
+
+			sprintf(full_batt_icon, "B%%{F%s}%s%s %d%%  \n", batt_color, bolt, batt_icon, batt_nval);
+			write_fifo(full_batt_icon, fifo_fd);
+			pclose(po);
+			cnt_batt = 0;
 		}
 
 		// Volume
 		if (cnt_vol++ >= upd_vol) {
 			if ((po = popen("amixer get Master | sed -n 's/^.*\\[\\([0-9]\\+\\)%.*$/\\1/p' | uniq", "r")) == NULL)
 				err_ret("popen error: volume");
-			if (fgets(cmdout, 3, po) == NULL)
+			if (fgets(cmdout, 4, po) == NULL)
 				err_ret("fgets error: volume");
 			int volume = atoi(cmdout);
 
 			if (volume == 0) {
-				icon = "V\uf026  ";
+				icon = "V\uf026  \n";
 			} else {
-				icon = (volume >= 50) ? "V\uf028  " : "V\uf027  ";
+				icon = (volume >= 50) ? "V\uf028  \n" : "V\uf027  \n";
 			}
-			write_fifo(icon);
+			write_fifo(icon, fifo_fd);
+			pclose(po);
 			cnt_vol = 0;
 		}
 
 		// Dropbox
 		if (cnt_dbox++ >= upd_dbox) {
 			ecode = system("pgrep dropbox >& /dev/null");
-			icon = (ecode == 0) ? "D\uf16b  " : "D";
-			write_fifo(icon);
+			icon = (ecode == 0) ? "D\uf16b  \n" : "D\n";
+			write_fifo(icon, fifo_fd);
 			cnt_dbox = 0;
 		}
 
 		// PIA
 		if (cnt_pia++ >= upd_pia) {
 			ecode = system("pgrep openvpn >& /dev/null");
-			icon = (ecode == 0) ? "P\uf17b  " : "P";
-			write_fifo(icon);
+			icon = (ecode == 0) ? "P\uf17b  \n" : "P\n";
+			write_fifo(icon, fifo_fd);
 			cnt_pia = 0;
 		}
 
 		// Network Connection
-		char pcmd[20] = "ip link show "; 
 		if (cnt_net++ >= upd_net) {
-			if ((po = popen(strcat(pcmd, net_dev), "r")) == NULL)
+			if ((po = popen(pcmd, "r")) == NULL)
 				err_ret("popen error: network");
 			if (fgets(cmdout, MAX_CMD, po) == NULL)
 				err_ret("fgets error: network");
 
 			if (strstr(cmdout, "state UP") == NULL) {
-				icon = "X\uf119  ";
+				icon = "X\uf119  \n";
 			} else {
 				ecode = system("ping -q -w 1 -c 1 google.com >& /dev/null");
-				icon = (ecode == 0) ? "X\uf118  " : "X\uf11a  ";
+				icon = (ecode == 0) ? "X\uf118  \n" : "X\uf11a  \n";
 			}
 
-			write_fifo(icon);
+			write_fifo(icon, fifo_fd);
+			pclose(po);
 			cnt_net = 0;
 		}
 
+		// Sleep for (1 second) - (loop iteration time)
         clock_gettime(CLOCK_MONOTONIC, &end);
         u_int64_t diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
-
 		struct timespec sleep_time;
 		sleep_time.tv_sec = 0;
 		sleep_time.tv_nsec = (diff < BILLION) ? BILLION - diff : 0;
@@ -143,21 +172,4 @@ int main(void)
 	}
 
     return 0;
-}
-
-
-inline void err_ret(char *restrict alterr)
-{
-	fprintf(stderr, "%s\n", (errno != 0) ? strerror(errno) : alterr);
-	exit(1);
-}
-
-
-inline void write_fifo(char *restrict icon)
-{
-	int length = strlen(icon) + 1;
-	char Icon[length];
-	strcpy(Icon, icon);
-	strcat(Icon, "\n");
-	write(fifo_fd, Icon, length);;
 }

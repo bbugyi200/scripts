@@ -22,7 +22,7 @@ if [[ "$(hostname)" == "athena" ]]; then
     FONT_SIZE="12"
 fi
 
-~/Dropbox/scripts/lemonbar/Apanel &
+~/Dropbox/scripts/lemonbar/panel_a &
 
 panel_bar < "$PANEL_FIFO" | lemonbar -a 32 -n "$PANEL_WM_NAME" -g x$PANEL_HEIGHT -f "Inconsolata-$FONT_SIZE:Bold" -f "Font Awesome-$FONT_SIZE" -f "Font Awesome-12" -F "$COLOR_DEFAULT_FG" -B "$COLOR_DEFAULT_BG" | sh &
 

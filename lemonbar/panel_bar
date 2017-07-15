@@ -16,7 +16,7 @@ while read -r line ; do
             batt="%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
             ;;
         D*)
-            dbox="%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
+            dbox="%{F$BLUE}%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
             ;;
         X*)
             net="%{F$WHITE}%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
@@ -31,7 +31,7 @@ while read -r line ; do
             vol="%{F$WHITE}%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
             ;;
         M*)
-            mail="%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
+			mail="%{F$WHITE}%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
             ;;
         W*)
             # bspwm's state

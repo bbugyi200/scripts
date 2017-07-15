@@ -65,5 +65,5 @@ fi
 if [[ NEW -eq 1 ]]; then
 	vim ~/Dropbox/notes/Onething/{body.txt,mind.txt,spirit.txt} && vim $DAY_FILE && dayplan -c
 else
-	vim $DAY_FILE $WEEK_FILE $TQUEUE_FILE
+	vim -c "silent! argdo set eventignore-=Syntax | set nospell | bnext" $DAY_FILE $WEEK_FILE $TQUEUE_FILE
 fi

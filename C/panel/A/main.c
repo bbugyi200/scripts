@@ -2,6 +2,10 @@
 #include <fcntl.h>
 #include <time.h>
 #include <stdbool.h>
+#include <errno.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/wait.h>
 #include "A.h"
 #include "../panel.h"
 
@@ -42,7 +46,7 @@ int main(void)
 
 
 	// Loop Variable Declarations
-	char	*icon,			cmdout[MAX_CMD], 		batt_val[4],
+	char	*icon,			cmdout[MAX_CMD], 		batt_val[5],
 			*batt_color,	*batt_icon, 			full_batt_icon[30],
 			c,				*batt_valp = batt_val,	*bolt;
 
@@ -50,6 +54,11 @@ int main(void)
 	u_int64_t diff;
 	FILE *po;
 	struct timespec start, end, sleep_time;
+
+	pid_t pid = 0;
+	int pipefd[2];
+	FILE *output;
+	int status;
 
 	// Main Loop
 	for(;;) {
@@ -146,10 +155,22 @@ int main(void)
 
 		// Network Connection
 		if (cnt_net++ >= upd_net) {
-			if ((po = popen(pcmd, "r")) == NULL)
-				err_ret("popen error: network");
-			if (fgets(cmdout, MAX_CMD, po) == NULL)
+			pipe(pipefd);
+			pid = fork();
+			if (pid == 0) {
+				close(pipefd[0]);
+				dup2(pipefd[1], STDOUT_FILENO);
+				dup2(pipefd[1], STDERR_FILENO);
+				execl("/usr/bin/ip", "ip", "link", "show", net_dev, (char *) NULL);
+			}
+
+			close(pipefd[1]);
+			output = fdopen(pipefd[0], "r");
+
+			if (fgets(cmdout, MAX_CMD, output) == NULL)
 				err_ret("fgets error: network");
+
+			waitpid(pid, &status, 0);
 
 			if (strstr(cmdout, "state UP") == NULL) {
 				icon = "X\uf119  \n";
@@ -159,7 +180,6 @@ int main(void)
 			}
 
 			write_fifo(icon, fifo_fd);
-			pclose(po);
 			cnt_net = 0;
 		}
 

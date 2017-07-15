@@ -4,10 +4,7 @@
 
 // Libraries
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <errno.h>
 
 
 // Definitions
@@ -23,6 +20,8 @@
 #define upd_dbox 5
 #define upd_vol 1
 #define upd_mail 15
+
+extern int errno;
 
 
 // Inline Function Definitions / Function Declarations

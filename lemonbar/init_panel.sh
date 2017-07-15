@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 if xdo id -a "$PANEL_WM_NAME" > /dev/null ; then
     printf "%s\n" "The panel is already running." >&2

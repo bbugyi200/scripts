@@ -21,7 +21,7 @@ int main(void)
 {
 	errno = 0;
 
-	// Filter counters and set constants based on hostname
+	// Set constants based on hostname
 	char hostname[HNSIZE], *net_dev;
 	gethostname(hostname, HNSIZE);
 	bool is_laptop = false;
@@ -79,13 +79,16 @@ int main(void)
 			pipe(pipefd);
 			pid = fork();
 			if (pid == 0) {
+				close(pipefd[0]);
 				dup2(pipefd[1], STDOUT_FILENO);
 				execl("/usr/bin/acpi", "acpi", "--battery", (char *) NULL);
 			}
 
 			close(pipefd[1]);
-			waitpid(pid, &status, 0);
 			pipe_output = fdopen(pipefd[0], "r");
+
+			waitpid(pid, &status, 0);
+
 			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
 				err_ret("fgets error: battery power-check", errno);
 
@@ -102,9 +105,6 @@ int main(void)
 			while (*(++batt_valp) != '%')
 				;
 			*batt_valp = '\0';
-
-			close(pipefd[0]);
-			waitpid(pid, &status, 0);
 
 			batt_nval = (int) strtol(batt_val, NULL, 0);
 
@@ -218,7 +218,7 @@ int main(void)
 			cnt_net = 0;
 		}
 
-		// Sleep for (1 second) - (loop iteration time)
+		// sleep_time =  (1 second) - (loop iteration time)
 		clock_gettime(CLOCK_MONOTONIC, &end);
 		diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
 		sleep_time.tv_sec = 0;

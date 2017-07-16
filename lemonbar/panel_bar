@@ -102,5 +102,5 @@ while read -r line ; do
             done
             ;;
     esac
-    printf "%s\n" "%{l}${wm}%{c}${sys}%{r}%{T3}${pia}${mail}${batt}${vol}${dbox}${net}${updt}%{T-}"
+    printf "%s\n" "%{l}${wm}%{c}${sys}%{r}%{T3}${mail}${batt}${vol}${pia}${dbox}${net}${updt}%{T-}"
 done

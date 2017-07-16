@@ -5,15 +5,16 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <sys/wait.h>
 #include "A.h"
 #include "../panel.h"
 
 int 	cnt_pia = upd_pia,	cnt_batt = upd_batt,	cnt_net = upd_net,
-    	cnt_upd = upd_upd,	cnt_dbox = upd_dbox,	cnt_vol = upd_vol,
-    	cnt_mail = upd_mail;
+		cnt_upd = upd_upd,	cnt_dbox = upd_dbox,	cnt_vol = upd_vol,
+		cnt_mail = upd_mail;
 
-void err_ret(char *);
+void err_ret(char *, int);
 void write_fifo(char *, int);
 
 int main(void)
@@ -30,9 +31,6 @@ int main(void)
 		net_dev = "wlo1";
 		is_laptop = true;
 	}
-	char pcmd[20] = "ip link show "; 
-	strcat(pcmd, net_dev);
-
 
 	// Get FIFO Descriptor
 	const char *fifo_path = getenv("PANEL_FIFO");
@@ -44,25 +42,21 @@ int main(void)
 		fifo_fd = open(fifo_path, O_RDWR);
 	}
 
-
 	// Loop Variable Declarations
-	char	*icon,			cmdout[MAX_CMD], 		batt_val[5],
-			*batt_color,	*batt_icon, 			full_batt_icon[30],
-			c,				*batt_valp = batt_val,	*bolt;
-
 	int ecode, batt_nval, volume;
 	u_int64_t diff;
-	FILE *po;
 	struct timespec start, end, sleep_time;
+	char *icon, cmdout[MAX_CMD], *batt_color,
+		 *batt_icon, full_batt_icon[30], *bolt;
 
 	pid_t pid = 0;
-	int pipefd[2];
-	FILE *output;
+	int pipefd[4];
+	FILE *pipe_output;
 	int status;
 
 	// Main Loop
 	for(;;) {
-        clock_gettime(CLOCK_MONOTONIC, &start);
+		clock_gettime(CLOCK_MONOTONIC, &start);
 
 		// OS Update Checker
 		if (cnt_upd++ >= upd_upd) {
@@ -82,13 +76,38 @@ int main(void)
 
 		// Battery
 		if (cnt_batt++ >= upd_batt && is_laptop) {
-			if ((po = popen("acpi --battery | cut -d, -f2", "r")) == NULL)
-				err_ret("popen error: battery percentage");
-			while ((c = fgetc(po)) != EOF) {
-				*batt_valp++ = c;
+			pipe(pipefd);
+			pid = fork();
+			if (pid == 0) {
+				dup2(pipefd[1], STDOUT_FILENO);
+				execl("/usr/bin/acpi", "acpi", "--battery", (char *) NULL);
 			}
-			*(--batt_valp) = '\0';
-			batt_nval = atoi(batt_val);
+
+			close(pipefd[1]);
+			waitpid(pid, &status, 0);
+			pipe_output = fdopen(pipefd[0], "r");
+			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
+				err_ret("fgets error: battery power-check", errno);
+
+			if (strstr(cmdout, "Discharging") == NULL)
+				bolt = "\uf0e7 ";
+			else
+				bolt = "";
+
+			// Find Comma
+			char *batt_val = cmdout;
+			while (*batt_val++ != ',')
+				;
+			char *batt_valp = batt_val++;
+			while (*(++batt_valp) != '%')
+				;
+			*batt_valp = '\0';
+
+			close(pipefd[0]);
+			waitpid(pid, &status, 0);
+
+			batt_nval = (int) strtol(batt_val, NULL, 0);
+
 			if (batt_nval >= 70) {
 				batt_color = GREEN;
 				batt_icon = "\uf240";
@@ -100,40 +119,56 @@ int main(void)
 				batt_icon = "\uf243";
 			}
 
-			pclose(po);
-
-			if ((po = popen("acpi --battery", "r")) == NULL)
-				err_ret("popen error: battery power-check");
-			if (fgets(cmdout, MAX_CMD, po) == NULL)
-				err_ret("fgets error: battery power-check");
-
-			if (strstr(cmdout, "Discharging") == NULL)
-				bolt = "\uf0e7 ";
-			else
-				bolt = "";
-
 			sprintf(full_batt_icon, "B%%{F%s}%s%s %d%%  \n", batt_color,
 					bolt, batt_icon, batt_nval);
 			write_fifo(full_batt_icon, fifo_fd);
-			pclose(po);
+			fclose(pipe_output);
 			cnt_batt = 0;
 		}
 
 		// Volume
 		if (cnt_vol++ >= upd_vol) {
-			if ((po = popen("amixer get Master | sed -n 's/^.*\\[\\([0-9]\\+\\)%.*$/\\1/p' | uniq", "r")) == NULL)
-				err_ret("popen error: volume");
-			if (fgets(cmdout, 4, po) == NULL)
-				err_ret("fgets error: volume");
-			volume = atoi(cmdout);
+			// First Pipe CMD
+			pipe(pipefd);
+			pid = fork();
+			if (pid == 0) {
+				dup2(pipefd[1], STDOUT_FILENO);
+				execl("/usr/bin/amixer", "amixer", "get", "Master", (char *) NULL);
+			}
+
+			close(pipefd[1]);
+			waitpid(pid, &status, 0);
+
+			// Second Pipe CMD
+			pipe(pipefd + 2);
+			pid = fork();
+			char *sed_pttrn = "s/^.*\\[\\([0-9]\\+\\)%.*$/\\1/p";
+			if (pid == 0) {
+				close(pipefd[2]);
+				dup2(pipefd[0], STDIN_FILENO);
+				dup2(pipefd[3], STDOUT_FILENO);
+				execl("/usr/bin/sed", "sed", "-n", sed_pttrn, (char *) NULL);
+			}
+
+			close(pipefd[0]);
+			close(pipefd[3]);
+			pipe_output = fdopen(pipefd[2], "r");
+
+			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
+				err_ret("fgets error: volume", errno);
+
+			volume = (int) strtol(cmdout, NULL, 0);
+
+			waitpid(pid, &status, 0);
 
 			if (volume == 0) {
 				icon = "V\uf026  \n";
 			} else {
 				icon = (volume >= 50) ? "V\uf028  \n" : "V\uf027  \n";
 			}
+
 			write_fifo(icon, fifo_fd);
-			pclose(po);
+			fclose(pipe_output);
 			cnt_vol = 0;
 		}
 
@@ -160,15 +195,14 @@ int main(void)
 			if (pid == 0) {
 				close(pipefd[0]);
 				dup2(pipefd[1], STDOUT_FILENO);
-				dup2(pipefd[1], STDERR_FILENO);
 				execl("/usr/bin/ip", "ip", "link", "show", net_dev, (char *) NULL);
 			}
 
 			close(pipefd[1]);
-			output = fdopen(pipefd[0], "r");
+			pipe_output = fdopen(pipefd[0], "r");
 
-			if (fgets(cmdout, MAX_CMD, output) == NULL)
-				err_ret("fgets error: network");
+			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
+				err_ret("fgets error: network", errno);
 
 			waitpid(pid, &status, 0);
 
@@ -180,17 +214,18 @@ int main(void)
 			}
 
 			write_fifo(icon, fifo_fd);
+			fclose(pipe_output);
 			cnt_net = 0;
 		}
 
 		// Sleep for (1 second) - (loop iteration time)
-        clock_gettime(CLOCK_MONOTONIC, &end);
-        diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
+		clock_gettime(CLOCK_MONOTONIC, &end);
+		diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
 		sleep_time.tv_sec = 0;
 		sleep_time.tv_nsec = (diff < BILLION) ? BILLION - diff : 0;
 
 		nanosleep(&sleep_time, NULL);
 	}
 
-    return 0;
+	return 0;
 }

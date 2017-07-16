@@ -21,13 +21,11 @@
 #define upd_vol 1
 #define upd_mail 15
 
-extern int errno;
-
 
 // Inline Function Definitions / Function Declarations
-inline void err_ret(char *restrict alterr)
+inline void err_ret(char *restrict alterr, int err)
 {
-	fprintf(stderr, "%s\n", (errno != 0) ? strerror(errno) : alterr);
+	fprintf(stderr, "%s\n", (err != 0) ? strerror(err) : alterr);
 }
 
 

@@ -2,17 +2,18 @@
 #define A 0
 
 
-// Libraries
+// ----- Libraries ------
 #include <stdio.h>
 #include <string.h>
 
 
-// Definitions
+// ----- Definitions -----
 #define MAX_CMD 200
 #define BILLION 1000000000L
 #define NEVER_DAY 3456000
 #define HNSIZE 10
 
+// Update Timers
 #define upd_pia 5
 #define upd_batt 1
 #define upd_net 8
@@ -39,7 +40,7 @@
 
 int fifo_fd;
 
-// Inline Function Definitions / Function Declarations
+// ----- Inline Function Definitions / Function Declarations ------
 inline void err_ret(char *restrict alterr, int err)
 {
 	fprintf(stderr, "%s\n", (err != 0) ? strerror(err) : alterr);

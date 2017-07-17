@@ -21,7 +21,8 @@ int main(void)
 {
 	errno = 0;
 
-	// Set constants based on hostname
+
+	// ----- Set constants based on hostname ------
 	char hostname[HNSIZE], *net_dev;
 	gethostname(hostname, HNSIZE);
 	bool is_laptop = false;
@@ -32,7 +33,8 @@ int main(void)
 		is_laptop = true;
 	}
 
-	// Get FIFO Descriptor
+
+	// ----- Get FIFO Descriptor ------
 	const char *fifo_path = getenv("PANEL_FIFO");
 	struct stat sb;
 	int fifo_fd;
@@ -42,19 +44,30 @@ int main(void)
 		fifo_fd = open(fifo_path, O_RDWR);
 	}
 
-	// Loop Variable Declarations
-	int ecode, batt_nval, volume;
+
+	// ----- Loop Variable Declarations -----
+	// General
+	int ecode;
 	u_int64_t diff;
 	struct timespec start, end, sleep_time;
-	char *icon, cmdout[MAX_CMD], *batt_color,
-		 *batt_icon, full_batt_icon[30], *bolt;
+	char *icon, cmdout[MAX_CMD];
 
+	// Pipes
 	pid_t pid = 0;
 	int pipefd[4];
 	FILE *pipe_output;
 	int status;
 
-	// Main Loop
+	// Battery
+	int batt_nval;
+	char *batt_color, *batt_icon, full_batt_icon[30], *bolt;
+
+	// Volume
+	int volume;
+	char volume_icon[15], *dots[3];
+
+
+	// ----- Main Loop -----
 	for(;;) {
 		clock_gettime(CLOCK_MONOTONIC, &start);
 
@@ -119,8 +132,9 @@ int main(void)
 				batt_icon = "\uf243";
 			}
 
-			sprintf(full_batt_icon, "B%%{F%s}%s%s %d%%  \n", batt_color,
-					bolt, batt_icon, batt_nval);
+			if (snprintf(full_batt_icon, 30, "B%%{F%s}%s%s %d%%  \n", batt_color,
+						bolt, batt_icon, batt_nval) == 0)
+				fprintf(stderr, "battery: snprintf error");
 			write_fifo(full_batt_icon, fifo_fd);
 			fclose(pipe_output);
 			cnt_batt = 0;
@@ -161,13 +175,28 @@ int main(void)
 
 			waitpid(pid, &status, 0);
 
-			if (volume == 0) {
-				icon = "V\uf026  \n";
+			if (volume > 0) {
+				dots[0] = "\u2022";
 			} else {
-				icon = (volume >= 50) ? "V\uf028  \n" : "V\uf027  \n";
+				dots[0] = "\u25E6";
 			}
 
-			write_fifo(icon, fifo_fd);
+			if (volume > 33) {
+				dots[1] = "\u2022";
+			} else {
+				dots[1] = "\u25E6";
+			}
+
+			if (volume > 66) {
+				dots[2] = "\u2022";
+			} else {
+				dots[2] = "\u25E6";
+			}
+
+			if (snprintf(volume_icon, 15, "V%s%s%s  \n", dots[0], dots[1], dots[2]) == 0)
+				fprintf(stderr, "volume: snprintf error");
+
+			write_fifo(volume_icon, fifo_fd);
 			fclose(pipe_output);
 			cnt_vol = 0;
 		}

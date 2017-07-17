@@ -21,6 +21,23 @@
 #define upd_vol 1
 #define upd_mail 15
 
+// Unicode Font Awesome Icons
+#define UPDT "\uf0aa"
+#define MAIL "\uf003"
+#define BOLT "\uf0e7"
+#define HBATT "\uf240"
+#define MBATT "\uf242"
+#define LBATT "\uf243"
+#define EDOT "\u25e6"
+#define DOT "\u2022"
+#define STAR "\u2605"
+#define DBOX "\uf16b"
+#define PIA "\uf17b"
+#define FROWN "\uf119"
+#define SMILE "\uf118"
+#define MEH "\uf11a"
+
+int fifo_fd;
 
 // Inline Function Definitions / Function Declarations
 inline void err_ret(char *restrict alterr, int err)
@@ -29,9 +46,9 @@ inline void err_ret(char *restrict alterr, int err)
 }
 
 
-inline void write_fifo(char *restrict icon, int fd)
+inline void write_fifo(char *restrict icon)
 {
-	write(fd, icon, strlen(icon));;
+	write(fifo_fd, icon, strlen(icon));;
 }
 
 #endif /* ifndef A */

@@ -15,7 +15,7 @@ int 	cnt_pia = upd_pia,	cnt_batt = upd_batt,	cnt_net = upd_net,
 		cnt_mail = upd_mail;
 
 void err_ret(char *, int);
-void write_fifo(char *, int);
+void write_fifo(char *);
 
 int main(void)
 {
@@ -37,7 +37,6 @@ int main(void)
 	// ----- Get FIFO Descriptor ------
 	const char *fifo_path = getenv("PANEL_FIFO");
 	struct stat sb;
-	int fifo_fd;
 	if (stat(fifo_path, &sb) != 0 || !S_ISFIFO(sb.st_mode)) {
 		fifo_fd = mkfifo(fifo_path, 0666);
 	} else {
@@ -74,16 +73,16 @@ int main(void)
 		// OS Update Checker
 		if (cnt_upd++ >= upd_upd) {
 			ecode = system("python ~/Dropbox/scripts/python/UpdtCheck.py");
-			icon = (ecode == 0) ? "U\n" : "U\uf0aa  \n";
-			write_fifo(icon, fifo_fd);
+			icon = (ecode == 0) ? "U\n" : "U" UPDT "  \n";
+			write_fifo(icon);
 			cnt_upd = 0;
 		}
 
 		// New Mail
 		if (cnt_mail++ >= upd_mail) {
 			ecode = system("check_mail -q");
-			icon = (ecode == 0) ? "M\n" : "M\uf003  \n";
-			write_fifo(icon, fifo_fd);
+			icon = (ecode == 0) ? "M\n" : "M" MAIL "  \n";
+			write_fifo(icon);
 			cnt_mail = 0;
 		}
 
@@ -106,7 +105,7 @@ int main(void)
 				err_ret("fgets error: battery power-check", errno);
 
 			if (strstr(cmdout, "Discharging") == NULL)
-				bolt = "\uf0e7 ";
+				bolt = BOLT " ";
 			else
 				bolt = "";
 
@@ -123,19 +122,19 @@ int main(void)
 
 			if (batt_nval >= 70) {
 				batt_color = GREEN;
-				batt_icon = "\uf240";
+				batt_icon = HBATT;
 			} else if (batt_nval >= 35) {
 				batt_color = YELLOW;
-				batt_icon = "\uf242";
+				batt_icon = MBATT;
 			} else {
 				batt_color = RED;
-				batt_icon = "\uf243";
+				batt_icon = LBATT;
 			}
 
 			if (snprintf(full_batt_icon, 30, "B%%{F%s}%s%s %d%%  \n", batt_color,
 						bolt, batt_icon, batt_nval) == 0)
 				fprintf(stderr, "battery: snprintf error");
-			write_fifo(full_batt_icon, fifo_fd);
+			write_fifo(full_batt_icon);
 			fclose(pipe_output);
 			cnt_batt = 0;
 		}
@@ -175,28 +174,37 @@ int main(void)
 
 			waitpid(pid, &status, 0);
 
+			// Conditional Volume 'dots' Assignments
 			if (volume > 0) {
-				dots[0] = "\u2022";
+				dots[0] = DOT;
+				if (volume > 33) {
+					dots[1] = DOT;
+					if (volume > 66) {
+						if (volume == 100) {
+							dots[0] = STAR;
+							dots[1] = STAR;
+							dots[2] = STAR;
+						} else {
+							dots[2] = DOT;
+						}
+					} else {
+						dots[2] = EDOT;
+					}
+				} else {
+					dots[1] = EDOT;
+					dots[2] = EDOT;
+				}
 			} else {
-				dots[0] = "\u25E6";
+				dots[0] = EDOT;
+				dots[1] = EDOT;
+				dots[2] = EDOT;
 			}
 
-			if (volume > 33) {
-				dots[1] = "\u2022";
-			} else {
-				dots[1] = "\u25E6";
-			}
-
-			if (volume > 66) {
-				dots[2] = "\u2022";
-			} else {
-				dots[2] = "\u25E6";
-			}
 
 			if (snprintf(volume_icon, 15, "V%s%s%s  \n", dots[0], dots[1], dots[2]) == 0)
 				fprintf(stderr, "volume: snprintf error");
 
-			write_fifo(volume_icon, fifo_fd);
+			write_fifo(volume_icon);
 			fclose(pipe_output);
 			cnt_vol = 0;
 		}
@@ -204,16 +212,16 @@ int main(void)
 		// Dropbox
 		if (cnt_dbox++ >= upd_dbox) {
 			ecode = system("pgrep dropbox >& /dev/null");
-			icon = (ecode == 0) ? "D\uf16b  \n" : "D\n";
-			write_fifo(icon, fifo_fd);
+			icon = (ecode == 0) ? "D" DBOX "  \n" : "D\n";
+			write_fifo(icon);
 			cnt_dbox = 0;
 		}
 
 		// PIA
 		if (cnt_pia++ >= upd_pia) {
 			ecode = system("pgrep openvpn >& /dev/null");
-			icon = (ecode == 0) ? "P\uf17b  \n" : "P\n";
-			write_fifo(icon, fifo_fd);
+			icon = (ecode == 0) ? "P" PIA "  \n" : "P\n";
+			write_fifo(icon);
 			cnt_pia = 0;
 		}
 
@@ -236,13 +244,13 @@ int main(void)
 			waitpid(pid, &status, 0);
 
 			if (strstr(cmdout, "state UP") == NULL) {
-				icon = "X\uf119  \n";
+				icon = "X" FROWN "  \n";
 			} else {
 				ecode = system("ping -q -w 1 -c 1 google.com >& /dev/null");
-				icon = (ecode == 0) ? "X\uf118  \n" : "X\uf11a  \n";
+				icon = (ecode == 0) ? "X" SMILE "  \n" : "X" MEH "  \n";
 			}
 
-			write_fifo(icon, fifo_fd);
+			write_fifo(icon);
 			fclose(pipe_output);
 			cnt_net = 0;
 		}

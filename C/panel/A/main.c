@@ -10,17 +10,17 @@
 #include "A.h"
 #include "../panel.h"
 
+
 int 	cnt_pia = upd_pia,	cnt_batt = upd_batt,	cnt_net = upd_net,
-		cnt_upd = upd_upd,	cnt_dbox = upd_dbox,	cnt_vol = upd_vol,
-		cnt_mail = upd_mail;
+		cnt_upd = upd_upd,	cnt_dbox = upd_dbox,	cnt_mail = upd_mail;
 
 void err_ret(char *, int);
 void write_fifo(char *);
 
+
 int main(void)
 {
 	errno = 0;
-
 
 	// ----- Set constants based on hostname ------
 	char hostname[HNSIZE], *net_dev;
@@ -33,15 +33,7 @@ int main(void)
 		is_laptop = true;
 	}
 
-
-	// ----- Get FIFO Descriptor ------
-	const char *fifo_path = getenv("PANEL_FIFO");
-	struct stat sb;
-	if (stat(fifo_path, &sb) != 0 || !S_ISFIFO(sb.st_mode)) {
-		fifo_fd = mkfifo(fifo_path, 0666);
-	} else {
-		fifo_fd = open(fifo_path, O_RDWR);
-	}
+	set_fifo();
 
 
 	// ----- Loop Variable Declarations -----
@@ -61,9 +53,13 @@ int main(void)
 	int batt_nval;
 	char *batt_color, *batt_icon, full_batt_icon[30], *bolt;
 
-	// Volume
-	int volume;
-	char volume_icon[15], *dots[3];
+	// ----- Volume Initialization -----
+	pid = fork();
+	if (pid == 0) {
+		execl("/usr/local/bin/volume-panel-update", "volume-panel-update", (char *) NULL);
+	}
+
+	waitpid(pid, &status, 0);
 
 
 	// ----- Main Loop -----
@@ -137,76 +133,6 @@ int main(void)
 			write_fifo(full_batt_icon);
 			fclose(pipe_output);
 			cnt_batt = 0;
-		}
-
-		// Volume
-		if (cnt_vol++ >= upd_vol) {
-			// First Pipe CMD
-			pipe(pipefd);
-			pid = fork();
-			if (pid == 0) {
-				dup2(pipefd[1], STDOUT_FILENO);
-				execl("/usr/bin/amixer", "amixer", "get", "Master", (char *) NULL);
-			}
-
-			close(pipefd[1]);
-			waitpid(pid, &status, 0);
-
-			// Second Pipe CMD
-			pipe(pipefd + 2);
-			pid = fork();
-			char *sed_pttrn = "s/^.*\\[\\([0-9]\\+\\)%.*$/\\1/p";
-			if (pid == 0) {
-				close(pipefd[2]);
-				dup2(pipefd[0], STDIN_FILENO);
-				dup2(pipefd[3], STDOUT_FILENO);
-				execl("/usr/bin/sed", "sed", "-n", sed_pttrn, (char *) NULL);
-			}
-
-			close(pipefd[0]);
-			close(pipefd[3]);
-			pipe_output = fdopen(pipefd[2], "r");
-
-			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
-				err_ret("fgets error: volume", errno);
-
-			volume = (int) strtol(cmdout, NULL, 0);
-
-			waitpid(pid, &status, 0);
-
-			// Conditional Volume 'dots' Assignments
-			if (volume > 0) {
-				dots[0] = DOT;
-				if (volume > 33) {
-					dots[1] = DOT;
-					if (volume > 66) {
-						if (volume == 100) {
-							dots[0] = STAR;
-							dots[1] = STAR;
-							dots[2] = STAR;
-						} else {
-							dots[2] = DOT;
-						}
-					} else {
-						dots[2] = EDOT;
-					}
-				} else {
-					dots[1] = EDOT;
-					dots[2] = EDOT;
-				}
-			} else {
-				dots[0] = EDOT;
-				dots[1] = EDOT;
-				dots[2] = EDOT;
-			}
-
-
-			if (snprintf(volume_icon, 15, "V%s%s%s  \n", dots[0], dots[1], dots[2]) == 0)
-				fprintf(stderr, "volume: snprintf error");
-
-			write_fifo(volume_icon);
-			fclose(pipe_output);
-			cnt_vol = 0;
 		}
 
 		// Dropbox

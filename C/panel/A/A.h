@@ -1,5 +1,5 @@
 #ifndef A
-#define A 0
+#define A
 
 
 // ----- Libraries ------
@@ -19,7 +19,6 @@
 #define upd_net 8
 #define upd_upd 86400
 #define upd_dbox 5
-#define upd_vol 1
 #define upd_mail 15
 
 // Unicode Font Awesome Icons
@@ -38,7 +37,11 @@
 #define SMILE "\uf118"
 #define MEH "\uf11a"
 
+
+void set_fifo();
+
 int fifo_fd;
+
 
 // ----- Inline Function Definitions / Function Declarations ------
 inline void err_ret(char *restrict alterr, int err)

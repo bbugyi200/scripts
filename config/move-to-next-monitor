@@ -7,9 +7,9 @@ ALT_D="$?"
 
 N=$(bspc query --nodes --node focused.!hidden)
 focus-local "strict"
-bspc node $N -d "^$ALT_D"
 if [[ "$1" == "swap" ]]; then
     bspc monitor -f next
     move-to-next-monitor
 fi
+bspc node $N -d "^$ALT_D"
 bspc desktop -f "^$ALT_D"

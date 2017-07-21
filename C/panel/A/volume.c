@@ -5,22 +5,13 @@
 #include <errno.h>
 #include "A.h"
 
+
 #define NUM_OF_DOTS 5
 #define VOL_ICON_MAX 25
 
+
 void err_ret(char *, int);
 void write_fifo(char *);
-
-
-int volume;
-char volume_icon[VOL_ICON_MAX], *dots[NUM_OF_DOTS];
-
-pid_t pid = 0;
-int pipefd[4];
-FILE *pipe_output;
-int status;
-
-char *icon, cmdout[MAX_CMD];
 
 
 int main(int argc, char *argv[])
@@ -28,6 +19,16 @@ int main(int argc, char *argv[])
 	errno = 0;
 
 	set_fifo();
+
+	int volume;
+	char volume_icon[VOL_ICON_MAX], *dots[NUM_OF_DOTS];
+
+	pid_t pid = 0;
+	int pipefd[4];
+	FILE *pipe_output;
+	int status;
+
+	char *icon, cmdout[MAX_CMD];
 
 	// First Pipe CMD
 	pipe(pipefd);

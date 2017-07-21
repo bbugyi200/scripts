@@ -33,6 +33,7 @@ int main(void)
 		is_laptop = true;
 	}
 
+	// Sets fifo_fd
 	set_fifo();
 
 

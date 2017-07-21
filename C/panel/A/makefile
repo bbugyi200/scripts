@@ -10,9 +10,6 @@ vol-dev: volume.c A.c
 vol-prod: volume.c A.c
 	gcc -O2 -o ~/Dropbox/scripts/lemonbar/volume-panel-update volume.c A.c
 
-restart:
-	killall init_panel.sh && init_panel.sh &> /dev/null & disown
-
 test: a.out
 	./a.out
 

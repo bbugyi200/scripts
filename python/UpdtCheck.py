@@ -1,5 +1,4 @@
-""" UpdtCheck.py """
-
+#!/bin/python
 import os
 import sys
 from dateutil.parser import parse

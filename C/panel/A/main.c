@@ -69,7 +69,7 @@ int main(void)
 
 		// OS Update Checker
 		if (cnt_upd++ >= upd_upd) {
-			ecode = system("python ~/Dropbox/scripts/python/UpdtCheck.py");
+			ecode = system("~/Dropbox/scripts/python/UpdtCheck.py");
 			icon = (ecode == 0) ? "U\n" : "U" UPDT "  \n";
 			write_fifo(icon);
 			cnt_upd = 0;

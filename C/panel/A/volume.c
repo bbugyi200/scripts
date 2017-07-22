@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
 
 	close(pipefd[0]);
 	close(pipefd[3]);
+	waitpid(pid, &status, 0);
+
 	pipe_output = fdopen(pipefd[2], "r");
 
 	if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
@@ -61,7 +63,6 @@ int main(int argc, char *argv[])
 
 	volume = (int) strtol(cmdout, NULL, 0);
 
-	waitpid(pid, &status, 0);
 
 	int bin_size = 100 / NUM_OF_DOTS;
 	if (volume == 100) {

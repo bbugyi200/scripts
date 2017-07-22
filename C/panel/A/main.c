@@ -94,9 +94,9 @@ int main(void)
 			}
 
 			close(pipefd[1]);
-			pipe_output = fdopen(pipefd[0], "r");
-
 			waitpid(pid, &status, 0);
+
+			pipe_output = fdopen(pipefd[0], "r");
 
 			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
 				err_ret("fgets error: battery power-check", errno);
@@ -163,12 +163,13 @@ int main(void)
 			}
 
 			close(pipefd[1]);
+			waitpid(pid, &status, 0);
+
 			pipe_output = fdopen(pipefd[0], "r");
 
 			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
 				err_ret("fgets error: network", errno);
 
-			waitpid(pid, &status, 0);
 
 			if (strstr(cmdout, "state UP") == NULL) {
 				icon = "X" FROWN "  \n";

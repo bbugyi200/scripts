@@ -1,3 +1,5 @@
+#!/bin/python
+
 from dateutil.parser import parse
 from datetime import datetime, date, timedelta
 import sys
@@ -15,6 +17,9 @@ def calc_easter(year):
     month = f // 31
     day = f % 31 + 1    
     return date(year, month, day)
+
+def nth_day_holiday(start_day):
+    start = datetime.strptime(start_day, '%m/%d/%Y')
 
 
 now = datetime.now().date()

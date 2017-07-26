@@ -24,7 +24,8 @@ int main(void)
 
 	// ----- Set constants based on hostname ------
 	char hostname[HNSIZE], *net_dev;
-	gethostname(hostname, HNSIZE);
+	if (gethostname(hostname, HNSIZE) < 0)
+		fprintf(stderr, "%s\n", "gethostname error");
 	bool is_laptop = false;
 	if (strncmp(hostname, "athena", 6) == 0) {
 		net_dev = "enp2s0";

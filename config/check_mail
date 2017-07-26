@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # https://linuxconfig.org/check-your-gmail-inbox-for-new-emails-with-bash-script
-source <(gpg2 -dq ~/.my-pwds.gpg)
+source <(gpg2 -dq /home/bryan/.my-pwds.gpg)
 if [[ -z "$my_rutgers_pwd" ]]; then
     if [[ "$1" != '-q' ]]; then
         echo "Decryption Failed"

@@ -76,14 +76,6 @@ int main(void)
 			cnt_upd = 0;
 		}
 
-		// New Mail
-		if (cnt_mail++ >= upd_mail) {
-			ecode = system("check_mail -q");
-			icon = (ecode == 0) ? "M\n" : "M" MAIL "  \n";
-			write_fifo(icon);
-			cnt_mail = 0;
-		}
-
 		// Battery
 		if (cnt_batt++ >= upd_batt && is_laptop) {
 			pipe(pipefd);
@@ -182,6 +174,14 @@ int main(void)
 			write_fifo(icon);
 			fclose(pipe_output);
 			cnt_net = 0;
+		}
+
+		// New Mail
+		if (cnt_mail++ >= upd_mail) {
+			ecode = system("check_mail -q");
+			icon = (ecode == 0) ? "M\n" : "M" MAIL "  \n";
+			write_fifo(icon);
+			cnt_mail = 0;
 		}
 
 		// sleep_time =  (1 second) - (loop iteration time)

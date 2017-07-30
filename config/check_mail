@@ -13,11 +13,11 @@ password="$my_rutgers_pwd"
 subjects=$(curl -u $username:$password --silent "https://mail.google.com/mail/feed/atom" |  grep -oPm1 "(?<=<title>)[^<]+" | sed '1d')
 
 if [[ -z "$subjects" ]]; then
-    exit 0
+    exit 1
 else
     if [[ "$1" != '-q' ]]; then
         echo $subjects
     fi
 
-    exit 1
+    exit 0
 fi

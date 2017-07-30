@@ -18,11 +18,13 @@
 #define upd_batt 1
 #define upd_net 8
 #define upd_upd 86400
+#define upd_clean 86400
 #define upd_dbox 5
 #define upd_mail 15
 
 // Unicode Font Awesome Icons
 #define UPDT "\uf0aa"
+#define TRASH "\uf014"
 #define MAIL "\uf003"
 #define BOLT "\uf0e7"
 #define HBATT "\uf240"

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+printf "\nDo you really want to run \"$*\"?\n\n"
+select choice in yes no; do
+	if [[ "$choice" == "yes" ]]; then
+		printf "\nrunning: \"$*\"\n"
+		"$@"
+		exit 0
+	elif [[ "$choice" == "no" ]]; then
+		clear
+		exit 1
+	fi
+done

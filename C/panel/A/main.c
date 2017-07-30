@@ -12,7 +12,8 @@
 
 
 int 	cnt_pia = upd_pia,	cnt_batt = upd_batt,	cnt_net = upd_net,
-		cnt_upd = upd_upd,	cnt_dbox = upd_dbox,	cnt_mail = upd_mail;
+		cnt_upd = upd_upd,	cnt_dbox = upd_dbox,	cnt_mail = upd_mail,
+		cnt_clean = upd_clean;
 
 void err_ret(char *, int);
 void write_fifo(char *);
@@ -70,10 +71,18 @@ int main(void)
 
 		// OS Update Checker
 		if (cnt_upd++ >= upd_upd) {
-			ecode = system("~/Dropbox/scripts/python/UpdtCheck.py");
+			ecode = system("~/Dropbox/scripts/python/MaintChck.py --update");
 			icon = (ecode == 0) ? "U\n" : "U" UPDT "  \n";
 			write_fifo(icon);
 			cnt_upd = 0;
+		}
+
+		// Filesystem Cleanup Check
+		if (cnt_clean++ >= upd_clean) {
+			ecode = system("~/Dropbox/scripts/python/MaintChck.py --cleanup");
+			icon = (ecode == 0) ? "C\n" : "C" TRASH "  \n";
+			write_fifo(icon);
+			cnt_clean = 0;
 		}
 
 		// Battery
@@ -179,7 +188,7 @@ int main(void)
 		// New Mail
 		if (cnt_mail++ >= upd_mail) {
 			ecode = system("check_mail -q");
-			icon = (ecode == 0) ? "M\n" : "M" MAIL "  \n";
+			icon = (ecode == 0) ? "M" MAIL "  \n" : "M\n";
 			write_fifo(icon);
 			cnt_mail = 0;
 		}

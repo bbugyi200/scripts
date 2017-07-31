@@ -2,4 +2,5 @@
 
 printf "Screenshot Filename?: "
 read filename
+bspc node -g hidden
 scrot -s ~/Dropbox/Reference_Material/Receipts/$filename.png

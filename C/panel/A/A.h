@@ -21,6 +21,7 @@
 #define upd_clean 86400
 #define upd_dbox 5
 #define upd_mail 15
+#define upd_surf 10800
 
 // Unicode Font Awesome Icons
 #define UPDT "\uf0aa"
@@ -38,6 +39,7 @@
 #define FROWN "\uf119"
 #define SMILE "\uf118"
 #define MEH "\uf11a"
+#define DIAMOND "\uf219"
 
 
 void set_fifo();

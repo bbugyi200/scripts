@@ -22,7 +22,8 @@ if [[ $(hostname) == "athena" ]]; then
 	FONT_SIZE="12"
 fi
 
-~/Dropbox/scripts/lemonbar/panel_a &
+num_of_monitors=$(bspc query --monitors | wc -l)
+~/Dropbox/scripts/lemonbar/panel_a $num_of_monitors &
 
 panel_bar < "$PANEL_FIFO" | lemonbar -a 32 -n "$PANEL_WM_NAME" -g x$PANEL_HEIGHT -f "Inconsolata-$FONT_SIZE:Bold" -f "Font Awesome-$FONT_SIZE" -f "Font Awesome-14" -F "$COLOR_DEFAULT_FG" -B "$COLOR_DEFAULT_BG" | sh &
 

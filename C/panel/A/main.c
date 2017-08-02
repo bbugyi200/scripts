@@ -10,18 +10,27 @@
 #include "A.h"
 #include "../panel.h"
 
+#define BATT_ICON_MAX 30
+#define SURF_ICON_MAX 50
 
-int 	cnt_pia = upd_pia,	cnt_batt = upd_batt,	cnt_net = upd_net,
-		cnt_upd = upd_upd,	cnt_dbox = upd_dbox,	cnt_mail = upd_mail,
-		cnt_clean = upd_clean;
+
+int 	cnt_pia = upd_pia,		cnt_batt = upd_batt,	cnt_net = upd_net,
+		cnt_upd = upd_upd,		cnt_dbox = upd_dbox,	cnt_mail = upd_mail,
+		cnt_clean = upd_clean,	cnt_surf = upd_surf;
 
 void err_ret(char *, int);
 void write_fifo(char *);
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	errno = 0;
+	if (argc < 2) {
+		fprintf(stderr, "syntax: %s num_of_monitors\n", argv[0]);
+	}
+
+	int num_of_monitors = (int) strtol(argv[1], NULL, 0);
+	bool multi_mon = (num_of_monitors > 1) ? true : false;
 
 	// ----- Set constants based on hostname ------
 	char hostname[HNSIZE], *net_dev;
@@ -54,7 +63,13 @@ int main(void)
 
 	// Battery
 	int batt_nval;
-	char *batt_color, *batt_icon, full_batt_icon[30], *bolt;
+	char *batt_color, *batt_icon, full_batt_icon[BATT_ICON_MAX], *bolt;
+
+	// Surf
+	int labels[3];
+	char *colors[3];
+	char full_surf_icon[SURF_ICON_MAX];
+	
 
 	// ----- Volume Initialization -----
 	pid = fork();
@@ -130,8 +145,8 @@ int main(void)
 				batt_icon = LBATT;
 			}
 
-			if (snprintf(full_batt_icon, 30, "B%%{F%s}%s%s %d%%  \n", batt_color,
-						bolt, batt_icon, batt_nval) == 0)
+			if (snprintf(full_batt_icon, BATT_ICON_MAX, "B%%{F%s}%s%s %d%%  \n", batt_color,
+						bolt, batt_icon, batt_nval) < 0)
 				fprintf(stderr, "battery: snprintf error");
 			write_fifo(full_batt_icon);
 			fclose(pipe_output);
@@ -191,6 +206,36 @@ int main(void)
 			icon = (ecode == 0) ? "M" MAIL "  \n" : "M\n";
 			write_fifo(icon);
 			cnt_mail = 0;
+		}
+
+		// Surf Check
+		if (cnt_surf++ >= upd_surf && multi_mon) {
+			ecode = system("~/Dropbox/scripts/python/SurfCheck.py");
+			ecode = ecode / 256;  // 'system' returns multiple of 256
+			labels[0] = ecode / 100; ecode = ecode - 100*labels[0];
+			labels[1] = ecode / 10; ecode = ecode - 10*labels[1];
+			labels[2] = ecode;
+
+			for (int i = 0; i < 3; ++i) {
+				switch (labels[i]) {
+					case 0:
+						colors[i] = RED;
+						break;
+					case 1:
+						colors[i] = YELLOW;
+						break;
+					case 2:
+						colors[i] = GREEN;
+						break;
+					default:
+						colors[i] = WHITE;
+				}
+			}
+			if (snprintf(full_surf_icon, SURF_ICON_MAX, "Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n",
+						 colors[0], colors[1], colors[2]) < 0) 
+				perror("snprintf");
+			write_fifo(full_surf_icon);
+			cnt_surf = 0;
 		}
 
 		// sleep_time =  (1 second) - (loop iteration time)

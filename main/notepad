@@ -1,0 +1,7 @@
+#!/bin/bash
+base=$(basename $1)
+fpath="/home/bryan/Dropbox/notes/study/${base%pdf}txt"
+border="---------------------------------------------------------------------------" 
+printf "%s\n\n" $border >> $fpath
+bspc node -p south -o 0.8
+termite --class="notepad" --title="notepad" -e "vim $fpath"

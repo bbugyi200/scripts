@@ -11,13 +11,10 @@ int get_focused_desktop(void) {
 
 int count_titles(char *title)
 {
-	FILE *po = popen("wmctrl -l", "r");
-	char line[200], *linep;
+	FILE *po = popen("wmctrl -lx", "r");
+	char line[500], *linep;
 	int count = 0;
-	while (fgets(line, 200, po) != NULL) {
-		linep = line;
-		while ((*linep++ = tolower(*linep)))
-			;
+	while (fgets(line, 500, po) != NULL) {
 		if (strstr(line, title) != NULL)
 			count++;
 	}

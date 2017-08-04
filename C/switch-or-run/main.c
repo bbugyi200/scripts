@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 				system(full_cmd);
 			}
 			else {
-				char wmctrl_cmd[] = "wmctrl -a ";
+				char wmctrl_cmd[100] = "wmctrl -xa ";
 				system(strcat(wmctrl_cmd, windowp->name));
 			}
 			break;

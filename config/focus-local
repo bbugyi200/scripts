@@ -1,8 +1,8 @@
 #!/bin/bash
 
 current_desktop=$(wmctrl -d | grep "*" | cut -d ' ' -f1)
-mult_locals_exist=$(wmctrl -l | grep -v "scratchpad" | tr -s ' ' | cut -d ' ' -f2 | grep $current_desktop | wc -l)
-if [[ "$mult_locals_exist" -ge 2 ]]; then
+n_locals_exist=$(wmctrl -l | grep -v "scratchpad" | tr -s ' ' | cut -d ' ' -f2 | grep $current_desktop | wc -l)
+if [[ "$n_locals_exist" -ge 2 ]]; then
 	bspc node -f next.local
 else
     bspc desktop -f next.occupied.local

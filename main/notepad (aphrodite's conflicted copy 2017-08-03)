@@ -1,4 +1,0 @@
-#!/bin/bash
-base=$(basename $1)
-bspc node -p south -o 0.8
-termite -t "notepad" -e "vim /home/bryan/Dropbox/notes/Study/${base%pdf}txt"

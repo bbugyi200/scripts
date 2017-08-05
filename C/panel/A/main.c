@@ -231,9 +231,12 @@ int main(int argc, char *argv[])
 						colors[i] = WHITE;
 				}
 			}
-			if (snprintf(full_surf_icon, SURF_ICON_MAX, "Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n",
-						 colors[0], colors[1], colors[2]) < 0) 
+			if (snprintf(full_surf_icon,
+					SURF_ICON_MAX,
+					"Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n",
+					colors[0], colors[1], colors[2]) < 0) 
 				perror("snprintf");
+
 			write_fifo(full_surf_icon);
 			cnt_surf = 0;
 		}

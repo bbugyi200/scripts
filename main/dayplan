@@ -5,14 +5,16 @@
 ### Constants
 DIR=~/Dropbox/notes/Dayplan
 DAY_FILE=$DIR/dayplan.txt
+YESTERDAY_FILE=$DIR/yesterday.txt
 DATE_FILE=$DIR/date.txt
 WEEK_FILE=$DIR/weekplan.txt
 SCRATCH_FILE=$DIR/scratch.txt
+ARG="$1"
 
 
 ### Set NEW Flag (1 or 0)
 DATE="$(cat $DATE_FILE)"
-if [[ "$DATE" != "$(date +'%m/%d/%Y')" ]]; then
+if [ "$DATE" != "$(date +'%m/%d/%Y')" ] && [ "$ARG" != "--static" ]; then
 	NEW=1
 	DATE_DIFF_SECS=$(($(date -d "$(date +%m/%d/%Y)" +%s) - $(date -d "$DATE" +%s)))
 	DATE_DIFF=$(($DATE_DIFF_SECS / 86400))
@@ -34,12 +36,13 @@ fi
 
 
 ### Handles Program Arguments
-if [ "$1" == '--new' -o "$1" == '-n' -o $NEW == 1 ]; then
+if [ "$ARG" == '--new' -o "$ARG" == '-n' -o $NEW == 1 ]; then
 
 	# Update date.txt
 	echo "$(date +'%m/%d/%Y')" > $DATE_FILE
 
 	# dayplan.txt modifications
+	cp "$DAY_FILE" "$YESTERDAY_FILE"
 	sed -i -e "2,$ d" "$DAY_FILE"
 	for ((i=0; i<=16; i++)); do
 		printf "$(date +'%I:00%p' --date="$i hours") - \n" >> "$DAY_FILE"
@@ -56,13 +59,13 @@ if [ "$1" == '--new' -o "$1" == '-n' -o $NEW == 1 ]; then
 		date -d "$((N - 1)) days" +"%m/%d/%Y - " >> "$WEEK_FILE"
 	done
 
-elif [ "$1" == '--collapse' -o "$1" == '-c' ]; then
+elif [ "$ARG" == '--collapse' -o "$ARG" == '-c' ]; then
 	sed -i '/-\s*$/d' $DAY_FILE
 fi
 
 
 ### Vim
-if [[ NEW -eq 1 ]]; then
+if [ $NEW -eq 1 ] && [ "$ARG" != "--static" ]; then
 	vim ~/Dropbox/notes/Onething/{body.txt,mind.txt,spirit.txt} && vim $DAY_FILE && dayplan -c
 else
 	vim -c "silent! argdo set eventignore-=Syntax | set nospell | bnext" $DAY_FILE $WEEK_FILE $SCRATCH_FILE

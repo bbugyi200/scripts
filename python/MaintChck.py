@@ -15,11 +15,6 @@ if sys.argv[1] == "--update":
     last_updt = parse(date_str)
     delta = datetime.today() - last_updt
 
-    print(delta.days)
-    if delta.days >= MAX:
-        sys.exit(1)
-    else:
-        sys.exit(0)
 
 elif sys.argv[1] == "--cleanup":
     MAX=30
@@ -28,7 +23,8 @@ elif sys.argv[1] == "--cleanup":
     last_clean = parse(date_str)
     delta = datetime.today() - last_clean
 
-    if delta.days >= MAX:
-        sys.exit(1)
-    else:
-        sys.exit(0)
+
+if delta.days >= MAX:
+    sys.exit(1)
+else:
+    sys.exit(0)

@@ -1,5 +1,5 @@
-#ifndef A
-#define A
+#ifndef POLL
+#define POLL 0
 
 
 // ----- Libraries ------
@@ -8,7 +8,7 @@
 
 
 // ----- Definitions -----
-#define MAX_CMD 200
+#define MAX_CMD 300
 #define BILLION 1000000000L
 #define NEVER_DAY 3456000
 #define HNSIZE 10
@@ -21,7 +21,7 @@
 #define upd_clean 86400
 #define upd_dbox 5
 #define upd_mail 15
-#define upd_surf 10800
+#define upd_surf 3600
 
 // Unicode Font Awesome Icons
 #define UPDT "\uf0aa"
@@ -42,8 +42,7 @@
 #define DIAMOND "\uf219"
 
 
-void set_fifo();
-
+const char *fifo_path = "/tmp/panel-fifo";
 int fifo_fd;
 
 
@@ -59,4 +58,4 @@ inline void write_fifo(char *restrict icon)
 	write(fifo_fd, icon, strlen(icon));;
 }
 
-#endif /* ifndef A */
+#endif /* ifndef POLL */

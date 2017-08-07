@@ -3,7 +3,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <errno.h>
-#include "A.h"
+#include <fcntl.h>
+#include "poll.h"
 
 
 #define NUM_OF_DOTS 5
@@ -13,12 +14,11 @@
 void err_ret(char *, int);
 void write_fifo(char *);
 
+extern int fifo_fd;
 
 int main(int argc, char *argv[])
 {
-	errno = 0;
-
-	set_fifo();
+	fifo_fd = open(fifo_path, O_RDWR);
 
 	int volume;
 	char volume_icon[VOL_ICON_MAX], *dots[NUM_OF_DOTS];

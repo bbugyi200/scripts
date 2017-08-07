@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/wait.h>
-#include "A.h"
+#include "poll.h"
 #include "../panel.h"
 
 #define BATT_ICON_MAX 30
@@ -21,15 +21,42 @@ int 	cnt_pia = upd_pia,		cnt_batt = upd_batt,	cnt_net = upd_net,
 void err_ret(char *, int);
 void write_fifo(char *);
 
+extern int fifo_fd;
 
 int main(int argc, char *argv[])
 {
-	errno = 0;
-	if (argc < 2) {
-		fprintf(stderr, "syntax: %s num_of_monitors\n", argv[0]);
+	fifo_fd = open(fifo_path, O_RDWR);
+
+	// Pipe Variables
+	int pipefd[2];
+	pid_t pid;
+	FILE *pipe_output;
+	char cmdout[MAX_CMD];
+
+
+	// ----- Sets 'multi_mon' -----
+	pipe(pipefd);
+	if ((pid = fork()) < 0)
+		perror(argv[0]);
+	else if (pid == 0) {
+		close(pipefd[0]);
+		dup2(pipefd[1], STDOUT_FILENO);
+		execl("/usr/bin/bspc", "bspc", "query", "--monitors", (char *)NULL);
 	}
 
-	int num_of_monitors = (int) strtol(argv[1], NULL, 0);
+	close(pipefd[1]);
+	waitpid(pid, NULL, 0);
+
+	pipe_output = fdopen(pipefd[0], "r");
+
+	errno = 0;
+	int num_of_monitors;
+	while (fgets(cmdout, MAX_CMD, pipe_output) != NULL) {
+		num_of_monitors++;
+	}
+	if (errno)
+		perror(argv[0]);
+
 	bool multi_mon = (num_of_monitors > 1) ? true : false;
 
 	// ----- Set constants based on hostname ------
@@ -44,22 +71,13 @@ int main(int argc, char *argv[])
 		is_laptop = true;
 	}
 
-	// Sets fifo_fd
-	set_fifo();
-
 
 	// ----- Loop Variable Declarations -----
 	// General
 	int ecode;
 	u_int64_t diff;
 	struct timespec start, end, sleep_time;
-	char *icon, cmdout[MAX_CMD];
-
-	// Pipes
-	pid_t pid = 0;
-	int pipefd[4];
-	FILE *pipe_output;
-	int status;
+	char *icon;
 
 	// Battery
 	int batt_nval;
@@ -77,7 +95,7 @@ int main(int argc, char *argv[])
 		execl("/usr/local/bin/volume-panel-update", "volume-panel-update", (char *) NULL);
 	}
 
-	waitpid(pid, &status, 0);
+	waitpid(pid, NULL, 0);
 
 
 	// ----- Main Loop -----
@@ -111,7 +129,7 @@ int main(int argc, char *argv[])
 			}
 
 			close(pipefd[1]);
-			waitpid(pid, &status, 0);
+			waitpid(pid, NULL, 0);
 
 			pipe_output = fdopen(pipefd[0], "r");
 
@@ -180,7 +198,7 @@ int main(int argc, char *argv[])
 			}
 
 			close(pipefd[1]);
-			waitpid(pid, &status, 0);
+			waitpid(pid, NULL, 0);
 
 			pipe_output = fdopen(pipefd[0], "r");
 

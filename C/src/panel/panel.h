@@ -1,6 +1,12 @@
 #ifndef PANEL
 #define PANEL 0
 
+#include <stdio.h>
+#include <string.h>
+#include <sys/syslog.h>
+
+#define MAX_CMD 300
+
 // Colors
 #define GREEN "#0BF816"
 #define YELLOW "#EBEE27"
@@ -33,5 +39,21 @@
 #define COLOR_TITLE_BG "#333232"
 #define COLOR_SYS_FG "#b1a57d"
 #define COLOR_SYS_BG "#333232"
+
+int fifo_fd;
+const char *fifo_path = "/tmp/panel-fifo";
+
+inline void write_fifo(char *restrict icon)
+{
+	write(fifo_fd, icon, strlen(icon));;
+}
+
+void
+err_ext(const char *cmd)
+{
+	syslog(LOG_ERR, "%s - %m", cmd);
+	exit(1);
+}
+
 
 #endif /* ifndef PANEL */

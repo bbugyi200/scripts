@@ -6,7 +6,6 @@
 #include <signal.h>
 #include <wait.h>
 #include <sys/stat.h>
-#include <sys/syslog.h>
 #include "daemonize.h"
 #include "../panel.h"
 
@@ -19,11 +18,20 @@ void set_fifo(int *);
 void err_ext(const char *);
 
 const char *flpath = "/home/bryan/.panel.pid";
-const char *fifo_path = "/tmp/panel-fifo";
 
 int
 main(int argc, char *argv[])
 {
+	// ----- Check pid File -----
+	int fd = open(flpath, OFLAGS, OMODE);
+
+	if (fd < 0)
+		err_ext("open");
+
+	if (lockf(fd, F_TLOCK, 0) < 0) {
+		fprintf(stderr, "%s\n", "The panel is already running!");
+		_exit(1);
+	}
 
 	// ----- Daemonize this Process -----
 	daemonize(argv[0]);
@@ -46,26 +54,28 @@ main(int argc, char *argv[])
 		err_ext("sigaction");
 
 	// ----- Lock pid File -----
-	int fd = open(flpath, OFLAGS, OMODE);
+	fd = open(flpath, OFLAGS, OMODE);
 
 	if (fd < 0)
 		err_ext("open");
 
 	if (lockf(fd, F_TLOCK, 0) < 0) {
-		fprintf(stderr, "%s\n", "The panel is already running!");
+		syslog(LOG_ERR, "%s\n", "The panel is already running!");
 		_exit(1);
 	}
 
 	dprintf(fd, "%d", getpid());
 
 	// ----- Fork Child Processes -----
-	int fifo_fd, pid, pipefd[2];
-	char hostname[10], *font_size;
+	pid_t pid;
+	int fifo_fd, pipefd[2];
 	set_fifo(&fifo_fd);
 
-	/* if (gethostname(hostname, 10) < 0) */
-	/* 	err_ext(argv[0]); */
-	/* font_size = (strncmp(hostname, "athena", 6) == 0) ? "12" : "10"; */
+	char hostname[10];
+	int font_size;
+	if (gethostname(hostname, 10) < 0)
+		err_ext("gethostname");
+	font_size = (strncmp(hostname, "athena", 6) == 0) ? 12 : 10;
 	
 
 	if (system("bspc config top_padding 24") != 0)
@@ -93,6 +103,16 @@ main(int argc, char *argv[])
 		execl("/usr/local/bin/panel-poll", "panel-poll", (char *)NULL);
 	}
 
+	// Volume Initialization
+	if ((pid = fork()) < 0)
+		err_ext("fork");
+	else if (pid == 0) {
+		execl("/usr/local/bin/volume-panel-update", "volume-panel-update", (char *) NULL);
+	}
+
+	waitpid(pid, NULL, 0);
+
+
 	pipe(pipefd);
 	if ((pid = fork()) < 0)
 		err_ext("fork");
@@ -103,11 +123,17 @@ main(int argc, char *argv[])
 		execl("/bin/sh", "sh", "/usr/local/bin/panel_bar", (char *)NULL);
 	}
 
+	char inconsolata[30], font_awesome[20];
+	if (sprintf(inconsolata, "Inconsolata-%d:Bold", font_size) < 0)
+		err_ext("sprintf");
+	if (sprintf(font_awesome, "Font Awesome-%d", font_size) < 0)
+		err_ext("sprintf");
+
 	if ((pid = fork()) < 0)
 		err_ext("fork");
 	else if (pid == 0) {
 		dup2(pipefd[0], STDIN_FILENO);
-		execl("/usr/bin/lemonbar", "lemonbar", "-a32", "-gx24", "-fInconsolata-12:Bold", "-f", "Font Awesome-12", "-f", "Font Awesome-14", "-F" COLOR_DEFAULT_FG, "-B" COLOR_DEFAULT_BG, (char *)NULL);
+		execl("/usr/bin/lemonbar", "lemonbar", "-a32", "-gx24", "-f", inconsolata, "-f", font_awesome, "-f", "Font Awesome-14", "-F" COLOR_DEFAULT_FG, "-B" COLOR_DEFAULT_BG, (char *)NULL);
 	}
 
 	close(pipefd[1]);
@@ -127,13 +153,6 @@ exith(void)
 	unlink(flpath);
 	printf("\n\n%s\n", "Goodbye Cruel World!");
 	kill(0, SIGTERM);
-}
-
-void
-err_ext(const char *cmd)
-{
-	syslog(LOG_ERR, "%s: %m", cmd);
-	exit(1);
 }
 
 void

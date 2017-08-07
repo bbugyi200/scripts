@@ -4,19 +4,21 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include "poll.h"
-
+#include "../panel.h"
 
 #define NUM_OF_DOTS 5
 #define VOL_ICON_MAX 25
+#define EDOT "\u25e6"
+#define DOT "\u2022"
+#define STAR "\u2605"
 
-
-void err_ret(char *, int);
+void err_ext(const char *);
 void write_fifo(char *);
 
 extern int fifo_fd;
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 	fifo_fd = open(fifo_path, O_RDWR);
 
@@ -59,7 +61,7 @@ int main(int argc, char *argv[])
 	pipe_output = fdopen(pipefd[2], "r");
 
 	if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
-		err_ret("fgets error: volume", errno);
+		err_ext("fgets");
 
 	volume = (int) strtol(cmdout, NULL, 0);
 

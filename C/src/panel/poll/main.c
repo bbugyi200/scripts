@@ -18,7 +18,7 @@ int 	cnt_pia = upd_pia,		cnt_batt = upd_batt,	cnt_net = upd_net,
 		cnt_upd = upd_upd,		cnt_dbox = upd_dbox,	cnt_mail = upd_mail,
 		cnt_clean = upd_clean,	cnt_surf = upd_surf;
 
-void err_ret(char *, int);
+void err_ext(const char *);
 void write_fifo(char *);
 
 extern int fifo_fd;
@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
 	}
 	if (errno)
 		perror(argv[0]);
+	fclose(pipe_output);
 
 	bool multi_mon = (num_of_monitors > 1) ? true : false;
 
@@ -88,15 +89,6 @@ int main(int argc, char *argv[])
 	char *colors[3];
 	char full_surf_icon[SURF_ICON_MAX];
 	
-
-	// ----- Volume Initialization -----
-	pid = fork();
-	if (pid == 0) {
-		execl("/usr/local/bin/volume-panel-update", "volume-panel-update", (char *) NULL);
-	}
-
-	waitpid(pid, NULL, 0);
-
 
 	// ----- Main Loop -----
 	for(;;) {
@@ -134,7 +126,7 @@ int main(int argc, char *argv[])
 			pipe_output = fdopen(pipefd[0], "r");
 
 			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
-				err_ret("fgets error: battery power-check", errno);
+				err_ext("fgets");
 
 			if (strstr(cmdout, "Discharging") == NULL)
 				bolt = BOLT " ";
@@ -203,7 +195,7 @@ int main(int argc, char *argv[])
 			pipe_output = fdopen(pipefd[0], "r");
 
 			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
-				err_ret("fgets error: network", errno);
+				err_ext("fgets");
 
 
 			if (strstr(cmdout, "state UP") == NULL) {

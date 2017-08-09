@@ -1,68 +1,85 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "switch.h"
-
 
 int main(int argc, char *argv[])
 {
-	WIN window, *windowp = &window;
+	// Test Arguments
+	/* char **argv = malloc(4 * sizeof(char *)); */
+	/* for (int i = 0; i < 4; ++i) { */
+	/* 	argv[i] = malloc(255 * sizeof(char)); */
+	/* } */
 
+	/* strcpy(argv[1], "okular.okular:zathura.Zathura"); */
+	/* strcpy(argv[2], "okular:zathura"); */
+	/* strcpy(argv[3], "3"); */
 
-	// Validate arguments
-	if (argc < 4) {
-		fprintf(stderr, "%s\n%s\n", "ERROR: Not enough arguments!",
-				"switch-or-run {win-title} {app-init-cmd} {desktop#}");
-		return 1;
-	}
+	/* strcpy(argv[1], "google-chrome.Google-chrome"); */
+	/* strcpy(argv[2], "google-chrome-stable"); */
+	/* strcpy(argv[3], "2"); */
 
 	// Assign arguments from argv
-	windowp->name = *++argv;
-	windowp->cmd = *++argv;
-	windowp->desktop = (*++argv)[0] - '0';
-	windowp->alt_desktop = (windowp->desktop + 5) % 10;
+	char *target = argv[1];
+	char alt_target[ALT_MAX], alt_cmd[ALT_MAX];
+	strcpy(alt_target, target);
+	char *cmd = argv[2];
+	strcpy(alt_cmd, cmd);
+	int desktop = argv[3][0] - '0';
+	int alt_desktop = (desktop + 5) % 10;
 
-	int num_open = count_titles(windowp->name);
+	getalt(target, alt_target);
+	getalt(cmd, alt_cmd);
+
+	target_data tdata = get_target_data(target, alt_target);
+
 	int focused_desktop = get_focused_desktop();
 
-	char full_cmd[50];
-	int dt, main_focused, alt_focused;
+	char full_cmd[50], *next_cmd = cmd, *next_target = alt_target;
+	int next_desktop = desktop;
+	bool main_focused, alt_focused, target_focused;
+	main_focused = (desktop == focused_desktop);
+	alt_focused = (alt_desktop == focused_desktop);
+	target_focused = (tdata.desktop == focused_desktop);
 
+	// This assignment for next_desktop is valid for MAIN, ALT, and BOTH cases,
+	// but not for case NONE.
+	if (main_focused) {
+		next_desktop = alt_desktop;
+	} else {
+		next_desktop = desktop;
+	}
 
-	// The following assignments make clear whether or not the primary or
-	// alternate desktops are focused.
-	//
-	// If so, dt represents the desktop # of the next TARGET desktop
-	main_focused = windowp->desktop == focused_desktop ? windowp->alt_desktop : 0;
-	alt_focused = windowp->alt_desktop == focused_desktop ? windowp->desktop : 0;
-	dt = main_focused ? main_focused : alt_focused;
-	switch (num_open) {
-		case 0:
+	const char *fmt = "bspc rule -a \"*:*\" -o desktop=^%d && %s &> /dev/null & bspc desktop -f ^%d";
+	char *bspc_fmt = "bspc desktop -f ^%d";
+	char bspc_cmd[strlen(bspc_fmt) + 1];
+	switch (tdata.status) {
+		case NONE:
 			if (focused_desktop >= 6) {
-				dt = windowp->alt_desktop;
+				next_desktop = alt_desktop;
 			} else {
-				dt = windowp->desktop;
+				next_desktop = desktop;
 			}
 
-			get_full_cmd(windowp->cmd, full_cmd, dt);
+			sprintf(full_cmd, fmt, next_desktop, cmd, next_desktop);
 			system(full_cmd);
 			break;
-		case 1:
-			if (dt) {
-				get_full_cmd(windowp->cmd, full_cmd, dt);
+		case MAIN:
+			next_cmd = alt_cmd;
+			next_target = target;
+		case ALT:
+			if (target_focused) {
+				sprintf(full_cmd, fmt, next_desktop, next_cmd, next_desktop);
 				system(full_cmd);
 			}
 			else {
 				char wmctrl_cmd[100] = "wmctrl -xa ";
-				system(strcat(wmctrl_cmd, windowp->name));
+				system(strcat(wmctrl_cmd, next_target));
 			}
 			break;
-		case 2:
+		case BOTH:
 		default:
-			dt = dt ? dt : windowp->desktop;
-			char *bspc_fmt = "bspc desktop -f ^%d";
-			char bspc_cmd[strlen(bspc_fmt)];
-			sprintf(bspc_cmd, bspc_fmt, dt);
+			sprintf(bspc_cmd, bspc_fmt, next_desktop);
 			system(bspc_cmd);
 			break;
 	}

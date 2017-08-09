@@ -23,6 +23,7 @@ int
 main(int argc, char *argv[])
 {
 	// ----- Check pid File -----
+	// Last chance to get printable output to the user.
 	int fd = open(flpath, OFLAGS, OMODE);
 
 	if (fd < 0)
@@ -54,6 +55,8 @@ main(int argc, char *argv[])
 		err_ext("sigaction");
 
 	// ----- Lock pid File -----
+	// This must be redone because file descriptors are destroyed by the
+	// daemonize function.
 	fd = open(flpath, OFLAGS, OMODE);
 
 	if (fd < 0)
@@ -68,7 +71,7 @@ main(int argc, char *argv[])
 
 	// ----- Fork Child Processes -----
 	pid_t pid;
-	int fifo_fd, pipefd[2];
+	int fifo_fd;
 	set_fifo(&fifo_fd);
 
 	char hostname[10];
@@ -79,7 +82,7 @@ main(int argc, char *argv[])
 	
 
 	if (system("bspc config top_padding 24") != 0)
-		fprintf(stderr, "%s\n", "'bspc config' failed");
+		syslog(LOG_ERR, "%s\n", "'bspc config' failed");
 
 
 	if ((pid = fork()) < 0)
@@ -96,7 +99,6 @@ main(int argc, char *argv[])
 		execl("/usr/bin/clock", "clock", "-sf", "S%A, %B %d %Y   %I:%M%p", (char *)NULL);
 	}
 
-
 	if ((pid = fork()) < 0)
 		err_ext("fork");
 	else if (pid == 0) {
@@ -110,9 +112,7 @@ main(int argc, char *argv[])
 		execl("/usr/local/bin/volume-panel-update", "volume-panel-update", (char *) NULL);
 	}
 
-	waitpid(pid, NULL, 0);
-
-
+	int pipefd[4];
 	pipe(pipefd);
 	if ((pid = fork()) < 0)
 		err_ext("fork");
@@ -129,14 +129,26 @@ main(int argc, char *argv[])
 	if (sprintf(font_awesome, "Font Awesome-%d", font_size) < 0)
 		err_ext("sprintf");
 
+	pipe(pipefd + 2);
 	if ((pid = fork()) < 0)
 		err_ext("fork");
 	else if (pid == 0) {
+		close(pipefd[2]);
 		dup2(pipefd[0], STDIN_FILENO);
+		dup2(pipefd[3], STDOUT_FILENO);
 		execl("/usr/bin/lemonbar", "lemonbar", "-a32", "-gx24", "-f", inconsolata, "-f", font_awesome, "-f", "Font Awesome-14", "-F" COLOR_DEFAULT_FG, "-B" COLOR_DEFAULT_BG, (char *)NULL);
 	}
 
+	// For areas of the bar to be clickable, lemonbar must be piped to 'sh'
+	if ((pid = fork()) < 0)
+		perror("fork");
+	else if (pid == 0) {
+		dup2(pipefd[2], STDIN_FILENO);
+		execl("/bin/sh", "sh");
+	}
+
 	close(pipefd[1]);
+	close(pipefd[3]);
 	waitpid(pid, NULL, 0);
 	exit(3);
 }
@@ -151,7 +163,6 @@ void
 exith(void)
 {
 	unlink(flpath);
-	printf("\n\n%s\n", "Goodbye Cruel World!");
 	kill(0, SIGTERM);
 }
 

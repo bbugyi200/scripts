@@ -5,7 +5,8 @@
 
 int main(int argc, char *argv[])
 {
-	// Test Arguments
+	// ----- Test Arguments -----
+	
 	/* char **argv = malloc(4 * sizeof(char *)); */
 	/* for (int i = 0; i < 4; ++i) { */
 	/* 	argv[i] = malloc(255 * sizeof(char)); */
@@ -19,40 +20,46 @@ int main(int argc, char *argv[])
 	/* strcpy(argv[2], "google-chrome-stable"); */
 	/* strcpy(argv[3], "2"); */
 
-	// Assign arguments from argv
+	// ----- argv assignments -----
 	char *target = argv[1];
 	char alt_target[ALT_MAX], alt_cmd[ALT_MAX];
-	strcpy(alt_target, target);
 	char *cmd = argv[2];
-	strcpy(alt_cmd, cmd);
 	int desktop = argv[3][0] - '0';
 	int alt_desktop = (desktop + 5) % 10;
 
+	strcpy(alt_target, target);
+	strcpy(alt_cmd, cmd);
 	getalt(target, alt_target);
 	getalt(cmd, alt_cmd);
 
+	// ----- Data Assignments needed for Switch logic -----
 	target_data tdata = get_target_data(target, alt_target);
+
+	const char *fmt = "bspc rule -a \"*:*\" -o desktop=^%d && %s &> /dev/null & bspc desktop -f ^%d";
+	const char *bspc_fmt = "bspc desktop -f ^%d";
+
+	// next_target and next_cmd are preset for ALT
+	char full_cmd[50],
+		 *next_cmd = cmd,
+		 *next_target = alt_target,
+		 bspc_cmd[strlen(bspc_fmt) + 1];
 
 	int focused_desktop = get_focused_desktop();
 
-	char full_cmd[50], *next_cmd = cmd, *next_target = alt_target;
-	int next_desktop = desktop;
-	bool main_focused, alt_focused, target_focused;
-	main_focused = (desktop == focused_desktop);
-	alt_focused = (alt_desktop == focused_desktop);
-	target_focused = (tdata.desktop == focused_desktop);
+	bool main_focused = (desktop == focused_desktop),
+		 alt_focused = (alt_desktop == focused_desktop),
+		 target_focused = (tdata.desktop == focused_desktop);
 
 	// This assignment for next_desktop is valid for MAIN, ALT, and BOTH cases,
 	// but not for case NONE.
+	int next_desktop;
 	if (main_focused) {
 		next_desktop = alt_desktop;
 	} else {
 		next_desktop = desktop;
 	}
 
-	const char *fmt = "bspc rule -a \"*:*\" -o desktop=^%d && %s &> /dev/null & bspc desktop -f ^%d";
-	char *bspc_fmt = "bspc desktop -f ^%d";
-	char bspc_cmd[strlen(bspc_fmt) + 1];
+	// ----- Switch Logic -----
 	switch (tdata.status) {
 		case NONE:
 			if (focused_desktop >= 6) {
@@ -78,7 +85,6 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case BOTH:
-		default:
 			sprintf(bspc_cmd, bspc_fmt, next_desktop);
 			system(bspc_cmd);
 			break;

@@ -48,12 +48,4 @@ inline void write_fifo(char *restrict icon)
 	write(fifo_fd, icon, strlen(icon));;
 }
 
-void
-err_ext(const char *cmd)
-{
-	syslog(LOG_ERR, "%s - %m", cmd);
-	exit(1);
-}
-
-
 #endif /* ifndef PANEL */

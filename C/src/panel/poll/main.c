@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/wait.h>
+#include "errorwraps.h"
 #include "poll.h"
 #include "../panel.h"
 
@@ -18,7 +19,6 @@ int 	cnt_pia = upd_pia,		cnt_batt = upd_batt,	cnt_net = upd_net,
 		cnt_upd = upd_upd,		cnt_dbox = upd_dbox,	cnt_mail = upd_mail,
 		cnt_clean = upd_clean,	cnt_surf = upd_surf;
 
-void err_ext(const char *);
 void write_fifo(char *);
 
 extern int fifo_fd;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	// ----- Set constants based on hostname ------
 	char hostname[HNSIZE], *net_dev;
 	if (gethostname(hostname, HNSIZE) < 0)
-		fprintf(stderr, "%s\n", "gethostname error");
+		log_sys("gethostname");
 	bool is_laptop = false;
 	if (strncmp(hostname, "athena", 6) == 0) {
 		net_dev = "enp2s0";
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 			pipe_output = fdopen(pipefd[0], "r");
 
 			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
-				err_ext("fgets");
+				log_sys("fgets");
 
 			if (strstr(cmdout, "Discharging") == NULL)
 				bolt = BOLT " ";
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
 			pipe_output = fdopen(pipefd[0], "r");
 
 			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
-				err_ext("fgets");
+				log_sys("fgets");
 
 
 			if (strstr(cmdout, "state UP") == NULL) {

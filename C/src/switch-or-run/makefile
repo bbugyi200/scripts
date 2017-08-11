@@ -1,8 +1,8 @@
 dev:
-	gcc -g -Wall main.c switch.c
+	gcc -g -Wall main.c switch.c -lerrorwraps
 
 prod:
-	gcc -O2 -o ~/Dropbox/scripts/config/switch-or-run main.c switch.c
+	gcc -O2 -o ~/Dropbox/scripts/config/switch-or-run main.c switch.c -lerrorwraps
 
 atest:
 	./a.out "okular.okular" "okular" "3"

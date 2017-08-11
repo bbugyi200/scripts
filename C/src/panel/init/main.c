@@ -7,6 +7,7 @@
 #include <wait.h>
 #include <sys/stat.h>
 #include "daemonize.h"
+#include "errorwraps.h"
 #include "../panel.h"
 
 #define OFLAGS O_RDWR | O_CREAT
@@ -15,7 +16,6 @@
 void exith(void);
 void sighan(int);
 void set_fifo(int *);
-void err_ext(const char *);
 
 const char *flpath = "/home/bryan/.panel.pid";
 
@@ -27,7 +27,7 @@ main(int argc, char *argv[])
 	int fd = open(flpath, OFLAGS, OMODE);
 
 	if (fd < 0)
-		err_ext("open");
+		log_sys("open");
 
 	if (lockf(fd, F_TLOCK, 0) < 0) {
 		fprintf(stderr, "%s\n", "The panel is already running!");
@@ -48,11 +48,11 @@ main(int argc, char *argv[])
 	sa.sa_mask = mask;
 
 	if (sigaction(SIGTERM, &sa, NULL) < 0)
-		err_ext("sigaction");
+		log_sys("sigaction");
 	if (sigaction(SIGINT, &sa, NULL) < 0)
-		err_ext("sigaction");
+		log_sys("sigaction");
 	if (sigaction(SIGQUIT, &sa, NULL) < 0)
-		err_ext("sigaction");
+		log_sys("sigaction");
 
 	// ----- Lock pid File -----
 	// This must be redone because file descriptors are destroyed by the
@@ -60,7 +60,7 @@ main(int argc, char *argv[])
 	fd = open(flpath, OFLAGS, OMODE);
 
 	if (fd < 0)
-		err_ext("open");
+		log_sys("open");
 
 	if (lockf(fd, F_TLOCK, 0) < 0) {
 		syslog(LOG_ERR, "%s\n", "The panel is already running!");
@@ -77,7 +77,7 @@ main(int argc, char *argv[])
 	char hostname[10];
 	int font_size;
 	if (gethostname(hostname, 10) < 0)
-		err_ext("gethostname");
+		log_sys("gethostname");
 	font_size = (strncmp(hostname, "athena", 6) == 0) ? 12 : 10;
 	
 
@@ -86,28 +86,28 @@ main(int argc, char *argv[])
 
 
 	if ((pid = fork()) < 0)
-		err_ext("fork");
+		log_sys("fork");
 	else if (pid == 0) {
 		dup2(fifo_fd, STDOUT_FILENO);
 		execl("/usr/bin/bspc", "bspc", "subscribe", "report", (char *)NULL);
 	}
 
 	if ((pid = fork()) < 0)
-		err_ext("fork");
+		log_sys("fork");
 	else if (pid == 0) {
 		dup2(fifo_fd, STDOUT_FILENO);
 		execl("/usr/bin/clock", "clock", "-sf", "S%A, %B %d %Y   %I:%M%p", (char *)NULL);
 	}
 
 	if ((pid = fork()) < 0)
-		err_ext("fork");
+		log_sys("fork");
 	else if (pid == 0) {
 		execl("/usr/local/bin/panel-poll", "panel-poll", (char *)NULL);
 	}
 
 	// Volume Initialization
 	if ((pid = fork()) < 0)
-		err_ext("fork");
+		log_sys("fork");
 	else if (pid == 0) {
 		execl("/usr/local/bin/volume-panel-update", "volume-panel-update", (char *) NULL);
 	}
@@ -115,7 +115,7 @@ main(int argc, char *argv[])
 	int pipefd[4];
 	pipe(pipefd);
 	if ((pid = fork()) < 0)
-		err_ext("fork");
+		log_sys("fork");
 	else if (pid == 0) {
 		close(pipefd[0]);
 		dup2(fifo_fd, STDIN_FILENO);
@@ -125,13 +125,13 @@ main(int argc, char *argv[])
 
 	char inconsolata[30], font_awesome[20];
 	if (sprintf(inconsolata, "Inconsolata-%d:Bold", font_size) < 0)
-		err_ext("sprintf");
+		log_sys("sprintf");
 	if (sprintf(font_awesome, "Font Awesome-%d", font_size) < 0)
-		err_ext("sprintf");
+		log_sys("sprintf");
 
 	pipe(pipefd + 2);
 	if ((pid = fork()) < 0)
-		err_ext("fork");
+		log_sys("fork");
 	else if (pid == 0) {
 		close(pipefd[2]);
 		dup2(pipefd[0], STDIN_FILENO);
@@ -172,7 +172,7 @@ set_fifo(int *fd)
 	struct stat sb;
 	if (stat(fifo_path, &sb) != 0 || !S_ISFIFO(sb.st_mode)) {
 		if (mkfifo(fifo_path, 0666) < 0)
-			err_ext("mkfifo");
+			log_sys("mkfifo");
 		*fd = open(fifo_path, O_RDWR);
 	} else {
 		*fd = open(fifo_path, O_RDWR);

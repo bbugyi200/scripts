@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "errorwraps.h"
 #include "switch.h"
 
 int main(int argc, char *argv[])
@@ -47,7 +48,6 @@ int main(int argc, char *argv[])
 	int focused_desktop = get_focused_desktop();
 
 	bool main_focused = (desktop == focused_desktop),
-		 alt_focused = (alt_desktop == focused_desktop),
 		 target_focused = (tdata.desktop == focused_desktop);
 
 	// This assignment for next_desktop is valid for MAIN, ALT, and BOTH cases,
@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
 	}
 
 	// ----- Switch Logic -----
+	int status;
 	switch (tdata.status) {
 		case NONE:
 			if (focused_desktop >= 6) {
@@ -68,25 +69,33 @@ int main(int argc, char *argv[])
 				next_desktop = desktop;
 			}
 
-			sprintf(full_cmd, fmt, next_desktop, cmd, next_desktop);
-			system(full_cmd);
+			if (sprintf(full_cmd, fmt, next_desktop, cmd, next_desktop) < 0)
+				err_sys("sprintf(%s, %s, %d, %s, %d)", full_cmd, fmt, next_desktop, cmd, next_desktop);
+			if ((status = system(full_cmd)) != 0)
+				err_quit("system(%s) = %d", full_cmd, status/256);
 			break;
 		case MAIN:
 			next_cmd = alt_cmd;
 			next_target = target;
 		case ALT:
 			if (target_focused) {
-				sprintf(full_cmd, fmt, next_desktop, next_cmd, next_desktop);
-				system(full_cmd);
+				if (sprintf(full_cmd, fmt, next_desktop, next_cmd, next_desktop) < 0)
+					err_sys("sprintf");
+				if ((status = system(full_cmd)) != 0)
+					err_quit("system(%s) = %d", full_cmd, status);
 			}
 			else {
 				char wmctrl_cmd[100] = "wmctrl -xa ";
-				system(strcat(wmctrl_cmd, next_target));
+				strcat(wmctrl_cmd, next_target);
+				if ((status = system(wmctrl_cmd)) != 0)
+					err_quit("system(%s) = %d", wmctrl_cmd, status/256);
 			}
 			break;
 		case BOTH:
-			sprintf(bspc_cmd, bspc_fmt, next_desktop);
-			system(bspc_cmd);
+			if (sprintf(bspc_cmd, bspc_fmt, next_desktop) < 0)
+				err_sys("sprintf");
+			if ((status = system(bspc_cmd)) != 0)
+				err_quit("system(%s) = %d", bspc_cmd, status/256);
 			break;
 	}
 

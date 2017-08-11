@@ -6,11 +6,3 @@ mv /media/bryan/hercules/backup/dropbox/2months/ /media/bryan/hercules/backup/dr
 mv $DROPBOX /media/bryan/hercules/backup/dropbox/2months
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
 date > $DROPBOX/backup.txt
-
-# root backup
-rsync -av --delete /home/ /media/bryan/hercules/backup/root/home/
-rsync -av --delete /etc/ /media/bryan/hercules/backup/root/etc/
-rsync -av --delete /var/ /media/bryan/hercules/backup/root/var/
-
-# pacman package list backup
-pacman -Qqe > /media/bryan/hercules/backup/pacman/monthly.txt

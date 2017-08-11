@@ -1,4 +1,20 @@
 #!/bin/bash
+if [[ $(hostname) == "aphrodite" ]]; then
+	cd /home/bryan/Dropbox/logs/aphrodite-motion
+else
+	cd /home/bryan/motion
+fi
+
+(sleep 60 && motion) &
+PID=$!
+
 scrot /tmp/screenshot.png
 convert /tmp/screenshot.png -blur 0x5 /tmp/screenshotblur.png
-i3lock -i /tmp/screenshotblur.png
+i3lock -n -i /tmp/screenshotblur.png
+
+kill $PID
+pkill motion
+
+touch -t $(date --date="1 minute ago" +%Y%m%d%H%M) /tmp/motionts
+find . -newer /tmp/motionts -name "*.avi" -delete
+find . -name "*.avi" -size -100k -delete

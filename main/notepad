@@ -9,6 +9,7 @@ elif [[ $arg == "--put" ]]; then
 	page=$(wmctrl -l | grep Advanced | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1)
 	clip=$(xclip -selection clipboard -o)
 	if [[ $clip == *"."* ]]; then
+		clip=${clip#*. }
 		clip=${clip%.*}
 		clip+="."
 	fi

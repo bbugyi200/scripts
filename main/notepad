@@ -1,5 +1,18 @@
 #!/bin/bash
-base=$(basename $1)
+arg=$1
+base=$(basename $2)
 fpath="/home/bryan/Dropbox/notes/Study/${base%pdf}txt"
-bspc node -p south -o 0.8
-termite --class="notepad" --title="notepad" -e "vim + $fpath"
+if [[ $arg == "--open" ]]; then
+	bspc node -p south -o 0.8
+	termite --class="notepad" --title="notepad" -e "vim + $fpath"
+elif [[ $arg == "--put" ]]; then
+	page=$(wmctrl -l | grep Advanced | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1)
+	clip=$(xclip -selection clipboard -o)
+	if [[ $clip == *"."* ]]; then
+		clip=${clip%.*}
+		clip+="."
+	fi
+	printf "\"" >> $fpath
+	echo -n $clip >> $fpath 
+	printf "\" - p%s\n\n" $page >> $fpath
+fi

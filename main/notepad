@@ -3,13 +3,12 @@ arg=$1
 base=$(basename $2)
 fpath="/home/bryan/Dropbox/notes/Study/${base%pdf}txt"
 if [[ $arg == "--open" ]]; then
-	bspc node -p south -o 0.8
+	bspc node -p south -o 0.7
 	termite --class="notepad" --title="notepad" -e "vim + $fpath"
 elif [[ $arg == "--put" ]]; then
-	page=$(wmctrl -l | grep Advanced | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1)
+	page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1)
 	clip=$(xclip -selection clipboard -o)
 	if [[ $clip == *"."* ]]; then
-		clip=${clip#*. }
 		clip=${clip%.*}
 		clip+="."
 	fi

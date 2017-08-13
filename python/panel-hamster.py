@@ -20,7 +20,7 @@ if len(current.split()) > 2:
 
     output = "H%s   (%s / %s)\n" % (current, act_time, tot_time)
 else:
-    output = current
+    output = "H%s" % current
 
 with open(getenv("PANEL_FIFO"), "w") as f:
     f.write(output)

@@ -256,27 +256,9 @@ int main(int argc, char *argv[])
 
 			// Hamster
 			if (cnt_ham++ >= upd_ham) {
-				/* if ((fp = popen("hamster current | cut -d' ' -f 3-4", "r")) == NULL) */
-				/* 	log_sys("popen (hamster)"); */
-
-				/* if (fgets(cmdout, MAXLINE, fp) < 0) */
-				/* 	log_sys("fgets (hamster)"); */
-
-				/* if (strchr(cmdout, '@') == NULL) { */
-				/* 	strcpy(cmdout, "No Activity"); */
-				/* } */
-
-				/* if (snprintf(full_icon, MAX_ICON, "H%s\n", cmdout) < 0) */
-				/* 	log_sys("snprintf (hamster)"); */
-
-				/* write_fifo(full_icon); */
-
 				if ((status = system("/home/bryan/Dropbox/scripts/python/panel-hamster.py")) != 0)
 					err_quit("system(\"%s\") = %d", "/home/bryan/Dropbox/scripts/python/panel-hamster.py", status/256);
 				cnt_ham = 0;
-
-				/* if (pclose(fp) < 0) */
-				/* 	log_sys("pclose (hamster)"); */
 			}
 		}
 

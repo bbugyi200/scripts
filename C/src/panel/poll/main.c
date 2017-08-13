@@ -7,17 +7,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/wait.h>
+#include <ctype.h>
 #include "errorwraps.h"
+#include "bugyi.h"
 #include "poll.h"
 #include "../panel.h"
 
-#define BATT_ICON_MAX 30
-#define SURF_ICON_MAX 50
+#define MAX_ICON 50
 
 
 int 	cnt_pia = upd_pia,		cnt_batt = upd_batt,	cnt_net = upd_net,
 		cnt_upd = upd_upd,		cnt_dbox = upd_dbox,	cnt_mail = upd_mail,
-		cnt_clean = upd_clean,	cnt_surf = upd_surf;
+		cnt_clean = upd_clean,	cnt_surf = upd_surf,	cnt_ham = upd_ham;
 
 void write_fifo(char *);
 
@@ -28,10 +29,10 @@ int main(int argc, char *argv[])
 	fifo_fd = open(fifo_path, O_RDWR);
 
 	// Pipe Variables
-	int pipefd[2];
+	int pipefd[2], status;
 	pid_t pid;
 	FILE *pipe_output;
-	char cmdout[MAX_CMD];
+	char cmdout[MAXLINE];
 
 
 	// ----- Sets 'multi_mon' -----
@@ -51,7 +52,7 @@ int main(int argc, char *argv[])
 
 	errno = 0;
 	int num_of_monitors;
-	while (fgets(cmdout, MAX_CMD, pipe_output) != NULL) {
+	while (fgets(cmdout, MAXLINE, pipe_output) != NULL) {
 		num_of_monitors++;
 	}
 	if (errno)
@@ -78,16 +79,16 @@ int main(int argc, char *argv[])
 	int ecode;
 	u_int64_t diff;
 	struct timespec start, end, sleep_time;
-	char *icon;
+	char *icon, full_icon[MAX_ICON];
+	FILE *fp;
 
 	// Battery
 	int batt_nval;
-	char *batt_color, *batt_icon, full_batt_icon[BATT_ICON_MAX], *bolt;
+	char *batt_color, *batt_icon, *bolt;
 
 	// Surf
 	int labels[3];
 	char *colors[3];
-	char full_surf_icon[SURF_ICON_MAX];
 	
 
 	// ----- Main Loop -----
@@ -125,7 +126,7 @@ int main(int argc, char *argv[])
 
 			pipe_output = fdopen(pipefd[0], "r");
 
-			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
+			if (fgets(cmdout, MAXLINE, pipe_output) == NULL)
 				log_sys("fgets");
 
 			if (strstr(cmdout, "Discharging") == NULL)
@@ -155,10 +156,10 @@ int main(int argc, char *argv[])
 				batt_icon = LBATT;
 			}
 
-			if (snprintf(full_batt_icon, BATT_ICON_MAX, "B%%{F%s}%s%s %d%%  \n", batt_color,
+			if (snprintf(full_icon, MAX_ICON, "B%%{F%s}%s%s %d%%  \n", batt_color,
 						bolt, batt_icon, batt_nval) < 0)
 				fprintf(stderr, "battery: snprintf error");
-			write_fifo(full_batt_icon);
+			write_fifo(full_icon);
 			fclose(pipe_output);
 			cnt_batt = 0;
 		}
@@ -194,7 +195,7 @@ int main(int argc, char *argv[])
 
 			pipe_output = fdopen(pipefd[0], "r");
 
-			if (fgets(cmdout, MAX_CMD, pipe_output) == NULL)
+			if (fgets(cmdout, MAXLINE, pipe_output) == NULL)
 				log_sys("fgets");
 
 
@@ -218,37 +219,65 @@ int main(int argc, char *argv[])
 			cnt_mail = 0;
 		}
 
-		// Surf Check
-		if (cnt_surf++ >= upd_surf && multi_mon) {
-			ecode = system("~/Dropbox/scripts/python/SurfCheck.py");
-			ecode = ecode / 256;  // 'system' returns multiple of 256
-			labels[0] = ecode / 100; ecode = ecode - 100*labels[0];
-			labels[1] = ecode / 10; ecode = ecode - 10*labels[1];
-			labels[2] = ecode;
+		// Multimon Panel Items
+		if (multi_mon) {
+			// Surf Check
+			if (cnt_surf++ >= upd_surf) {
+				ecode = system("~/Dropbox/scripts/python/SurfCheck.py");
+				ecode = ecode / 256;  // 'system' returns multiple of 256
+				labels[0] = ecode / 100; ecode = ecode - 100*labels[0];
+				labels[1] = ecode / 10; ecode = ecode - 10*labels[1];
+				labels[2] = ecode;
 
-			for (int i = 0; i < 3; ++i) {
-				switch (labels[i]) {
-					case 0:
-						colors[i] = RED;
-						break;
-					case 1:
-						colors[i] = YELLOW;
-						break;
-					case 2:
-						colors[i] = GREEN;
-						break;
-					default:
-						colors[i] = WHITE;
+				for (int i = 0; i < 3; ++i) {
+					switch (labels[i]) {
+						case 0:
+							colors[i] = RED;
+							break;
+						case 1:
+							colors[i] = YELLOW;
+							break;
+						case 2:
+							colors[i] = GREEN;
+							break;
+						default:
+							colors[i] = WHITE;
+					}
 				}
-			}
-			if (snprintf(full_surf_icon,
-					SURF_ICON_MAX,
-					"Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n",
-					colors[0], colors[1], colors[2]) < 0) 
-				perror("snprintf");
+				if (snprintf(full_icon,
+						MAX_ICON,
+						"Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n",
+						colors[0], colors[1], colors[2]) < 0) 
+					perror("snprintf");
 
-			write_fifo(full_surf_icon);
-			cnt_surf = 0;
+				write_fifo(full_icon);
+				cnt_surf = 0;
+			}
+
+			// Hamster
+			if (cnt_ham++ >= upd_ham) {
+				/* if ((fp = popen("hamster current | cut -d' ' -f 3-4", "r")) == NULL) */
+				/* 	log_sys("popen (hamster)"); */
+
+				/* if (fgets(cmdout, MAXLINE, fp) < 0) */
+				/* 	log_sys("fgets (hamster)"); */
+
+				/* if (strchr(cmdout, '@') == NULL) { */
+				/* 	strcpy(cmdout, "No Activity"); */
+				/* } */
+
+				/* if (snprintf(full_icon, MAX_ICON, "H%s\n", cmdout) < 0) */
+				/* 	log_sys("snprintf (hamster)"); */
+
+				/* write_fifo(full_icon); */
+
+				if ((status = system("/home/bryan/Dropbox/scripts/python/panel-hamster.py")) != 0)
+					err_quit("system(\"%s\") = %d", "/home/bryan/Dropbox/scripts/python/panel-hamster.py", status/256);
+				cnt_ham = 0;
+
+				/* if (pclose(fp) < 0) */
+				/* 	log_sys("pclose (hamster)"); */
+			}
 		}
 
 		// sleep_time =  (1 second) - (loop iteration time)

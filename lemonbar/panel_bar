@@ -39,6 +39,9 @@ while read -r line ; do
         Y*)
 			surf="%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
             ;;
+        H*)
+			ham="%{B$COLOR_SYS_BG}${line#?}%{B-}%{F-}"
+            ;;
         W*)
             # bspwm's state
             wm=""
@@ -108,5 +111,5 @@ while read -r line ; do
             done
             ;;
     esac
-    printf "%s\n" "%{l}${wm}%{c}${sys}%{r}%{T3}${mail}${batt}${vol}${pia}${dbox}${net}${updt}${clean}%{S+}${surf}%{T-}"
+    printf "%s\n" "%{l}${wm}%{c}${sys}%{r}%{T3}${mail}${batt}${vol}${pia}${dbox}${net}${updt}${clean}%{S+}%{c}${ham}%{r}${surf}%{T-}"
 done

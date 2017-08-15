@@ -1,14 +1,24 @@
 #!/bin/python
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from syslog import syslog
+import html.parser
 import re
-import sys
 
-url = urlopen('http://www.surfline.com/surf-forecasts/mid-atlantic/new-jersey_2147')
-bsObj = BeautifulSoup(url, "html.parser")
-top_tag = bsObj.find_all(attrs={'class':'obs-bx'})[0]
-strong_tags = top_tag.find_all('strong')
-labels = [s.get_text() for s in strong_tags]
+try:
+    url = urlopen('http://www.surfline.com/surf-forecasts/mid-atlantic/new-jersey_2147')
+except IOError:
+    syslog("urlopen error")
+    raise
+
+try:
+    bsObj = BeautifulSoup(url, "html.parser")
+    top_tag = bsObj.find_all(attrs={'class': 'obs-bx'})[0]
+    strong_tags = top_tag.find_all('strong')
+    labels = [s.get_text() for s in strong_tags]
+except html.parser.HTMLParseError:
+    syslog("BeautifulSoup parse error")
+    raise
 
 mask = 0
 regBad = re.compile('poor|none')
@@ -24,6 +34,6 @@ for i in range(3):
     else:
         num = 3
 
-    mask += num * (10**(2-i))
+    mask += num * (10**(2 - i))
 
-sys.exit(mask)
+print("%03d" % mask)

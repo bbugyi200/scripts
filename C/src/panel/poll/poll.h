@@ -16,7 +16,7 @@
 #define upd_dbox 5
 #define upd_mail 15
 #define upd_surf 3600
-#define upd_ham 60
+#define upd_ham 30
 
 // Unicode Font Awesome Icons
 #define UPDT "\uf0aa"

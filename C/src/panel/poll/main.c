@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	pipe_output = fdopen(pipefd[0], "r");
 
 	errno = 0;
-	int num_of_monitors;
+	int num_of_monitors = 0;
 	while (fgets(cmdout, MAXLINE, pipe_output) != NULL) {
 		num_of_monitors++;
 	}
@@ -80,15 +80,13 @@ int main(int argc, char *argv[])
 	u_int64_t diff;
 	struct timespec start, end, sleep_time;
 	char *icon, full_icon[MAX_ICON];
-	FILE *fp;
 
 	// Battery
 	int batt_nval;
 	char *batt_color, *batt_icon, *bolt;
 
 	// Surf
-	int labels[3];
-	char *colors[3];
+	char *colors[3], label;
 	
 
 	// ----- Main Loop -----
@@ -223,27 +221,45 @@ int main(int argc, char *argv[])
 		if (multi_mon) {
 			// Surf Check
 			if (cnt_surf++ >= upd_surf) {
-				ecode = system("~/Dropbox/scripts/python/SurfCheck.py");
-				ecode = ecode / 256;  // 'system' returns multiple of 256
-				labels[0] = ecode / 100; ecode = ecode - 100*labels[0];
-				labels[1] = ecode / 10; ecode = ecode - 10*labels[1];
-				labels[2] = ecode;
 
-				for (int i = 0; i < 3; ++i) {
-					switch (labels[i]) {
-						case 0:
-							colors[i] = RED;
-							break;
-						case 1:
-							colors[i] = YELLOW;
-							break;
-						case 2:
-							colors[i] = GREEN;
-							break;
-						default:
-							colors[i] = WHITE;
+				if (pipe(pipefd) < 0)
+					log_sys("pipe (surf check)");
+				if ((pid = fork()) < 0)
+					log_sys("fork (surf check)");
+				else if (pid == 0) {
+					close(pipefd[0]);
+					dup2(pipefd[1], STDOUT_FILENO);
+					execl("/home/bryan/Dropbox/scripts/python/SurfCheck.py", "SurfCheck.py", (char *) NULL);
+				}
+
+				close(pipefd[1]);
+				waitpid(pid, &status, 0);
+
+				if (status != 0) {
+					log_ret("Surf Check Failed");
+					for (int i = 0; i < 3; ++i) {
+						colors[i] = WHITE;
+					}
+				} else {
+					for (int i = 0; i < 3; ++i) {
+						if (read(pipefd[0], &label, sizeof(char)) < 0)
+							log_sys("read (surf check)");
+						switch (strtol(&label, NULL, 0)) {
+							case 0:
+								colors[i] = RED;
+								break;
+							case 1:
+								colors[i] = YELLOW;
+								break;
+							case 2:
+								colors[i] = GREEN;
+								break;
+							default:
+								colors[i] = WHITE;
+						}
 					}
 				}
+
 				if (snprintf(full_icon,
 						MAX_ICON,
 						"Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n",
@@ -251,13 +267,14 @@ int main(int argc, char *argv[])
 					perror("snprintf");
 
 				write_fifo(full_icon);
+
 				cnt_surf = 0;
 			}
 
 			// Hamster
 			if (cnt_ham++ >= upd_ham) {
 				if ((status = system("/home/bryan/Dropbox/scripts/python/panel-hamster.py")) != 0)
-					err_quit("system(\"%s\") = %d", "/home/bryan/Dropbox/scripts/python/panel-hamster.py", status/256);
+					log_ret("system(\"%s\") = %d", "/home/bryan/Dropbox/scripts/python/panel-hamster.py", status/256);
 				cnt_ham = 0;
 			}
 		}

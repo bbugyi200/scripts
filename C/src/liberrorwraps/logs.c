@@ -33,6 +33,18 @@ log_quit(const char *fmt, ...)
 	exit(1);
 }
 
+void
+log_ret(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	log_main(false, 0, fmt, ap);
+	va_end(ap);
+
+	return;
+}
+
 static void
 log_main(bool errnoflag, int error, const char *fmt, va_list ap)
 {

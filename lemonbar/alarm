@@ -1,0 +1,70 @@
+#!/bin/bash
+
+. panel_config
+
+FILE=/tmp/alarm.pid
+
+
+if [[ "$1" == "--stop" ]]; then
+	cat $FILE | xargs kill
+	echo "A" > "$PANEL_FIFO"
+	exit 0
+fi
+
+if [[ -f $FILE ]]; then
+	echo "An Alarm is Already Running!"
+	exit 1
+else
+	echo $$ > $FILE
+fi
+
+
+trap 'rm $FILE' EXIT
+
+
+if [[ -z "$1" ]]; then
+	alrm_time="$(echo -e "1\n2\n3\n5\n10\n15\n20\n25\n30" | dmenu)"
+else
+	alrm_time=$1
+fi
+
+
+len=${#alrm_time}
+idx=$((len-1))
+if [[ ${alrm_time:$idx:1} == 's' ]]; then
+	alrm_time=${alrm_time%s}
+	stop_time=$(date --date="$alrm_time seconds" +%s)
+elif [[ $alrm_time == *":"* ]]; then
+	stop_time=$(date --date="$alrm_time" +%s)
+else
+	stop_time=$(date --date="$alrm_time minutes" +%s)
+fi
+
+
+time_left() {
+	echo $(($stop_time - $(date --date="now" +%s)))
+}
+
+
+finished=0
+iclock="\uf017"
+while [[ $finished == 0 ]]; do
+	TL=$(time_left)
+	printf "A%%{F$GREY}%d:%02d $iclock\n" $((TL/60)) $((TL%60)) > "$PANEL_FIFO"
+	sleep 1
+
+	if [[ $TL -le 0 ]]; then
+		finished=1
+	fi
+done
+
+
+for i in {0..11} ; do
+	if [[ $((i % 2)) == 0 ]]; then
+		COLOR=$GREY
+	else
+		COLOR=$RED
+	fi
+	printf "A%%{F$COLOR}TIMER IS DONE $iclock\n" > "$PANEL_FIFO"
+	sleep 0.5
+done

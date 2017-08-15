@@ -10,16 +10,25 @@ open_notepad() {
 
 if [[ $arg == "--open" ]]; then
 	open_notepad
-elif [[ $arg == "--put" ]]; then
+elif [[ $arg == "--side" ]]; then
+	termite --class="notepad" --title="notepad" -e "vim + $fpath"
+elif [[ $arg == "--put"* ]]; then
 	page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1)
 	clip=$(xclip -selection clipboard -o)
-	# if [[ $clip == *"."* ]]; then
-	# 	clip=${clip%.*}
-	# 	clip+="."
-	# fi
-	printf "\n\"" >> $fpath
+	if [[ $clip == *[a-z] ]]; then
+		clip=${clip%[A-Z]*}
+		clip="$(echo -e "${clip}" | sed -e 's/[[:space:]]*$//')"
+	fi
+	if [[ $arg == "--put-major" ]]; then
+		printf "\n" >> $fpath
+	elif [[ $arg == "--put-minor" ]]; then
+		printf "  - " >> $fpath
+		clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n     /g')
+	fi
+	printf "\"" >> $fpath
 	echo -n $clip >> $fpath 
-	printf "\" - p%s\n\n" $page >> $fpath
+	printf "\" - p%s\n" $page >> $fpath
 	wmctrl -c notepad
-	open_notepad && wmctrl -ax zathura.Zathura
+	open_notepad
+	sleep 0.3 && wmctrl -ax zathura.Zathura
 fi

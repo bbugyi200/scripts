@@ -32,6 +32,18 @@ err_quit(const char *fmt, ...)
 	exit(1);
 }
 
+void
+err_ret(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	err_main(false, 0, fmt, ap);
+	va_end(ap);
+
+	return;
+}
+
 static void
 err_main(bool errnoflag, int error, const char *fmt, va_list ap)
 {

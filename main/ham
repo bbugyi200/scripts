@@ -1,0 +1,2 @@
+#!/bin/bash
+hamster "$@" && /home/bryan/Dropbox/scripts/python/panel-hamster.py

@@ -96,7 +96,7 @@ main(int argc, char *argv[])
 		log_sys("fork");
 	else if (pid == 0) {
 		dup2(fifo_fd, STDOUT_FILENO);
-		execl("/usr/bin/clock", "clock", "-sf", "S%A, %B %d %Y   %I:%M%p", (char *)NULL);
+		execl("/usr/bin/clock", "clock", "-sf", "S%A, %B %d %Y   %T %Z", (char *)NULL);
 	}
 
 	if ((pid = fork()) < 0)

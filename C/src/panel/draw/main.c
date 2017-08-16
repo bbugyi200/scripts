@@ -5,7 +5,7 @@
 
 #define MAXLINE 1000
 #define MAXBARVAR MAXLINE + 50
-#define MAXITEM 10
+#define MAXITEM 50
 #define MAXBOD 50
 
 char *get_workspace_icons(char *);
@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 				break;
 		}
 
-		fmt = "%%{l}%s%%{c}%s%%{r}%%{T3}%s%s%s%s%s%s%s%s%%{S+}%%{l}  %s%%{c}%s%%{r}%s%%{T-}\n";
+		fmt = "%%{l}%s%%{c}%s%%{r}%%{T3}%s%s%s%s%s%s%s%s%%{S+}%%{l}%s%%{c}%s%%{r}%s%%{T-}\n";
 		fprintf(stdout, fmt,
 				wm, // #1 Left
 				sys, // #1 Center
@@ -148,19 +148,20 @@ int main(int argc, char *argv[])
 char *
 get_workspace_icons(char *name)
 {
-	if (((strcmp(name, "I") == 0) || (strcmp(name, "VI") == 0))) {
+	if (((strcmp(name, "I") == 0) || (strcmp(name, "VI") == 0)))
 		return "\uf2d0";
-	} else if ((strcmp(name, "II") == 0) || (strcmp(name, "VII") == 0)) {
+	else if ((strcmp(name, "II") == 0) || (strcmp(name, "VII") == 0))
 		return "\uf268";
-	} else if ((strcmp(name, "III") == 0) || (strcmp(name, "VIII") == 0)) {
+	else if ((strcmp(name, "III") == 0) || (strcmp(name, "VIII") == 0))
 		return "\uf1c1";
-	} else if (strcmp(name, "IV") == 0) {
+	else if (strcmp(name, "IV") == 0)
 		return "A";
-	} else if (strcmp(name, "V") == 0) {
+	else if (strcmp(name, "V") == 0)
 		return "B";
-	} else if (strcmp(name, "IX") == 0) {
+	else if (strcmp(name, "IX") == 0)
 		return "C";
-	} else if (strcmp(name, "X") == 0) {
+	else if (strcmp(name, "X") == 0)
 		return "D";
-	}
+	else
+		return NULL;
 }

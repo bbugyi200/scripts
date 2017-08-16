@@ -50,7 +50,7 @@ finished=0
 iclock="\uf017"
 while [[ $finished == 0 ]]; do
 	TL=$(time_left)
-	printf "A%%{F$GREY}%d:%02d $iclock\n" $((TL/60)) $((TL%60)) > "$PANEL_FIFO"
+	printf "A%%{F$GREY}  %d:%02d $iclock\n" $((TL/60)) $((TL%60)) > "$PANEL_FIFO"
 	sleep 1
 
 	if [[ $TL -le 0 ]]; then
@@ -65,6 +65,6 @@ for i in {0..11} ; do
 	else
 		COLOR=$RED
 	fi
-	printf "A%%{F$COLOR}TIMER IS DONE $iclock\n" > "$PANEL_FIFO"
+	printf "A%%{F$COLOR}  TIMER IS DONE $iclock\n" > "$PANEL_FIFO"
 	sleep 0.5
 done

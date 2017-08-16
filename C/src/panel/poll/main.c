@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
 						MAX_ICON,
 						"Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n",
 						colors[0], colors[1], colors[2]) < 0) 
-					perror("snprintf");
+					log_quit("snprintf (surf check)");
 
 				write_fifo(full_icon);
 

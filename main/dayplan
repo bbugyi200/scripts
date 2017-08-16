@@ -45,8 +45,8 @@ if [ "$ARG" == '--new' -o "$ARG" == '-n' -o $NEW == 1 ]; then
 	cp "$DAY_FILE" "$YESTERDAY_FILE"
 	sed -i -e "2,$ d" "$DAY_FILE"
 	for ((i=0; i<=16; i++)); do
-		printf "$(date +'%I:00%p' --date="$i hours") - \n" >> "$DAY_FILE"
-		printf "$(date +'%I:30%p' --date="$i hours") - \n" >> "$DAY_FILE"
+		printf "$(date +'%H:00' --date="$i hours") - \n" >> "$DAY_FILE"
+		printf "$(date +'%H:30' --date="$i hours") - \n" >> "$DAY_FILE"
 	done
 
 	# weekplan.txt modifications

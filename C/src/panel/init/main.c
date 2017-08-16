@@ -120,6 +120,7 @@ main(int argc, char *argv[])
 		close(pipefd[0]);
 		dup2(fifo_fd, STDIN_FILENO);
 		dup2(pipefd[1], STDOUT_FILENO);
+		execl("/usr/local/bin/panel-draw", "panel-draw", (char*) NULL);
 		execl("/bin/sh", "sh", "/usr/local/bin/panel_bar", (char *)NULL);
 	}
 

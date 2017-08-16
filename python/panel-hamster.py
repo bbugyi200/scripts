@@ -14,7 +14,7 @@ ssun = sun.strftime("%Y-%m-%d")
 ham_list_day = popen("hamster list %s" % stoday).read()
 ham_list_week = popen("hamster list %s %s" % (ssun, stoday)).read()
 
-reg = re.compile("Study: (\d\.\dh)")
+reg = re.compile("Study: (\d+\.\dh)")
 
 try:
     day_time = reg.search(ham_list_day).groups()[0]

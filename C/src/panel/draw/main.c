@@ -9,7 +9,6 @@
 #define MAXITEM 10
 #define MAXBOD 50
 
-void setbarvar(char *, char *, char *);
 char *get_workspace_icons(char *);
 
 int main(int argc, char *argv[])
@@ -28,51 +27,39 @@ int main(int argc, char *argv[])
 		switch (line[0]) {
 			case 'S':
 				snprintf(sys, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", GREY, line+1);
-				/* setbarvar(sys, GREY, line); */
 				break;
 			case 'B':
 				snprintf(batt, MAXBARVAR, "%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", line+1);
-				/* setbarvar(batt, NULL, line); */
 				break;
 			case 'D':
 				snprintf(dbox, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", BLUE, line+1);
-				/* setbarvar(dbox, BLUE, line); */
 				break;
 			case 'X':
 				snprintf(net, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", WHITE, line+1);
-				/* setbarvar(net, WHITE, line); */
 				break;
 			case 'P':
 				snprintf(pia, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", GREEN, line+1);
-				/* setbarvar(pia, GREEN, line); */
 				break;
 			case 'U':
 				snprintf(updt, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", RED, line+1);
-				/* setbarvar(updt, RED, line); */
 				break;
 			case 'C':
 				snprintf(clean, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", RED, line+1);
-				/* setbarvar(clean, RED, line); */
 				break;
 			case 'V':
 				snprintf(vol, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", WHITE, line+1);
-				/* setbarvar(vol, WHITE, line); */
 				break;
 			case 'M':
 				snprintf(mail, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", WHITE, line+1);
-				/* setbarvar(mail, WHITE, line); */
 				break;
 			case 'Y':
 				snprintf(surf, MAXBARVAR, "%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", line+1);
-				/* setbarvar(surf, NULL, line); */
 				break;
 			case 'H':
 				snprintf(ham, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", GREY, line+1);
-				/* setbarvar(ham, GREY, line); */
 				break;
 			case 'A':
 				snprintf(alrm, MAXBARVAR, "%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", line+1);
-				/* setbarvar(alrm, NULL, line); */
 				break;
 			case 'W':
 				pline = line + 1;
@@ -150,19 +137,6 @@ int main(int argc, char *argv[])
 	}
 
 	exit(3);
-}
-
-void
-setbarvar(char *barvar, char *FG, char *line)
-{
-	int length = sizeof(barvar);
-	memset(barvar, 0, length);
-	if (FG != NULL) {
-		strcat(strcat(strcat(barvar, "%{F"), FG), "}");
-	}
-	strcat(barvar, "%{B" COLOR_SYS_BG "}");
-	strcat(barvar, line+1);
-	strcat(barvar, "%{B-}%{F-}");
 }
 
 char *

@@ -80,22 +80,26 @@ int main(int argc, char *argv[])
 	bool do_geometry;
 	FILE *fp;
 	char line[MAXLINE];
+	int status;
 	while (fgets(line, MAXLINE, stdin) != NULL) {
 
 		do_geometry = false;
 		*strchr(line, '\n') = '\0';
 
 		if ((strstr(line, "monitor_remove") != NULL) || (strstr(line, "monitor_add") != NULL)) {
-			// ----- Get panel-init PID -----
-			pid_t panel_pid;
-			FILE *pid_fp = fopen(panel_pid_path, "r");
+			do_geometry = true;
 
-			if (fgets(line, MAXLINE, pid_fp) == NULL)
+			// ----- Restart panel-init -----
+			// Get panel-init PID
+			pid_t panel_pid;
+			FILE *fp = fopen(panel_pid_path, "r");
+
+			if (fgets(line, MAXLINE, fp) == NULL)
 				err_sys("fgets");
 
 			panel_pid = strtol(line, NULL, 0);
+			fclose(fp);
 
-			do_geometry = true;
 			kill(panel_pid, SIGTERM);
 
 			// Ensures that panel-init is dead
@@ -116,12 +120,16 @@ int main(int argc, char *argv[])
 		}
 
 		if ((strstr(line, "monitor_geometry") != NULL) || do_geometry) {
+
+			// ----- Spawn toggle_monitor -----
+			// toggle_monitor uses xrandr to enable/disable the monitor
 			if ((pid = fork()) < 0)
 				log_sys("fork");
 			else if (pid == 0) {
 				execl("/usr/local/bin/toggle_monitor", "toggle_monitor", (char *) NULL);
 			}
 
+			// ----- Counts Monitors -----
 			if (pipe(pipefd) < 0)
 				log_sys("pipe");
 			if ((pid = fork()) < 0)
@@ -132,15 +140,11 @@ int main(int argc, char *argv[])
 				execl("/usr/bin/bspc", "bspc", "query", "-M", (char *) NULL);
 			}
 
-			int flags;
-			flags = fcntl(pipefd[0], F_GETFL, 0);
-			flags |= O_NONBLOCK;
-			fcntl(pipefd[0], F_SETFL, flags);
+			close(pipefd[1]);
 			fp = fdopen(pipefd[0], "r");
 
 			int num_of_monitors = 0, i = 0;
 			char *monitors[2];
-			usleep(250000);
 			while (fgets(line, MAXLINE, fp) != NULL) {
 				num_of_monitors++;
 				*strchr(line, '\n') = '\0';
@@ -149,7 +153,7 @@ int main(int argc, char *argv[])
 
 			fclose(fp);
 
-
+			// ----- Sets Workspaces based on num_of_monitors -----
 			if (num_of_monitors == 1) {
 				if ((pid = fork()) < 0)
 					log_sys("fork (bspc monitor -d)");
@@ -163,6 +167,10 @@ int main(int argc, char *argv[])
 					execl("/usr/bin/bspc", "bspc", "monitor", monitors[0], "-d", "I", "II", "III", "IV", "V", (char *) NULL);
 				}
 
+				waitpid(pid, &status, 0);
+				if (status != 0)
+					log_ret("status = %d", status);
+
 				if ((pid = fork()) < 0)
 					log_sys("fork (bspc monitor -d)");
 				else if (pid == 0) {
@@ -174,7 +182,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	return 0;
+	exit(3);
 }
 
 void

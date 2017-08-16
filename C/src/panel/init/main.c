@@ -121,7 +121,6 @@ main(int argc, char *argv[])
 		dup2(fifo_fd, STDIN_FILENO);
 		dup2(pipefd[1], STDOUT_FILENO);
 		execl("/usr/local/bin/panel-draw", "panel-draw", (char*) NULL);
-		execl("/bin/sh", "sh", "/usr/local/bin/panel_bar", (char *)NULL);
 	}
 
 	char inconsolata[30], font_awesome[20];

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "errorwraps.h"
 #include "../panel.h"
 
 #define MAXLINE 1000
@@ -132,7 +131,14 @@ int main(int argc, char *argv[])
 		}
 
 		fmt = "%%{l}%s%%{c}%s%%{r}%%{T3}%s%s%s%s%s%s%s%s%%{S+}%%{l}  %s%%{c}%s%%{r}%s%%{T-}\n";
-		fprintf(stdout, fmt, wm, sys, mail, batt, vol, pia, dbox, net, updt, clean, alrm, ham, surf);
+		fprintf(stdout, fmt,
+				wm, // #1 Left
+				sys, // #1 Center
+				mail, batt, vol, pia, dbox, net, updt, clean, // #1 Right
+				alrm, // #2 Left
+				ham,  // #2 Center
+				surf); // #2 Right
+
 		fflush(stdout);
 	}
 

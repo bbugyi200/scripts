@@ -1,5 +1,5 @@
 dev: main.c
-	gcc -Wall -g main.c -lerrorwraps
+	gcc -Wall -g main.c
 
 prod: main.c
-	gcc -O2 -o /home/bryan/Dropbox/scripts/lemonbar/panel-draw main.c -lerrorwraps
+	gcc -O2 -o /home/bryan/Dropbox/scripts/lemonbar/panel-draw main.c

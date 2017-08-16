@@ -50,7 +50,11 @@ finished=0
 iclock="\uf017"
 while [[ $finished == 0 ]]; do
 	TL=$(time_left)
-	printf "A%%{F$GREY}  %d:%02d $iclock\n" $((TL/60)) $((TL%60)) > "$PANEL_FIFO"
+	if [[ $TL -ge 3600 ]]; then
+		printf "A%%{F$GREY}  %d:%02d:%02d $iclock\n" $((TL/3600)) $((TL%3600/60)) $((TL%3600%60)) > "$PANEL_FIFO"
+	else
+		printf "A%%{F$GREY}  %d:%02d $iclock\n" $((TL/60)) $((TL%60)) > "$PANEL_FIFO"
+	fi
 	sleep 1
 
 	if [[ $TL -le 0 ]]; then

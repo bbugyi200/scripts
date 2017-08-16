@@ -10,21 +10,16 @@
 #include "errorwraps.h"
 #include "../panel.h"
 
-#define OFLAGS O_RDWR | O_CREAT
-#define OMODE S_IRUSR | S_IWUSR
-
 void exith(void);
 void sighan(int);
 void set_fifo(int *);
-
-const char *flpath = "/home/bryan/.panel.pid";
 
 int
 main(int argc, char *argv[])
 {
 	// ----- Check pid File -----
 	// Last chance to get printable output to the user.
-	int fd = open(flpath, OFLAGS, OMODE);
+	int fd = open(panel_pid_path, OFLAGS, OMODE);
 
 	if (fd < 0)
 		log_sys("open");
@@ -57,7 +52,7 @@ main(int argc, char *argv[])
 	// ----- Lock pid File -----
 	// This must be redone because file descriptors are destroyed by the
 	// daemonize function.
-	fd = open(flpath, OFLAGS, OMODE);
+	fd = open(panel_pid_path, OFLAGS, OMODE);
 
 	if (fd < 0)
 		log_sys("open");
@@ -144,7 +139,7 @@ main(int argc, char *argv[])
 		perror("fork");
 	else if (pid == 0) {
 		dup2(pipefd[2], STDIN_FILENO);
-		execl("/bin/sh", "sh");
+		execl("/bin/sh", "sh", (char *) NULL);
 	}
 
 	close(pipefd[1]);
@@ -162,7 +157,7 @@ sighan(int signo)
 void
 exith(void)
 {
-	unlink(flpath);
+	unlink(panel_pid_path);
 	kill(0, SIGTERM);
 }
 

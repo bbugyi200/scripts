@@ -9,7 +9,6 @@ bspc subscribe monitor | while read -r line; do
 
           toggle_monitor &
 
-          I=1
           M=$(bspc query -M | wc -l)
           if [[ "$M" == 1 ]]; then
             bspc monitor LVDS1 -d I II III IV V

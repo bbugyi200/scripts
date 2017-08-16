@@ -29,8 +29,7 @@ daemonize(const char *cmd)
 	for (int i = 0; i < rl.rlim_max; ++i) {
 		close(i);
 	}
-
-	fd0 = open("/dev/null", O_RDWR);
-	fd1 = dup(0);
-	fd2 = dup(0);
+    fd0 = open("/dev/null", O_RDWR);
+    fd1 = dup(0);
+    fd2 = dup(0);
 }

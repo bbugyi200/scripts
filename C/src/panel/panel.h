@@ -41,8 +41,15 @@
 #define COLOR_SYS_FG "#b1a57d"
 #define COLOR_SYS_BG "#333232"
 
+#define OFLAGS O_RDWR | O_CREAT
+#define OMODE S_IRUSR | S_IWUSR
+
+
 int fifo_fd;
 const char *fifo_path = "/tmp/panel-fifo";
+const char *panel_pid_path = "/tmp/panel.pid";
+const char *multimon_pid_path = "/tmp/multimon.pid";
+
 
 inline void write_fifo(char *restrict icon)
 {

@@ -1,27 +1,61 @@
 #!/bin/zsh
-arg=$1
-base=$(basename $2)
-fpath="/home/bryan/Dropbox/notes/Study/${base%pdf}txt"
 
 open_notepad() {
 	bspc node -p south -o 0.8
 	termite --class="notepad" --title="notepad" -e "vim + $fpath"
 }
 
-if [[ $arg == "--open" ]]; then
+
+eval set -- $(getopt -o "osp:" -l "open,side,put:" -- "$@")
+
+while [[ -n "$1" ]]; do
+	case $1 in
+		'-o' | '--open' )
+			action="open"
+			;;
+		'-s' | '--side' )
+			action="side"
+			;;
+		'-p' | '--put' )
+			shift
+			case "$1" in
+				'major' )
+					action="put-major"
+					;;
+				'minor' )
+					action="put-minor"
+					;;
+			esac
+			;;
+		'--' )
+			shift
+			break
+			;;
+	esac
+	shift
+done
+
+
+base=$(basename $1)
+base=${base// /_}
+base=${base%pdf}
+fpath="/home/bryan/Dropbox/notes/Study/${base}txt"
+
+
+if [[ $action == "open" ]]; then
 	open_notepad
-elif [[ $arg == "--side" ]]; then
+elif [[ $action == "side" ]]; then
 	termite --class="notepad" --title="notepad" -e "vim + $fpath"
-elif [[ $arg == "--put"* ]]; then
+elif [[ $action == "put"* ]]; then
 	page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
 	clip=$(xclip -selection clipboard -o)
 	if [[ $clip == *[a-z] ]]; then
 		clip=${clip%[A-Z]*}
 		clip="$(echo -e "${clip}" | sed -e 's/[[:space:]]*$//')"
 	fi
-	if [[ $arg == "--put-major" ]]; then
+	if [[ $action == "put-major" ]]; then
 		printf "\n" >> $fpath
-	elif [[ $arg == "--put-minor" ]]; then
+	elif [[ $action == "put-minor" ]]; then
 		printf "  - " >> $fpath
 		clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n     /g')
 	fi

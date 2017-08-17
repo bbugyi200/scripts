@@ -27,6 +27,9 @@ int main(int argc, char *argv[])
 	char *cmd = argv[2];
 	int desktop = argv[3][0] - '0';
 	int alt_desktop = (desktop + 5) % 10;
+	if (alt_desktop == 0) {
+		alt_desktop = 10;
+	}
 
 	strcpy(alt_target, target);
 	strcpy(alt_cmd, cmd);

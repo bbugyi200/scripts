@@ -1,12 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "../panel.h"
-
-#define MAXLINE 1000
-#define MAXBARVAR MAXLINE + 50
-#define MAXITEM 50
-#define MAXBOD 50
+#include "draw.h"
 
 char *get_workspace_icons(char *);
 
@@ -25,40 +20,40 @@ int main(int argc, char *argv[])
 		*strchr(line, '\n') = '\0';
 		switch (line[0]) {
 			case 'S':
-				snprintf(sys, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", GREY, line+1);
+				setbarvar(sys, GREY, line+1);
 				break;
 			case 'B':
-				snprintf(batt, MAXBARVAR, "%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", line+1);
+				setbarvar(batt, "-", line+1);
 				break;
 			case 'D':
-				snprintf(dbox, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", BLUE, line+1);
+				setbarvar(dbox, BLUE, line+1);
 				break;
 			case 'X':
-				snprintf(net, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", WHITE, line+1);
+				setbarvar(net, WHITE, line+1);
 				break;
 			case 'P':
-				snprintf(pia, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", GREEN, line+1);
+				setbarvar(pia, GREEN, line+1);
 				break;
 			case 'U':
-				snprintf(updt, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", RED, line+1);
+				setbarvar(updt, RED, line+1);
 				break;
 			case 'C':
-				snprintf(clean, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", RED, line+1);
+				setbarvar(clean, RED, line+1);
 				break;
 			case 'V':
-				snprintf(vol, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", WHITE, line+1);
+				setbarvar(vol, WHITE, line+1);
 				break;
 			case 'M':
-				snprintf(mail, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", WHITE, line+1);
+				setbarvar(mail, WHITE, line+1);
 				break;
 			case 'Y':
-				snprintf(surf, MAXBARVAR, "%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", line+1);
+				setbarvar(surf, "-", line+1);
 				break;
 			case 'H':
-				snprintf(ham, MAXBARVAR, "%%{F%s}%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", GREY, line+1);
+				setbarvar(ham, GREY, line+1);
 				break;
 			case 'A':
-				snprintf(alrm, MAXBARVAR, "%%{B" COLOR_SYS_BG "}%s%%{B-}%%{F-}", line+1);
+				setbarvar(alrm, "-", line+1);
 				break;
 			case 'W':
 				pline = line + 1;

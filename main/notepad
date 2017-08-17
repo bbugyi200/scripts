@@ -13,7 +13,7 @@ if [[ $arg == "--open" ]]; then
 elif [[ $arg == "--side" ]]; then
 	termite --class="notepad" --title="notepad" -e "vim + $fpath"
 elif [[ $arg == "--put"* ]]; then
-	page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1)
+	page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
 	clip=$(xclip -selection clipboard -o)
 	if [[ $clip == *[a-z] ]]; then
 		clip=${clip%[A-Z]*}
@@ -28,7 +28,5 @@ elif [[ $arg == "--put"* ]]; then
 	printf "\"" >> $fpath
 	echo -n $clip >> $fpath 
 	printf "\" - p%s\n" $page >> $fpath
-	wmctrl -c notepad
-	open_notepad
-	sleep 0.3 && wmctrl -ax zathura.Zathura
+	wmctrl -c notepad && open_notepad && sleep 0.3 && wmctrl -ax zathura.Zathura
 fi

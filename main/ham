@@ -1,2 +1,89 @@
 #!/bin/bash
-hamster "$@" && /home/bryan/Dropbox/scripts/python/panel-hamster.py
+PID_FILE=/tmp/hamster.pid
+LOG_FILE=/tmp/hamster.log
+SECONDS=90
+
+print_panel() {
+	/home/bryan/Dropbox/scripts/python/panel-hamster.py
+}
+
+# ---------- Command Line Arguments ----------
+eval set -- $(getopt -o 'i:' -l 'idle-time:' -- "$@")
+
+while [[ -n "$1" ]]; do
+	case $1 in
+		'-i' | '--idle-time' )
+			MINUTES=$2
+			SECONDS=$((MINUTES * 60))
+			shift;;
+		'--' )
+			shift
+			break;;
+	esac
+	shift
+done
+
+
+MAX=$((SECONDS * 1000))
+action=$1
+
+
+# ---------- Redirect STDOUT and STDERR ----------
+exec 2>&1
+exec >> $LOG_FILE
+
+
+# ---------- Check for PID File ----------
+if [[ -f $PID_FILE ]]; then
+	cat $PID_FILE | xargs kill
+fi
+
+while [[ -f $PID_FILE ]]; do
+	sleep 0.5
+done
+
+# ---------- Run Initial Hamster Command ----------
+hamster "$@"
+
+if [[ $? -ne 0 ]]; then
+	printf "\"hamster $@\" failed\n\n"
+	exit 1
+else
+	print_panel
+fi
+
+# ---------- Handle Actions ----------
+if [[ $action == "stop" ]]; then
+	exit 0
+fi
+
+
+if [[ $action == "start" ]]; then
+	trap "rm $PID_FILE && kill 0" EXIT
+	activity=$2
+	while true; do
+		sleep 30
+		if [[ $(xprintidle) -ge $MAX ]]; then
+			hamster stop && print_panel
+			printf "Hamster \'$activity\' went idle at: %s\n" "$(date +'%m/%d/%Y %T %Z')"
+		else
+			continue
+		fi
+
+		# Only reaches this point if Idle
+		timeout_time=$(date --date="30 minutes" +%s)
+		while true; do
+			sleep 1
+			if [[ $(xprintidle) -le $MAX ]]; then
+				hamster $action $activity && print_panel
+				printf "Hamster \'$activity\' resumed at: %s\n\n" "$(date +'%m/%d/%Y %T %Z')"
+				break
+			elif [[ $(date +%s) -ge $timeout_time ]]; then
+				exit 1
+			fi
+		done
+	done
+fi &
+
+# ---------- Put PID of forked 'if' statement into PID File  ----------
+echo $! > $PID_FILE

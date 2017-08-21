@@ -1,4 +1,8 @@
 #!/bin/bash
+if [[ $(hostname) == "athena" ]]; then
+	stow -v --dir=/home/bryan/Dropbox/scripts/backup --target=/etc -R cron.jobs
+fi
+
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R main
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R config
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R lemonbar

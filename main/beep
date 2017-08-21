@@ -1,0 +1,17 @@
+#!/bin/bash
+
+sound=/usr/share/sounds/Oxygen-Sys-App-Positive.ogg
+
+eval set -- $(getopt -o 'n' -l 'negative' -- "$@")
+while [[ -n "$1" ]]; do
+	case $1 in
+		'-n' | '--negative')
+			sound=/usr/share/sounds/Oxygen-Sys-App-Negative.ogg;;
+		'--')
+			shift
+			break;;
+	esac
+	shift
+done
+
+paplay $sound

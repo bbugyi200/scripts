@@ -1,36 +1,27 @@
 #!/bin/zsh
 
-open_notepad() {
-	bspc node -p south -o 0.8
-	termite --class="notepad" --title="notepad" -e "vim + $fpath"
-}
+eval set -- $(getopt -o "osNp:" -l "open,side,no-newlines,put:" -- "$@")
 
-
-eval set -- $(getopt -o "osp:" -l "open,side,put:" -- "$@")
-
+newlines=1
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-o' | '--open' )
-			action="open"
-			;;
+			action="open";;
 		'-s' | '--side' )
-			action="side"
-			;;
+			action="side";;
+		'-N' | '--no-newlines' )
+			newlines=0;;
 		'-p' | '--put' )
 			shift
 			case "$1" in
 				'major' )
-					action="put-major"
-					;;
+					action="put-major";;
 				'minor' )
-					action="put-minor"
-					;;
-			esac
-			;;
+					action="put-minor";;
+			esac;;
 		'--' )
 			shift
-			break
-			;;
+			break;;
 	esac
 	shift
 done
@@ -38,29 +29,52 @@ done
 
 base=$(basename $1)
 base=${base// /_}
-base=${base%pdf}
-fpath="/home/bryan/Dropbox/notes/Study/${base}txt"
+base=${base%.pdf}
+abbrv=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g')
+fpath="/home/bryan/Dropbox/notes/Study/${base}.txt"
+esc_fpath=$(printf "%q" $fpath)
 
 
-if [[ $action == "open" ]]; then
-	open_notepad
-elif [[ $action == "side" ]]; then
-	termite --class="notepad" --title="notepad" -e "vim + $fpath"
-elif [[ $action == "put"* ]]; then
-	page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
-	clip=$(xclip -selection clipboard -o)
-	if [[ $clip == *[a-z] ]]; then
-		clip=${clip%[A-Z]*}
-		clip="$(echo -e "${clip}" | sed -e 's/[[:space:]]*$//')"
-	fi
-	if [[ $action == "put-major" ]]; then
-		printf "\n" >> $fpath
-	elif [[ $action == "put-minor" ]]; then
-		printf "  - " >> $fpath
-		clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n     /g')
-	fi
-	printf "\"" >> $fpath
-	echo -n $clip >> $fpath 
-	printf "\" - p%s\n" $page >> $fpath
-	wmctrl -c notepad && open_notepad && sleep 0.3 && wmctrl -ax zathura.Zathura
-fi
+case $action in
+	'open')
+		bspc node -p south -o 0.8
+		termite --title="notepad" --class="notepad" -e "tm-init notepad" &
+		sleep 0.5
+		tmux send-keys -t notepad:0.0 "vim + $esc_fpath" Enter;;
+	'side')
+		tmux send-keys -t $abbrv:0.0 "vim + -c'?---' $esc_fpath" Enter "zt"
+		wmctrl -a termite;;
+	'put'*)
+		page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
+		clip=$(xclip -selection clipboard -o)
+
+		if [[ $newlines -eq 0 ]]; then
+			if [[ $clip == [a-z]* ]]; then
+				clip=$(echo $clip | tr '\n' ' ')
+				clip=${clip#*. }
+			fi
+		elif [[ $clip == *[A-Z]*"."* ]]; then
+			if [[ $clip == *[A-Za-z,] ]]; then
+				clip="${clip%.*}."
+				# clip="$(echo -e "${clip}" | sed -e 's/[[:space:]]*$//')"
+			fi
+		fi
+
+		if [[ $action == "put-major" ]]; then
+			printf "\n" >> $fpath
+		elif [[ $action == "put-minor" ]]; then
+			printf "  - " >> $fpath
+			clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n     /g')
+		fi
+
+		printf "\"" >> $fpath
+		echo -n $clip >> $fpath 
+		printf "\" - p%s\n" $page >> $fpath
+
+		if tmux send-keys -t notepad:0.0 ":e" Enter "G"; then
+			exit 0
+		else
+			tmux send-keys -t $abbrv:0.0 ":e" Enter "G"
+		fi
+		;;
+esac

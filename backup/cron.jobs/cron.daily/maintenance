@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Updates 'locate' database
+updatedb
+
+# Delete conflicted copies
+find /home/bryan/Dropbox -name "*aphrodite's conflicted copy*" -delete

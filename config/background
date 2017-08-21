@@ -1,3 +1,8 @@
 #!/bin/bash
-feh --bg-fill $1
-echo $1 > ~/Dropbox/photos/backgrounds/current_bg.txt
+if [[ $(hostname) == "aphrodite" ]]; then
+	feh --bg-fill $1
+else
+	feh --bg-fill $1 /home/bryan/Dropbox/photos/backgrounds/portrait/triangle-lines.jpg
+fi
+
+echo $1 > /tmp/current_bg.txt

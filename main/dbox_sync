@@ -1,0 +1,36 @@
+#!/bin/bash
+
+eval set -- $(getopt -o 'd' -l 'debug' -- "$@")
+
+debug=0
+while [[ -n "$1" ]]; do
+	case $1 in
+		'-d' | '--debug')
+			debug=1;;
+		'--')
+			shift
+			break;;
+	esac
+	shift
+done
+
+if [[ $debug -eq 0 ]]; then
+	exec 2>&1
+	exec 1> /dev/null
+fi
+
+COUNT=0
+while true; do
+	STATUS=$(dropbox-cli status)
+	printf "%s\n\n" "$STATUS"
+	if [[ $STATUS == "Up to date" ]]; then
+		(( COUNT++ ))
+	fi
+
+	printf "COUNT = %d\n\n" $COUNT
+	if (( COUNT >= 5 )); then
+		printf "Exiting...\n\n"
+		exit 0
+	fi
+	sleep 1
+done

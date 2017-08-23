@@ -18,7 +18,8 @@
 
 int 	cnt_pia = upd_pia,		cnt_batt = upd_batt,	cnt_net = upd_net,
 		cnt_upd = upd_upd,		cnt_dbox = upd_dbox,	cnt_mail = upd_mail,
-		cnt_clean = upd_clean,	cnt_surf = upd_surf,	cnt_ham = upd_ham;
+		cnt_clean = upd_clean,	cnt_surf = upd_surf,	cnt_ham = upd_ham,
+		cnt_temp = upd_temp;
 
 void write_fifo(char *);
 
@@ -29,7 +30,7 @@ int main(int argc, char *argv[])
 	fifo_fd = open(fifo_path, O_RDWR);
 
 	// Pipe Variables
-	int pipefd[2], status;
+	int pipefd[4], status;
 	pid_t pid;
 	FILE *pipe_output;
 	char cmdout[MAXLINE];
@@ -231,6 +232,56 @@ int main(int argc, char *argv[])
 
 		// Multimon Panel Items
 		if (multi_mon) {
+			// Hamster
+			if (cnt_ham++ >= upd_ham) {
+				if ((status = system("/home/bryan/Dropbox/scripts/python/panel-hamster.py")) != 0)
+					log_ret("system(\"%s\") = %d", "/home/bryan/Dropbox/scripts/python/panel-hamster.py", status/256);
+				cnt_ham = 0;
+			}
+
+			// Temperature
+			if (cnt_temp++ >= upd_temp) {
+				pipe(pipefd);
+				if ((pid = fork()) < 0)
+					log_sys("fork");
+				else if (pid == 0) {
+					close(pipefd[0]);
+					dup2(pipefd[1], STDOUT_FILENO);
+					execl("/usr/bin/weather-report", "weather-report", "-q", "--headers", "Temperature", "08060", (char *) NULL);
+				}
+
+				close(pipefd[1]);
+				waitpid(pid, &status, 0);
+				if (status != 0)
+					log_msg("weather-report failed with 'status = %d'", status);
+
+				pipe(pipefd + 2);
+				if ((pid = fork()) < 0)
+					log_sys("fork");
+				else if (pid == 0) {
+					close(pipefd[2]);
+					dup2(pipefd[0], STDIN_FILENO);
+					dup2(pipefd[3], STDOUT_FILENO);
+					execl("/usr/bin/gawk", "gawk", "{printf \"%d%s\", $2, $3}", (char *) NULL);
+				}
+
+				close(pipefd[3]);
+				waitpid(pid, &status, 0);
+				if (status != 0)
+					log_msg("gawk failed with 'status = %d'", status);
+
+				pipe_output = fdopen(pipefd[2], "r");
+
+				if (fgets(cmdout, MAX_CMD, pipe_output) < 0)
+					log_sys("fgets");
+
+				if (snprintf(full_icon, MAX_ICON, "T%s  \n", cmdout) < 0)
+					log_sys("snprintf (temp)");
+
+				write_fifo(full_icon);
+				cnt_temp = 0;
+			}
+
 			// Surf Check
 			if (cnt_surf++ >= upd_surf) {
 
@@ -281,13 +332,6 @@ int main(int argc, char *argv[])
 				write_fifo(full_icon);
 
 				cnt_surf = 0;
-			}
-
-			// Hamster
-			if (cnt_ham++ >= upd_ham) {
-				if ((status = system("/home/bryan/Dropbox/scripts/python/panel-hamster.py")) != 0)
-					log_ret("system(\"%s\") = %d", "/home/bryan/Dropbox/scripts/python/panel-hamster.py", status/256);
-				cnt_ham = 0;
 			}
 		}
 

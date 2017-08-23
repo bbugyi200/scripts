@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 	char sys[MAXBARVAR] = "", batt[MAXBARVAR] = "", dbox[MAXBARVAR] = "", net[MAXBARVAR] = "",
 		pia[MAXBARVAR] = "", updt[MAXBARVAR] = "", clean[MAXBARVAR] = "", vol[MAXBARVAR] = "",
 		mail[MAXBARVAR] = "", surf[MAXBARVAR] = "", ham[MAXBARVAR] = "", alrm[MAXBARVAR] = "",
-		wm[MAXBARVAR] = "";
+		wm[MAXBARVAR] = "", temp[MAXBARVAR] = "";
 
 	int i;
 	bool last_item;
@@ -54,6 +54,9 @@ int main(int argc, char *argv[])
 				break;
 			case 'A':
 				setbarvar(alrm, "-", line+1);
+				break;
+			case 'T':
+				setbarvar(temp, GREY, line+1);
 				break;
 			case 'W':
 				pline = line + 1;
@@ -125,14 +128,14 @@ int main(int argc, char *argv[])
 				break;
 		}
 
-		fmt = "%%{l}%s%%{c}%s%%{r}%%{T3}%s%s%s%s%s%s%s%s%%{S+}%%{l}%s%%{c}%s%%{r}%s%%{T-}\n";
+		fmt = "%%{l}%s%%{c}%s%%{r}%%{T3}%s%s%s%s%s%s%s%s%%{S+}%%{l}%s%%{c}%s%%{r}%s%s%%{T-}\n";
 		fprintf(stdout, fmt,
 				wm, // #1 Left
 				sys, // #1 Center
 				mail, batt, vol, pia, dbox, net, updt, clean, // #1 Right
 				alrm, // #2 Left
 				ham,  // #2 Center
-				surf); // #2 Right
+				surf, temp); // #2 Right
 
 		fflush(stdout);
 	}

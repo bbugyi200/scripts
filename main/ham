@@ -8,10 +8,13 @@ print_panel() {
 }
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o 'i:' -l 'idle-time:' -- "$@")
+eval set -- $(getopt -o 'di:' -l 'debug,idle-time:' -- "$@")
 
+debug=0
 while [[ -n "$1" ]]; do
 	case $1 in
+		'-d' | '--debug' )
+			debug=1;;
 		'-i' | '--idle-time' )
 			MINUTES=$2
 			SECONDS=$((MINUTES * 60))
@@ -29,8 +32,10 @@ action=$1
 
 
 # ---------- Redirect STDOUT and STDERR ----------
-exec 2>&1
-exec >> $LOG_FILE
+if [[ $debug -eq 0 ]]; then
+	exec 2>&1
+	exec >> $LOG_FILE
+fi
 
 
 # ---------- Check for PID File ----------
@@ -55,25 +60,34 @@ while [[ -f $PID_FILE ]]; do
 	fi
 done
 
-# ---------- Run Initial Hamster Command ----------
-hamster "$@"
-
-if [[ $? -ne 0 ]]; then
-	logger "ham: hamster command failed"
-	exit 1
-else
-	print_panel
-fi
-
 # ---------- Handle Actions ----------
 if [[ $action == "stop" ]]; then
+	hamster stop
+	print_panel
 	exit 0
 fi
 
 
 if [[ $action == "start" ]]; then
 	trap "rm $PID_FILE && kill 0" EXIT
-	activity=$2
+
+	if [[ "$2" == [0-9] ]]; then
+		activity=$(hamster activities | sort | sed "$2q;d")
+	elif [[ -n "$2" ]]; then
+		activity=$2
+	else
+		activity=$(hamster activities | sort | dmenu -i -m 0)
+	fi
+
+	hamster "$action" "$activity" "${@:3}"
+
+	if [[ $? -ne 0 ]]; then
+		logger "ham: hamster command failed"
+		exit 1
+	else
+		print_panel
+	fi
+
 	while true; do
 		sleep 30
 		if [[ $(xprintidle) -ge $MAX ]]; then

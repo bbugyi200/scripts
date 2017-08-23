@@ -17,6 +17,7 @@
 #define upd_mail 15
 #define upd_surf 3600
 #define upd_ham 30
+#define upd_temp 1800
 
 // Unicode Font Awesome Icons
 #define UPDT "\uf0aa"

@@ -21,6 +21,6 @@ i3lock -n -i /tmp/screenshotblur.png
 kill $PID
 pkill motion
 
-touch -t $(date --date="$M minute ago" +%Y%m%d%H%M) /tmp/motionts
+touch -t $(date --date="$M minutes ago" +%Y%m%d%H%M) /tmp/motionts
 find . -newer /tmp/motionts -name "*.avi" -delete
-find . -name "*.avi" -size -300k -delete
+find . -name "*.avi" -size -100k -delete

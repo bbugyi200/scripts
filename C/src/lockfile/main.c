@@ -9,7 +9,6 @@
 
 #define OFLAGS O_RDWR | O_CREAT
 #define OMODE S_IRUSR | S_IWUSR
-#define MAXARG 256
 
 static int fd;
 
@@ -48,24 +47,25 @@ int main(int argc, char *argv[])
 				lockfile = optarg;
 				break;
 			default:
-				abort();
+				exit(1);
 		}
 	}
 
 	// ----- Splitting 'cmd' into 'cmdv' -----
-	int count = 2; // one for command name; one for null ptr at the end
-	char *cmdp = cmd;
+	int token_count = 2; // one for command name; one for null ptr at the end
 	int cmd_len = strlen(cmd);
+	char *cmdp = cmd;
+
 	for (int i = 0; i < cmd_len; i++) {
 		if (*cmdp++ == ' ') {
-			count++;
+			token_count++;
 		}
 	}
 
-	char **cmdv = malloc(sizeof(char *) * count);
+	char **cmdv = malloc(sizeof(char *) * token_count);
 
 	cmdv[0] = strtok(cmd, " ");
-	for (int i = 1; i < count; ++i) {
+	for (int i = 1; i < token_count; ++i) {
 		cmdv[i] = strtok(NULL, " ");
 	}
 
@@ -80,18 +80,19 @@ int main(int argc, char *argv[])
 
 	// ----- Spawning 'cmd' -----
 	pid_t pid;
+
 	if ((pid = fork()) < 0)
 		err_sys("fork");
 	else if (pid == 0) {
 		execvp(cmdv[0], cmdv); 
 	}
-
 	free(cmdv);
 
 	int status;
+
 	waitpid(pid, &status, 0);
 	if (status != 0)
-		err_quit("status = %d", status);
+		err_msg("status = %d", status);
 
 	exit(0);
 }
@@ -108,5 +109,5 @@ exith(void)
 void
 sighand(int signo)
 {
-	exit(1);
+	exit(2);
 }

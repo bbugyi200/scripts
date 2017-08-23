@@ -38,10 +38,18 @@ err_ret(const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
+	err_main(true, errno, fmt, ap);
+	va_end(ap);
+}
+
+void
+err_msg(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
 	err_main(false, 0, fmt, ap);
 	va_end(ap);
-
-	return;
 }
 
 static void

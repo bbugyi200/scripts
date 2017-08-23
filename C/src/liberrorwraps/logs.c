@@ -39,10 +39,19 @@ log_ret(const char *fmt, ...)
 	va_list ap;
 
 	va_start(ap, fmt);
+	log_main(true, errno, fmt, ap);
+	va_end(ap);
+}
+
+
+void
+log_msg(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
 	log_main(false, 0, fmt, ap);
 	va_end(ap);
-
-	return;
 }
 
 static void

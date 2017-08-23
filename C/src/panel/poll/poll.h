@@ -33,6 +33,7 @@
 #define SMILE "\uf118"
 #define MEH "\uf11a"
 #define DIAMOND "\uf219"
+#define THERM "\uf2c9"
 
 
 #endif /* ifndef POLL */

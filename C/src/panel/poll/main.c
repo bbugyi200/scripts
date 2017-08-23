@@ -275,7 +275,7 @@ int main(int argc, char *argv[])
 				if (fgets(cmdout, MAX_CMD, pipe_output) < 0)
 					log_sys("fgets");
 
-				if (snprintf(full_icon, MAX_ICON, "T%s  \n", cmdout) < 0)
+				if (snprintf(full_icon, MAX_ICON, "T %s " THERM "  \n", cmdout) < 0)
 					log_sys("snprintf (temp)");
 
 				write_fifo(full_icon);

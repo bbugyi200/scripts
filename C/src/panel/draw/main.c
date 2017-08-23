@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 				setbarvar(batt, "-", line+1);
 				break;
 			case 'D':
-				setbarvar(dbox, BLUE, line+1);
+				setbarvar(dbox, "-", line+1);
 				break;
 			case 'X':
 				setbarvar(net, WHITE, line+1);

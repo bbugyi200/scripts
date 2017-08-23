@@ -1,12 +1,17 @@
 #!/bin/zsh
 
-eval set -- $(getopt -o "osNp:" -l "open,side,no-newlines,put:" -- "$@")
+eval set -- $(getopt -o "odusNp:" -l "open,debug,undo,side,no-newlines,put:" -- "$@")
 
 newlines=1
+debug=0
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-o' | '--open' )
 			action="open";;
+		'-d' | '--debug' )
+			debug=1;;
+		'-u' | '--undo' )
+			action="undo";;
 		'-s' | '--side' )
 			action="side";;
 		'-N' | '--no-newlines' )
@@ -26,6 +31,13 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
+tmux_send_keys() {
+	if tmux send-keys -t notepad:0.0 ":e" Enter "G"; then
+		:
+	else
+		tmux send-keys -t $abbrv:0.0 ":e" Enter "G"
+	fi
+}
 
 base=$(basename $1)
 base=${base// /_}
@@ -34,6 +46,10 @@ abbrv=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g
 fpath="/home/bryan/Dropbox/notes/Study/${base}.txt"
 esc_fpath=$(printf "%q" $fpath)
 
+if [[ $debug -eq 0 ]]; then
+	exec 2>&1
+	exec 1> /dev/null
+fi
 
 case $action in
 	'open')
@@ -41,6 +57,10 @@ case $action in
 		termite --title="notepad" --class="notepad" -e "tm-init notepad" &
 		sleep 0.5
 		tmux send-keys -t notepad:0.0 "vim + $esc_fpath" Enter;;
+	'undo')
+		sed -i'.backup' ':a; ${d; q}; N; /\n$/!ba' $fpath
+		sed -i '$d' $fpath
+		tmux_send_keys;;
 	'side')
 		tmux send-keys -t $abbrv:0.0 "vim + -c'?---' $esc_fpath" Enter "zt"
 		wmctrl -a termite;;
@@ -48,9 +68,10 @@ case $action in
 		page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
 		clip=$(xclip -selection clipboard -o)
 
+		printf "newlines = %d\n" $newlines
 		if [[ $newlines -eq 0 ]]; then
+			clip=$(echo $clip | tr '\n' ' ')
 			if [[ $clip == [a-z]* ]]; then
-				clip=$(echo $clip | tr '\n' ' ')
 				clip=${clip#*. }
 			fi
 		elif [[ $clip == *[A-Z]*"."* ]]; then
@@ -59,6 +80,8 @@ case $action in
 				# clip="$(echo -e "${clip}" | sed -e 's/[[:space:]]*$//')"
 			fi
 		fi
+
+		printf "clip = %s\n\n" $clip
 
 		if [[ $action == "put-major" ]]; then
 			printf "\n" >> $fpath
@@ -70,11 +93,7 @@ case $action in
 		printf "\"" >> $fpath
 		echo -n $clip >> $fpath 
 		printf "\" - p%s\n" $page >> $fpath
-
-		if tmux send-keys -t notepad:0.0 ":e" Enter "G"; then
-			exit 0
-		else
-			tmux send-keys -t $abbrv:0.0 ":e" Enter "G"
-		fi
+		
+		tmux_send_keys
 		;;
 esac

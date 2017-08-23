@@ -1,5 +1,7 @@
 #!/bin/bash
 
+. /home/bryan/Dropbox/scripts/lemonbar/panel_config
+
 eval set -- $(getopt -o 'd' -l 'debug' -- "$@")
 
 debug=0
@@ -14,6 +16,10 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
+print_icon() {
+	printf "D%%{F$1}$DBOX  \n" > $PANEL_FIFO
+}
+
 if [[ $debug -eq 0 ]]; then
 	exec 2>&1
 	exec 1> /dev/null
@@ -25,6 +31,13 @@ while true; do
 	printf "%s\n\n" "$STATUS"
 	if [[ $STATUS == "Up to date" ]]; then
 		(( COUNT++ ))
+		print_icon $BLUE
+	elif [[ $STATUS == "Connecting..." ]] || [[ $STATUS == "Starting..." ]]; then
+		print_icon $RED
+	elif [[ $STATUS == "Dropbox isn't running!" ]]; then
+		printf "D\n" > $PANEL_FIFO
+	else
+		print_icon $YELLOW
 	fi
 
 	printf "COUNT = %d\n\n" $COUNT

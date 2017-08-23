@@ -8,6 +8,21 @@ BLUE="#3C4BF7"
 WHITE="#FFFFFF"
 GREY="#D9D9D9"
 
+# Icons
+UPDT="\uf0aa"
+TRASH="\uf014"
+MAIL="\uf003"
+BOLT="\uf0e7"
+HBATT="\uf240"
+MBATT="\uf242"
+LBATT="\uf243"
+DBOX="\uf16b"
+PIA="\uf17b"
+FROWN="\uf119"
+SMILE="\uf118"
+MEH="\uf11a"
+DIAMOND="\uf219"
+
 # Original Colors
 COLOR_DEFAULT_FG="#a7a5a5"
 COLOR_DEFAULT_BG="#333232"

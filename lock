@@ -23,4 +23,4 @@ pkill motion
 
 touch -t $(date --date="$M minute ago" +%Y%m%d%H%M) /tmp/motionts
 find . -newer /tmp/motionts -name "*.avi" -delete
-find . -name "*.avi" -size -500k -delete
+find . -name "*.avi" -size -300k -delete

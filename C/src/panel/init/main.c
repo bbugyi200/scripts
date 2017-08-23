@@ -107,6 +107,13 @@ main(int argc, char *argv[])
 		execl("/usr/local/bin/volume-panel-update", "volume-panel-update", (char *) NULL);
 	}
 
+	// Dropbox Sync
+	if ((pid = fork()) < 0)
+		log_sys("fork");
+	else if (pid == 0) {
+		execl("/usr/local/bin/lockfile", "lockfile", "-f", dbox_ipath, "-c", "dbox_sync", (char *) NULL);
+	}
+
 	int pipefd[4];
 	pipe(pipefd);
 	if ((pid = fork()) < 0)

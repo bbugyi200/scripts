@@ -87,6 +87,11 @@ int main(int argc, char *argv[])
 
 	// Surf
 	char *colors[3], label;
+
+	// Dropbox
+	int fd_dbox = open(dbox_ipath, OFLAGS, OMODE);
+	if (fd_dbox < 0)
+		log_sys("open");
 	
 
 	// ----- Main Loop -----
@@ -164,9 +169,16 @@ int main(int argc, char *argv[])
 
 		// Dropbox
 		if (cnt_dbox++ >= upd_dbox) {
-			ecode = system("pgrep dropbox >& /dev/null");
-			icon = (ecode == 0) ? "D" DBOX "  \n" : "D\n";
-			write_fifo(icon);
+			if (lockf(fd_dbox, F_TLOCK, 0) < 0)
+				log_ret("%s is already locked.", dbox_ipath);
+			else {
+				ecode = system("pgrep dropbox >& /dev/null");
+				icon = (ecode == 0) ? "D%{F" BLUE "}" DBOX "  \n" : "D\n";
+				write_fifo(icon);
+				if (lockf(fd_dbox, F_ULOCK, 0) < 0)
+					log_sys("Unable to unlock %s.", dbox_ipath);
+			}
+
 			cnt_dbox = 0;
 		}
 

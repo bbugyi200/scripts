@@ -49,6 +49,7 @@ int fifo_fd;
 const char *fifo_path = "/tmp/panel-fifo";
 const char *panel_pid_path = "/tmp/panel.pid";
 const char *multimon_pid_path = "/tmp/multimon.pid";
+const char *dbox_ipath = "/tmp/dbox.icon";
 
 
 inline void write_fifo(char *restrict icon)

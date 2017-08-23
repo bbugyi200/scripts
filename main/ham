@@ -46,7 +46,7 @@ done
 hamster "$@"
 
 if [[ $? -ne 0 ]]; then
-	printf "\"hamster $@\" failed\n\n"
+	printf "\"Hamster $@\" failed\n\n"
 	exit 1
 else
 	print_panel
@@ -59,6 +59,7 @@ fi
 
 
 if [[ $action == "start" ]]; then
+	trap "exit" INT TERM
 	trap "rm $PID_FILE && kill 0" EXIT
 	activity=$2
 	while true; do
@@ -79,6 +80,7 @@ if [[ $action == "start" ]]; then
 				printf "Hamster \'$activity\' resumed at: %s\n\n" "$(date +'%m/%d/%Y %T %Z')"
 				break
 			elif [[ $(date +%s) -ge $timeout_time ]]; then
+				printf "Hamster \'$activity\' timed out at: %s\n\n" "$(date +'%m/%d/%Y %T %Z')"
 				exit 1
 			fi
 		done

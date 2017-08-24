@@ -21,8 +21,6 @@ int 	cnt_pia = upd_pia,		cnt_batt = upd_batt,	cnt_net = upd_net,
 		cnt_clean = upd_clean,	cnt_surf = upd_surf,	cnt_ham = upd_ham,
 		cnt_temp = upd_temp;
 
-void write_fifo(char *);
-
 extern int fifo_fd;
 
 int main(int argc, char *argv[])
@@ -262,7 +260,7 @@ int main(int argc, char *argv[])
 					close(pipefd[2]);
 					dup2(pipefd[0], STDIN_FILENO);
 					dup2(pipefd[3], STDOUT_FILENO);
-					execl("/usr/bin/gawk", "gawk", "{printf \"%d%s\", $2, $3}", (char *) NULL);
+					execl("/usr/bin/gawk", "gawk", "{printf \"%d\u00b0F\", $2}", (char *) NULL);
 				}
 
 				close(pipefd[3]);
@@ -275,7 +273,7 @@ int main(int argc, char *argv[])
 				if (fgets(cmdout, MAX_CMD, pipe_output) < 0)
 					log_sys("fgets");
 
-				if (snprintf(full_icon, MAX_ICON, "T %s " THERM "  \n", cmdout) < 0)
+				if (snprintf(full_icon, MAX_ICON, "T %s  \n", cmdout) < 0)
 					log_sys("snprintf (temp)");
 
 				write_fifo(full_icon);

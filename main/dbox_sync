@@ -29,16 +29,17 @@ COUNT=0
 while true; do
 	STATUS=$(dropbox-cli status)
 	printf "%s\n\n" "$STATUS"
-	if [[ $STATUS == "Up to date" ]]; then
-		(( COUNT++ ))
-		print_icon $BLUE
-	elif [[ $STATUS == "Connecting..." ]] || [[ $STATUS == "Starting..." ]]; then
-		print_icon $RED
-	elif [[ $STATUS == "Dropbox isn't running!" ]]; then
-		printf "D\n" > $PANEL_FIFO
-	else
-		print_icon $YELLOW
-	fi
+	case $STATUS in
+		'Up to date')
+			(( COUNT++ ))
+			print_icon $BLUE;;
+		'Connecting...' | 'Starting...' | "Can't establish secure internet connection"*)
+			print_icon $RED;;
+		"Dropbox isn't running!")
+			printf "D\n" > $PANEL_FIFO;;
+		*)
+			print_icon $YELLOW;;
+	esac
 
 	printf "COUNT = %d\n\n" $COUNT
 	if (( COUNT >= 5 )); then

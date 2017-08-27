@@ -4,7 +4,9 @@ LOG_FILE=/tmp/hamster.log
 SECONDS=90
 
 print_panel() {
-	/home/bryan/Dropbox/scripts/python/panel-hamster.py
+	if [[ $(bspc query -M | wc -l) -ge 2 ]]; then
+		/home/bryan/Dropbox/scripts/python/panel-hamster.py
+	fi
 }
 
 # ---------- Command Line Arguments ----------
@@ -69,7 +71,7 @@ fi
 
 
 if [[ $action == "start" ]]; then
-	trap "rm $PID_FILE && kill 0" EXIT
+	trap "rm $PID_FILE; kill 0" EXIT
 
 	if [[ "$2" == [0-9] ]]; then
 		activity=$(hamster activities | sort | sed "$2q;d")
@@ -79,7 +81,19 @@ if [[ $action == "start" ]]; then
 		activity=$(hamster activities | sort | dmenu -i -m 0)
 	fi
 
-	hamster "$action" "$activity" "${@:3}"
+	start_time=
+	if [[ -z "$activity" ]]; then
+		logger "ham: 'activity' variable is empty"
+		exit 1
+	elif [[ $activity == *"+"* ]]; then
+		offset="${activity#*+}"
+		activity="${activity%+*}"
+
+		start_time=$(date --date="$offset minutes ago" +%H:%M)
+	fi
+
+
+	hamster "$action" "$activity" "$start_time" "${@:3}"
 
 	if [[ $? -ne 0 ]]; then
 		logger "ham: hamster command failed"

@@ -1,9 +1,10 @@
 #!/bin/bash
 
 DROPBOX=/media/bryan/hercules/backup/dropbox/weekly
-date > $DROPBOX/backup.txt
 
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
+date > $DROPBOX/backup.txt
+
 pacman -Qqe > /media/bryan/hercules/backup/pacman/weekly.txt
 tar -cjf /media/bryan/hercules/backup/pacman/pacman_database.tar.bz2 /var/lib/pacman/local
 

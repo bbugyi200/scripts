@@ -1,9 +1,10 @@
 #!/bin/zsh
 
-eval set -- $(getopt -o "odusNp:" -l "open,debug,undo,side,no-newlines,put:" -- "$@")
+eval set -- $(getopt -o "odusNp:" -l "open,debug,undo,side,no-newlines,put:,dmenu" -- "$@")
 
 newlines=1
 debug=0
+dmenu=0
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-o' | '--open' )
@@ -24,6 +25,8 @@ while [[ -n "$1" ]]; do
 				'minor' )
 					action="put-minor";;
 			esac;;
+		'--dmenu' )
+			dmenu=1;;
 		'--' )
 			shift
 			break;;
@@ -39,9 +42,11 @@ tmux_send_keys() {
 	fi
 }
 
+
 base=$(basename $1)
 base=${base// /_}
 base=${base%.pdf}
+
 abbrv=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g')
 fpath="/home/bryan/Dropbox/notes/Study/${base}.txt"
 esc_fpath=$(printf "%q" $fpath)
@@ -66,33 +71,41 @@ case $action in
 		wmctrl -a termite;;
 	'put'*)
 		page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
-		clip=$(xclip -selection clipboard -o)
 
-		printf "newlines = %d\n" $newlines
-		if [[ $newlines -eq 0 ]]; then
-			clip=$(echo $clip | tr '\n' ' ')
-			if [[ $clip == [a-z]* ]]; then
-				clip=${clip#*. }
+		if [[ $dmenu -eq 0 ]]; then
+			clip=$(xclip -selection clipboard -o)
+			Q="\""
+
+			if [[ $newlines -eq 0 ]]; then
+				clip=$(echo $clip | tr '\n' ' ')
+				if [[ $clip == [a-z]* ]]; then
+					clip=${clip#*. }
+				fi
+			elif [[ $clip == *[A-Z]*"."* ]]; then
+				if [[ $clip == *[A-Za-z,] ]]; then
+					clip="${clip%.*}."
+				fi
 			fi
-		elif [[ $clip == *[A-Z]*"."* ]]; then
-			if [[ $clip == *[A-Za-z,] ]]; then
-				clip="${clip%.*}."
-				# clip="$(echo -e "${clip}" | sed -e 's/[[:space:]]*$//')"
-			fi
+		else
+			clip=$(echo | dmenu -p "notepad:")
+			Q=
 		fi
 
-		printf "clip = %s\n\n" $clip
+		if [[ -z "$clip" ]]; then
+			logger "notepad: 'clip' variable is empty"
+			exit 1
+		fi
 
 		if [[ $action == "put-major" ]]; then
 			printf "\n" >> $fpath
 		elif [[ $action == "put-minor" ]]; then
-			printf "  - " >> $fpath
+			printf "  * " >> $fpath
 			clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n     /g')
 		fi
 
-		printf "\"" >> $fpath
+		printf "$Q" >> $fpath
 		echo -n $clip >> $fpath 
-		printf "\" - p%s\n" $page >> $fpath
+		printf "$Q - p%s\n" $page >> $fpath
 		
 		tmux_send_keys
 		;;

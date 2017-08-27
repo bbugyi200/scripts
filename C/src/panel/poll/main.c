@@ -245,7 +245,7 @@ int main(int argc, char *argv[])
 				else if (pid == 0) {
 					close(pipefd[0]);
 					dup2(pipefd[1], STDOUT_FILENO);
-					execl("/usr/bin/weather-report", "weather-report", "-q", "--headers", "Temperature", "08060", (char *) NULL);
+					execl("/usr/bin/weather-report", "weather-report", "-q", "--headers", "Temperature", "--no-cache", "08060", (char *) NULL);
 				}
 
 				close(pipefd[1]);
@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
 					close(pipefd[2]);
 					dup2(pipefd[0], STDIN_FILENO);
 					dup2(pipefd[3], STDOUT_FILENO);
-					execl("/usr/bin/gawk", "gawk", "{printf \"%d\u00b0F\", $2}", (char *) NULL);
+					execl("/usr/bin/gawk", "gawk", "{printf \"%.0f\u00b0F\", $2}", (char *) NULL);
 				}
 
 				close(pipefd[3]);

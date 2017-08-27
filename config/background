@@ -2,7 +2,8 @@
 if [[ $(hostname) == "aphrodite" ]]; then
 	feh --bg-fill $1
 else
-	feh --bg-fill $1 /home/bryan/Dropbox/photos/backgrounds/portrait/triangle-lines.jpg
+	# feh --bg-fill /home/bryan/Dropbox/photos/backgrounds/portrait/triangle-lines.jpg $1
+	feh --bg-fill $1
 fi
 
 echo $1 > /tmp/current_bg.txt

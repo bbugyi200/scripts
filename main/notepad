@@ -1,11 +1,21 @@
 #!/bin/zsh
 
+# Refreshes vim by reopening the file and then brings cursor to the bottom
+refresh_notes() {
+	if tmux send-keys -t notes:0.0 ":e" Enter "G"; then
+		:
+	else
+		tmux send-keys -t $abbrv:0.0 ":e" Enter "G"
+	fi
+}
+
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "odusc:p:" -l "open,debug,undo,side,cut:,put:,dmenu" -- "$@")
+eval set -- $(getopt -o "odubc:p:" -l "open,debug,undo,bottom,cut:,put:,dmenu" -- "$@")
 
 putarg=
 debug=0
 dmenu=0
+bottom=0
 cut="suffix+prefix"
 while [[ -n "$1" ]]; do
 	case $1 in
@@ -15,8 +25,8 @@ while [[ -n "$1" ]]; do
 			debug=1;;
 		'-u' | '--undo' )
 			action="undo";;
-		'-s' | '--side' )
-			action="side";;
+		'-b' | '--bottom' )
+			bottom=1;;
 		'-c' | '--cut' )
 			shift
 			cut="$1";;
@@ -32,17 +42,6 @@ while [[ -n "$1" ]]; do
 	esac
 	shift
 done
-
-
-# ---------- Functions ----------
-# Refreshes vim by reopening the file and then brings cursor to the bottom
-refresh_notes() {
-	if tmux send-keys -t notes:0.0 ":e" Enter "G"; then
-		:
-	else
-		tmux send-keys -t $abbrv:0.0 ":e" Enter "G"
-	fi
-}
 
 
 # ---------- Variable Initializations ----------
@@ -70,19 +69,21 @@ fi
 # ---------- Handle Actions ----------
 case $action in
 	'open')
-		bspc node -p south -o 0.8
-		termite --title="notes" --class="notes" -e "tm-init notes" &
-		sleep 0.5
-		tmux send-keys -t notes:0.0 "vim + $esc_fpath" Enter;;
+		if [[ $bottom -eq 1 ]]; then
+			bspc node -p south -o 0.8
+			termite --title="notes" --class="notes" -e "tm-init notes" &
+			sleep 0.5
+			tmux send-keys -t notes:0.0 "vim + $esc_fpath" Enter
+		else
+			tmux send-keys "tm $abbrv" Enter
+			sleep 0.5
+			tmux send-keys -t $abbrv:0.0 "vim -c'?---' $esc_fpath" Enter "zt"
+			wmctrl -a termite
+		fi;;
 	'undo')
 		sed -i'.backup' ':a; ${d; q}; N; /\n$/!ba' $fpath
 		sed -i '$d' $fpath
 		refresh_notes;;
-	'side')
-		tmux send-keys "tm $abbrv" Enter
-		sleep 0.5
-		tmux send-keys -t $abbrv:0.0 "vim -c'?---' $esc_fpath" Enter "zt"
-		wmctrl -a termite;;
 	'put')
 		# gets current page number
 		page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
@@ -125,6 +126,8 @@ case $action in
 			printf "\n" >> $fpath
 		elif [[ $putarg == "minor" ]]; then
 			printf "  * " >> $fpath
+
+			# Replaces every '\n' in clip with '\n     '
 			clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n     /g')
 		else
 			logger "notepad: Unacceptable value ('putarg' = $putarg)"

@@ -1,10 +1,12 @@
 #!/bin/zsh
 
-eval set -- $(getopt -o "odusNp:" -l "open,debug,undo,side,no-newlines,put:,dmenu" -- "$@")
+# ---------- Command Line Arguments ----------
+eval set -- $(getopt -o "odusc:p:" -l "open,debug,undo,side,cut:,put:,dmenu" -- "$@")
 
-newlines=1
+putarg=
 debug=0
 dmenu=0
+cut="suffix+prefix"
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-o' | '--open' )
@@ -15,16 +17,13 @@ while [[ -n "$1" ]]; do
 			action="undo";;
 		'-s' | '--side' )
 			action="side";;
-		'-N' | '--no-newlines' )
-			newlines=0;;
+		'-c' | '--cut' )
+			shift
+			cut="$1";;
 		'-p' | '--put' )
 			shift
-			case "$1" in
-				'major' )
-					action="put-major";;
-				'minor' )
-					action="put-minor";;
-			esac;;
+			action="put"
+			putarg="$1";;
 		'--dmenu' )
 			dmenu=1;;
 		'--' )
@@ -34,8 +33,11 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
-tmux_send_keys() {
-	if tmux send-keys -t notepad:0.0 ":e" Enter "G"; then
+
+# ---------- Functions ----------
+# Refreshes vim by reopening the file and then brings cursor to the bottom
+refresh_notes() {
+	if tmux send-keys -t notes:0.0 ":e" Enter "G"; then
 		:
 	else
 		tmux send-keys -t $abbrv:0.0 ":e" Enter "G"
@@ -43,70 +45,95 @@ tmux_send_keys() {
 }
 
 
-base=$(basename $1)
+# ---------- Variable Initializations ----------
+# Retrieves the basename of the pdf (minus the ".pdf" suffix)
+base=$(basename "$1")
 base=${base// /_}
 base=${base%.pdf}
 
+# Abbreviation for book (used for tmux session name)
 abbrv=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g')
+
+# Full path to text file that stores my notes for this book
 fpath="/home/bryan/Dropbox/notes/Study/${base}.txt"
+
+# Escaped file path (for use on command line)
 esc_fpath=$(printf "%q" $fpath)
 
+
+# ---------- Kill stdout and stderr ----------
 if [[ $debug -eq 0 ]]; then
 	exec 2>&1
 	exec 1> /dev/null
 fi
 
+# ---------- Handle Actions ----------
 case $action in
 	'open')
 		bspc node -p south -o 0.8
-		termite --title="notepad" --class="notepad" -e "tm-init notepad" &
+		termite --title="notes" --class="notes" -e "tm-init notes" &
 		sleep 0.5
-		tmux send-keys -t notepad:0.0 "vim + $esc_fpath" Enter;;
+		tmux send-keys -t notes:0.0 "vim + $esc_fpath" Enter;;
 	'undo')
 		sed -i'.backup' ':a; ${d; q}; N; /\n$/!ba' $fpath
 		sed -i '$d' $fpath
-		tmux_send_keys;;
+		refresh_notes;;
 	'side')
-		tmux send-keys -t $abbrv:0.0 "vim + -c'?---' $esc_fpath" Enter "zt"
+		tmux send-keys "tm $abbrv" Enter
+		sleep 0.5
+		tmux send-keys -t $abbrv:0.0 "vim -c'?---' $esc_fpath" Enter "zt"
 		wmctrl -a termite;;
-	'put'*)
+	'put')
+		# gets current page number
 		page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
 
-		if [[ $dmenu -eq 0 ]]; then
+		# if '--dmenu' was used, clip is set using dmenu input
+		if [[ $dmenu -eq 1 ]]; then
+			clip=$(echo | dmenu -p "notepad:")
+		# else the contents of the clipboard are used
+		else
 			clip=$(xclip -selection clipboard -o)
-			Q="\""
 
-			if [[ $newlines -eq 0 ]]; then
-				clip=$(echo $clip | tr '\n' ' ')
-				if [[ $clip == [a-z]* ]]; then
+			# Remove newlines
+			clip=$(echo $clip | tr '\n' ' ')
+
+			# Remove partial sentence at beginning of clip
+			if [[ $cut == *"prefix"* ]] && [[ $clip == [a-z,' ']* ]]; then
 					clip=${clip#*. }
-				fi
-			elif [[ $clip == *[A-Z]*"."* ]]; then
-				if [[ $clip == *[A-Za-z,] ]]; then
+			fi
+
+			# Remove partial sentence at end of clip
+			if [[ $cut == *"suffix"* ]] && [[ $clip == *[A-Z]*"."* ]]; then
+				if [[ $clip == *[A-Za-z,' '] ]]; then
 					clip="${clip%.*}."
 				fi
 			fi
-		else
-			clip=$(echo | dmenu -p "notepad:")
-			Q=
+
+			# Enclose clip in quotes
+			clip="\"${clip}\""
 		fi
+
+		# Inserts newline in clip every 80 characters
+		clip=$(echo $clip | fold -w80 -s)
 
 		if [[ -z "$clip" ]]; then
 			logger "notepad: 'clip' variable is empty"
 			exit 1
 		fi
 
-		if [[ $action == "put-major" ]]; then
+		if [[ $putarg == "major" ]]; then
 			printf "\n" >> $fpath
-		elif [[ $action == "put-minor" ]]; then
+		elif [[ $putarg == "minor" ]]; then
 			printf "  * " >> $fpath
 			clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n     /g')
+		else
+			logger "notepad: Unacceptable value ('putarg' = $putarg)"
+			exit 1
 		fi
 
-		printf "$Q" >> $fpath
 		echo -n $clip >> $fpath 
-		printf "$Q - p%s\n" $page >> $fpath
+		printf " - p%s\n" $page >> $fpath
 		
-		tmux_send_keys
+		refresh_notes
 		;;
 esac

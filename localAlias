@@ -16,20 +16,19 @@ LocalAlias () {
     if [ -n "$CMD" ]; then
         printf "$ALIAS$DISPSEP$CMD $ARGS\n\n"
         eval "$CMD $ARGS"
-        return 1
+        return 0
     else
         printf "Create a new local alias for $ALIAS? (y/n): "
         CHOICE=$(bash -c "read -n 1 C; echo \$C")
         echo
-        printf "$x"
 
         if [ "$CHOICE" != "y" ]; then
-            return 0
+            return 1
         fi
 
         printf "$ALIAS$DISPSEP"
         read CMD
         printf "$ALIAS$SEP'$CMD'\n" >> $FILE
-        return 1
+        return 0
     fi
 }

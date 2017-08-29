@@ -1,0 +1,10 @@
+#!/bin/bash
+
+CLASS=$(echo $1 | sed 's/\./\//g')
+
+PS3=$'\n'">>> "
+
+select DOC in $(locate -r "/usr/share/doc/java8-openjdk/api/java/.*/$CLASS\.html"); do
+	google-chrome-stable $DOC &> /dev/null & disown
+	exit 0
+done

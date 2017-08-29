@@ -1,10 +1,10 @@
 #!/bin/bash
 
-confirm sudo pacman -Rns $(pacman -Qtdq)
+confirm "sudo pacman -Rns $(pacman -Qtdq)"
 printf "\nls ~/Downloads\n\n"
 ls ~/Downloads
-confirm sudo rm -R ~/Downloads/*
-confirm sudo paccache -r
+confirm "sudo rm -R ~/Downloads/*"
+confirm "sudo paccache -r"
 printf "\nList of Foreign Packages (pacman -Qm):\n\n"
 pacman -Qm
 printf "\nIt is up to you to manually remove the packages above that you are no longer using.\n\n"

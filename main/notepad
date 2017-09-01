@@ -90,7 +90,7 @@ case $action in
 
 		# if '--dmenu' was used, clip is set using dmenu input
 		if [[ $dmenu -eq 1 ]]; then
-			clip=$(echo | dmenu -p "notepad:")
+			clip=$(echo | dmenu -p "notepad ($putarg):")
 		# else the contents of the clipboard are used
 		else
 			clip=$(xclip -selection clipboard -o)
@@ -128,7 +128,7 @@ case $action in
 			printf "  * " >> $fpath
 
 			# Replaces every '\n' in clip with '\n     '
-			clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n     /g')
+			clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n    /g')
 		else
 			logger "notepad: Unacceptable value ('putarg' = $putarg)"
 			exit 1

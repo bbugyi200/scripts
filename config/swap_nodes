@@ -7,5 +7,5 @@ if [[ $(bspc query --desktops --desktop focused) == "$(bspc query --desktops --n
     bspc node -s $direction
     [[ $M != $(bspc query --monitors --monitor focused) ]] && bspc node --focus last
 else
-    move-to-next-monitor "swap"
+    move-to-next-monitor --swap
 fi

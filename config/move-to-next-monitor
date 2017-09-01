@@ -1,15 +1,45 @@
 #!/bin/bash
 
+eval set -- $(getopt -o 's' -l 'swap,no-focus' -- "$@")
+
+swap=0
+focus=1
+while [[ -n "$1" ]]; do
+	case $1 in
+		'-s' | '--swap')
+			swap=1;;
+		'--no-focus')
+			focus=0;;
+		'--')
+			shift
+			break;;
+	esac
+	shift
+done
+
+
 focused=$(xprop -root _NET_CURRENT_DESKTOP | awk '{print $3+1}')
+
+if [[ $focus -eq 0 ]]; then
+	bspc monitor -f next
+	M=$(bspc query --nodes --node focused.!hidden)
+	bspc monitor -f next
+fi
 
 get_alt_desktop $focused
 ALT_D="$?"
 
 N=$(bspc query --nodes --node focused.!hidden)
 focus-local "strict"
-if [[ "$1" == "swap" ]]; then
-    bspc monitor -f next
+if [[ $swap -eq 1 ]]; then
+	bspc monitor -f next
     move-to-next-monitor
 fi
 bspc node $N -d "^$ALT_D"
-bspc desktop -f "^$ALT_D"
+
+if [[ $focus -eq 1 ]]; then
+	bspc desktop -f "^$ALT_D"
+else
+	bspc node -f $M
+	bspc monitor -f next
+fi

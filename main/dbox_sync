@@ -20,7 +20,10 @@ print_icon() {
 	printf "D%%{F$1}$DBOX  \n" > $PANEL_FIFO
 }
 
-if [[ $debug -eq 0 ]]; then
+if [[ $debug -eq 1 ]]; then
+	PS4='$LINENO: '
+	set -x
+else
 	exec 2>&1
 	exec 1> /dev/null
 fi
@@ -28,7 +31,6 @@ fi
 COUNT=0
 while true; do
 	STATUS=$(dropbox-cli status)
-	printf "%s\n\n" "$STATUS"
 	case $STATUS in
 		'Up to date')
 			(( COUNT++ ))
@@ -41,9 +43,7 @@ while true; do
 			print_icon $YELLOW;;
 	esac
 
-	printf "COUNT = %d\n\n" $COUNT
 	if (( COUNT >= 5 )); then
-		printf "Exiting...\n\n"
 		exit 0
 	fi
 	sleep 1

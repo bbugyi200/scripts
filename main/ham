@@ -33,11 +33,14 @@ action=$1
 
 
 # ---------- Redirect STDOUT and STDERR ----------
-if [[ $debug -eq 0 ]]; then
-	exec 2>&1
-	exec >> $LOG_FILE
-fi
+exec 2>&1
+exec >> $LOG_FILE
 
+# ---------- DEBUG ----------
+if [[ $debug -eq 1 ]]; then
+	PS4='$LINENO :'
+	set -x
+fi
 
 # ---------- Check for PID File ----------
 if [[ -f $PID_FILE ]]; then

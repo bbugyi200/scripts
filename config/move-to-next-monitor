@@ -1,21 +1,30 @@
 #!/bin/bash
 
-eval set -- $(getopt -o 's' -l 'swap,no-focus' -- "$@")
+eval set -- $(getopt -o 's,d' -l 'swap,debug,no-focus' -- "$@")
 
 swap=0
 focus=1
+debug=0
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-s' | '--swap')
 			swap=1;;
 		'--no-focus')
 			focus=0;;
+		'-d' | '--debug')
+			debug=1;;
 		'--')
 			shift
 			break;;
 	esac
 	shift
 done
+
+
+if [[ $debug -eq 1 ]]; then
+	PS4='$LINENO: '
+	set -x
+fi
 
 
 focused=$(xprop -root _NET_CURRENT_DESKTOP | awk '{print $3+1}')

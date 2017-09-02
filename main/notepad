@@ -60,10 +60,10 @@ fpath="/home/bryan/Dropbox/notes/Study/${base}.txt"
 esc_fpath=$(printf "%q" $fpath)
 
 
-# ---------- Kill stdout and stderr ----------
-if [[ $debug -eq 0 ]]; then
-	exec 2>&1
-	exec 1> /dev/null
+# ---------- DEBUG ----------
+if [[ $debug -eq 1 ]]; then
+	PS4='$LINENO: '
+	set -x
 fi
 
 # ---------- Handle Actions ----------

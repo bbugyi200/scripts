@@ -17,17 +17,17 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
-if [[ $debug -eq 0 ]]; then
+if [[ $debug -eq 1 ]]; then
+	PS4='$LINENO: '
+	set -x
+else
 	exec 2>&1
 	exec 1> /dev/null
 fi
 
 CLASS=${1%%[^A-Za-z\.]*}
-printf "%s\n" "$CLASS"
 CPATH="/$(echo $CLASS | sed 's/\./\//g')"
-printf "%s\n" "$CPATH"
 MATCHES=$(locate -r "/usr/share/doc/java8-openjdk/api.*$CPATH\.html")
-printf "%s\n" "$MATCHES"
 
 if [[ -z "$MATCHES" ]]; then
 	echo "No matching docs could be found." | tee >(logger -t "$(basename $0)")

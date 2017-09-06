@@ -1,10 +1,3 @@
 #!/bin/bash
 
-# root backup
-DROPBOX=/media/bryan/perseus/home/bryan/Dropbox
-rsync -av --delete /home/ /media/bryan/perseus/home/ && date > $DROPBOX/backup.txt
-rsync -av --delete /etc/ /media/bryan/perseus/etc/
-rsync -av --delete /var/ /media/bryan/perseus/var/
-
-# pacman package list backup
-pacman -Qqe > /media/bryan/perseus/pacman_pkgs.txt
+rsync -av --delete /media/bryan/hercules/backup /media/bryan/perseus && date > /media/bryan/perseus/backup//external.txt

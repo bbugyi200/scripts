@@ -221,12 +221,12 @@ int main(int argc, char *argv[])
 		}
 
 		// New Mail
-		if (cnt_mail++ >= upd_mail) {
-			ecode = system("check_mail -q");
-			icon = (ecode == 0) ? "M" MAIL "  \n" : "M\n";
-			write_fifo(icon);
-			cnt_mail = 0;
-		}
+		/* if (cnt_mail++ >= upd_mail) { */
+		/* 	ecode = system("check_mail -q"); */
+		/* 	icon = (ecode == 0) ? "M" MAIL "  \n" : "M\n"; */
+		/* 	write_fifo(icon); */
+		/* 	cnt_mail = 0; */
+		/* } */
 
 		// Multimon Panel Items
 		if (multi_mon) {
@@ -281,56 +281,56 @@ int main(int argc, char *argv[])
 			}
 
 			// Surf Check
-			if (cnt_surf++ >= upd_surf) {
+			/* if (cnt_surf++ >= upd_surf) { */
 
-				if (pipe(pipefd) < 0)
-					log_sys("pipe (surf check)");
-				if ((pid = fork()) < 0)
-					log_sys("fork (surf check)");
-				else if (pid == 0) {
-					close(pipefd[0]);
-					dup2(pipefd[1], STDOUT_FILENO);
-					execl("/home/bryan/Dropbox/scripts/python/SurfCheck.py", "SurfCheck.py", (char *) NULL);
-				}
+			/* 	if (pipe(pipefd) < 0) */
+			/* 		log_sys("pipe (surf check)"); */
+			/* 	if ((pid = fork()) < 0) */
+			/* 		log_sys("fork (surf check)"); */
+			/* 	else if (pid == 0) { */
+			/* 		close(pipefd[0]); */
+			/* 		dup2(pipefd[1], STDOUT_FILENO); */
+			/* 		execl("/home/bryan/Dropbox/scripts/python/SurfCheck.py", "SurfCheck.py", (char *) NULL); */
+			/* 	} */
 
-				close(pipefd[1]);
-				waitpid(pid, &status, 0);
+			/* 	close(pipefd[1]); */
+			/* 	waitpid(pid, &status, 0); */
 
-				if (status != 0) {
-					log_ret("Surf Check Failed");
-					for (int i = 0; i < 3; ++i) {
-						colors[i] = WHITE;
-					}
-				} else {
-					for (int i = 0; i < 3; ++i) {
-						if (read(pipefd[0], &label, sizeof(char)) < 0)
-							log_sys("read (surf check)");
-						switch (strtol(&label, NULL, 0)) {
-							case 0:
-								colors[i] = RED;
-								break;
-							case 1:
-								colors[i] = YELLOW;
-								break;
-							case 2:
-								colors[i] = GREEN;
-								break;
-							default:
-								colors[i] = WHITE;
-						}
-					}
-				}
+			/* 	if (status != 0) { */
+			/* 		log_ret("Surf Check Failed"); */
+			/* 		for (int i = 0; i < 3; ++i) { */
+			/* 			colors[i] = WHITE; */
+			/* 		} */
+			/* 	} else { */
+			/* 		for (int i = 0; i < 3; ++i) { */
+			/* 			if (read(pipefd[0], &label, sizeof(char)) < 0) */
+			/* 				log_sys("read (surf check)"); */
+			/* 			switch (strtol(&label, NULL, 0)) { */
+			/* 				case 0: */
+			/* 					colors[i] = RED; */
+			/* 					break; */
+			/* 				case 1: */
+			/* 					colors[i] = YELLOW; */
+			/* 					break; */
+			/* 				case 2: */
+			/* 					colors[i] = GREEN; */
+			/* 					break; */
+			/* 				default: */
+			/* 					colors[i] = WHITE; */
+			/* 			} */
+			/* 		} */
+			/* 	} */
 
-				if (snprintf(full_icon,
-						MAX_ICON,
-						"Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n",
-						colors[0], colors[1], colors[2]) < 0) 
-					log_quit("snprintf (surf check)");
+			/* 	if (snprintf(full_icon, */
+			/* 			MAX_ICON, */
+			/* 			"Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n", */
+			/* 			colors[0], colors[1], colors[2]) < 0) */ 
+			/* 		log_quit("snprintf (surf check)"); */
 
-				write_fifo(full_icon);
+			/* 	write_fifo(full_icon); */
 
-				cnt_surf = 0;
-			}
+			/* 	cnt_surf = 0; */
+			/* } */
 		}
 
 		// sleep_time =  (1 second) - (loop iteration time)

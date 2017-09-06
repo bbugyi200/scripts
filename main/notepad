@@ -5,18 +5,20 @@ refresh_notes() {
 	if tmux send-keys -t notes:0.0 ":e" Enter "G"; then
 		:
 	else
-		tmux send-keys -t $abbrv:0.0 ":e" Enter "G"
+		tmux send-keys -t $tmux_sess.0 ":e" Enter "G"
 	fi
 }
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "odubc:p:" -l "open,debug,undo,bottom,cut:,put:,dmenu" -- "$@")
+eval set -- $(getopt -o "odubc:p:" -l "open,debug,undo,bottom,cut:,put:,dmenu,book:" -- "$@")
 
 putarg=
 debug=0
 dmenu=0
 bottom=0
+page=1
 cut="suffix+prefix"
+book=
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-o' | '--open' )
@@ -36,6 +38,9 @@ while [[ -n "$1" ]]; do
 			putarg="$1";;
 		'--dmenu' )
 			dmenu=1;;
+		'--book')
+			shift
+			book=$1;;
 		'--' )
 			shift
 			break;;
@@ -43,28 +48,42 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
-
-# ---------- Variable Initializations ----------
-# Retrieves the basename of the pdf (minus the ".pdf" suffix)
-base=$(basename "$1")
-base=${base// /_}
-base=${base%.pdf}
-
-# Abbreviation for book (used for tmux session name)
-abbrv=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g')
-
-# Full path to text file that stores my notes for this book
-fpath="/home/bryan/Dropbox/notes/Study/${base}.txt"
-
-# Escaped file path (for use on command line)
-esc_fpath=$(printf "%q" $fpath)
-
-
 # ---------- DEBUG ----------
 if [[ $debug -eq 1 ]]; then
+	exec &> "/tmp/notepad.log"
 	PS4='$LINENO: '
 	set -x
 fi
+
+
+# ---------- Variable Initializations ----------
+if [[ -n "$book" ]]; then
+	# Retrieves the basename of the pdf (minus the ".pdf" suffix)
+	base=$(basename "$book")
+	base=${base// /_}
+	base=${base%.pdf}
+
+	# Abbreviation for book (used for tmux session name)
+	tmux_sess=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g')
+
+	subdir="Textbook"
+
+else
+	tsess_file="/tmp/notepad.tmux_sess"
+	if [[ -f $tsess_file ]]; then
+		tmux_sess="$(cat $tsess_file)"
+		subdir="Lectures"
+	else
+		echo "$tsess_file does not exist!" | tee >(logger -t $0)
+		exit 1
+	fi
+fi
+
+# Full path to text file that stores my notes for this book
+fpath="/home/bryan/Dropbox/notes/Study/${subdir}/${base}.txt"
+
+# Escaped file path (for use on command line)
+esc_fpath=$(printf "%q" $fpath)
 
 # ---------- Handle Actions ----------
 case $action in
@@ -75,9 +94,9 @@ case $action in
 			sleep 0.5
 			tmux send-keys -t notes:0.0 "vim + $esc_fpath" Enter
 		else
-			tmux send-keys "tm $abbrv" Enter
+			tmux send-keys "tm $tmux_sess" Enter
 			sleep 0.5
-			tmux send-keys -t $abbrv:0.0 "vim -c'?---' $esc_fpath" Enter "zt"
+			tmux send-keys -t $tmux_sess.0 "vim -c'?---' $esc_fpath" Enter "zt"
 			wmctrl -a termite
 		fi;;
 	'undo')
@@ -135,7 +154,10 @@ case $action in
 		fi
 
 		echo -n $clip >> $fpath 
-		printf " - p%s\n" $page >> $fpath
+
+		if [[ -n "$book" ]]; then
+			printf " - p%s\n" "$page" >> $fpath
+		fi
 		
 		refresh_notes
 		;;

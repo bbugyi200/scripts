@@ -1,0 +1,3 @@
+#!/bin/bash
+
+course_name=$(echo | dmenu -p "Course Name:")

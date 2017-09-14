@@ -1,24 +1,40 @@
 #!/bin/zsh
 
+DiB_FILE_PATH="/tmp/notepad.dir_is_base"
+
 # Refreshes vim by reopening the file and then brings cursor to the bottom
 refresh_notes() {
-	if tmux send-keys -t notes:0.0 ":e" Enter "G"; then
-		:
-	else
-		tmux send-keys -t $tmux_sess.0 ":e" Enter "G"
+	tmux_sessions=$(tmux ls)
+	if [[ $tmux_sessions == *"notes:"* ]]; then
+		sess="notes"
+	elif [[ $tmux_sessions == *"$abbrv:"* ]]; then
+		sess="$abbrv"
 	fi
+
+	tmux send-keys -t $sess:0.0 ":e" Enter "G"
 }
 
+
+add_header() {
+read -r -d '' HEADER << EOF
+--------------------------------- $(date +%m/%d/%Y) -----------------------------------
+--------------------------------------------------------------------------------
+EOF
+
+printf "$HEADER\n" >> $fpath
+}
+
+
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "odubc:p:" -l "open,debug,undo,bottom,cut:,put:,dmenu,book:" -- "$@")
+eval set -- $(getopt -o "odubc:p:h:" -l "open,debug,undo,bottom,cut:,put:,dmenu,header:,dir-is-base:" -- "$@")
 
 putarg=
 debug=0
 dmenu=0
 bottom=0
 page=1
+header=0
 cut="suffix+prefix"
-book=
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-o' | '--open' )
@@ -38,9 +54,16 @@ while [[ -n "$1" ]]; do
 			putarg="$1";;
 		'--dmenu' )
 			dmenu=1;;
-		'--book')
+		'-h' | '--header')
 			shift
-			book=$1;;
+			if [[ $1 == "true" ]]; then
+				header=1
+			fi;;
+		'--dir-is-base')
+			shift
+			if [[ $1 == "true" ]]; then
+				dir_is_base=1
+			fi;;
 		'--' )
 			shift
 			break;;
@@ -48,36 +71,44 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
+if [[ -f $DiB_FILE_PATH && $action != "open" ]]; then
+	if [[ $(cat $DiB_FILE_PATH) == "true" ]]; then
+		dir_is_base=1
+	fi
+fi
+
 # ---------- DEBUG ----------
 if [[ $debug -eq 1 ]]; then
-	exec &> "/tmp/notepad.log"
 	PS4='$LINENO: '
 	set -x
+else
+	exec 2>&1
+	exec 1> /dev/null
 fi
 
 
 # ---------- Variable Initializations ----------
-if [[ -n "$book" ]]; then
-	# Retrieves the basename of the pdf (minus the ".pdf" suffix)
-	base=$(basename "$book")
-	base=${base// /_}
-	base=${base%.pdf}
+# Retrieves the basename of the pdf (minus the ".pdf" suffix)
 
-	# Abbreviation for book (used for tmux session name)
-	tmux_sess=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g')
-
+if [[ "$1" == *".pdf" ]]; then
 	subdir="Textbook"
-
+	isbook=1
 else
-	tsess_file="/tmp/notepad.tmux_sess"
-	if [[ -f $tsess_file ]]; then
-		tmux_sess="$(cat $tsess_file)"
-		subdir="Lectures"
-	else
-		echo "$tsess_file does not exist!" | tee >(logger -t $0)
-		exit 1
-	fi
+	subdir="Lectures"
+	isbook=0
 fi
+
+if [[ $dir_is_base -eq 1 ]]; then
+	base=$(dirname "$1" | xargs basename)
+else
+	base=$(basename -s'.pdf' "$1")
+fi
+
+base=${base// /_}
+
+# Abbreviation for book (used for tmux session name)
+abbrv=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g')
+
 
 # Full path to text file that stores my notes for this book
 fpath="/home/bryan/Dropbox/notes/Study/${subdir}/${base}.txt"
@@ -88,15 +119,25 @@ esc_fpath=$(printf "%q" $fpath)
 # ---------- Handle Actions ----------
 case $action in
 	'open')
+		if [[ $header -eq 1 ]]; then
+			add_header
+		fi
+
+		if [[ $dir_is_base -eq 1 ]]; then
+			printf "true" > $DiB_FILE_PATH
+		else
+			printf "false" > $DiB_FILE_PATH
+		fi
+
 		if [[ $bottom -eq 1 ]]; then
 			bspc node -p south -o 0.8
 			termite --title="notes" --class="notes" -e "tm-init notes" &
 			sleep 0.5
 			tmux send-keys -t notes:0.0 "vim + $esc_fpath" Enter
 		else
-			tmux send-keys "tm $tmux_sess" Enter
+			tmux send-keys -t Terminal:0.0 "tm $abbrv" Enter
 			sleep 0.5
-			tmux send-keys -t $tmux_sess.0 "vim -c'?---' $esc_fpath" Enter "zt"
+			tmux send-keys -t $abbrv.0 "vim -c'?---' $esc_fpath" Enter "zt"
 			wmctrl -a termite
 		fi;;
 	'undo')
@@ -137,7 +178,7 @@ case $action in
 		clip=$(echo $clip | fold -w80 -s)
 
 		if [[ -z "$clip" ]]; then
-			logger "notepad: 'clip' variable is empty"
+			echo "'clip' variable is empty" | tee >(logger -t $0)
 			exit 1
 		fi
 
@@ -149,15 +190,17 @@ case $action in
 			# Replaces every '\n' in clip with '\n     '
 			clip=$(echo -n $clip | sed ':a;N;$!ba;s/\n/\n    /g')
 		else
-			logger "notepad: Unacceptable value ('putarg' = $putarg)"
+			echo "Unacceptable value ('putarg' = $putarg)" | tee >(logger -t $0)
 			exit 1
 		fi
 
 		echo -n $clip >> $fpath 
 
-		if [[ -n "$book" ]]; then
-			printf " - p%s\n" "$page" >> $fpath
+		if [[ $isbook -eq 1 ]]; then
+			printf " - p%s" "$page" >> $fpath
 		fi
+
+		printf '\n' >> $fpath
 		
 		refresh_notes
 		;;

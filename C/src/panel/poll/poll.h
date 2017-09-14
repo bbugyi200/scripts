@@ -10,7 +10,7 @@
 // Update Timers
 #define upd_pia 5
 #define upd_batt 1
-#define upd_net 8
+#define upd_net 3
 #define upd_upd 86400
 #define upd_clean 86400
 #define upd_dbox 5

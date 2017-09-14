@@ -88,3 +88,5 @@ for i in {0..101} ; do
 	printf "A%%{F$COLOR}  TIMER IS DONE $iclock\n"
 	sleep 0.5
 done > "$PANEL_FIFO"
+
+printf "A\n" > "$PANEL_FIFO"

@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-DiB_FILE_PATH="/tmp/notepad.dir_is_base"
+# DiB_FILE_PATH="/tmp/notepad.dir_is_base"
 
 # Refreshes vim by reopening the file and then brings cursor to the bottom
 refresh_notes() {
@@ -26,13 +26,12 @@ printf "$HEADER\n" >> $fpath
 
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "odubc:p:h:" -l "open,debug,undo,bottom,cut:,put:,dmenu,header:,dir-is-base:" -- "$@")
+eval set -- $(getopt -o "odubc:p:h:" -l "open,debug,undo,bottom,cut:,put:,dmenu,header:" -- "$@")
 
 putarg=
 debug=0
 dmenu=0
 bottom=0
-page=1
 header=0
 cut="suffix+prefix"
 while [[ -n "$1" ]]; do
@@ -59,11 +58,11 @@ while [[ -n "$1" ]]; do
 			if [[ $1 == "true" ]]; then
 				header=1
 			fi;;
-		'--dir-is-base')
-			shift
-			if [[ $1 == "true" ]]; then
-				dir_is_base=1
-			fi;;
+		# '--dir-is-base')
+		# 	shift
+		# 	if [[ $1 == "true" ]]; then
+		# 		dir_is_base=1
+		# 	fi;;
 		'--' )
 			shift
 			break;;
@@ -71,11 +70,11 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
-if [[ -f $DiB_FILE_PATH && $action != "open" ]]; then
-	if [[ $(cat $DiB_FILE_PATH) == "true" ]]; then
-		dir_is_base=1
-	fi
-fi
+# if [[ -f $DiB_FILE_PATH && $action != "open" ]]; then
+# 	if [[ $(cat $DiB_FILE_PATH) == "true" ]]; then
+# 		dir_is_base=1
+# 	fi
+# fi
 
 # ---------- DEBUG ----------
 if [[ $debug -eq 1 ]]; then
@@ -98,11 +97,11 @@ else
 	isbook=0
 fi
 
-if [[ $dir_is_base -eq 1 ]]; then
-	base=$(dirname "$1" | xargs basename)
-else
-	base=$(basename -s'.pdf' "$1")
-fi
+# if [[ $dir_is_base -eq 1 ]]; then
+# 	base=$(dirname "$1" | xargs basename)
+# else
+base=$(basename -s'.pdf' "$1")
+# fi
 
 base=${base// /_}
 
@@ -123,11 +122,11 @@ case $action in
 			add_header
 		fi
 
-		if [[ $dir_is_base -eq 1 ]]; then
-			printf "true" > $DiB_FILE_PATH
-		else
-			printf "false" > $DiB_FILE_PATH
-		fi
+		# if [[ $dir_is_base -eq 1 ]]; then
+		# 	printf "true" > $DiB_FILE_PATH
+		# else
+		# 	printf "false" > $DiB_FILE_PATH
+		# fi
 
 		if [[ $bottom -eq 1 ]]; then
 			bspc node -p south -o 0.8
@@ -146,7 +145,7 @@ case $action in
 		refresh_notes;;
 	'put')
 		# gets current page number
-		page=$(wmctrl -l | grep $base | tr -s ' ' | cut -d ' ' -f5 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
+		page=$(wmctrl -lx | grep "zathura.Zathura" | tr -s ' ' | cut -d ' ' -f6 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
 
 		# if '--dmenu' was used, clip is set using dmenu input
 		if [[ $dmenu -eq 1 ]]; then
@@ -196,7 +195,7 @@ case $action in
 
 		echo -n $clip >> $fpath 
 
-		if [[ $isbook -eq 1 ]]; then
+		if [[ $isbook -eq 1 && $page != "" ]]; then
 			printf " - p%s" "$page" >> $fpath
 		fi
 

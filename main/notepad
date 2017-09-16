@@ -1,7 +1,5 @@
 #!/bin/zsh
 
-# DiB_FILE_PATH="/tmp/notepad.dir_is_base"
-
 # Refreshes vim by reopening the file and then brings cursor to the bottom
 refresh_notes() {
 	tmux_sessions=$(tmux ls)
@@ -58,23 +56,12 @@ while [[ -n "$1" ]]; do
 			if [[ $1 == "true" ]]; then
 				header=1
 			fi;;
-		# '--dir-is-base')
-		# 	shift
-		# 	if [[ $1 == "true" ]]; then
-		# 		dir_is_base=1
-		# 	fi;;
 		'--' )
 			shift
 			break;;
 	esac
 	shift
 done
-
-# if [[ -f $DiB_FILE_PATH && $action != "open" ]]; then
-# 	if [[ $(cat $DiB_FILE_PATH) == "true" ]]; then
-# 		dir_is_base=1
-# 	fi
-# fi
 
 # ---------- DEBUG ----------
 if [[ $debug -eq 1 ]]; then
@@ -97,11 +84,7 @@ else
 	isbook=0
 fi
 
-# if [[ $dir_is_base -eq 1 ]]; then
-# 	base=$(dirname "$1" | xargs basename)
-# else
 base=$(basename -s'.pdf' "$1")
-# fi
 
 base=${base// /_}
 
@@ -121,12 +104,6 @@ case $action in
 		if [[ $header -eq 1 ]]; then
 			add_header
 		fi
-
-		# if [[ $dir_is_base -eq 1 ]]; then
-		# 	printf "true" > $DiB_FILE_PATH
-		# else
-		# 	printf "false" > $DiB_FILE_PATH
-		# fi
 
 		if [[ $bottom -eq 1 ]]; then
 			bspc node -p south -o 0.8

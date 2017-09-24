@@ -1,0 +1,13 @@
+#!/bin/bash
+
+list_windows=$(tmux list-windows)
+
+if [[ $list_windows == *"MATLAB*"* ]]; then
+	clear_cmd="clc"
+elif [[ $list_windows == *"vim*"* ]]; then
+	exit 1
+else
+	clear_cmd="clear"
+fi
+
+tmux send-keys "$clear_cmd" "Enter"

@@ -33,33 +33,6 @@ int main(int argc, char *argv[])
 	FILE *pipe_output;
 	char cmdout[MAXLINE];
 
-
-	// ----- Sets 'multi_mon' -----
-	pipe(pipefd);
-	if ((pid = fork()) < 0)
-		perror(argv[0]);
-	else if (pid == 0) {
-		close(pipefd[0]);
-		dup2(pipefd[1], STDOUT_FILENO);
-		execl("/usr/bin/bspc", "bspc", "query", "--monitors", (char *)NULL);
-	}
-
-	close(pipefd[1]);
-	waitpid(pid, NULL, 0);
-
-	pipe_output = fdopen(pipefd[0], "r");
-
-	errno = 0;
-	int num_of_monitors = 0;
-	while (fgets(cmdout, MAXLINE, pipe_output) != NULL) {
-		num_of_monitors++;
-	}
-	if (errno)
-		perror(argv[0]);
-	fclose(pipe_output);
-
-	bool multi_mon = (num_of_monitors > 1) ? true : false;
-
 	// ----- Set constants based on hostname ------
 	char hostname[HNSIZE], *net_dev;
 	if (gethostname(hostname, HNSIZE) < 0)
@@ -232,109 +205,54 @@ int main(int argc, char *argv[])
 		/* 	cnt_mail = 0; */
 		/* } */
 
-		// Multimon Panel Items
-		if (multi_mon) {
-			// Hamster
-			if (cnt_ham++ >= upd_ham) {
-				if ((status = system("/home/bryan/Dropbox/scripts/python/panel-hamster.py")) != 0)
-					log_ret("system(\"%s\") = %d", "/home/bryan/Dropbox/scripts/python/panel-hamster.py", status/256);
-				cnt_ham = 0;
+		// Hamster
+		if (cnt_ham++ >= upd_ham) {
+			if ((status = system("/home/bryan/Dropbox/scripts/python/panel-hamster.py")) != 0)
+				log_ret("system(\"%s\") = %d", "/home/bryan/Dropbox/scripts/python/panel-hamster.py", status/256);
+			cnt_ham = 0;
+		}
+
+		// Temperature
+		if (cnt_temp++ >= upd_temp) {
+			pipe(pipefd);
+			if ((pid = fork()) < 0)
+				log_sys("fork");
+			else if (pid == 0) {
+				close(pipefd[0]);
+				dup2(pipefd[1], STDOUT_FILENO);
+				execl("/usr/bin/weather-report", "weather-report", "-q", "--headers", "Temperature", "--no-cache", zipcode, (char *) NULL);
 			}
 
-			// Temperature
-			if (cnt_temp++ >= upd_temp) {
-				pipe(pipefd);
-				if ((pid = fork()) < 0)
-					log_sys("fork");
-				else if (pid == 0) {
-					close(pipefd[0]);
-					dup2(pipefd[1], STDOUT_FILENO);
-					execl("/usr/bin/weather-report", "weather-report", "-q", "--headers", "Temperature", "--no-cache", zipcode, (char *) NULL);
-				}
+			close(pipefd[1]);
+			waitpid(pid, &status, 0);
+			if (status != 0)
+				log_msg("weather-report failed with 'status = %d'", status);
 
-				close(pipefd[1]);
-				waitpid(pid, &status, 0);
-				if (status != 0)
-					log_msg("weather-report failed with 'status = %d'", status);
-
-				pipe(pipefd + 2);
-				if ((pid = fork()) < 0)
-					log_sys("fork");
-				else if (pid == 0) {
-					close(pipefd[2]);
-					dup2(pipefd[0], STDIN_FILENO);
-					dup2(pipefd[3], STDOUT_FILENO);
-					execl("/usr/bin/gawk", "gawk", "{printf \"%.0f\u00b0F\", $2}", (char *) NULL);
-				}
-
-				close(pipefd[3]);
-				waitpid(pid, &status, 0);
-				if (status != 0)
-					log_msg("gawk failed with 'status = %d'", status);
-
-				pipe_output = fdopen(pipefd[2], "r");
-
-				if (fgets(cmdout, MAX_CMD, pipe_output) < 0)
-					log_sys("fgets");
-
-				if (snprintf(full_icon, MAX_ICON, "T %s  \n", cmdout) < 0)
-					log_sys("snprintf (temp)");
-
-				write_fifo(full_icon);
-				cnt_temp = 0;
+			pipe(pipefd + 2);
+			if ((pid = fork()) < 0)
+				log_sys("fork");
+			else if (pid == 0) {
+				close(pipefd[2]);
+				dup2(pipefd[0], STDIN_FILENO);
+				dup2(pipefd[3], STDOUT_FILENO);
+				execl("/usr/bin/gawk", "gawk", "{printf \"%.0f\u00b0F\", $2}", (char *) NULL);
 			}
 
-			// Surf Check
-			/* if (cnt_surf++ >= upd_surf) { */
+			close(pipefd[3]);
+			waitpid(pid, &status, 0);
+			if (status != 0)
+				log_msg("gawk failed with 'status = %d'", status);
 
-			/* 	if (pipe(pipefd) < 0) */
-			/* 		log_sys("pipe (surf check)"); */
-			/* 	if ((pid = fork()) < 0) */
-			/* 		log_sys("fork (surf check)"); */
-			/* 	else if (pid == 0) { */
-			/* 		close(pipefd[0]); */
-			/* 		dup2(pipefd[1], STDOUT_FILENO); */
-			/* 		execl("/home/bryan/Dropbox/scripts/python/SurfCheck.py", "SurfCheck.py", (char *) NULL); */
-			/* 	} */
+			pipe_output = fdopen(pipefd[2], "r");
 
-			/* 	close(pipefd[1]); */
-			/* 	waitpid(pid, &status, 0); */
+			if (fgets(cmdout, MAX_CMD, pipe_output) < 0)
+				log_sys("fgets");
 
-			/* 	if (status != 0) { */
-			/* 		log_ret("Surf Check Failed"); */
-			/* 		for (int i = 0; i < 3; ++i) { */
-			/* 			colors[i] = WHITE; */
-			/* 		} */
-			/* 	} else { */
-			/* 		for (int i = 0; i < 3; ++i) { */
-			/* 			if (read(pipefd[0], &label, sizeof(char)) < 0) */
-			/* 				log_sys("read (surf check)"); */
-			/* 			switch (strtol(&label, NULL, 0)) { */
-			/* 				case 0: */
-			/* 					colors[i] = RED; */
-			/* 					break; */
-			/* 				case 1: */
-			/* 					colors[i] = YELLOW; */
-			/* 					break; */
-			/* 				case 2: */
-			/* 					colors[i] = GREEN; */
-			/* 					break; */
-			/* 				default: */
-			/* 					colors[i] = WHITE; */
-			/* 			} */
-			/* 		} */
-			/* 	} */
+			if (snprintf(full_icon, MAX_ICON, "T %s  \n", cmdout) < 0)
+				log_sys("snprintf (temp)");
 
-			/* 	if (snprintf(full_icon, */
-			/* 			MAX_ICON, */
-			/* 			"Y%%{F%s}" DIAMOND " %%{F%s}" DIAMOND " %%{F%s}" DIAMOND "  \n", */
-			/* 			colors[0], colors[1], colors[2]) < 0) */ 
-			/* 		log_quit("snprintf (surf check)"); */
-
-			/* 	write_fifo(full_icon); */
-
-			/* 	cnt_surf = 0; */
-			/* } */
+			write_fifo(full_icon);
+			cnt_temp = 0;
 		}
 
 		// sleep_time =  (1 second) - (loop iteration time)

@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <sys/wait.h>
 #include "draw.h"
 
 char *get_workspace_icons(char *);
@@ -15,6 +17,39 @@ int main(int argc, char *argv[])
 	int i;
 	bool last_item;
 	char line[MAXLINE], *fmt, *pline, c, item[MAXITEM], *FG, *BG, BODY[MAXBOD];
+
+	// ----- Sets 'multi_mon' -----
+	// Pipe Variables
+	int pipefd[4], status;
+	pid_t pid;
+	FILE *pipe_output;
+	char cmdout[MAXLINE];
+
+	pipe(pipefd);
+	if ((pid = fork()) < 0)
+		perror(argv[0]);
+	else if (pid == 0) {
+		close(pipefd[0]);
+		dup2(pipefd[1], STDOUT_FILENO);
+		execl("/usr/bin/bspc", "bspc", "query", "--monitors", (char *)NULL);
+	}
+
+	close(pipefd[1]);
+	waitpid(pid, NULL, 0);
+
+	pipe_output = fdopen(pipefd[0], "r");
+
+	errno = 0;
+	int num_of_monitors = 0;
+	while (fgets(cmdout, MAXLINE, pipe_output) != NULL) {
+		num_of_monitors++;
+	}
+	if (errno)
+		perror(argv[0]);
+	fclose(pipe_output);
+
+	bool multi_mon = (num_of_monitors > 1) ? true : false;
+
 
 	while (fgets(line, MAXLINE, stdin) != NULL) {
 		*strchr(line, '\n') = '\0';
@@ -128,14 +163,22 @@ int main(int argc, char *argv[])
 				break;
 		}
 
-		fmt = "%%{l}%s%%{c}%s%%{r}%%{T3}%s%s%s%s%s%s%s%s%%{S+}%%{l}%s%%{c}%s%%{r}%s%s%%{T-}\n";
-		fprintf(stdout, fmt,
-				wm, // #1 Left
-				sys, // #1 Center
-				mail, batt, vol, pia, dbox, net, updt, clean, // #1 Right
-				alrm, // #2 Left
-				ham,  // #2 Center
-				surf, temp); // #2 Right
+		if (multi_mon){
+			fmt = "%%{l}%s%%{c}%s%%{r}%%{T3}%s%s%s%s%s%s%s%s%%{S+}%%{l}%s%%{c}%s%%{r}%s%s%%{T-}\n";
+			fprintf(stdout, fmt,
+					wm, // #1 Left
+					sys, // #1 Center
+					mail, batt, vol, pia, dbox, net, updt, clean, // #1 Right
+					alrm, // #2 Left
+					ham,  // #2 Center
+					surf, temp); // #2 Right
+		} else {
+			fmt = "%%{l}%s%%{c}%s%%{r}%%{T3}%s%s%s%s%s%s%s%s%s%%{T-}\n";
+			fprintf(stdout, fmt,
+					wm, // #1 Left
+					ham, // #1 Center
+					alrm, mail, batt, vol, pia, dbox, net, updt, clean); // #1 Right
+		}
 
 		fflush(stdout);
 	}

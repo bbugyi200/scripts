@@ -4,9 +4,7 @@ LOG_FILE=/tmp/hamster.log
 SECONDS=90
 
 print_panel() {
-	if [[ $(bspc query -M | wc -l) -ge 2 ]]; then
-		/home/bryan/Dropbox/scripts/python/panel-hamster.py
-	fi
+	/home/bryan/Dropbox/scripts/python/panel-hamster.py
 }
 
 # ---------- Command Line Arguments ----------

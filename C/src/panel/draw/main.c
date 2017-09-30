@@ -51,6 +51,7 @@ int main(int argc, char *argv[])
 	bool multi_mon = (num_of_monitors > 1) ? true : false;
 
 
+	// ----- Loop through Standard Input -----
 	while (fgets(line, MAXLINE, stdin) != NULL) {
 		*strchr(line, '\n') = '\0';
 		switch (line[0]) {

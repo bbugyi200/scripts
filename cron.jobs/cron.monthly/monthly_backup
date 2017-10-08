@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # dropbox backup
-DROPBOX=/media/bryan/hercules/backup/dropbox/monthly/
-mv /media/bryan/hercules/backup/dropbox/2months/ /media/bryan/hercules/backup/dropbox/3months
-mv $DROPBOX /media/bryan/hercules/backup/dropbox/2months
-rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
-date > $DROPBOX/backup.txt
+DROPBOX=/media/bryan/hercules/backup/dropbox
+rm -rf $DROPBOX/3months && mv $DROPBOX/2months $DROPBOX/3months && cp -r $DROPBOX/monthly $DROPBOX/2months
+rsync -av --delete /home/bryan/Dropbox/ $DROPBOX/monthly/
+date > $DROPBOX/monthly/backup.txt

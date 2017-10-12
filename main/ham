@@ -74,30 +74,31 @@ if [[ $action == "start" ]]; then
 	trap "rm $PID_FILE; kill 0" EXIT
 
 	if [[ "$2" == [0-9] ]]; then
-		activity=$(hamster activities | sort | sed "$2q;d")
+		cmd=$(hamster activities | sort | sed "$2q;d")
 	elif [[ -n "$2" ]]; then
-		activity=$2
+		cmd=$2
 	else
-		activity=$(hamster activities | sort | dmenu -i -m 0)
+		cmd=$(hamster activities | sort | dmenu -i -m 0)
 	fi
 
 	start_time=
-	if [[ -z "$activity" ]]; then
-		logger "ham: 'activity' variable is empty"
+	if [[ -z "$cmd" ]]; then
+		logger "ham: 'cmd' variable is empty"
 		exit 1
 	fi
 
-	if [[ $activity == *":"* ]]; then
-		MINUTES="${activity#*:}"
-		activity="${activity%:*}"
+	if [[ $cmd == *":"* ]]; then
+		MINUTES="${cmd#*:}"
 	fi
 
-	if [[ $activity == *"+"* ]]; then
-		offset="${activity#*+}"
-		activity="${activity%+*}"
+	if [[ $cmd == *"+"* ]]; then
+		offset="${cmd#*+}"
 
 		start_time=$(date --date="$offset minutes ago" +%H:%M)
 	fi
+
+	activity="${cmd%+*}"
+	activity="${activity%:*}"
 
 
 	if [[ -n "$MINUTES" ]]; then

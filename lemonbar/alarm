@@ -56,6 +56,9 @@ if [[ $alrm_time == *"s" ]]; then
 	stop_time=$(date --date="$alrm_time seconds" +%s)
 elif [[ $alrm_time == *":"* ]]; then
 	stop_time=$(date --date="$alrm_time" +%s)
+	if [[ $(date +%s) -ge $stop_time ]]; then
+		stop_time=$(date --date="$alrm_time tomorrow" +%s)
+	fi
 else
 	stop_time=$(date --date="$alrm_time minutes" +%s)
 fi

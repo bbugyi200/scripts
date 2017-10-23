@@ -89,12 +89,13 @@ if [[ $action == "start" ]]; then
 
 	if [[ $cmd == *":"* ]]; then
 		MINUTES="${cmd#*:}"
+		MINUTES="${MINUTES%+*}"
 	fi
 
 	if [[ $cmd == *"+"* ]]; then
 		offset="${cmd#*+}"
-
-		start_time=$(date --date="$offset minutes ago" +%H:%M)
+		offset="${offset%:*}"
+		start_time=$(date --date="$offset minutes ago" +"%Y-%m-%d %H:%M:%S")
 	fi
 
 	activity="${cmd%+*}"

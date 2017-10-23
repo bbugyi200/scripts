@@ -39,13 +39,10 @@ int main(int argc, char *argv[])
 		log_sys("gethostname");
 
 	bool is_laptop = false;
-	char *zipcode;
 	if (strncmp(hostname, "athena", 6) == 0) {
 		net_dev = "enp2s0";
-		zipcode = "08060";
 	} else {
 		net_dev = "wlo1";
-		zipcode = "08901";
 		is_laptop = true;
 	}
 
@@ -220,7 +217,7 @@ int main(int argc, char *argv[])
 			else if (pid == 0) {
 				close(pipefd[0]);
 				dup2(pipefd[1], STDOUT_FILENO);
-				execl("/usr/bin/weather-report", "weather-report", "-q", "--headers", "Temperature", "--no-cache", zipcode, (char *) NULL);
+				execl("/usr/bin/weather-report", "weather-report", "-q", "--headers", "Temperature", "--no-cache", "08901", (char *) NULL);
 			}
 
 			close(pipefd[1]);

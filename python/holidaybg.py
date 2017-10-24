@@ -15,11 +15,8 @@ def calc_easter(year):
     e = (32 + 2 * (b % 4) + 2 * (c // 4) - d - (c % 4)) % 7
     f = d + e - 7 * ((a + 11 * d + 22 * e) // 451) + 114
     month = f // 31
-    day = f % 31 + 1    
+    day = f % 31 + 1
     return date(year, month, day)
-
-def nth_day_holiday(start_day):
-    start = datetime.strptime(start_day, '%m/%d/%Y')
 
 
 now = datetime.now().date()
@@ -40,7 +37,7 @@ main = [('christmas', '12/25', 15),
 
 holidays = short + main
 
-default_max=7
+default_max = 7
 for H in holidays:
     try:
         MAX = H[2]
@@ -60,7 +57,7 @@ for H in holidays:
     if delta.days <= MAX:
         path = '/home/bryan/Dropbox/photos/backgrounds/holidays/{}.jpg'.format(H[0])
         if os.path.exists(path):
-            with open('/tmp/current_bg.txt', 'w+') as F:
+            with open('/tmp/current_bg.txt', 'w') as F:
                 F.write(path)
 
             os.system('feh --bg-fill {}'.format(path))

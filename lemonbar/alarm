@@ -82,7 +82,7 @@ done > "$PANEL_FIFO"
 
 
 # ---------- Timer Finished ----------
-for i in {0..101} ; do
+for i in {0..60} ; do
 	if [[ $((i % 2)) == 0 ]]; then
 		COLOR=$GREY
 	else

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+list_windows=$(tmux list-windows)
+
+case $list_windows in
+	*"ghc"* )
+		quit_cmd=":quit";;
+	*"vim"* )
+		quit_cmd=":q";;
+	* )
+		quit_cmd="exit";;
+esac
+
+tmux send-keys "$quit_cmd" "Enter"

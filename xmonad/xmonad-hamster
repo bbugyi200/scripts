@@ -38,10 +38,11 @@ if len(current.split()) > 2:
     except AttributeError:
         act_time = "0.0h"
 
-    output = "H%s   (%s / %s / %s)\n" % (current, act_time, day_time, week_time)
+    output = "%s   (%s / %s / %s)" % (current, act_time, day_time, week_time)
 else:
-    output = "HNo Activity  (%s / %s)\n" % (day_time, week_time)
+    output = "No Activity  (%s / %s)" % (day_time, week_time)
 
+print(output)
 
-with open('/tmp/panel-fifo', "w") as f:
-    f.write(output)
+# with open('/tmp/panel-fifo', "w") as f:
+#     f.write(output)

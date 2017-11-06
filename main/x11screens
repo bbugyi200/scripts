@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo $(xrandr | grep " connected" | wc -l)

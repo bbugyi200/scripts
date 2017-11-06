@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 	else if (pid == 0) {
 		close(pipefd[0]);
 		dup2(pipefd[1], STDOUT_FILENO);
-		execl("/usr/bin/bspc", "bspc", "query", "--monitors", (char *)NULL);
+		execl("/usr/local/bin/x11screens", (char *)NULL);
 	}
 
 	close(pipefd[1]);
@@ -40,10 +40,8 @@ int main(int argc, char *argv[])
 	pipe_output = fdopen(pipefd[0], "r");
 
 	errno = 0;
-	int num_of_monitors = 0;
-	while (fgets(cmdout, MAXLINE, pipe_output) != NULL) {
-		num_of_monitors++;
-	}
+	fgets(cmdout, MAXLINE, pipe_output);
+	int num_of_monitors = cmdout[0] - '0';
 	if (errno)
 		perror(argv[0]);
 	fclose(pipe_output);

@@ -65,7 +65,7 @@ done
 # ---------- Handle Actions ----------
 if [[ $action == "stop" ]]; then
 	hamster stop
-	print_panel
+	# print_panel
 	exit 0
 fi
 
@@ -114,13 +114,13 @@ if [[ $action == "start" ]]; then
 		logger "ham: hamster command failed"
 		exit 1
 	else
-		print_panel
+		: # print_panel
 	fi
 
 	while true; do
 		sleep 30
 		if [[ $(xprintidle) -ge $MAX ]]; then
-			hamster stop && print_panel
+			hamster stop # && print_panel
 			printf "Hamster \'$activity\' went idle at: %s\n" "$(date +'%m/%d/%Y %T %Z')"
 		else
 			continue
@@ -131,7 +131,7 @@ if [[ $action == "start" ]]; then
 		while true; do
 			sleep 1
 			if [[ $(xprintidle) -le $MAX ]]; then
-				hamster $action $activity && print_panel
+				hamster $action $activity # && print_panel
 				printf "Hamster \'$activity\' resumed at: %s\n\n" "$(date +'%m/%d/%Y %T %Z')"
 				break
 			elif [[ $(date +%s) -ge $timeout_time ]]; then

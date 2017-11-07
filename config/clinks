@@ -6,7 +6,7 @@ fi
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R main
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R config
 stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R lemonbar
-stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R xmonad
+stow -v --dir=/home/bryan/Dropbox/scripts --target=/usr/local/bin -R polls
 stow -v --dir=/home/bryan/Dropbox --target=/home/bryan -R dotfiles
 stow -v --dir=/home/bryan/Dropbox --target=/root -R dotfiles
 stow -v --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src -R src

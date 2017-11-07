@@ -17,7 +17,7 @@ while [[ -n "$1" ]]; do
 done
 
 print_icon() {
-	printf "D%%{F$1}$DBOX  \n" > $PANEL_FIFO
+	:
 }
 
 if [[ $debug -eq 1 ]]; then

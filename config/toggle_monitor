@@ -6,5 +6,5 @@ if xrandr | grep "$extern disconnected"; then
     xrandr --output "$extern" --off --output "$intern" --auto
 else
     xrandr --output "$intern" --primary --output "$extern" --auto --right-of "$intern"
-    sleep 1 && feh --bg-fill $(cat /tmp/current_bg.txt)
+    sleep 1 && feh --bg-fill $(cat /tmp/current_bg.txt) && xdotool key alt+7 && sleep 0.5 && xdotool key alt+1
 fi

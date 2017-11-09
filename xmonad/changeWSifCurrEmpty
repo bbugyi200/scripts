@@ -1,0 +1,26 @@
+#!/bin/bash
+
+MAX=5
+COUNT=1
+CURR=$(xdotool get_desktop)
+
+WNAME=
+
+if [[ -n $1 ]]; then
+	WNAME=$1
+fi
+
+case $WNAME in
+	*"Anki"* )
+		xdotool key alt+bracketright;;
+	* )
+	while [[ $COUNT -le $MAX ]]; do
+		xdotool key ctrl+alt+shift+n
+		sleep 0.1
+
+		if [[ $(xdotool get_desktop) -ne $CURR ]]; then
+			break
+		fi
+		COUNT=$((COUNT+1))
+	done;;
+esac

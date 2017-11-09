@@ -1,8 +1,8 @@
 #!/bin/bash
 
-list_windows=$(tmux list-windows)
+active_window=$(tmux list-windows | grep "*")
 
-case $list_windows in
+case $active_window in
 	*"MATLAB"* )
 		clear_cmd="clc";;
 	*"vim"* )

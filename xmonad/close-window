@@ -1,0 +1,8 @@
+#!/bin/bash
+WNAME=`xdotool getwindowfocus getwindowname`
+
+if wmctrl -c :ACTIVE:; then
+	changeWSifCurrEmpty $WNAME
+else
+	xdotool key alt+s
+fi

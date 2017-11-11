@@ -1,14 +1,12 @@
 #!/bin/python
 import os
-import pandas as pd
-import sys
 import sys
 from dateutil.parser import parse
 from datetime import datetime
 
 
 if sys.argv[1] == "--update":
-    MAX=7
+    MAX = 7
 
     cmd_output = os.popen('grep -e ".*starting full.*" /var/log/pacman.log | tail -1 | cut -d "[" -f2 | cut -d "]" -f1')
     date_str = cmd_output.read().rstrip()
@@ -17,7 +15,7 @@ if sys.argv[1] == "--update":
 
 
 elif sys.argv[1] == "--cleanup":
-    MAX=30
+    MAX = 30
 
     date_str = open('/home/bryan/.cleanup-tmstmp.log', 'r').read().rstrip()
     last_clean = parse(date_str)
@@ -25,6 +23,6 @@ elif sys.argv[1] == "--cleanup":
 
 
 if delta.days >= MAX:
-    sys.exit(1)
+    sys.exit(delta.days)
 else:
     sys.exit(0)

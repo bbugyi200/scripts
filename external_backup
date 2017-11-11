@@ -1,3 +1,0 @@
-#!/bin/bash
-
-rsync -av --delete /media/bryan/hercules/backup /media/bryan/perseus && date > /media/bryan/perseus/backup//external.txt

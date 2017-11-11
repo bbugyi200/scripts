@@ -1,0 +1,13 @@
+#!/bin/bash
+
+MaintChck --update
+STATUS=$?
+if [[ $STATUS -ne 0 ]]; then
+	notify-send -u critical "Maintenance Required!" "You should update your computer. You haven't run a full update in $STATUS days."
+fi
+
+MaintChck --cleanup
+STATUS=$?
+if [[ $STATUS -ne 0 ]]; then
+	notify-send -u critical "Maintenance Required." "You should run the 'cleanup' command. The last time you ran 'cleanup' was $STATUS days ago."
+fi

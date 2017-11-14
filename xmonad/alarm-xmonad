@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# My Colors
+GREEN="#0BF816"
+YELLOW="#EBEE27"
+RED="#FB0611"
+BLUE="#3C4BF7"
+WHITE="#FFFFFF"
+GREY="#D9D9D9"
+
+
+FILE=/tmp/alarm.pid
+
+
+time_left() {
+	echo $(($stop_time - $(date --date="now" +%s)))
+}
+
+
+# ---------- Command Line Arguments ----------
+eval set -- $(getopt -o "s" -l "stop" -- "$@")
+
+while [[ -n "$1" ]]; do
+	case $1 in
+		'-s' | '--stop' )
+			action="stop";;
+		'--' )
+			shift
+			break;;
+	esac
+	shift
+done
+
+FIFO=/tmp/alarm-fifo
+[[ -S $FIFO ]] || mkfifo $FIFO
+
+# ---------- Action: stop ----------
+if [[ "$action" == "stop" ]]; then
+	cat $FILE | xargs kill
+	echo "" > "$FIFO"
+	exit 0
+fi
+
+# ---------- Exit if FILE Exists ----------
+if [[ -f $FILE ]]; then
+	echo "An Alarm is Already Running!"
+	exit 1
+else
+	echo $$ > $FILE
+fi
+
+
+trap 'rm $FILE' EXIT
+
+
+# ---------- Set Alarm Time ----------
+if [[ -z "$1" ]]; then
+	alrm_time="$(echo | dmenu -m 1 -p "Alarm:")"
+else
+	alrm_time=$1
+fi
+
+
+if [[ $alrm_time == *"s" ]]; then
+	alrm_time=${alrm_time%s}
+	stop_time=$(date --date="$alrm_time seconds" +%s)
+elif [[ $alrm_time == *":"* ]]; then
+	stop_time=$(date --date="$alrm_time" +%s)
+	if [[ $(date +%s) -ge $stop_time ]]; then
+		stop_time=$(date --date="$alrm_time tomorrow" +%s)
+	fi
+else
+	stop_time=$(date --date="$alrm_time minutes" +%s)
+fi
+
+
+# ---------- Main Output ----------
+iclock="<icon=clock.xbm/>"
+while true; do
+	TL=$(time_left)
+	if [[ $TL -ge 3600 ]]; then
+		printf "<fc=$GREY>  %d:%02d:%02d$iclock</fc>  |  \n" $((TL/3600)) $((TL%3600/60)) $((TL%3600%60))
+	else
+		printf "<fc=$GREY>  %d:%02d$iclock</fc>  |  \n" $((TL/60)) $((TL%60))
+	fi
+	sleep 1
+
+	if [[ $TL -le 0 ]]; then
+		break;
+	fi
+done > "$FIFO"
+
+
+# ---------- Timer Finished ----------
+printf "<fc=$RED>TIMER IS DONE!$iclock</fc>  |  \n" > "$FIFO"
+sleep 30
+
+printf "\n" > "$FIFO"

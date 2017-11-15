@@ -4,11 +4,7 @@ MAX=5
 COUNT=1
 CURR=$(xdotool get_desktop)
 
-WNAME=
-
-if [[ -n $1 ]]; then
-	WNAME=$1
-fi
+WNAME=$1
 
 case $WNAME in
 	*"Anki"* )

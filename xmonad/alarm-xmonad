@@ -55,9 +55,13 @@ trap 'rm $FILE' EXIT
 
 # ---------- Set Alarm Time ----------
 if [[ -z "$1" ]]; then
-	alrm_time="$(echo | dmenu -m 1 -p "Alarm:")"
+	alrm_time="$(echo | dmenu -p "Alarm:")"
 else
 	alrm_time=$1
+fi
+
+if [[ -z "$alrm_time" ]]; then
+    exit 1
 fi
 
 

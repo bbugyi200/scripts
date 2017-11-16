@@ -31,6 +31,9 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
+PS4='$LINENO: '
+set -x
+
 FIFO=/tmp/alarm-fifo
 [[ -S $FIFO ]] || mkfifo $FIFO
 

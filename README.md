@@ -1,5 +1,5 @@
 # Why?
-We shouldn't leave our personal belongings in public places unattended. You know it, I know it, and the would-be thieves know it. But most of us do it anyway sometimes. Am I really going to pack up my laptop, mouse and mousepad, charger, notebook, pencil and eraser, calculator, and the rest of my belongings every time I need to take a trip to the bathroom? Probably not. So I leave my things where they sit and risk having them stolen. My goal in writing ProtectMyLaptop was to help make this risk a bit more manageable.
+We shouldn't leave our personal belongings in public places unattended. You know it, I know it, and the would-be thieves know it. But most of us do it anyway. Am I really going to pack up my laptop, mouse and mousepad, charger, notebook, pencil and eraser, calculator, and the rest of my belongings every time I need to take a trip to the bathroom? Probably not. So I leave my things where they sit and risk having them stolen. My goal in writing ProtectMyLaptop was to help make this risk a bit more manageable.
 
 # What?
 

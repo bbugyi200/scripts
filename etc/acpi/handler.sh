@@ -7,7 +7,7 @@ case "$1" in
             PBTN|PWRF)
                 logger 'PowerButton pressed'
                 if [[ -f /tmp/lock.pid ]]; then
-                    /home/bryan/Dropbox/scripts/python/textme/textme "Laptop Power-Button has been Pressed!!!"
+                    textme "Laptop Power-Button has been Pressed!!!"
                 fi
                 ;;
             *)
@@ -64,7 +64,7 @@ case "$1" in
             close)
                 logger 'LID closed'
                 if [[ -f /tmp/lock.pid ]]; then
-                    /home/bryan/Dropbox/scripts/python/textme/textme "Laptop Lid has been Closed!!!"
+                    textme "Laptop Lid has been Closed!!!"
                 else
                     systemctl suspend
                 fi

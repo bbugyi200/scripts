@@ -8,7 +8,8 @@ WNAME=$1
 
 case $WNAME in
 	*"Anki"* )
-		xdotool key alt+bracketright;;
+        sleep 0.1
+		xdotool key super+r;;
 	* )
 	while [[ $COUNT -le $MAX ]]; do
 		xdotool key ctrl+alt+shift+n

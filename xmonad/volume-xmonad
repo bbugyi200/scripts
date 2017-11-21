@@ -1,0 +1,31 @@
+#!/bin/bash
+
+FIFO=/tmp/volume-fifo
+[[ -p $FIFO ]] || mkfifo $FIFO
+
+sleep 3
+while true; do
+    if pgrep xmobar > /dev/null; then
+        VOLUME=$(amixer get Master | grep ".*\[[0-9]\+%" | sed "s/.*\[\([0-9]\+\)%.*$/\1/")
+        if [[ $VOLUME -eq 0 ]]; then
+            NUM_OF_BANGS=0
+        else
+            NUM_OF_BANGS=$((VOLUME / 10 + 1))
+        fi
+
+        COLONS="::::::::::"
+        PREFIX=${COLONS:0:$NUM_OF_BANGS}
+        SUFFIX=${COLONS:$NUM_OF_BANGS}
+        OUTPUT="${PREFIX//:/\#}$SUFFIX"
+
+        if [[ $VOLUME -eq 100 ]]; then
+            OUTPUT="#### MAX ####"
+        fi
+
+        printf "$OUTPUT\n" > $FIFO
+        break
+    else
+        sleep 5
+        continue
+    fi
+done

@@ -9,7 +9,9 @@ WHITE="#FFFFFF"
 GREY="#D9D9D9"
 
 
-FILE=/tmp/alarm.pid
+PID_FILE=/tmp/alarm.pid
+TIMESTAMP_FILE=/home/bryan/.alarm.ts
+FIFO=/tmp/alarm-fifo
 
 
 time_left() {
@@ -18,12 +20,14 @@ time_left() {
 
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "s" -l "stop" -- "$@")
+eval set -- $(getopt -o "s,r" -l "stop,resume" -- "$@")
 
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-s' | '--stop' )
 			action="stop";;
+        '-r' | '--resume' )
+            action="resume";;
 		'--' )
 			shift
 			break;;
@@ -31,53 +35,61 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
-PS4='$LINENO: '
-set -x
-
-FIFO=/tmp/alarm-fifo
-[[ -S $FIFO ]] || mkfifo $FIFO
-
-# ---------- Action: stop ----------
-if [[ "$action" == "stop" ]]; then
-	cat $FILE | xargs kill
-	echo "" > "$FIFO"
-	exit 0
-fi
-
-# ---------- Exit if FILE Exists ----------
-if [[ -f $FILE ]]; then
-	echo "An Alarm is Already Running!"
-	exit 1
-else
-	echo $$ > $FILE
-fi
-
-
-trap 'rm $FILE' EXIT
-
-
-# ---------- Set Alarm Time ----------
-if [[ -z "$1" ]]; then
-	alrm_time="$(echo | dmenu -p "Alarm:")"
-else
-	alrm_time=$1
-fi
-
-if [[ -z "$alrm_time" ]]; then
+if [[ "$action" == "resume" && ! -f $TIMESTAMP_FILE ]]; then
     exit 1
 fi
 
 
-if [[ $alrm_time == *"s" ]]; then
-	alrm_time=${alrm_time%s}
-	stop_time=$(date --date="$alrm_time seconds" +%s)
-elif [[ $alrm_time == *":"* ]]; then
-	stop_time=$(date --date="$alrm_time" +%s)
-	if [[ $(date +%s) -ge $stop_time ]]; then
-		stop_time=$(date --date="$alrm_time tomorrow" +%s)
-	fi
+[[ -p $FIFO ]] || mkfifo $FIFO
+
+# ---------- Action: stop ----------
+if [[ "$action" == "stop" ]]; then
+	cat $PID_FILE | xargs kill
+    rm $TIMESTAMP_FILE
+	echo "" > "$FIFO"
+	exit 0
+fi
+
+# ---------- Exit if PID_FILE Exists ----------
+if [[ -f $PID_FILE ]]; then
+	echo "An Alarm is Already Running!"
+	exit 1
 else
-	stop_time=$(date --date="$alrm_time minutes" +%s)
+	echo $$ > $PID_FILE
+fi
+
+
+trap 'rm $PID_FILE' EXIT
+trap ':' SIGPIPE
+
+# ---------- Set Alarm Time ----------
+if [[ -f $TIMESTAMP_FILE ]]; then
+    stop_time=$(cat $TIMESTAMP_FILE)
+else
+    if [[ -z "$1" ]]; then
+        alrm_time="$(echo | dmenu -p "Alarm:")"
+    else
+        alrm_time=$1
+    fi
+
+    if [[ -z "$alrm_time" ]]; then
+        exit 1
+    fi
+
+
+    if [[ $alrm_time == *"s" ]]; then
+        alrm_time=${alrm_time%s}
+        stop_time=$(date --date="$alrm_time seconds" +%s)
+    elif [[ $alrm_time == *":"* ]]; then
+        stop_time=$(date --date="$alrm_time" +%s)
+        if [[ $(date +%s) -ge $stop_time ]]; then
+            stop_time=$(date --date="$alrm_time tomorrow" +%s)
+        fi
+    else
+        stop_time=$(date --date="$alrm_time minutes" +%s)
+    fi
+
+    echo $stop_time > $TIMESTAMP_FILE
 fi
 
 
@@ -99,7 +111,15 @@ done > "$FIFO"
 
 
 # ---------- Timer Finished ----------
-printf "<fc=$RED>TIMER IS DONE!$iclock</fc>  |  \n" > "$FIFO"
-sleep 30
+for i in {0..60} ; do
+    if ((i % 2)); then
+        COLOR=$RED
+    else
+        COLOR=$GREY
+    fi
+
+    printf "<fc=$COLOR>TIMER IS DONE!$iclock</fc>  |  \n" > "$FIFO"
+    sleep 1
+done
 
 printf "\n" > "$FIFO"

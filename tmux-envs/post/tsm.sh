@@ -1,1 +1,1 @@
-tmux send-keys "tsm-stop && PIA stop && tmux kill-session -t tsm" Enter
+tmux send-keys -t "tsm" "tsm-stop && PIA stop && tmux kill-session -t tsm" Enter

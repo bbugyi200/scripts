@@ -60,7 +60,7 @@ for H in holidays:
             with open('/tmp/current_bg.txt', 'w') as F:
                 F.write(path)
 
-            os.system('feh --bg-fill {}'.format(path))
+            os.system('feh --bg-center {}'.format(path))
             sys.exit(0)
 
 sys.exit(1)

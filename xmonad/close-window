@@ -2,7 +2,7 @@
 WNAME=`xdotool getwindowfocus getwindowname`
 
 if wmctrl -c :ACTIVE:; then
-	changeWSifCurrEmpty $WNAME
+	removeEmptyWorkspace $WNAME
 else
     if [[ $(wmctrl -d | wc -l) -le 2 ]]; then
         xdotool key alt+s

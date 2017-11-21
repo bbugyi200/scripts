@@ -46,7 +46,7 @@ fi
 if [[ "$action" == "stop" ]]; then
 	cat $PID_FILE | xargs kill
     rm $TIMESTAMP_FILE
-	echo "" > "$FIFO"
+	printf "\n" > "$FIFO"
 	exit 0
 fi
 
@@ -122,3 +122,4 @@ for i in {0..60} ; do
 done
 
 printf "\n" > "$FIFO"
+rm $TIMESTAMP_FILE

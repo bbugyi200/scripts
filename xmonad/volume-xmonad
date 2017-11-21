@@ -3,7 +3,6 @@
 FIFO=/tmp/volume-fifo
 [[ -p $FIFO ]] || mkfifo $FIFO
 
-sleep 3
 while true; do
     if pgrep xmobar > /dev/null; then
         VOLUME=$(amixer get Master | grep ".*\[[0-9]\+%" | sed "s/.*\[\([0-9]\+\)%.*$/\1/")

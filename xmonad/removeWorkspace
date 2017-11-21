@@ -1,0 +1,15 @@
+#!/bin/bash
+
+NUM_OF_WS=$(wmctrl -d | wc -l)
+
+COUNT=1
+xdotool key super+r
+while [[ $(wmctrl -d | wc -l) -eq $NUM_OF_WS ]]; do
+    if [[ $COUNT -ge 5 ]]; then
+        break
+    fi
+    sleep 0.1
+    COUNT=$((COUNT+1))
+
+    xdotool key super+r
+done

@@ -78,8 +78,7 @@ else
 
 
     if [[ $alrm_time == *"s" ]]; then
-        alrm_time=${alrm_time%s}
-        stop_time=$(date --date="$alrm_time seconds" +%s)
+        stop_time=$(date --date="${alrm_time%s} seconds" +%s)
     elif [[ $alrm_time == *":"* ]]; then
         stop_time=$(date --date="$alrm_time" +%s)
         if [[ $(date +%s) -ge $stop_time ]]; then

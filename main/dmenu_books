@@ -15,4 +15,12 @@ else
     echo $CHOICE > $CACHE_FILE
 fi
 
-xdotool key q && zathura "$(printf "$PATH_LIST\n" | grep $CHOICE)" &> /dev/null &
+CHOICE_PATH=$(printf "$PATH_LIST\n" | grep $CHOICE)
+
+if [[ -z "$CHOICE_PATH" ]]; then
+    sed -i "/$CHOICE/d" $CACHE_FILE
+    notify-send -u critical "dmenu_books" "The document $CHOICE was not found. It has been purged from the cache file."
+    exit 2
+fi
+
+xdotool key q && zathura "$CHOICE_PATH" &> /dev/null &

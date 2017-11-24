@@ -110,16 +110,6 @@ done > "$FIFO"
 
 
 # ---------- Timer Finished ----------
-for i in {0..60} ; do
-    if ((i % 2)); then
-        COLOR=$RED
-    else
-        COLOR=$GREY
-    fi
-
-    printf "<fc=$COLOR>TIMER IS DONE!$iclock</fc>  |  \n" > "$FIFO"
-    sleep 1
-done
-
+notify-send -u critical -t 0 "$(basename $0)" "THE TIMER IS DONE!"
 printf "\n" > "$FIFO"
 rm $TIMESTAMP_FILE

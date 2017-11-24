@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CACHE_FILE=/home/bryan/Dropbox/scripts/data/dmenu_books_cache
-PATH_LIST=$(find /home/bryan/Dropbox/Books -name "*.pdf" -o -name "*.epub")
+PATH_LIST=$(find /home/bryan/Dropbox -name "*.pdf" -o -name "*.epub")
 CHOICE=$(printf "$PATH_LIST\n" | sed -e 's/.*\///g' | cat $CACHE_FILE - | gawk '!a[$0]++' | dmenu)
 
 if [[ -z "$CHOICE" ]]; then

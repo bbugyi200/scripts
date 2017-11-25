@@ -123,7 +123,8 @@ case $action in
 		refresh_notes;;
 	'put')
 		# gets current page number
-		page=$(wmctrl -lx | grep "zathura.Zathura" | tr -s ' ' | cut -d ' ' -f6 | cut -d'[' -f2 | cut -d'/' -f1 | head -1)
+        zath_desktop=$(wmctrl -lx | grep "zathura.Zathura" | head -1 | cut -d ' ' -f3)
+		page=$(wmctrl -lx | grep "zathura.Zathura" | grep " $zath_desktop " | tr -s ' ' | cut -d ' ' -f6 | cut -d'[' -f2 | cut -d'/' -f1 | tail -1)
 
 		# if '--dmenu' was used, clip is set using dmenu input
 		if [[ $dmenu -eq 1 ]]; then

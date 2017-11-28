@@ -110,6 +110,9 @@ done > "$FIFO"
 
 
 # ---------- Timer Finished ----------
-notify-send -u critical -t 0 "$(basename $0)" "THE TIMER IS DONE!"
+notify-send -u critical -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "$(basename $0)" "THE TIMER IS DONE!"
+printf "<fc=$RED>  TIMER IS DONE!!! $iclock</fc>  |  \n" > "$FIFO"
+
+sleep 30
 printf "\n" > "$FIFO"
 rm $TIMESTAMP_FILE

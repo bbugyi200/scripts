@@ -19,8 +19,17 @@ def calc_easter(year):
     return date(year, month, day)
 
 
+def calc_thanksgiving(year):
+    last_possible_date = date(year, 11, 28)
+    weekday = last_possible_date.weekday()
+
+    # Thursday == 3
+    offset = (weekday + 4) if (weekday < 3) else (weekday - 3)
+    return date(year, 11, 28 - offset)
+
+
 now = datetime.now().date()
-# now = parse('04/01').date()
+# now = parse('11/25').date()
 
 short = [('pigday', '03/01', 0),
          ('stpatricks', '03/17', 3),
@@ -30,7 +39,7 @@ short = [('pigday', '03/01', 0),
 
 main = [('christmas', '12/25', 15),
         ('halloween', '10/31'),
-        ('thanksgiving', '11/25'),
+        ('thanksgiving', calc_thanksgiving(now.year)),
         ('easter', calc_easter(now.year)),
         ('birthday', '03/04'),
         ('fourth', '07/04', 3)]
@@ -39,6 +48,7 @@ holidays = short + main
 
 default_max = 7
 for H in holidays:
+    print(H)
     try:
         MAX = H[2]
     except IndexError:

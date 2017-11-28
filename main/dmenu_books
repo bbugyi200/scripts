@@ -15,7 +15,7 @@ else
     echo $CHOICE > $CACHE_FILE
 fi
 
-CHOICE_PATH=$(printf "$PATH_LIST\n" | grep $CHOICE)
+CHOICE_PATH=$(printf "$PATH_LIST\n" | grep "$CHOICE")
 
 if [[ -z "$CHOICE_PATH" ]]; then
     sed -i "/$CHOICE/d" $CACHE_FILE

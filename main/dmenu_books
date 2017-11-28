@@ -15,10 +15,11 @@ else
     echo $CHOICE > $CACHE_FILE
 fi
 
-CHOICE_PATH=$(printf "$PATH_LIST\n" | grep "$CHOICE")
+CHOICE_PATH=$(printf "$PATH_LIST\n" | grep -F "$CHOICE")
 
 if [[ -z "$CHOICE_PATH" ]]; then
-    sed -i "/$CHOICE/d" $CACHE_FILE
+    ESCAPED_CHOICE=$(echo $CHOICE | sed 's/\[/\\[/g' | sed 's/\]/\\]/g')
+    sed -i "/$ESCAPED_CHOICE/d" $CACHE_FILE
     notify-send -u critical "dmenu_books" "The document $CHOICE was not found. It has been purged from the cache file."
     exit 2
 fi

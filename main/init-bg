@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Set Background
-python3 ~/Dropbox/scripts/python/holidaybg.py
-if [[ $? -ne 0 ]]; then
+if ! python3 ~/Dropbox/scripts/python/holidaybg.py; then
     BG=$(find ~/Dropbox/photos/backgrounds/random -type f | shuf -n 1)
 	feh --bg-fill $BG
 	echo $BG > /tmp/current_bg.txt

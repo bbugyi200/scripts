@@ -20,8 +20,8 @@ def calc_easter(year):
 
 
 def calc_thanksgiving(year):
-    last_possible_date = date(year, 11, 28)
-    weekday = last_possible_date.weekday()
+    last_possible_day = date(year, 11, 28)
+    weekday = last_possible_day.weekday()
 
     # Thursday == 3
     offset = (weekday + 4) if (weekday < 3) else (weekday - 3)

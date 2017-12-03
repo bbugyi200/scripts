@@ -1,6 +1,7 @@
 #!/bin/bash
 if [[ $(hostname) == "aphrodite" ]]; then
 	cd /home/bryan/Dropbox/logs/aphrodite-motion
+    /home/bryan/Dropbox/scripts/python/textme/textme "ProtectMyLaptop has been activated!"
 	N=30
 	M=0
 else

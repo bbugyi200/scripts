@@ -1,0 +1,88 @@
+#!/bin/bash
+
+# Allows me to have a .localaliases file in any directory that I want which
+# can be used to customize bash commands locally.
+
+shopt -s expand_aliases
+source /home/bryan/Dropbox/dotfiles/.globrc
+
+eval set -- $(getopt -o "da:ep" -l "debug,alias:,edit,print" -- "$@")
+
+while [[ -n "$1" ]]; do
+    case $1 in
+        '--debug' )
+            debug=true;;
+        '-a' | '--alias' )
+            shift
+            ALIAS="$1";;
+        '-e' | '--edit' )
+            edit=true;;
+        '-p' | '--print' )
+            display=true;;
+        '--' )
+            shift
+            break;;
+    esac
+    shift
+done
+
+if [[ "$debug" = true ]]; then
+    PS4="$LINENO: "
+    set -x
+fi
+
+SEP="="
+DISPSEP=" ---> "
+LOCALALIAS_FILE="./.localaliases"
+DEF=$(grep -s "^$ALIAS$SEP" "$LOCALALIAS_FILE")
+CMD=${DEF/"$ALIAS$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}
+
+if [[ "$edit" = true ]]; then
+    eval "vim -c '/=.\zs.\ze' $LOCALALIAS_FILE"
+    exit 0
+fi
+
+if [[ "$display" = true || -z "$ALIAS" ]]; then
+    eval "cat $LOCALALIAS_FILE"
+    exit 0
+fi
+
+if [ -n "$CMD" ]; then
+    eval "$CMD $@"
+    exit 0
+else
+    printf "Create a new local alias for $ALIAS? (y/n): "
+    read -n 1 CHOICE
+    echo
+
+    if [ "$CHOICE" != "y" ]; then
+        exit 1
+    fi
+
+    printf "$ALIAS$SEP''\033[1D" 
+    IFS=
+    read -n 1 C
+    while [[ "$C" != "" ]]; do
+        if [[ "$C" = "" ]]; then
+            if [[ -n "$CMD" ]]; then
+                CMD=${CMD::-1}
+            fi
+        else
+            CMD="$CMD$C"
+        fi
+
+        echo -ne "\033[0K\r"
+        echo -ne "\033[0K\r"  # 2nd call clears backspace
+
+        Q="'"
+        if [[ "$CMD" == *"$Q"* ]]; then
+            Q='"'
+        fi
+
+        printf "$ALIAS$SEP$Q$CMD$Q\033[1D" 
+        read -n 1 C
+    done
+
+    printf "$ALIAS$SEP$Q$CMD$Q\n" >> $LOCALALIAS_FILE
+    exit 0
+fi

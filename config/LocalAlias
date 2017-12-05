@@ -28,7 +28,7 @@ while [[ -n "$1" ]]; do
         '-r' | '--remove' )
             shift
             action='remove'
-            BADCMD="$1";;
+            ALIAS="$1";;
         '--' )
             shift
             break;;
@@ -45,7 +45,7 @@ SEP="="
 LOCALALIAS_FILE="./.localaliases"
 
 function remove() {
-    sed -i "/$1$SEP/d" $LOCALALIAS_FILE
+    sed -i "/$ALIAS$SEP/d" $LOCALALIAS_FILE
 }
 
 function add() {
@@ -79,10 +79,10 @@ function add() {
 
 case $action in
     'add' )
-        remove $ALIAS
+        remove
         add;;
     'remove' )
-        remove $BADCMD;;
+        remove;;
     'print' )
         if [[ -n "$1" ]]; then
             cat $LOCALALIAS_FILE | grep $1$SEP

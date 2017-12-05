@@ -8,20 +8,22 @@ source /home/bryan/Dropbox/dotfiles/.globrc
 
 eval set -- $(getopt -o "da:epr:" -l "debug,alias:,edit,print,remove" -- "$@")
 
+action='print'
 while [[ -n "$1" ]]; do
     case $1 in
         '-d' | '--debug' )
             debug=true;;
         '-a' | '--alias' )
+            action='alias'
             shift
             ALIAS="$1";;
         '-e' | '--edit' )
-            edit=true;;
+            action='edit';;
         '-p' | '--print' )
-            display=true;;
+            action="print";;
         '-r' | '--remove' )
             shift
-            remove=true
+            action='remove'
             BADCMD="$1";;
         '--' )
             shift
@@ -40,57 +42,51 @@ LOCALALIAS_FILE="./.localaliases"
 DEF=$(grep -s "^$ALIAS$SEP" "$LOCALALIAS_FILE")
 CMD=${DEF/"$ALIAS$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}
 
-if [[ "$edit" = true ]]; then
-    eval "vim -c '/=.\zs.\ze' $LOCALALIAS_FILE"
-    exit 0
-fi
-
-if [[ "$remove" = true ]]; then
-    sed -i "/$BADCMD$SEP/d" $LOCALALIAS_FILE
-    exit 0
-fi
-
-if [[ "$display" = true || -z "$ALIAS" ]]; then
-    eval "cat $LOCALALIAS_FILE"
-    exit 0
-fi
-
-if [ -n "$CMD" ]; then
-    eval "$CMD $@"
-    exit 0
-else
-    printf "Create a new local alias for $ALIAS? (y/n): "
-    read -n 1 CHOICE
-    echo
-
-    if [ "$CHOICE" != "y" ]; then
-        exit 1
-    fi
-
-    printf "$ALIAS$SEP''\033[1D" 
-    IFS=
-    read -n 1 C
-    while [[ "$C" != "" ]]; do
-        if [[ "$C" = "" ]]; then
-            if [[ -n "$CMD" ]]; then
-                CMD=${CMD::-1}
-            fi
+case $action in
+    'remove' )
+        sed -i "/$BADCMD$SEP/d" $LOCALALIAS_FILE;;
+    'print' )
+        cat $LOCALALIAS_FILE;;
+    'edit' )
+        vim -c '/=.\zs.\ze' $LOCALALIAS_FILE;;
+    'alias' )
+        if [ -n "$CMD" ]; then
+            eval "$CMD $@"
+            exit 0
         else
-            CMD="$CMD$C"
+            printf "Create a new local alias for $ALIAS? (y/n): "
+            read -n 1 CHOICE
+            echo
+
+            if [ "$CHOICE" != "y" ]; then
+                exit 1
+            fi
+
+            printf "$ALIAS$SEP''\033[1D" 
+            IFS=
+            read -n 1 C
+            while [[ "$C" != "" ]]; do
+                if [[ "$C" = "" ]]; then
+                    if [[ -n "$CMD" ]]; then
+                        CMD=${CMD::-1}
+                    fi
+                else
+                    CMD="$CMD$C"
+                fi
+
+                echo -ne "\033[0K\r"
+                echo -ne "\033[0K\r"  # 2nd call clears backspace
+
+                Q="'"
+                if [[ "$CMD" == *"$Q"* ]]; then
+                    Q='"'
+                fi
+
+                printf "$ALIAS$SEP$Q$CMD$Q\033[1D" 
+                read -n 1 C
+            done
+
+            printf "$ALIAS$SEP$Q$CMD$Q\n" >> $LOCALALIAS_FILE
+            exit 0
         fi
-
-        echo -ne "\033[0K\r"
-        echo -ne "\033[0K\r"  # 2nd call clears backspace
-
-        Q="'"
-        if [[ "$CMD" == *"$Q"* ]]; then
-            Q='"'
-        fi
-
-        printf "$ALIAS$SEP$Q$CMD$Q\033[1D" 
-        read -n 1 C
-    done
-
-    printf "$ALIAS$SEP$Q$CMD$Q\n" >> $LOCALALIAS_FILE
-    exit 0
-fi
+esac

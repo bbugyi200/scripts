@@ -6,21 +6,25 @@
 shopt -s expand_aliases
 source /home/bryan/Dropbox/dotfiles/.globrc
 
-eval set -- $(getopt -o "da:epr:" -l "debug,alias:,edit,print,remove" -- "$@")
+eval set -- $(getopt -o "da:epr:" -l "debug,add:,edit,print,remove,evaluate:" -- "$@")
 
 action='print'
 while [[ -n "$1" ]]; do
     case $1 in
         '-d' | '--debug' )
             debug=true;;
-        '-a' | '--alias' )
-            action='alias'
+        '--evaluate' )
+            action='evaluate'
             shift
             ALIAS="$1";;
         '-e' | '--edit' )
             action='edit';;
         '-p' | '--print' )
             action="print";;
+        '-a' | '--add' )
+            action='add'
+            shift
+            ALIAS="$1";;
         '-r' | '--remove' )
             shift
             action='remove'
@@ -39,17 +43,58 @@ fi
 
 SEP="="
 LOCALALIAS_FILE="./.localaliases"
-DEF=$(grep -s "^$ALIAS$SEP" "$LOCALALIAS_FILE")
-CMD=${DEF/"$ALIAS$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}
+
+function remove() {
+    sed -i "/$1$SEP/d" $LOCALALIAS_FILE
+}
+
+function add() {
+    printf "$ALIAS$SEP''\033[1D" 
+    IFS=
+    read -n 1 C
+    while [[ "$C" != "" ]]; do
+        if [[ "$C" = "" ]]; then
+            if [[ -n "$CMD" ]]; then
+                CMD=${CMD::-1}
+            fi
+        else
+            CMD="$CMD$C"
+        fi
+
+        echo -ne "\033[0K\r"
+        echo -ne "\033[0K\r"  # 2nd call clears backspace
+
+        Q="'"
+        if [[ "$CMD" == *"$Q"* ]]; then
+            Q='"'
+        fi
+
+        printf "$ALIAS$SEP$Q$CMD$Q\033[1D" 
+        read -n 1 C
+    done
+
+    printf "$ALIAS$SEP$Q$CMD$Q\n" >> $LOCALALIAS_FILE
+    exit 0
+}
 
 case $action in
+    'add' )
+        remove $ALIAS
+        add;;
     'remove' )
-        sed -i "/$BADCMD$SEP/d" $LOCALALIAS_FILE;;
+        remove $BADCMD;;
     'print' )
-        cat $LOCALALIAS_FILE;;
+        if [[ -n "$1" ]]; then
+            cat $LOCALALIAS_FILE | grep $1$SEP
+        else
+            cat $LOCALALIAS_FILE
+        fi;;
     'edit' )
         vim -c '/=.\zs.\ze' $LOCALALIAS_FILE;;
-    'alias' )
+    'evaluate' )
+        DEF=$(grep -s "^$ALIAS$SEP" "$LOCALALIAS_FILE")
+        CMD=${DEF/"$ALIAS$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}
+
         if [ -n "$CMD" ]; then
             eval "$CMD $@"
             exit 0
@@ -62,31 +107,6 @@ case $action in
                 exit 1
             fi
 
-            printf "$ALIAS$SEP''\033[1D" 
-            IFS=
-            read -n 1 C
-            while [[ "$C" != "" ]]; do
-                if [[ "$C" = "" ]]; then
-                    if [[ -n "$CMD" ]]; then
-                        CMD=${CMD::-1}
-                    fi
-                else
-                    CMD="$CMD$C"
-                fi
-
-                echo -ne "\033[0K\r"
-                echo -ne "\033[0K\r"  # 2nd call clears backspace
-
-                Q="'"
-                if [[ "$CMD" == *"$Q"* ]]; then
-                    Q='"'
-                fi
-
-                printf "$ALIAS$SEP$Q$CMD$Q\033[1D" 
-                read -n 1 C
-            done
-
-            printf "$ALIAS$SEP$Q$CMD$Q\n" >> $LOCALALIAS_FILE
-            exit 0
-        fi
+            add
+        fi;;
 esac

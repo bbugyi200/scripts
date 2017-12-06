@@ -84,10 +84,15 @@ case $action in
     'remove' )
         remove;;
     'print' )
-        if [[ -n "$1" ]]; then
-            cat $LOCALALIAS_FILE | grep $1$SEP
+        if [[ -f $LOCALALIAS_FILE ]]; then
+            if [[ -n "$1" ]]; then
+                cat $LOCALALIAS_FILE | grep $1$SEP
+            else
+                cat $LOCALALIAS_FILE
+            fi
         else
-            cat $LOCALALIAS_FILE
+            echo "$LOCALALIAS_FILE does not exist!"
+            exit 1
         fi;;
     'edit' )
         vim -c '/=.\zs.\ze' $LOCALALIAS_FILE;;

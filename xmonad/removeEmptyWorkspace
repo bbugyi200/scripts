@@ -1,9 +1,12 @@
 #!/bin/bash
 
+if [[ $(wmctrl -d | grep -v "NSP" | wc -l) -le 2 ]]; then
+    exit 1
+fi
+
 MAX=5
 COUNT=1
 CURR=$(xdotool get_desktop)
-
 WNAME=$1
 
 case $WNAME in

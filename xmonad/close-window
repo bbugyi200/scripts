@@ -2,9 +2,9 @@
 WNAME=`xdotool getwindowfocus getwindowname`
 
 if wmctrl -c :ACTIVE:; then
-	removeEmptyWorkspace $WNAME
+    removeEmptyWorkspace $WNAME
 else
-    if [[ $(wmctrl -d | wc -l) -le 2 ]]; then
+    if [[ $(wmctrl -d | grep -v "NSP" | wc -l) -le 2 ]]; then
         xdotool key alt+s
     else
         removeWorkspace

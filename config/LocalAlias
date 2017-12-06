@@ -95,7 +95,7 @@ case $action in
             exit 1
         fi;;
     'edit' )
-        vim -c '/=.\zs.\ze' $LOCALALIAS_FILE;;
+        vim -c "/=['\"]\zs.\ze" $LOCALALIAS_FILE;;
     'evaluate' )
         DEF=$(grep -s "^$ALIAS$SEP" "$LOCALALIAS_FILE")
         CMD=${DEF/"$ALIAS$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}

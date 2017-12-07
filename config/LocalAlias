@@ -62,7 +62,7 @@ function add() {
         fi
 
         echo -ne "\033[0K\r"
-        echo -ne "\033[0K\r"  # 2nd call clears backspace
+        echo -ne "\033[0K\r"  # 2nd call clears backspace character (^?)
 
         Q="'"
         if [[ "$CMD" == *"$Q"* ]]; then
@@ -95,7 +95,7 @@ case $action in
             exit 1
         fi;;
     'edit' )
-        vim -c "/=['\"]\zs.\ze" $LOCALALIAS_FILE;;
+        vim -c "/=['\"]\zs.\ze" -c "normal n" $LOCALALIAS_FILE;;
     'evaluate' )
         DEF=$(grep -s "^$ALIAS$SEP" "$LOCALALIAS_FILE")
         CMD=${DEF/"$ALIAS$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}

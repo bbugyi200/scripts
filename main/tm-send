@@ -1,0 +1,61 @@
+#!/bin/bash
+
+active_window=$(tmux display-message -p '#{window_name}')
+pane_title=$(tmux display-message -p '#{pane_title}')
+if [[ "$pane_title" != $(hostname) ]]; then
+    active_window=$pane_title
+fi
+
+eval set -- $(getopt -o "da:" -l "debug,action:" -- "$@")
+
+while [[ -n "$1" ]]; do
+    case $1 in
+        '-a' | '--action' )
+            shift
+            action="$1";;
+        '-d' | '--debug' )
+            debug=true;;
+        '--' )
+            shift
+            break;;
+    esac
+    shift
+done
+
+if [[ "$debug" = true ]]; then
+    PS4="$LINENO: "
+    set -x
+fi
+
+
+case "$action" in
+    'clear' )
+        case $active_window in
+            "MATLAB" )
+                CMD="clc";;
+            "vim" )
+                exit 1;;
+            "ghc" )
+                CMD=":! clear";;
+            "sqlite3" )
+                CMD=".shell clear";;
+            * )
+                CMD="clear";;
+        esac;;
+    'quit' )
+        case $active_window in
+            *"ghc"* )
+                CMD=":quit";;
+            *"sqlite3"* )
+                CMD=".quit";;
+            *"vim"* )
+                CMD=":q";;
+            * )
+                CMD="exit";;
+        esac;;
+    * )
+        echo "USAGE: $(basename $0) --action=<action>"
+        exit 1;;
+esac
+
+tmux send-keys "$CMD" "Enter"

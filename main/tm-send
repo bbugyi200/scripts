@@ -49,12 +49,15 @@ case "$action" in
             *"sqlite3"* )
                 CMD=".quit";;
             *"vim"* )
-                CMD=":q";;
+                CMD=":qa";;
             * )
                 CMD="exit";;
         esac;;
+    '' )
+        echo "usage: $(basename $0) --action=<action>"
+        exit 1;;
     * )
-        echo "USAGE: $(basename $0) --action=<action>"
+        echo "$action is not a valid action!"
         exit 1;;
 esac
 

@@ -17,10 +17,6 @@ while true; do
         SUFFIX=${COLONS:$NUM_OF_BANGS}
         OUTPUT="${PREFIX//:/\#}$SUFFIX"
 
-        if [[ $VOLUME -eq 100 ]]; then
-            OUTPUT="#### MAX ####"
-        fi
-
         printf "$OUTPUT\n" > $FIFO
         break
     else

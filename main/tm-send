@@ -1,10 +1,8 @@
 #!/bin/bash
 
-active_window=$(tmux display-message -p '#{window_name}')
+window_name=$(tmux display-message -p '#{window_name}')
 pane_title=$(tmux display-message -p '#{pane_title}')
-if [[ "$pane_title" != $(hostname) ]]; then
-    active_window=$pane_title
-fi
+active_program="$window_name $pane_title"
 
 eval set -- $(getopt -o "da:" -l "debug,action:" -- "$@")
 
@@ -30,20 +28,20 @@ fi
 
 case "$action" in
     'clear' )
-        case $active_window in
-            "MATLAB" )
+        case $active_program in
+            *"MATLAB"* )
                 CMD="clc";;
-            "vim" )
-                exit 1;;
-            "ghc" )
+            *"vim"* )
+                CMD=":normal zt";;
+            *"ghc"* )
                 CMD=":! clear";;
-            "sqlite3" )
+            *"sqlite3"* )
                 CMD=".shell clear";;
             * )
                 CMD="clear";;
         esac;;
     'quit' )
-        case $active_window in
+        case $active_program in
             *"ghc"* )
                 CMD=":quit";;
             *"sqlite3"* )

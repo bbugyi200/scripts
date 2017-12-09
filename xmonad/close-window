@@ -5,7 +5,8 @@ if wmctrl -c :ACTIVE:; then
     removeEmptyWorkspace $WNAME
 else
     if [[ $(wmctrl -d | grep -v "NSP" | wc -l) -le 2 ]]; then
-        xdotool key alt+s
+        xdotool key alt+bracketright
+        xdotool key alt+backslash
     else
         removeWorkspace
     fi

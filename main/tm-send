@@ -31,12 +31,12 @@ case "$action" in
         case $active_program in
             *"MATLAB"* )
                 CMD="clc";;
-            *"vim"* )
-                CMD=":normal zt";;
             *"ghc"* )
                 CMD=":! clear";;
             *"sqlite3"* )
                 CMD=".shell clear";;
+            *"vim"* )
+                CMD=":normal zt";;
             * )
                 CMD="clear";;
         esac;;
@@ -46,6 +46,8 @@ case "$action" in
                 CMD=":quit";;
             *"sqlite3"* )
                 CMD=".quit";;
+            *"git"* )
+                CMD="q";;
             *"vim"* )
                 CMD=":qa";;
             * )

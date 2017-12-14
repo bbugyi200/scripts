@@ -26,8 +26,8 @@ while [[ -n "$1" ]]; do
             shift
             ALIAS="$1";;
         '-r' | '--remove' )
-            shift
             action='remove'
+            shift
             ALIAS="$1";;
         '--' )
             shift

@@ -1,9 +1,0 @@
-#!/bin/bash
-
-currentWS=$(wmctrl -d | grep '*' | cut -d ' ' -f1)
-currentWinCount=$(wmctrl -l | grep " $currentWS " | wc -l)
-totalWinCount=$(wmctrl -l | grep -v "scratchpad" | wc -l)
-
-if [[ $currentWinCount -le 2 && $totalWinCount -gt 2 ]]; then
-    xdotool key alt+s
-fi

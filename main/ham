@@ -1,7 +1,7 @@
 #!/bin/bash
 PID_FILE=/tmp/hamster.pid
 LOG_FILE=/tmp/hamster.log
-SECONDS=90
+SECONDS=120
 
 print_panel() {
 	/home/bryan/Dropbox/scripts/python/panel-hamster.py

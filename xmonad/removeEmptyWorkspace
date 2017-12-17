@@ -4,9 +4,11 @@ if [[ $(wmctrl -d | grep -v "NSP" | wc -l) -le 2 ]]; then
     exit 1
 fi
 
+getWS() { wmctrl -d | grep "*" | tr -s " " | cut -d' ' -f9; }
+
 MAX=5
 COUNT=1
-CURR=$(xdotool get_desktop)
+OLD_WS=$(getWS)
 WNAME=$1
 
 case $WNAME in
@@ -17,7 +19,11 @@ case $WNAME in
 		xdotool key ctrl+alt+shift+n
 		sleep 0.1
 
-		if [[ $(xdotool get_desktop) -ne $CURR ]]; then
+        CURR_WS=$(getWS)
+		if [[ $CURR_WS != $OLD_WS ]]; then
+            if [[ $CURR_WS == "NSP" ]]; then
+                xdotool key alt+bracketright
+            fi
 			break
 		fi
 		COUNT=$((COUNT+1))

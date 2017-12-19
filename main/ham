@@ -10,12 +10,11 @@ print_panel() {
 # ---------- Command Line Arguments ----------
 eval set -- $(getopt -o 'di:' -l 'debug,idle-time:' -- "$@")
 
-debug=0
 MINUTES=
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-d' | '--debug' )
-			debug=1;;
+			debug=true;;
 		'-i' | '--idle-time' )
 			MINUTES=$2
 			shift;;
@@ -35,7 +34,7 @@ exec 2>&1
 exec >> $LOG_FILE
 
 # ---------- DEBUG ----------
-if [[ $debug -eq 1 ]]; then
+if [[ "$debug" = true ]]; then
 	PS4='$LINENO :'
 	set -x
 fi
@@ -45,9 +44,8 @@ if [[ -f $PID_FILE ]]; then
 	PID=$(cat $PID_FILE)
 	kill $PID
 	if [[ $? != 0 ]]; then
-		logger "ham: failed to kill $PID"
+		logger "ham: failed to kill PID:$PID. It is possible that PID:$PID did not exist."
 		rm $PID_FILE
-		exit 1
 	fi
 fi
 
@@ -56,11 +54,13 @@ while [[ -f $PID_FILE ]]; do
 	sleep 0.5
 	((COUNT++))
 	if ((COUNT > 10)); then
-		rm $PID_FILE
+        rm $PID_FILE
 		logger "ham: $PID_FILE still exists. Timing out after $COUNT iterations."
 		exit 1
 	fi
 done
+
+
 
 # ---------- Handle Actions ----------
 if [[ $action == "stop" ]]; then
@@ -71,8 +71,7 @@ fi
 
 
 if [[ $action == "start" ]]; then
-	trap "rm $PID_FILE; kill 0" EXIT
-
+    trap "rm $PID_FILE; kill 0" EXIT
 	if [[ "$2" == [0-9] ]]; then
 		cmd=$(hamster activities | sort | sed "$2q;d")
 	elif [[ -n "$2" ]]; then
@@ -136,7 +135,6 @@ if [[ $action == "start" ]]; then
 				break
 			elif [[ $(date +%s) -ge $timeout_time ]]; then
 				printf "Hamster \'$activity\' timed out at: %s\n\n" "$(date +'%m/%d/%Y %T %Z')"
-				rm $PID_FILE$
 				exit 1
 			fi
 		done

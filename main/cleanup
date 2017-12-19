@@ -9,4 +9,3 @@ printf "\nList of Foreign Packages (pacman -Qm):\n\n"
 pacman -Qm
 printf "\nIt is up to you to manually remove the packages above that you are no longer using.\n\n"
 date +"%m/%d/%y" > ~/.cleanup-tmstmp.log
-echo "C" > $PANEL_FIFO

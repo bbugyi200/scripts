@@ -21,7 +21,7 @@ while [[ -n "$1" ]]; do
 done
 
 if [[ "$debug" = true ]]; then
-    PS4="$LINENO: "
+    PS4='$LINENO: '
     set -x
 fi
 
@@ -48,6 +48,8 @@ case "$action" in
                 CMD=".quit";;
             *"git"* )
                 CMD="q";;
+            *"python"* )
+                CMD="exit()";;
             *"vim"* )
                 CMD=":qa";;
             * )

@@ -1,18 +1,26 @@
 #!/bin/bash
 
-action='read'
 
-eval set -- $(getopt -o 'd' -l 'dmenu' -- "$@")
+eval set -- $(getopt -o 'd' -l 'debug,dmenu' -- "$@")
+
+action='read'
 while [[ -n "$1" ]]; do
 	case $1 in
-		'-d'|'--dmenu')
+		'--dmenu' )
 			action='dmenu';;
-		'--')
+        '-d' | '--debug' )
+            debug=true;;
+		'--' )
 			shift
 			break;;
 	esac	
 	shift
 done
+
+if [[ "$debug" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
 
 prompt="Do you really want to run \"$*\"? (y/n):"
 

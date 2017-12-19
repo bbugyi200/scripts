@@ -6,14 +6,14 @@ if [[ $(hostname) == "aphrodite" ]]; then
 	M=0
 else
 	cd /home/bryan/motion
-	N=300
+	N=-1
 	M=5
 fi
 
 echo $$ > /tmp/lock.pid
 trap 'rm /tmp/lock.pid' EXIT
 
-(sleep $N && motion) &
+(sleep -- $N && motion) &
 PID=$!
 
 ham stop

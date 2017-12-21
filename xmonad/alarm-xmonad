@@ -42,22 +42,25 @@ fi
 
 [[ -p $FIFO ]] || mkfifo $FIFO
 
+# ---------- Automatically set 'action=stop' if PID_FILE Exists ----------
+if [[ -f $PID_FILE ]]; then
+    logger "$(basename $0): An alarm is already running! Stopping existing alarm!"
+    action="stop"
+else
+	echo $$ > $PID_FILE
+fi
+
 # ---------- Action: stop ----------
 if [[ "$action" == "stop" ]]; then
 	cat $PID_FILE | xargs kill
     rm $TIMESTAMP_FILE
 	printf "\n" > "$FIFO"
+    if pgrep dunst; then
+        sleep 0.5
+        xdotool key ctrl+space  # Shortcut to close dunst notification
+    fi
 	exit 0
 fi
-
-# ---------- Exit if PID_FILE Exists ----------
-if [[ -f $PID_FILE ]]; then
-	echo "An Alarm is Already Running!"
-	exit 1
-else
-	echo $$ > $PID_FILE
-fi
-
 
 trap 'rm $PID_FILE' EXIT
 trap ':' SIGPIPE

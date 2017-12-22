@@ -2,7 +2,6 @@
 
 CACHE_FILE=/home/bryan/Dropbox/scripts/data/dmenu_books_cache
 PATH_LIST=$(find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu")
-CHOICE=$(printf "$PATH_LIST\n" | sed -e 's/.*\///g' | cat $CACHE_FILE - | gawk '!a[$0]++' | dmenu)
 
 eval set -- $(getopt -o "da:" -l "debug,application:" -- "$@")
 
@@ -27,6 +26,13 @@ if [[ $debug -eq 1 ]]; then
 	set -x
 fi
 
+OPEN_BOOK=$(wmctrl -lx | grep "$application" | tr -s " " | cut -d' ' -f5- | grep -o ".*\.\(pdf\|djvu\|epub\)")
+if [[ -z "$OPEN_BOOK" ]]; then
+    OPEN_BOOK="!@#$%^&*!@#$%^&*"  # Garbage
+fi
+
+CHOICE=$(printf "$PATH_LIST\n" | sed -e 's/.*\///g' | cat $CACHE_FILE - | sed "/$OPEN_BOOK/d" | gawk '!a[$0]++' | dmenu)
+
 if [[ -z "$CHOICE" ]]; then
     exit 1
 fi
@@ -38,7 +44,7 @@ else
     echo $CHOICE > $CACHE_FILE
 fi
 
-CHOICE_PATH=$(printf "$PATH_LIST\n" | grep -F "$CHOICE")
+CHOICE_PATH=$(printf "$PATH_LIST\n" | grep -F "$CHOICE" | head -1)
 
 if [[ -z "$CHOICE_PATH" ]]; then
     ESCAPED_CHOICE=$(echo $CHOICE | sed 's/\[/\\[/g' | sed 's/\]/\\]/g')

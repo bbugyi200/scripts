@@ -1,8 +1,11 @@
 #!/bin/bash
 
-window_name=$(tmux display-message -p '#{window_name}')
-pane_title=$(tmux display-message -p '#{pane_title}')
-active_program="$window_name $pane_title"
+LA_CMD_FILE='/tmp/LocalAlias.cmd'
+if [[ -f $LA_CMD_FILE ]]; then
+    active_program=$(cat $LA_CMD_FILE)
+else
+    active_program=$(tmux display-message -p '#{window_name}')
+fi
 
 eval set -- $(getopt -o "da:" -l "debug,action:" -- "$@")
 
@@ -59,8 +62,13 @@ case "$action" in
         echo "usage: $(basename $0) --action=<action>"
         exit 1;;
     * )
-        echo "$action is not a valid action!"
-        exit 1;;
+        case $active_program in
+            *"zsh"* | *"bash"* )
+                CMD=$action;;
+            * )
+                logger "$(basename $0): Unable to perform '$action'. Not in zsh or bash shell."
+                exit 1;
+        esac
 esac
 
 tmux send-keys "$CMD" "Enter"

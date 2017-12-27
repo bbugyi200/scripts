@@ -20,10 +20,12 @@ time_left() {
 
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "s,r" -l "stop,resume" -- "$@")
+eval set -- $(getopt -o "d,s,r" -l "debug,stop,resume" -- "$@")
 
 while [[ -n "$1" ]]; do
 	case $1 in
+        '-d' | '--debug' )
+            debug=true;;
 		'-s' | '--stop' )
 			action="stop";;
         '-r' | '--resume' )
@@ -35,6 +37,11 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
+if [[ "$debug" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
 if [[ "$action" == "resume" && ! -f $TIMESTAMP_FILE ]]; then
     exit 1
 fi
@@ -43,12 +50,15 @@ fi
 [[ -p $FIFO ]] || mkfifo $FIFO
 
 # ---------- Automatically set 'action=stop' if PID_FILE Exists ----------
-if [[ -f $PID_FILE ]]; then
+if [[ -f $PID_FILE && "$action" != "resume" ]]; then
     logger "$(basename $0): An alarm is already running! Stopping existing alarm!"
     action="stop"
 else
 	echo $$ > $PID_FILE
 fi
+
+trap 'rm $PID_FILE' EXIT
+trap ':' SIGPIPE
 
 # ---------- Action: stop ----------
 if [[ "$action" == "stop" ]]; then
@@ -61,9 +71,6 @@ if [[ "$action" == "stop" ]]; then
     fi
 	exit 0
 fi
-
-trap 'rm $PID_FILE' EXIT
-trap ':' SIGPIPE
 
 # ---------- Set Alarm Time ----------
 if [[ -f $TIMESTAMP_FILE ]]; then

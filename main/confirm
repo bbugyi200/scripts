@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 eval set -- $(getopt -o 'd' -l 'debug,dmenu' -- "$@")
 
 action='read'

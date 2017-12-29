@@ -1,4 +1,4 @@
-SERVER="east"
+SERVER="nyc"
 [[ -n "$1" ]] && SERVER="$1"
 
 tmux send-keys -t tsm "tsm-start" Enter

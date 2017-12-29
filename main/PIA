@@ -5,7 +5,19 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
-if [ "$1" == "start" ]; then
+action="$1"
+vpn="$2"
+
+if [[ -z "$1" ]]; then
+    if pgrep openvpn &> /dev/null; then
+        action="stop"
+    else
+        action="start"
+        vpn="nyc"
+    fi
+fi
+
+if [ "$action" == "start" ]; then
     if pgrep "openvpn" > /dev/null; then
         printf "\n\nPIA is already running!\n\n"
         exit 1
@@ -16,7 +28,7 @@ if [ "$1" == "start" ]; then
     cp /etc/resolv.conf /etc/resolv.tmp
     printf '%s\n%s' 'nameserver 209.222.18.222' 'nameserver 209.222.18.218' >> /etc/resolv.conf
 
-    case "$2" in 
+    case "$vpn" in 
         nyc)
             CONF="US-New-York-City.conf";;
         east)
@@ -30,7 +42,6 @@ if [ "$1" == "start" ]; then
 
     myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
     printf "\nPublic IP Address: %s" "${myip}"
-    # echo "%{c}PIA ($myip)" | lemonbar -b -p -B "#3a3a3a" -F "#74f442" &
 
     iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
     iptables -A INPUT -i lo -j ACCEPT
@@ -45,7 +56,7 @@ if [ "$1" == "start" ]; then
     iptables -A OUTPUT -o tun+ -j ACCEPT
     iptables -A OUTPUT -j REJECT --reject-with icmp-net-unreachable
 
-elif [ "$1" == "stop" ]; then
+elif [ "$action" == "stop" ]; then
     killall -9 openvpn
 
     mv /etc/resolv.tmp /etc/resolv.conf

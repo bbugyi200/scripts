@@ -101,12 +101,7 @@ case $action in
         CMD=${DEF/"$ALIAS$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}
 
         if [ -n "$CMD" ]; then
-            CMD_FILE="/tmp/$(basename $0).cmd"
-            echo "$CMD $@" > $CMD_FILE
-
             /bin/zsh -c "$CMD $@"
-
-            rm -f $CMD_FILE
             exit 0
         else
             printf "Create a new local alias for $ALIAS? (y/n): "

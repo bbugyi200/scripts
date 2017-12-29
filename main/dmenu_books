@@ -26,12 +26,12 @@ if [[ $debug -eq 1 ]]; then
 	set -x
 fi
 
-OPEN_BOOK=$(wmctrl -lx | grep "$application" | tr -s " " | cut -d' ' -f5- | grep -o ".*\.\(pdf\|djvu\|epub\)")
+OPEN_BOOK=$(wmctrl -lx | grep "$application" | tr -s " " | cut -d' ' -f5- | grep -o ".*\.\(pdf\|djvu\|epub\)" | head -1)
 if [[ -z "$OPEN_BOOK" ]]; then
     OPEN_BOOK="!@#$%^&*!@#$%^&*"  # Garbage
 fi
 
-CHOICE=$(printf "$PATH_LIST\n" | sed -e 's/.*\///g' | cat $CACHE_FILE - | sed "/$OPEN_BOOK/d" | gawk '!a[$0]++' | dmenu)
+CHOICE=$(printf "$PATH_LIST\n" | sed -e 's/.*\///g' | cat $CACHE_FILE - | sed "/$OPEN_BOOK/d" | gawk '!a[$0]++' | dmenu -i)
 
 if [[ -z "$CHOICE" ]]; then
     exit 1

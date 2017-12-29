@@ -1,11 +1,8 @@
 #!/bin/bash
 
-LA_CMD_FILE='/tmp/LocalAlias.cmd'
-if [[ -f $LA_CMD_FILE ]]; then
-    active_program=$(cat $LA_CMD_FILE)
-else
-    active_program=$(tmux display-message -p '#{window_name}')
-fi
+window_name=$(tmux display-message -p '#{window_name}')
+pane_title=$(tmux display-message -p '#{pane_title}')
+active_program="$window_name $pane_title"
 
 eval set -- $(getopt -o "da:" -l "debug,action:" -- "$@")
 

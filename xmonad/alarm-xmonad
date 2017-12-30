@@ -20,16 +20,14 @@ time_left() {
 
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "d,s,r" -l "debug,stop,resume" -- "$@")
+eval set -- $(getopt -o "d,r" -l "debug,resume" -- "$@")
 
 while [[ -n "$1" ]]; do
 	case $1 in
         '-d' | '--debug' )
             debug=true;;
-		'-s' | '--stop' )
-			action="stop";;
         '-r' | '--resume' )
-            action="resume";;
+            resume=true;;
 		'--' )
 			shift
 			break;;
@@ -37,32 +35,37 @@ while [[ -n "$1" ]]; do
 	shift
 done
 
+
 if [[ "$debug" = true ]]; then
     PS4='$LINENO: '
     set -x
 fi
 
-if [[ "$action" == "resume" && ! -f $TIMESTAMP_FILE ]]; then
+
+if [[ "$resume" = true && ! -f $TIMESTAMP_FILE ]]; then
     exit 1
 fi
 
 
 [[ -p $FIFO ]] || mkfifo $FIFO
 
-# ---------- Automatically set 'action=stop' if PID_FILE Exists ----------
-if [[ -f $PID_FILE && "$action" != "resume" ]]; then
+
+# ---------- Another Alarm is Already Running ----------
+# I am not sure why '-ge 3' instead of '-ge 2' but it is correct
+if [[ -f $PID_FILE ]] || [[ "$(pgrep $(basename $0) | wc -l)" -ge 3 ]]; then
+    if [[ "$resume" = true ]]; then
+        logger "$(basename $0): No need to restart! An alarm is already running!"
+        exit 2
+    fi
+
     logger "$(basename $0): An alarm is already running! Stopping existing alarm!"
-    action="stop"
-else
-	echo $$ > $PID_FILE
-fi
 
-trap 'rm $PID_FILE' EXIT
-trap ':' SIGPIPE
+    if [[ -f $PID_FILE ]]; then
+        cat $PID_FILE | xargs kill
+    else
+        pgrep "$(basename $0)" | grep -v $$ | xargs kill
+    fi
 
-# ---------- Action: stop ----------
-if [[ "$action" == "stop" ]]; then
-	cat $PID_FILE | xargs kill
     rm $TIMESTAMP_FILE
 	printf "\n" > "$FIFO"
     if pgrep dunst; then
@@ -71,6 +74,12 @@ if [[ "$action" == "stop" ]]; then
     fi
 	exit 0
 fi
+
+
+echo $$ > $PID_FILE
+trap 'rm $PID_FILE' EXIT
+trap ':' SIGPIPE
+
 
 # ---------- Set Alarm Time ----------
 if [[ -f $TIMESTAMP_FILE ]]; then

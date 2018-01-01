@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+    tmux ls
+    exit 0
+fi
+
+# PS4='$LINENO: '
+# set -x
+
+case $1 in
+    '-'* )
+        CMD=${1#-}; shift
+        if [[ 'edit' == "$CMD"* ]] && [[ -z "$1" ]]; then
+            tmuxinator edit $(tmux display-message -p "#S")
+        else
+            tmuxinator $CMD "$@"
+        fi;;
+    * )
+        SESSION_NAME=$1; shift
+        if [[ -f ~/Dropbox/dotfiles/.config/tmuxinator/$SESSION_NAME.yml ]]; then
+            tmuxinator start $SESSION_NAME root=$(defaultTmuxDir --get $SESSION_NAME)
+        else
+            tmux new -s $SESSION_NAME -c "$(defaultTmuxDir --get $SESSION_NAME)" -d
+            tmux switchc -t $SESSION_NAME
+        fi;;
+esac

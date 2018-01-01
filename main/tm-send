@@ -1,6 +1,6 @@
 #!/bin/bash
 
-window_name=$(tmux display-message -p '#{window_name}')
+window_name=$(tmux display-message -p '#{pane_current_command}')
 pane_title=$(tmux display-message -p '#{pane_title}')
 active_program="$window_name $pane_title"
 

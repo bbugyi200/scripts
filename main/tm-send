@@ -1,8 +1,8 @@
 #!/bin/bash
 
-window_name=$(tmux display-message -p '#{pane_current_command}')
+pane_current_command=$(tmux display-message -p '#{pane_current_command}')
 pane_title=$(tmux display-message -p '#{pane_title}')
-active_program="$window_name $pane_title"
+active_program="$pane_current_command $pane_title"
 
 eval set -- $(getopt -o "da:" -l "debug,action:" -- "$@")
 
@@ -12,18 +12,14 @@ while [[ -n "$1" ]]; do
             shift
             action="$1";;
         '-d' | '--debug' )
-            debug=true;;
+            PS4='$LINENO: '
+            set -x;;
         '--' )
             shift
             break;;
     esac
     shift
 done
-
-if [[ "$debug" = true ]]; then
-    PS4='$LINENO: '
-    set -x
-fi
 
 
 case "$action" in

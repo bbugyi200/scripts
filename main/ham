@@ -14,7 +14,8 @@ MINUTES=
 while [[ -n "$1" ]]; do
 	case $1 in
 		'-d' | '--debug' )
-			debug=true;;
+            PS4='$LINENO :'
+            set -x;;
 		'-i' | '--idle-time' )
 			MINUTES=$2
 			shift;;
@@ -32,12 +33,6 @@ action=$1
 # ---------- Redirect STDOUT and STDERR ----------
 exec 2>&1
 exec >> $LOG_FILE
-
-# ---------- DEBUG ----------
-if [[ "$debug" = true ]]; then
-	PS4='$LINENO :'
-	set -x
-fi
 
 # ---------- Check for PID File ----------
 if [[ -f $PID_FILE ]]; then

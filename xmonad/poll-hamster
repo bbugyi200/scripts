@@ -43,6 +43,3 @@ else:
     output = "No Activity  (%s / %s)" % (day_time, week_time)
 
 print(output)
-
-# with open('/tmp/panel-fifo', "w") as f:
-#     f.write(output)

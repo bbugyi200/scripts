@@ -1,0 +1,9 @@
+#!/bin/python
+
+import sys
+sys.path.insert(0, "/home/bryan/Dropbox/scripts/python")
+
+from ustack import UStack
+
+dirStack = UStack()
+print(dirStack.pop())

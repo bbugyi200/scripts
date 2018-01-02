@@ -16,12 +16,12 @@ else:
 
 
 action = sys.argv[1]
-sname = sys.argv[2]
+session_name = sys.argv[2]
 
 
 if action == '--get':
-    print(default_dirs.get(sname, '/home/bryan'), end='')
+    print(default_dirs.get(session_name, '/home/bryan'), end='')
 elif action == '--put':
-    default_dirs[sname] = sys.argv[3]
+    default_dirs[session_name] = sys.argv[3]
     with open(fpath, 'wb') as f:
         pickle.dump(default_dirs, f)

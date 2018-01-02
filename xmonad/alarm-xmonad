@@ -25,7 +25,8 @@ eval set -- $(getopt -o "d,r" -l "debug,resume" -- "$@")
 while [[ -n "$1" ]]; do
 	case $1 in
         '-d' | '--debug' )
-            debug=true;;
+            PS4='$LINENO: '
+            set -x;;
         '-r' | '--resume' )
             resume=true;;
 		'--' )
@@ -34,12 +35,6 @@ while [[ -n "$1" ]]; do
 	esac
 	shift
 done
-
-
-if [[ "$debug" = true ]]; then
-    PS4='$LINENO: '
-    set -x
-fi
 
 
 if [[ "$resume" = true && ! -f $TIMESTAMP_FILE ]]; then

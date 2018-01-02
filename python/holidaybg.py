@@ -48,7 +48,6 @@ holidays = short + main
 
 default_max = 7
 for H in holidays:
-    print(H)
     try:
         MAX = H[2]
     except IndexError:

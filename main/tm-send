@@ -56,6 +56,9 @@ case "$action" in
         exit 1;;
     * )
         case $active_program in
+            *"vim"* )  # Precautionary Check (some zsh/bash scripts execute vim)
+                logger "$(basename $0): Unable to perform '$action'. Vim has been detected!"
+                exit 1;;
             *"zsh"* | *"bash"* )
                 CMD=$action;;
             * )

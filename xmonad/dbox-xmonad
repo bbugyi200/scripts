@@ -5,7 +5,7 @@ status="$(dropbox-cli status)"
 case "$status" in
 	"Up to date")
 		echo "✔" ;;
-	Syncing*)
+	*Syncing*)
 		echo "↯" ;;
 	*)
 		echo "✘" ;;

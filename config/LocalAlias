@@ -6,30 +6,39 @@
 shopt -s expand_aliases
 source /home/bryan/Dropbox/dotfiles/.globrc
 
-eval set -- $(getopt -o "da:epr:" -l "debug,add:,edit,print,remove,evaluate:" -- "$@")
+
+SEP="="
+LOCALALIAS_FILE="./.lshrc"
+
+
+eval set -- $(getopt -o "da:ef:pr:x:" -l "debug,alias:,edit,function:,print,remove:,execute:" -- "$@")
 
 action='print'
 while [[ -n "$1" ]]; do
     case $1 in
         '-d' | '--debug' )
-            PS4="$LINENO: "
+            PS4='$LINENO: '
             set -x;;
-        '--evaluate' )
-            action='evaluate'
+        '-x' | '--execute' )
+            action='execute'
             shift
-            ALIAS="$1";;
+            ARG="$1";;
         '-e' | '--edit' )
             action='edit';;
+        '-f' | '--function' )
+            action='function'
+            shift
+            ARG="$1";;
         '-p' | '--print' )
             action="print";;
-        '-a' | '--add' )
-            action='add'
+        '-a' | '--alias' )
+            action='alias'
             shift
-            ALIAS="$1";;
+            ARG="$1";;
         '-r' | '--remove' )
             action='remove'
             shift
-            ALIAS="$1";;
+            ARG="$1";;
         '--' )
             shift
             break;;
@@ -38,15 +47,28 @@ while [[ -n "$1" ]]; do
 done
 
 
-SEP="="
-LOCALALIAS_FILE="./.localaliases"
+func_exists() {
+    if [[ -f $LOCALALIAS_FILE ]]; then
+        FUNC_EXISTS=$(cat $LOCALALIAS_FILE | grep -E "$ARG[ ]?\\(\\)")
+    fi
 
-function remove() {
-    sed -i "/$ALIAS$SEP/d" $LOCALALIAS_FILE
+    if [[ -n "$FUNC_EXISTS" ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
-function add() {
-    printf "$ALIAS$SEP''\033[1D" 
+remove() {
+    if func_exists; then
+        sed -i "/$ARG ()/,/^$/d" $LOCALALIAS_FILE
+    else
+        sed -i "/$ARG$SEP/d" $LOCALALIAS_FILE
+    fi
+}
+
+add_alias() {
+    printf "$ARG$SEP''\033[1D" 
     IFS=
     read -n 1 C
     while [[ "$C" != "" ]]; do
@@ -66,42 +88,64 @@ function add() {
             Q='"'
         fi
 
-        printf "$ALIAS$SEP$Q$CMD$Q\033[1D" 
+        printf "$ARG$SEP$Q$CMD$Q\033[1D" 
         read -n 1 C
     done
 
-    printf "$ALIAS$SEP$Q$CMD$Q\n" >> $LOCALALIAS_FILE
+    printf "alias $ARG$SEP$Q$CMD$Q\n" >> $LOCALALIAS_FILE
     exit 0
 }
 
+
 case $action in
-    'add' )
+    'alias' )
         remove
-        add;;
+        add_alias;;
+    'function' )
+        remove
+        sed -i "1 i\\$ARG () {}\n" $LOCALALIAS_FILE
+        vim -c "/$ARG () {\zs}\ze" -c 'normal n' +startinsert $LOCALALIAS_FILE
+        exit 0;;
     'remove' )
         remove;;
     'print' )
         if [[ -f $LOCALALIAS_FILE ]]; then
             if [[ -n "$1" ]]; then
-                cat $LOCALALIAS_FILE | grep $1$SEP
+                ARG=$1; shift
+                if func_exists; then
+                    sed -n "/$ARG ()/,/^$/p" $LOCALALIAS_FILE | pygmentize -l zsh
+                else
+                    cat $LOCALALIAS_FILE | grep $ARG$SEP | pygmentize -l zsh
+                fi
             else
-                cat $LOCALALIAS_FILE
+                pygmentize -l zsh $LOCALALIAS_FILE
             fi
         else
             echo "$LOCALALIAS_FILE does not exist!"
             exit 1
         fi;;
     'edit' )
-        vim -c "/=['\"]\zs.\ze" -c "normal n" $LOCALALIAS_FILE;;
-    'evaluate' )
-        DEF=$(grep -s "^$ALIAS$SEP" "$LOCALALIAS_FILE")
-        CMD=${DEF/"$ALIAS$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}
+        if [[ -n "$1" ]]; then
+            ARG=$1; shift
+            if func_exists; then
+                vim -c "/$ARG ()" -c "normal nj^" $LOCALALIAS_FILE
+            else
+                vim -c "/$ARG=['\"]\zs.\ze" -c "normal n" $LOCALALIAS_FILE
+            fi
+        else
+            vim $LOCALALIAS_FILE
+        fi;;
+    'execute' )
+        DEF=$(grep -s "alias $ARG$SEP" "$LOCALALIAS_FILE")
+        CMD=${DEF/"alias $ARG$SEP"}; CMD=${CMD/#[\"\']}; CMD=${CMD/%[\"\']}
 
         if [ -n "$CMD" ]; then
             /bin/zsh -c "$CMD $@"
             exit 0
+        elif func_exists; then
+            printf "The command '$ARG' is defined locally in $LOCALALIAS_FILE as a function, but $(basename $0) is only equipped to handle aliases!"
         else
-            printf "Create a new local alias for $ALIAS? (y/n): "
+            printf "Create a new local alias for $ARG? (y/n): "
             read -n 1 CHOICE
             echo
 
@@ -109,6 +153,6 @@ case $action in
                 exit 1
             fi
 
-            add
+            add_alias
         fi;;
 esac

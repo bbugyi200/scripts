@@ -1,4 +1,5 @@
 #!/bin/bash
+
 if [[ $(hostname) == "aphrodite" ]]; then
 	cd /home/bryan/Dropbox/logs/aphrodite-motion
     textme "ProtectMyLaptop has been activated!" 2> /tmp/screenlock.log

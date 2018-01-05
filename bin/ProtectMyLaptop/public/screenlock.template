@@ -1,0 +1,15 @@
+#!/bin/bash
+
+cd "<The directory you want 'motion' to save photos to>"
+
+echo $$ > /tmp/lock.pid
+trap 'rm /tmp/lock.pid' EXIT
+
+motion &
+PID=$!
+
+scrot /tmp/screenshot.png
+convert /tmp/screenshot.png -blur 0x5 /tmp/screenshotblur.png
+i3lock -n -i /tmp/screenshotblur.png
+
+kill $PID

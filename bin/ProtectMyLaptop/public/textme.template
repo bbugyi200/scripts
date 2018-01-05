@@ -1,0 +1,13 @@
+#!/bin/python
+import sys
+from twilio.rest import Client
+
+account_sid = "<Your Twillio Account SID>"
+auth_token = "<Your Twillio Auth Token>"
+
+body = sys.argv[1]
+client = Client(account_sid, auth_token)
+
+message = client.api.account.messages.create(to="+<Your Personal Phone Number>",
+                                             from_="+<Your Twilio Phone Number>",
+                                             body=body)

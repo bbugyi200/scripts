@@ -1,4 +1,4 @@
 #!/bin/bash
-/home/bryan/Dropbox/scripts/python/textme/textme "cron.weekly/weekly_jobs: This weekly test message is necessary in order to ensure this phone number stays active."
+textme "cron.weekly/weekly_jobs: This weekly test message is necessary in order to ensure this phone number stays active."
 
 rm -f /home/bryan/Dropbox/logs/aphrodite-motion/*

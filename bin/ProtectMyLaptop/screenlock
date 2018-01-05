@@ -1,11 +1,19 @@
 #!/bin/bash
-
-cd "<The directory you want 'motion' to save photos to>"
+if [[ $(hostname) == "aphrodite" ]]; then
+	cd /home/bryan/Dropbox/logs/aphrodite-motion
+    textme "ProtectMyLaptop has been activated!" 2> /tmp/screenlock.log
+	N=30
+	M=0
+else
+	cd /home/bryan/motion
+	N=-1
+	M=5
+fi
 
 echo $$ > /tmp/lock.pid
 trap 'rm /tmp/lock.pid' EXIT
 
-motion &
+(sleep -- $N && motion) &
 PID=$!
 
 scrot /tmp/screenshot.png
@@ -13,3 +21,8 @@ convert /tmp/screenshot.png -blur 0x5 /tmp/screenshotblur.png
 i3lock -n -i /tmp/screenshotblur.png
 
 kill $PID
+pkill motion
+
+touch -t $(date --date="$M minutes ago" +%Y%m%d%H%M) /tmp/motionts
+find . -newer /tmp/motionts -type f -delete
+find . -name "*.avi" -size -100k -delete

@@ -24,12 +24,12 @@ eval set -- $(getopt -o "d,r" -l "debug,resume" -- "$@")
 
 while [[ -n "$1" ]]; do
 	case $1 in
-        '-d' | '--debug' )
+        -d|--debug )
             PS4='$LINENO: '
             set -x;;
-        '-r' | '--resume' )
+        -r|--resume )
             resume=true;;
-		'--' )
+		-- )
 			shift
 			break;;
 	esac

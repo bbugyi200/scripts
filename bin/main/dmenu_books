@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CACHE_FILE=/home/bryan/.dmenu.db
+CACHE_FILE=/home/bryan/Dropbox/scripts/var/dmenu.db
 PATH_LIST=$(find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu")
 
 eval set -- $(getopt -o "da:" -l "debug,application:" -- "$@")

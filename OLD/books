@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python3 ~/Dropbox/Python_Projects/Scripts/Book_Library/Book_Library.py

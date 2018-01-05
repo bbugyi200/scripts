@@ -1,5 +1,4 @@
 *.sw*
-OLD/*
 **/a.out
 *~
 python/objs/*

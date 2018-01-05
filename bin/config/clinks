@@ -1,0 +1,13 @@
+#!/bin/bash
+if [[ $(hostname) == "athena" ]]; then
+	stow --dir=/home/bryan/Dropbox/scripts/bin --target=/etc -R cron.jobs
+fi
+
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R main
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R config
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R xmonad
+stow --dir=/home/bryan/Dropbox --target=/home/bryan -R dotfiles
+stow --dir=/home/bryan/Dropbox --target=/root -R dotfiles
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src -R src
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include -R include
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib -R lib

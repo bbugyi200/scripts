@@ -1,4 +1,0 @@
-#!/bin/bash
-
-filename=$(echo | dmenu -p "Screenshot Filename?: ")
-scrot -s ~/Dropbox/Reference_Material/Receipts/$filename.png

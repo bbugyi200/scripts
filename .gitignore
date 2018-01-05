@@ -1,5 +1,6 @@
 *.sw*
 **/a.out
 *~
+bin/ProtectMyLaptop/keys.py
 python/objs/*
 lemonbar/panel-*

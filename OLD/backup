@@ -1,4 +1,0 @@
-#!/bin/bash
-# Sun Mar 27 07:38:32 EDT 2016
-
-rsync -av --delete /home/bryan/ /media/bryan/Backup/Ubuntu/

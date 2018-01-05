@@ -4,7 +4,6 @@ if [[ $(hostname) == "athena" ]]; then
 fi
 
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R main
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R config
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R xmonad
 stow --dir=/home/bryan/Dropbox --target=/home/bryan -R dotfiles
 stow --dir=/home/bryan/Dropbox --target=/root -R dotfiles

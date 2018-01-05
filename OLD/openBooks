@@ -1,5 +1,0 @@
-#!/bin/bash
-
-nautilus /home/bryan/Dropbox/Books/
-sleep 0.1
-wmctrl -F -a Books

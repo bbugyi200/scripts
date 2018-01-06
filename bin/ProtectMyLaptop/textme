@@ -1,14 +1,26 @@
 #!/bin/python
 import sys
+import os
+import configparser
 
 from twilio.rest import Client
 
-from keys import TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
+configPath = os.path.expanduser('~/.PML.conf')
+if os.path.isfile(os.path.expanduser('~/.config/PML.conf')):
+    configPath = os.path.expanduser('~/.config/PML.conf')
+
+config = configparser.ConfigParser()
+config.read(configPath)
+
+account_sid = config.get('Twilio', 'account_sid')
+auth_token = config.get('Twilio', 'auth_token')
+to = config.get('Twilio', 'to')
+from_ = config.get('Twilio', 'from_')
 
 
 body = sys.argv[1]
-client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+client = Client(account_sid, auth_token)
 
-message = client.api.account.messages.create(to="+16095007081",
-                                             from_="+12316749266",
+message = client.api.account.messages.create(to=to,
+                                             from_=from_,
                                              body=body)

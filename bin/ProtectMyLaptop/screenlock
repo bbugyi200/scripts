@@ -1,16 +1,22 @@
 #!/bin/bash
 
-CONFIG_PATH=~/.ProtectMyLaptop.cfg
 
-PS4='$LINENO: '
-set -x
+if [[ -f ~/.config/PML.conf ]]; then
+    CONFIG_PATH=~/.config/PML.conf
+elif [[ -f ~/.PML.conf ]]; then
+    CONFIG_PATH=~/.PML.cfg
+else
+    logger "$(basename $0): No PML.conf file exists!"
+fi
+
 
 motion_enabled="$(awk -v opt=motion_enabled -f screenlock.awk $CONFIG_PATH)"
 motion_delay="$(awk -v opt=motion_delay -f screenlock.awk $CONFIG_PATH)"
 motion_oldest="$(awk -v opt=motion_oldest -f screenlock.awk $CONFIG_PATH)"
 motion_root_dir="$(awk -v opt=motion_root_dir -f screenlock.awk $CONFIG_PATH)"
 
-if [[ "$motion_enabled" -eq 1 ]]; then
+
+if [[ "$motion_enabled" -ne 0 ]]; then
     cd "$motion_root_dir"
     textme "ProtectMyLaptop has been activated!" 2> /var/tmp/screenlock.log
 fi

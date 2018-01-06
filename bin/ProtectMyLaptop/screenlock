@@ -4,7 +4,7 @@
 if [[ -f ~/.config/PML.conf ]]; then
     CONFIG_PATH=~/.config/PML.conf
 elif [[ -f ~/.PML.conf ]]; then
-    CONFIG_PATH=~/.PML.cfg
+    CONFIG_PATH=~/.PML.conf
 else
     logger "$(basename $0): No PML.conf file exists!"
     exit 1
@@ -25,7 +25,6 @@ BEGIN {
 EOF
 
 motion_enabled="$(awk -v opt=motion_enabled "$awkScript" $CONFIG_PATH)"
-motion_delay="$(awk -v opt=motion_delay "$awkScript" $CONFIG_PATH)"
 motion_oldest="$(awk -v opt=motion_oldest "$awkScript" $CONFIG_PATH)"
 motion_root_dir="$(awk -v opt=motion_root_dir "$awkScript" $CONFIG_PATH)"
 
@@ -47,8 +46,3 @@ i3lock -n -i /tmp/screenshotblur.png
 
 kill $PID
 pkill motion
-
-if [[ "$motion_enabled" = true ]]; then
-    touch -t $(date --date="$motion_oldest minutes ago" +%Y%m%d%H%M) /tmp/motionts
-    find . -newer /tmp/motionts -type f -name "*.jpg" -delete
-fi

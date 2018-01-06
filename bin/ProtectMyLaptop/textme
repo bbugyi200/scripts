@@ -17,10 +17,15 @@ auth_token = config.get('Twilio', 'auth_token')
 to = config.get('Twilio', 'to')
 from_ = config.get('Twilio', 'from_')
 
+try:
+    body = sys.argv[1]
+except IndexError as e:
+    print("usage: " + os.path.basename(__file__) + " <body>")
+    sys.exit(1)
 
-body = sys.argv[1]
-client = Client(account_sid, auth_token)
 
-message = client.api.account.messages.create(to=to,
-                                             from_=from_,
-                                             body=body)
+if __name__ == "__main__":
+    client = Client(account_sid, auth_token)
+    message = client.api.account.messages.create(to=to,
+                                                 from_=from_,
+                                                 body=body)

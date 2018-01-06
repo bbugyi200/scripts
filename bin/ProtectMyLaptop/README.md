@@ -15,16 +15,15 @@ ProtectMyLaptop uses a configuration file. This config file uses an ini like for
 
 ``` ini
 [Motion]
-motion_enabled="0 to disable motion from running or 1 to enable motion"
-motion_delay="Integer. Delay (in seconds) before motion starts"
-motion_oldest="jpg files produced by motion that are older than this number (in minutes) are deleted"
-motion_root_dir="jpeg files created by motion are stored in this directory"
+motion_enabled= # 0 to disable motion from running or 1 to enable motion
+motion_delay= # Delay (in seconds) before motion starts
+motion_root_dir= # jpeg files created by motion are stored in this directory
 
 [Twilio]
-account_sid="Twilio Account SID"
-auth_token="Twilio Auth Token"
-to="Your phone number (prefaced with a +)"
-from_="From phone number provided by Twilio (also prefaced with a +)"
+account_sid= # Twilio Account SID
+auth_token= # Twilio Auth Token
+to= # Your phone number (prefaced with a +)
+from_= # Provided by Twilio (also prefaced with a +)
 ```
 
 Before running `screenlock`, you should copy this format to one of the acceptable file paths mentioned above and fill in the options accordingly.

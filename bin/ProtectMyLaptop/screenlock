@@ -1,20 +1,24 @@
 #!/bin/bash
 
-if [[ $(hostname) == "aphrodite" ]]; then
-	cd /home/bryan/Dropbox/logs/aphrodite-motion
-    textme "ProtectMyLaptop has been activated!" 2> /tmp/screenlock.log
-	N=30
-	M=0
-else
-	cd /home/bryan/motion
-	N=-1
-	M=5
+CONFIG_PATH=~/.ProtectMyLaptop.cfg
+
+PS4='$LINENO: '
+set -x
+
+motion_enabled="$(awk -v opt=motion_enabled -f screenlock.awk $CONFIG_PATH)"
+motion_delay="$(awk -v opt=motion_delay -f screenlock.awk $CONFIG_PATH)"
+motion_oldest="$(awk -v opt=motion_oldest -f screenlock.awk $CONFIG_PATH)"
+motion_root_dir="$(awk -v opt=motion_root_dir -f screenlock.awk $CONFIG_PATH)"
+
+if [[ "$motion_enabled" -eq 1 ]]; then
+    cd "$motion_root_dir"
+    textme "ProtectMyLaptop has been activated!" 2> /var/tmp/screenlock.log
 fi
 
 echo $$ > /tmp/lock.pid
 trap 'rm /tmp/lock.pid' EXIT
 
-(sleep -- $N && motion) &
+(sleep -- "$motion_delay" && motion) &
 PID=$!
 
 scrot /tmp/screenshot.png
@@ -24,6 +28,7 @@ i3lock -n -i /tmp/screenshotblur.png
 kill $PID
 pkill motion
 
-touch -t $(date --date="$M minutes ago" +%Y%m%d%H%M) /tmp/motionts
-find . -newer /tmp/motionts -type f -delete
-find . -name "*.avi" -size -100k -delete
+if [[ "$motion_enabled" = true ]]; then
+    touch -t $(date --date="$motion_oldest minutes ago" +%Y%m%d%H%M) /tmp/motionts
+    find . -newer /tmp/motionts -type f -name "*.jpg" -delete
+fi

@@ -11,7 +11,7 @@ More of a set of complementary scripts than a cohesive program in and of itself,
 
 # Configuration
 
-ProtectMyLaptop uses a configuration file. This config file uses an ini like format and can either be stored at `~/.PML.conf` or (preferably) `~/.config/PML.conf`. The following options are available:
+ProtectMyLaptop uses a configuration file. This config file uses an ini like format and can either be stored at either `~/.PML.conf` or (preferably) `~/.config/PML.conf`. The following options are available:
 
 ``` ini
 [Motion]

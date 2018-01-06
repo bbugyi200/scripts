@@ -10,10 +10,23 @@ else
 fi
 
 
-motion_enabled="$(awk -v opt=motion_enabled -f screenlock.awk $CONFIG_PATH)"
-motion_delay="$(awk -v opt=motion_delay -f screenlock.awk $CONFIG_PATH)"
-motion_oldest="$(awk -v opt=motion_oldest -f screenlock.awk $CONFIG_PATH)"
-motion_root_dir="$(awk -v opt=motion_root_dir -f screenlock.awk $CONFIG_PATH)"
+read -d '' awkScript <<-'EOF'
+BEGIN {
+    FS="[:=]"
+}
+/\\[Motion\\]/{flag=1; next}
+/\\[.*\\]/{flag=0}
+{
+    if (flag && $1==opt) {
+        print $2
+    }
+}
+EOF
+
+motion_enabled="$(awk -v opt=motion_enabled "$awkScript" $CONFIG_PATH)"
+motion_delay="$(awk -v opt=motion_delay "$awkScript" $CONFIG_PATH)"
+motion_oldest="$(awk -v opt=motion_oldest "$awkScript" $CONFIG_PATH)"
+motion_root_dir="$(awk -v opt=motion_root_dir "$awkScript" $CONFIG_PATH)"
 
 
 if [[ "$motion_enabled" -ne 0 ]]; then

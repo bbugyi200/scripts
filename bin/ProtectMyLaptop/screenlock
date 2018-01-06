@@ -7,6 +7,7 @@ elif [[ -f ~/.PML.conf ]]; then
     CONFIG_PATH=~/.PML.cfg
 else
     logger "$(basename $0): No PML.conf file exists!"
+    exit 1
 fi
 
 

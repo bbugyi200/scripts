@@ -7,7 +7,7 @@ case "$1" in
             PBTN|PWRF)
                 logger 'PowerButton pressed'
                 if [[ -f /tmp/lock.pid ]]; then
-                    /usr/local/bin/textme "Laptop Power-Button has been Pressed!!!"
+                    sudo -u <username> /usr/local/bin/textme "Laptop Power-Button has been Pressed!!!"
                 fi
                 ;;
             *)
@@ -64,7 +64,7 @@ case "$1" in
             close)
                 logger 'LID closed'
                 if [[ -f /tmp/lock.pid ]]; then
-                    /usr/local/bin/textme "Laptop Lid has been Closed!!!"
+                    sudo -u <username> /usr/local/bin/textme "Laptop Lid has been Closed!!!"
                 else
                     systemctl suspend
                 fi

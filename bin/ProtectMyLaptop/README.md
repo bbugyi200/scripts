@@ -23,6 +23,8 @@ motion_delay=
 motion_root_dir=
 
 [Twilio]
+# 0 or 1. If enabled, it will text you when PML is activated
+textme_at_startup=
 # Twilio Account SID
 account_sid=
 # Twilio Auth Token
@@ -38,3 +40,4 @@ Before running `screenlock`, you should copy this format to one of the acceptabl
 # Notes
 
 * In order to get [Motion](https://wiki.archlinux.org/index.php/Motion) to behave as described in this document, you will have to change some of its default configurations. This can be done by making the appropriate alterations to the `/etc/motion/motion.conf` file.
+* The `etc/acpi/handler.sh` script included in this repo is merely a demonstration. In order to be texted when your laptop power button is pressed and/or laptop lid is closed, you must copy the `button/power` and `button/lid` sections to your local `/etc/acpi/handler.sh` file, which should already exist if you have installed `acpi` to your machine. In the provided `etc/acpi/handler.sh` demo, make sure to replace `<username>` with your own Linux username.

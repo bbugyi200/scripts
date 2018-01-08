@@ -15,7 +15,7 @@ read -d '' awkScript <<-'EOF'
 BEGIN {
     FS="[:=]"
 }
-/\\[Motion\\]/{flag=1; next}
+$0 ~ section {flag=1; next}
 /\\[.*\\]/{flag=0}
 {
     if (flag && $1==opt) {
@@ -24,25 +24,30 @@ BEGIN {
 }
 EOF
 
-motion_enabled="$(awk -v opt=motion_enabled "$awkScript" $CONFIG_PATH)"
-motion_oldest="$(awk -v opt=motion_oldest "$awkScript" $CONFIG_PATH)"
-motion_root_dir="$(awk -v opt=motion_root_dir "$awkScript" $CONFIG_PATH)"
+motion_enabled="$(awk -v opt=motion_enabled -v section=Motion "$awkScript" $CONFIG_PATH)"
+motion_delay="$(awk -v opt=motion_delay -v section=Motion "$awkScript" $CONFIG_PATH)"
+motion_root_dir="$(awk -v opt=motion_root_dir -v section=Motion "$awkScript" $CONFIG_PATH)"
+textme_at_startup="$(awk -v opt=textme_at_startup -v section=Twilio "$awkScript" $CONFIG_PATH)"
 
 
 if [[ "$motion_enabled" -ne 0 ]]; then
     cd "$motion_root_dir"
+    (sleep -- "$motion_delay" && motion) &
+    PID=$!
+fi
+if [[ "$textme_at_startup" -ne 0 ]]; then
     textme "ProtectMyLaptop has been activated!" 2> /var/tmp/screenlock.log
 fi
 
+
 echo $$ > /tmp/lock.pid
 trap 'rm /tmp/lock.pid' EXIT
-
-(sleep -- "$motion_delay" && motion) &
-PID=$!
 
 scrot /tmp/screenshot.png
 convert /tmp/screenshot.png -blur 0x5 /tmp/screenshotblur.png
 i3lock -n -i /tmp/screenshotblur.png
 
-kill $PID
-pkill motion
+if [[ "$motion_enabled" -ne 0 ]]; then
+    kill $PID
+    pkill motion
+fi

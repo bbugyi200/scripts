@@ -5,9 +5,15 @@ import configparser
 
 from twilio.rest import Client
 
-configPath = os.path.expanduser('~/.PML.conf')
-if os.path.isfile(os.path.expanduser('~/.config/PML.conf')):
-    configPath = os.path.expanduser('~/.config/PML.conf')
+primary_path = os.path.expanduser('~/.config/PML.conf')
+secondary_path = os.path.expanduser('~/.PML.conf')
+if os.path.isfile(primary_path):
+    configPath = primary_path
+elif os.path.isfile(secondary_path):
+    configPath = secondary_path
+else:
+    print("PML configuration file does not exist!", file=sys.stderr)
+    sys.exit(1)
 
 config = configparser.ConfigParser()
 config.read(configPath)

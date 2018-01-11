@@ -6,7 +6,7 @@ if [[ -f ~/.config/PML.conf ]]; then
 elif [[ -f ~/.PML.conf ]]; then
     CONFIG_PATH=~/.PML.conf
 else
-    logger "$(basename $0): No PML.conf file exists!"
+    echo "No PML.conf file exists!" | tee >(logger -t "$(basename $0)")
     exit 1
 fi
 

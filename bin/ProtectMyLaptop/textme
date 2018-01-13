@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
+import argparse
 import configparser
 
 from twilio.rest import Client
@@ -23,15 +24,13 @@ auth_token = config.get('Twilio', 'auth_token')
 to = config.get('Twilio', 'to')
 from_ = config.get('Twilio', 'from_')
 
-try:
-    body = sys.argv[1]
-except IndexError as e:
-    print("usage: " + os.path.basename(__file__) + " <body>")
-    sys.exit(1)
-
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('body')
+    args = parser.parse_args()
+
     client = Client(account_sid, auth_token)
     message = client.api.account.messages.create(to=to,
                                                  from_=from_,
-                                                 body=body)
+                                                 body=args.body)

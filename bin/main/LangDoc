@@ -1,0 +1,105 @@
+#!/bin/bash
+
+####################################################################################################
+#  LangDoc                                                                                         #
+#                                                                                                  #
+#  - Used to pull up the local documentation of a given function/class in a given module.          #
+#  - Attempts to generalize to multiple programming languages.                                     #
+####################################################################################################
+
+
+eval set -- $(getopt -o 'm,d,e:' -l 'menu,debug,ext:' -- "$@")
+
+menu=0
+debug=0
+while [[ -n "$1" ]]; do
+	case $1 in
+		'-m' | '--menu')
+			menu=1;;
+        '-e' | '--ext')
+            shift
+            EXT=$1;;
+		'-d' | '--debug')
+            PS4='$LINENO: '
+            set -x;;
+		'--')
+			shift
+			break;;
+	esac
+	shift
+done
+
+case "$EXT" in
+    'py' )
+        DOCDIR=/usr/share/doc/python;;
+    'java' )
+        DOCDIR=/usr/share/doc/java8-openjdk;;
+    'sh'|'' )
+        bash=true;;
+esac
+
+function getDocFiles() {
+    echo "$(find $DOCDIR -regex ".*/$1\.html")"
+}
+
+TEMP="$(echo $1 | sed 's/^[^A-Za-z0-9_\.]*\([A-Za-z0-9_\.]\)/\1/g')"  # Strip Head
+TEMP="${TEMP%%[^A-Za-z0-9_\.]*}"  # Strip Tail
+DOC_PTTRN="${TEMP##*[^A-Za-z0-9_\.]}"
+MODULE="$(expr match $DOC_PTTRN '\(.*\)\.')"
+MODULE="${MODULE:-$DOC_PTTRN}"
+LASTWORD="$(expr match $DOC_PTTRN '.*\.\(.*\)')"
+LASTWORD="${LASTWORD:-$DOC_PTTRN}"
+
+if [[ "$bash" = true ]]; then
+    man --html=google-chrome-stable $DOC_PTTRN
+    exit $?
+fi
+
+TEMP="$(getDocFiles $MODULE)"
+if [[ -z "$TEMP" ]]; then
+    while [[ -n "$MODULE" ]] && [[ -z "$TEMP" ]]; do
+        MODULE="$(expr match $MODULE '\(.*\)\.')"
+        TEMP="$(getDocFiles $MODULE)"
+    done
+
+    if [[ -z "$TEMP" ]]; then
+        printf "LangDoc was unable to find the documentation you are looking for. This is probably because it was not able to figure out infer the module. Help us out a little (or use 'q' to quit).\n\n"
+        printf "Function/Class Name: $LASTWORD\n"
+        read -p "Module Name: " MODULE
+        if [[ "$MODULE" == 'q' ]]; then
+            exit 1
+        fi
+        TEMP="$(getDocFiles $MODULE)"
+    fi
+fi
+MATCHES=$TEMP
+
+if [[ -z "$MATCHES" ]]; then
+	echo "No matching docs could be found." | tee >(logger -t "$(basename $0)")
+	exit 1
+fi
+
+PS3=$'\n'">>> "
+
+if [[ $menu -eq 1 ]] && [[ $(echo "$MATCHES" | wc -l) -ge 2 ]]; then
+	select DOC in $MATCHES; do
+		echo
+        break
+	done
+else
+	DOC=$(echo "$MATCHES" | head -1)
+fi
+
+HREF_MATCHES=$(grep -oP "href=\"[^\"]*?#.*?>$LASTWORD(\(\))?<" $DOC)
+HREF_MATCHES=${HREF_MATCHES:-$(grep -oP "href=\"[^\"]*?#.*?>[^<].*?$DOC_PTTRN(\(\))?<" $DOC)}
+HREF_MATCHES=${HREF_MATCHES:-$(grep -oP "href=\"[^\"]*?#.*?>[^<].*?$LASTWORD(\(\))?<" $DOC)}
+LINK_MATCHES=$(echo "$HREF_MATCHES" | grep -oP ".*\K#.*?(?=\")")
+LINK=$(echo "$LINK_MATCHES" | sort -nk 1 | head -1)
+
+if [[ -z "$LINK" ]]; then
+    LINK="#$DOC_PTTRN"
+fi
+
+URL="file://$DOC$LINK"
+google-chrome-stable $URL &> /dev/null & disown
+exit 0

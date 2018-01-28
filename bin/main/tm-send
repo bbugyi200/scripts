@@ -29,6 +29,8 @@ case "$action" in
                 CMD="clc";;
             *"ghc"* )
                 CMD=":! clear";;
+            *"gdb"* )
+                CMD="shell clear";;
             *"sqlite3"* )
                 CMD=".shell clear";;
             *"vim"* )
@@ -40,6 +42,8 @@ case "$action" in
         case $active_program in
             *"ghc"* )
                 CMD=":quit";;
+            *"gdb"* )
+                CMD="quit";;
             *"sqlite3"* )
                 CMD=".quit";;
             *"git"* )

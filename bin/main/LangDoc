@@ -3,7 +3,7 @@
 ####################################################################################################
 #  LangDoc                                                                                         #
 #                                                                                                  #
-#  - Used to pull up the local documentation of a given function/class in a given module.          #
+#  - Used to pull up the official documentation of a given function/class in a given module.       #
 #  - Attempts to generalize to multiple programming languages.                                     #
 ####################################################################################################
 
@@ -47,8 +47,8 @@ TEMP="${TEMP%%[^A-Za-z0-9_\.]*}"  # Strip Tail
 DOC_PTTRN="${TEMP##*[^A-Za-z0-9_\.]}"
 MODULE="$(expr match $DOC_PTTRN '\(.*\)\.')"
 MODULE="${MODULE:-$DOC_PTTRN}"
-LASTWORD="$(expr match $DOC_PTTRN '.*\.\(.*\)')"
-LASTWORD="${LASTWORD:-$DOC_PTTRN}"
+WORD="$(expr match $DOC_PTTRN '.*\.\(.*\)')"
+WORD="${WORD:-$DOC_PTTRN}"
 
 if [[ "$bash" = true ]]; then
     man --html=google-chrome-stable $DOC_PTTRN
@@ -64,7 +64,7 @@ if [[ -z "$TEMP" ]]; then
 
     if [[ -z "$TEMP" ]]; then
         printf "LangDoc was unable to find the documentation you are looking for. This is probably because it was not able to figure out infer the module. Help us out a little (or use 'q' to quit).\n\n"
-        printf "Function/Class Name: $LASTWORD\n"
+        printf "Function/Class Name: $WORD\n"
         read -p "Module Name: " MODULE
         if [[ "$MODULE" == 'q' ]]; then
             exit 1
@@ -90,7 +90,25 @@ else
 	DOC=$(echo "$MATCHES" | head -1)
 fi
 
-HREF_MATCHES=$(grep -oP "href=\"[^\"]*?#.*?>$LASTWORD(\(\))?<" $DOC)
+LASTWORD="$WORD"
+function getNextWord() {
+    NEXT_MODULE=${DOC_PTTRN%%\.$1*}
+    NEWWORD=${NEXT_MODULE##*\.}
+    if [[ "$NEWWORD" == "$LASTWORD" ]]; then
+        NEWWORD=
+    fi
+    echo "$NEWWORD"
+}
+
+HREF_MATCHES=$(grep -oP "href=\"[^\"]*?#.*?>$WORD(\(\))?<" $DOC)
+while [[ -z "$HREF_MATCHES" ]]; do
+    WORD="$(getNextWord $WORD)"
+    if [[ -z "$WORD" ]]; then
+        break
+    fi
+    HREF_MATCHES=$(grep -oP "href=\"[^\"]*?#.*?>$WORD(\(\))?<" $DOC)
+done
+
 HREF_MATCHES=${HREF_MATCHES:-$(grep -oP "href=\"[^\"]*?#.*?>[^<].*?$DOC_PTTRN(\(\))?<" $DOC)}
 HREF_MATCHES=${HREF_MATCHES:-$(grep -oP "href=\"[^\"]*?#.*?>[^<].*?$LASTWORD(\(\))?<" $DOC)}
 LINK_MATCHES=$(echo "$HREF_MATCHES" | grep -oP ".*\K#.*?(?=\")")

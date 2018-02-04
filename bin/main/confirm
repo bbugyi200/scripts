@@ -8,18 +8,14 @@ while [[ -n "$1" ]]; do
 		'--dmenu' )
 			action='dmenu';;
         '-d' | '--debug' )
-            debug=true;;
+            PS4='$LINENO: '
+            set -x;;
 		'--' )
 			shift
 			break;;
 	esac	
 	shift
 done
-
-if [[ "$debug" = true ]]; then
-    PS4='$LINENO: '
-    set -x
-fi
 
 prompt="Do you really want to run \"$*\"? (y/n):"
 

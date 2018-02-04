@@ -34,8 +34,12 @@ case "$EXT" in
         DOCDIR=/usr/share/doc/python;;
     'java' )
         DOCDIR=/usr/share/doc/java8-openjdk;;
+    'c' )
+        USE_MAN=true
+        MAN_SECTION=3;;
     'sh'|'' )
-        bash=true;;
+        USE_MAN=true
+        MAN_SECTION=1;;
 esac
 
 function getDocFiles() {
@@ -50,8 +54,8 @@ MODULE="${MODULE:-$DOC_PTTRN}"
 WORD="$(expr match $DOC_PTTRN '.*\.\(.*\)')"
 WORD="${WORD:-$DOC_PTTRN}"
 
-if [[ "$bash" = true ]]; then
-    man --html=google-chrome-stable $DOC_PTTRN
+if [[ "$USE_MAN" = true ]]; then
+    man --html=google-chrome-stable $MAN_SECTION $DOC_PTTRN
     exit $?
 fi
 
@@ -103,7 +107,7 @@ function getNextWord() {
 HREF_MATCHES=$(grep -oP "href=\"[^\"]*?#.*?>$WORD(\(\))?<" $DOC)
 while [[ -z "$HREF_MATCHES" ]]; do
     WORD="$(getNextWord $WORD)"
-    if [[ -z "$WORD" ]]; then
+    if [[ "$WORD" == "$MODULE" ]]; then
         break
     fi
     HREF_MATCHES=$(grep -oP "href=\"[^\"]*?#.*?>$WORD(\(\))?<" $DOC)

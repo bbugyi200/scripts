@@ -1,5 +1,8 @@
 #!/bin/bash
 
+shopt -s expand_aliases
+source ~/Dropbox/dotfiles/extras/globrc
+
 eval set -- $(getopt -o 'd' -l 'debug,dmenu' -- "$@")
 
 action='read'
@@ -29,8 +32,8 @@ esac
 if [[ "$choice" == "y" ]]; then
 	printf "\nrunning: \"$*\"\n\n"
 	eval "$*"
-	exit 0
+    exit 0
 else
-	clear
-	exit 1
+    echo
+    exit 1
 fi

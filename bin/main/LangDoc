@@ -34,7 +34,7 @@ case "$EXT" in
         DOCDIR=/usr/share/doc/python;;
     'java' )
         DOCDIR=/usr/share/doc/java8-openjdk;;
-    'c' )
+    'c'|'cpp' )
         USE_MAN=true
         MAN_SECTION=3;;
     'sh'|'' )

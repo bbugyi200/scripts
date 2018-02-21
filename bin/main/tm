@@ -7,7 +7,7 @@ if [[ -z "$1" ]]; then
     exit 0
 fi
 
-if [[ $1 == '--debug' ]]; then
+if [[ $1 == '--debug' || $1 == '-d' ]]; then
     PS4='$LINENO: '
     set -x
     shift

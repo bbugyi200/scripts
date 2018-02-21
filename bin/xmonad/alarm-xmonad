@@ -47,13 +47,14 @@ fi
 
 # ---------- Another Alarm is Already Running ----------
 # I am not sure why '-ge 3' instead of '-ge 2' but it is correct
+# Maybe because pgrep counts itself?
 if [[ -f $PID_FILE ]] || [[ "$(pgrep $(basename $0) | wc -l)" -ge 3 ]]; then
     if [[ "$resume" = true ]]; then
-        logger "$(basename $0): No need to restart! An alarm is already running!"
+        echo "No need to restart! An alarm is already running!" | tee >(logger -t "$(basename $0)")
         exit 2
     fi
 
-    logger "$(basename $0): An alarm is already running! Stopping existing alarm!"
+    echo "An alarm is already running! Stopping existing alarm!" | tee >(logger -t "$(basename $0)")
 
     if [[ -f $PID_FILE ]]; then
         cat $PID_FILE | xargs kill

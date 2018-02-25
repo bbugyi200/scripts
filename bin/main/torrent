@@ -1,0 +1,59 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+import time
+import subprocess
+import sys
+
+description = "Connects to a VPN, torrents a movie, disconnects from the VPN\
+        when the download is finished, and then texts me."
+
+delay_desc = "Delay starting the script for a few seconds. This is useful when\
+        running the script over ssh because it gives you time to exit the session\
+        normally before being disconnected."
+
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('magnet', help='The torrent magnet file.')
+parser.add_argument('-D', '--delay', dest='delay', action='store_true', help=delay_desc)
+args = parser.parse_args()
+
+DEVNULL = open(os.devnull, 'w')
+# DEVNULL = None
+
+if args.delay:
+    time.sleep(10)
+
+try:
+    subprocess.check_call(['PIA', 'start', 'nyc'], stdout=DEVNULL)
+    subprocess.check_call(['transmission-daemon'], stdout=DEVNULL)
+except subprocess.CalledProcessError as e:
+    subprocess.call(['textme', 'Failed to start the torrent! :('])
+    sys.exit(1)
+else:
+    i = 0
+    while True:
+        time.sleep(1)
+        try:
+            subprocess.check_call(['transmission-remote', '-a', args.magnet], stdout=DEVNULL)
+            break
+        except subprocess.CalledProcessError as e:
+            i += 1
+            if i < 10:
+                continue
+            else:
+                raise
+
+    while True:
+        time.sleep(5)
+        p = subprocess.Popen(['transmission-remote', '-l'], stdout=subprocess.PIPE)
+        output = p.communicate()[0].decode('utf-8')
+        if 'finished' in output.lower():
+            break
+
+    subprocess.call(['textme', 'Your movie has finished downloading! :)'], stdout=DEVNULL)
+
+finally:
+    subprocess.call(['transmission-remote', '-t1', '-r'])
+    subprocess.call(['killall', '-9', 'transmission-daemon'], stdout=DEVNULL)
+    subprocess.call(['PIA', 'stop'], stdout=DEVNULL)

@@ -1,8 +1,5 @@
 #!/bin/bash
 
-shopt -s expand_aliases
-source ~/Dropbox/dotfiles/extras/globrc
-
 eval set -- $(getopt -o 'd' -l 'debug,dmenu' -- "$@")
 
 action='read'

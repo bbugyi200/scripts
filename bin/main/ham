@@ -55,8 +55,6 @@ while [[ -f $PID_FILE ]]; do
 	fi
 done
 
-
-
 # ---------- Handle Actions ----------
 if [[ $action == "stop" ]]; then
 	hamster stop
@@ -75,7 +73,6 @@ if [[ $action == "start" ]]; then
 		cmd=$(hamster activities | sort | dmenu -i -m 0)
 	fi
 
-	start_time=
 	if [[ -z "$cmd" ]]; then
 		logger "ham: 'cmd' variable is empty"
 		exit 1

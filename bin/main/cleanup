@@ -3,7 +3,7 @@
 confirm "sudo pacman -Rns $(pacman -Qtdq)"
 printf "\nls ~/Downloads\n\n"
 ls ~/Downloads
-confirm "sudo rm -R ~/Downloads/*"
+confirm "rm -Rf ~/Downloads/*"
 confirm "sudo paccache -r"
 printf "\nList of Foreign Packages (pacman -Qm):\n\n"
 pacman -Qm

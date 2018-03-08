@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+import argparse
+import os
+import getpass
+import subprocess
+import re
+
+os.environ['EDITOR'] = '/usr/bin/vim'
+
+description = "Adds a password to 'pass' storage."
+
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('raw_url', help="The URL of the website (before being cleaned).")
+
+args = parser.parse_args()
+
+url = re.sub('(\.com).*|https://', r'\1', args.raw_url)
+
+pass_url_dir = '/home/' + getpass.getuser() + '/.password-store/' + url
+options = ''
+if os.path.isdir(pass_url_dir):
+    for filename in os.listdir(pass_url_dir):
+        options += re.sub('\.gpg', '', filename) + '\n'
+
+command = 'printf "{options}" | rofi -dmenu -p "Username to add/edit"'
+username = subprocess.check_output(command.format(options=options), shell=True).decode('utf-8')
+
+url = url + '/' + username
+
+if username in options:
+    subprocess.call(['termite', '-r', 'qb-pass', '--class', 'qb-pass', '-e', 'pass edit {}'.format(url)])
+else:
+    subprocess.call(['termite', '-r', 'qb-pass', '--class', 'qb-pass', '-e', 'pass insert {}'.format(url)])

@@ -22,6 +22,9 @@ while [[ -n "$1" ]]; do
 done
 
 
+PRE=
+POST=
+
 case "$action" in
     'clear' )
         case $active_program in
@@ -33,6 +36,9 @@ case "$action" in
                 CMD="shell clear";;
             *"sqlite3"* )
                 CMD=".shell clear";;
+            *"WeeChat"* )
+                PRE="a C-u"
+                CMD="/buffer clear";;
             *"vim"* )
                 CMD=":normal zt";;
             * )
@@ -50,6 +56,9 @@ case "$action" in
                 CMD="q";;
             *"python"* )
                 CMD="exit()";;
+            *"WeeChat"* )
+                PRE="a C-u"
+                CMD="/quit";;
             *"vim"* )
                 CMD=":qa";;
             * )
@@ -71,4 +80,4 @@ case "$action" in
         esac
 esac
 
-tmux send-keys "$CMD" "Enter"
+tmux send-keys $PRE "$CMD" $POST "Enter"

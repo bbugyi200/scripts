@@ -23,6 +23,7 @@ case $action in
 	'dmenu' )
 		choice="$(echo | dmenu -p "$prompt")";;
 	'read' )
+        echo
 		read -n 1 -p "$prompt " choice;;
 esac
 

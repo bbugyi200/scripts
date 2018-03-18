@@ -3,12 +3,12 @@
 NUM_OF_WS=$(wmctrl -d | wc -l)
 
 COUNT=1
-xdotool key super+r
+xdotool key super+ctrl+r
 while [[ $(wmctrl -d | wc -l) -eq $NUM_OF_WS ]]; do
     sleep 0.1
     COUNT=$((COUNT+1))
 
-    xdotool key super+r
+    xdotool key super+ctrl+r
     if [[ $COUNT -ge 5 ]]; then
         break
     fi

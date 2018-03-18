@@ -16,13 +16,13 @@ case $WNAME in
         removeWorkspace;;
 	* )
 	while [[ $COUNT -le $MAX ]]; do
-		xdotool key alt+shift+n
+		xdotool key super+shift+r
 		sleep 0.1
 
         CURR_WS=$(getWS)
 		if [[ $CURR_WS != $OLD_WS ]]; then
             if [[ $CURR_WS == "NSP" ]]; then
-                xdotool key alt+bracketright
+                xdotool key super+bracketright
             fi
 			break
 		fi

@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+# twmail hook script that is called for every mail.
+#
+# The environment variables available to a hook are:
+#
+# TWMAIL_DATE
+# TWMAIL_MESSAGE_ID
+# TWMAIL_FROM
+# TWMAIL_TO
+# TWMAIL_SUBJECT
+# TWMAIL_BODY
+
+import datetime as dt
+import os
+import subprocess
+
+# log = open('/home/bryan/twmail.log', 'w')
+
+if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
+    subprocess.call('task add +inbox {}'.format(os.environ['TWMAIL_SUBJECT']), shell=True)
+
+    utc_twmail_date = dt.datetime.strptime(os.environ['TWMAIL_DATE'], r'%Y-%m-%dT%H:%M:%S\+00:00').replace(tzinfo=dt.timezone.utc)
+    twmail_date = utc_twmail_date.astimezone(tz=None) - dt.timedelta(hours=6)
+    today = dt.date.today()
+
+    if twmail_date.date() != today:
+        uuid = subprocess.check_output('task +LATEST uuids', shell=True).decode('utf-8')
+        subprocess.call(['task', uuid, 'modify', 'due:due-1d', 'wait:due'])

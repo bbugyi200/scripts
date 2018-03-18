@@ -1,0 +1,13 @@
+#!/bin/python
+from os import popen
+
+status = popen("watson status").read()
+
+if status.startswith('Project'):
+    temp = ' '.join(status.split()[1:])
+    project = temp[:temp.find('[')]
+else:
+    project = status
+
+
+print(project)

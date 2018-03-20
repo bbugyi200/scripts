@@ -17,13 +17,18 @@ import subprocess
 
 # log = open('/home/bryan/twmail.log', 'w')
 
+START_OF_DAY = 6  # Hour that day starts
+
 if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
     subprocess.call('task add +inbox {}'.format(os.environ['TWMAIL_SUBJECT']), shell=True)
 
-    utc_twmail_date = dt.datetime.strptime(os.environ['TWMAIL_DATE'], r'%Y-%m-%dT%H:%M:%S\+00:00').replace(tzinfo=dt.timezone.utc)
-    twmail_date = utc_twmail_date.astimezone(tz=None) - dt.timedelta(hours=6)
-    today = dt.date.today()
+    utc_email_datetime = dt.datetime.strptime(os.environ['TWMAIL_DATE'], r'%Y-%m-%dT%H:%M:%S\+00:00').replace(tzinfo=dt.timezone.utc)
+    email_datetime = utc_email_datetime.astimezone(tz=None)
+    email_date = email_datetime.date()
 
-    if twmail_date.date() != today:
+    today_datetime = dt.datetime.now() - dt.timedelta(hours=START_OF_DAY)
+    today_date = today_datetime.date()
+
+    if email_date < today_date:
         uuid = subprocess.check_output('task +LATEST uuids', shell=True).decode('utf-8')
         subprocess.call(['task', uuid, 'modify', 'due:due-1d', 'wait:due'])

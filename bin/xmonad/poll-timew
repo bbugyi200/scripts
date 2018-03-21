@@ -1,0 +1,81 @@
+#!/usr/bin/env python
+
+import datetime as dt
+import subprocess as sp
+import re
+
+
+inactive_fmt = 'Study: {}   /   Dev: {}   /   Meta: {}'
+active_fmt = '{project}   |   {tag}   |   ({currtime} / {daytime} / {weektime})'
+
+
+def get_tag_time(tag, interval: 'day|week'):
+    if interval == 'week':
+        week_ago = dt.datetime.now() - dt.timedelta(days=7)
+        start = '{0}-{1:02d}-{2:02d}'.format(week_ago.year, week_ago.month, week_ago.day)
+    elif interval == 'day':
+        start = '6:00'
+
+    child = sp.Popen(['timew', 'summary', 'from', start, 'to', 'now', tag], stdout=sp.PIPE)
+    output = child.communicate()[0].decode()
+
+    if output.startswith('No'):
+        return '0:00:00'
+
+    pttrn = '[\s\S]*([0-9\s][0-9]:[0-9][0-9]:[0-9][0-9])[^A-Za-z][\s\S]*?'
+    match = re.findall(pttrn, output)[0]
+
+    return match.strip()
+
+
+def style_time(time_str: 'HH:MM:SS'):
+    col = time_str.find(':')
+
+    hours = int(time_str[:col])
+    minutes = int(time_str[col+1:col+3])
+
+    styled = hours
+    styled += minutes / 60
+    return '{0:.1f}h'.format(styled)
+
+
+def parse_status(status):
+    pttrn = 'Tracking (?:([A-Za-z\. ]*)|"([^"]*)"){2}\n[\s\S]*([0-9]?[0-9]:[0-9][0-9]:[0-9][0-9])'
+    tags, project, raw_currtime = re.findall(pttrn, status)[0]
+
+    project = project.replace('Project: ', '')
+
+    currtime = style_time(raw_currtime)
+
+    all_tags = tags.split()
+    if all_tags:
+        primary_tag = min(all_tags, key=lambda x: len(x))
+    else:
+        primary_tag = ''
+
+    return project, primary_tag, currtime
+
+
+def transform(t, i):
+    return style_time(get_tag_time(t, i))
+
+
+if __name__ == "__main__":
+    child = sp.Popen(['timew'], stdout=sp.PIPE)
+    output = child.communicate()[0].decode()
+
+    if child.returncode:
+        study_time = transform('Study', 'week')
+        dev_time = transform('Dev', 'week')
+        meta_time = transform('Meta', 'week')
+        print(inactive_fmt.format(study_time, dev_time, meta_time))
+    else:
+        project, tag, currtime = parse_status(output)
+        daytime = transform(tag, 'day')
+        weektime = transform(tag, 'week')
+
+        print(active_fmt.format(project=project,
+                         tag=tag.upper(),
+                         currtime=currtime,
+                         daytime=daytime,
+                         weektime=weektime))

@@ -1,13 +1,83 @@
 #!/bin/python
+import datetime as dt
+import re
 from os import popen
 
-status = popen("watson status").read()
 
-if status.startswith('Project'):
-    temp = ' '.join(status.split()[1:])
-    project = temp[:temp.find('[')]
-else:
-    project = status
+def get_tag_time(*tags, range_opt='-d'):
+    fmt = 'watson report {opt}{tags}'
+    formatted_tags = ''
+    for tag in tags:
+        formatted_tags += ' -T ' + tag
+    tag_report = popen(fmt.format(opt=range_opt, tags=formatted_tags))
+
+    for line in tag_report:
+        last_line = line
+
+    tag_time_raw = last_line[last_line.find(':') + 1:].strip()
+    tag_time = ' '.join(tag_time_raw.split()[:-1])
+
+    if tag_time:
+        return style_time(tag_time)
+    else:
+        return "0h"
 
 
-print(project)
+def style_time(timestr):
+    styled = 0
+    for t in timestr.split():
+        if t[-1] == 'h':
+            styled += int(t[:-1])
+        elif t[-1] == 'm':
+            styled += int(t[:-1]) / 60
+    return '{0:.1f}'.format(styled) + 'h'
+
+
+if __name__ == "__main__":
+    from_fmt = '--from {year}-{month}-{day}'
+
+    weekAgo = dt.date.today() - dt.timedelta(days=7)
+    year = weekAgo.year
+    month = weekAgo.month
+    day = weekAgo.day
+    week_range = from_fmt.format(year=year,
+                                 month=month,
+                                 day=day)
+
+    status = popen("watson status").read()
+    if status.startswith('Project'):
+        pttrn = re.compile(r'Project ([^\[]+).*started')
+        project = pttrn.findall(status)[0].strip()
+
+        pttrn = re.compile('\[[A-Za-z,\. ]*\]')
+        tags_raw = pttrn.findall(status)[0]
+        tags_list = tags_raw.strip('[]').replace(' ', '').split(',')
+
+        primary_tag = min(tags_list, key=lambda x: len(x))
+
+        pttrn = re.compile('([0-9][0-9]h )?([0-9][0-9]m )?[0-9][0-9]s')
+        log_output = popen('watson log -d -G')
+        _ = log_output.readline()
+        current_log = log_output.readline()
+        match = pttrn.search(current_log)
+
+        currtime = style_time(match.group())
+        daytime = get_tag_time(primary_tag)
+        weektime = get_tag_time(primary_tag, range_opt=week_range)
+
+        fmt = '{project}   <icon=vline.xbm/>   {tag}   <icon=vline.xbm/>   ({currtime} / {daytime} / {weektime})'
+        print(fmt.format(project=project,
+                         tag=primary_tag.upper(),
+                         currtime=currtime,
+                         daytime=daytime,
+                         weektime=weektime))
+    else:
+        fmt = 'Study: {}   /   Dev: {}   /   Meta: {}'
+
+        study_time = get_tag_time('Study', range_opt=week_range)
+        dev_time = get_tag_time('Dev', range_opt=week_range)
+        meta_time = get_tag_time('Meta', range_opt=week_range)
+
+        print(fmt.format(study_time,
+                         dev_time,
+                         meta_time))

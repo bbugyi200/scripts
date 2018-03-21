@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if ping -c 2 -W 2 www.google.com &> /dev/null; then
+    echo "You are already connected to the internet."
+else
+    systemctl restart netctl-auto@wlo1.service
+fi

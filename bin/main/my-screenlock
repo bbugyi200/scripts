@@ -1,0 +1,9 @@
+#!/bin/bash
+
+CURRENT_TASK_UUID=$(task +ACTIVE uuids)
+task start.not: stop
+screenlock
+
+if [[ -n "$CURRENT_TASK_UUID" ]]; then
+    task start $CURRENT_TASK_UUID
+fi

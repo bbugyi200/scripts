@@ -4,5 +4,25 @@ import os
 import subprocess
 
 subprocess.call(['task', 'start.not:', 'done'])
-next_task_id = os.popen("task rc.verbose=nothing rc._forcecolor=no next +READY").readline()
-subprocess.call(['task', 'start', next_task_id.split()[0]])
+
+ready_tasks_cmd = "task rc.verbose=nothing rc._forcecolor=no next +READY"
+ready_tasks = os.popen(ready_tasks_cmd)
+task = ready_tasks.readline()
+temp = ready_tasks.readline()
+
+task_choices = [task]
+task_urgency = float(task.split()[-1])
+temp_urgency = float(temp.split()[-1])
+while temp_urgency == task_urgency:
+    task_choices.append(temp)
+    temp = ready_tasks.readline()
+    temp_urgency = float(temp.split()[-1])
+
+if len(task_choices) > 1:
+    cmd_fmt = ready_tasks_cmd + ' | head -n {0:d} | rofi -p "Next Task" -dmenu'
+    next_task = os.popen(cmd_fmt.format(len(task_choices))).read()
+else:
+    next_task = task_choices[0]
+
+next_task_id = next_task.split()[0]
+subprocess.call(['task', 'start', next_task_id])

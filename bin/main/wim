@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [[ "$1" == "-d" ]]; then
+    PS4='$LINENO: '
+    set -x
+    shift
+fi
+
+REGEXP="$1"; shift
+
+SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name $REGEXP)"
+
+if [[ -n "$SCRIPT_PATH" ]]; then
+    vim "$SCRIPT_PATH"
+else
+    # LOCATION will end up containing a string of the form '+<N> <path>'
+    LOCATION="$(ag "^[A-z]*[ ]*$REGEXP[ =(]" ~/Dropbox/dotfiles | awk -F: '{ print "+"$2 " " $1 }')"
+    eval "vim $LOCATION"
+fi

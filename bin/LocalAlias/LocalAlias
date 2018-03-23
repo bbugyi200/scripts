@@ -13,8 +13,8 @@ read -d '' awkScript <<-'EOF'
 BEGIN { 
     printf "set -- %s\\n", args
 }
-$0 ~ my_func " ()" {flag=1; next}
-/^}$/{flag=0} 
+$0 ~ "^" my_func " ()" {flag=1; next}
+/^}\\s*$/{flag=0} 
 {
     if (flag) {
         gsub(/  [ ]*/, "")

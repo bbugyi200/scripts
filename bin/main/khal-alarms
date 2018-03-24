@@ -1,21 +1,18 @@
 #!/bin/bash
 
-PS4='$LINENO: '
-set -x
+if [[ "$1" == "-d" ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
 
-k=0
+get_next_time() { echo $(khal list --notstarted --day-format '' now | head -n 1 | awk -F'-' '{ print $1; }'); }
 
-alarm_times="$(khal list --day-format '' now | awk -F'-' '{ print $1; }')"
-N="$(echo "$alarm_times" | wc -l)"
-
-while [[ "$k" -lt "$N" ]]; do
-    k="$((k+1))"
-
-    new_time="$(echo $(echo "$alarm_times" | head -n $k | tail -n 1))"
-
-    if [[ "$(date --date=$new_time +%s)" <  "$(date +%s)" ]]; then
-        continue
-    fi
-
+new_time="$(get_next_time $k)"
+while [[ "$new_time" != "No events" ]]; do
     alarm-xmonad "$new_time"
+
+    if [[ "$new_time" < "$(date +%s)" ]]; then
+        break
+    fi
+    new_time="$(get_next_time $k)"
 done

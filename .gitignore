@@ -1,5 +1,4 @@
-!bin/*
-
+.lshrc
 *.sw*
 **/a.out
 *~

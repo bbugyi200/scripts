@@ -1,0 +1,15 @@
+#!/bin/bash
+
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+if [[ $CURRENT_BRANCH != "master" ]]; then
+    git checkout master
+fi
+
+if [[ -z "$1" ]]; then
+    TARGET_BRANCH=$CURRENT_BRANCH
+else
+    TARGET_BRANCH=$1
+fi
+
+git pull --rebase && git merge --ff-only $TARGET_BRANCH && git push --delete origin $TARGET_BRANCH && git branch -d $TARGET_BRANCH &&\
+    task start.not: done

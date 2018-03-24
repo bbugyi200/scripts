@@ -1,0 +1,21 @@
+#!/bin/bash
+
+PS4='$LINENO: '
+set -x
+
+k=0
+
+alarm_times="$(khal list --day-format '' now | awk -F'-' '{ print $1; }')"
+N="$(echo "$alarm_times" | wc -l)"
+
+while [[ "$k" -lt "$N" ]]; do
+    k="$((k+1))"
+
+    new_time="$(echo $(echo "$alarm_times" | head -n $k | tail -n 1))"
+
+    if [[ "$(date --date=$new_time +%s)" <  "$(date +%s)" ]]; then
+        continue
+    fi
+
+    alarm-xmonad "$new_time"
+done

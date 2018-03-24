@@ -1,0 +1,8 @@
+#!/bin/bash
+
+ARGS="$@"
+if [[ -n "$TASK_SEND_ENABLED" ]]; then
+    tmux send-keys -t GTD:0.0 "clear && task $ARGS" "Enter"
+else
+    eval "task $ARGS"
+fi

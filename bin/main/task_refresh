@@ -1,0 +1,8 @@
+#!/bin/bash
+
+CMD="clear && task next +READY limit:page"
+if [[ -n "$TASK_SEND_ENABLED" ]] || [[ "$1" == "-T" ]]; then
+    tmux send-keys -t GTD:0.0 "$CMD" "Enter"
+else
+    eval "$CMD"
+fi

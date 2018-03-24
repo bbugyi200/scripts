@@ -6,14 +6,20 @@ if [[ "$1" == "-d" ]]; then
     shift
 fi
 
-REGEXP="$1"; shift
+if [[ -z "$1" ]]; then
+    echo "usage: wim <SCRIPT>"
+    exit 1
+fi
 
-SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name $REGEXP)"
+SCRIPT_NAME="$1"; shift
+
+SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name $SCRIPT_NAME)"
 
 if [[ -n "$SCRIPT_PATH" ]]; then
     vim "$SCRIPT_PATH"
 else
-    # LOCATION will end up containing a string of the form '+<N> <path>'
-    LOCATION="$(ag "^[A-z]*[ ]*$REGEXP[ =(]" ~/Dropbox/dotfiles | awk -F: '{ print "+"$2 " " $1 }')"
+    LOCATION="$(ag "^[A-z]*[ ]*$SCRIPT_NAME[ =(]" ~/Dropbox/dotfiles | awk -F: '{ print "+"$2 " " $1 }')"
+
+    # LOCATION is now a string of the form '+<N> <path>'
     eval "vim $LOCATION"
 fi

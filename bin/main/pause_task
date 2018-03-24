@@ -1,0 +1,28 @@
+#!/bin/bash
+
+FIFO=/tmp/counter-fifo
+ALARM_PID_FILE=/tmp/alarm.pid
+UUID="$(stop_task)"
+
+[[ -p $FIFO ]] || mkfifo $FIFO
+
+if [[ -f $ALARM_PID_FILE ]]; then
+    ALARM_PID="$(cat $ALARM_PID_FILE)"
+    kill -STOP "$ALARM_PID"
+fi
+
+sleep 1
+idle_time="$(xprintidle)"
+while [ $idle_time -ge 500 ]; do
+    sleep 1
+    seconds=$((idle_time/1000))
+    printf "( PAUSED FOR ${seconds}s )  |  \n" > $FIFO
+    idle_time="$(xprintidle)"
+done
+
+printf "\n" > $FIFO
+resume_task "$UUID"
+
+if [[ -n "$ALARM_PID" ]]; then
+    kill -CONT "$ALARM_PID"
+fi

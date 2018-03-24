@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+    echo "usage: tghi <ID> [REPO] [-L <label> [-L <label> [...]]]"
+    exit 1
+fi
+
+ID=$1; shift
+if [[ -z "$1" ]] || [[ "$1" == "-"* ]]; then
+    REPO=scripts
+else
+    REPO=$2; shift
+fi
+
+eval "ghi open \"$(task _get ${ID}.description)\" $@ -- bbugyi200/$REPO" && confirm "task $ID done && task_refresh"

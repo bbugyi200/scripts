@@ -9,10 +9,9 @@ def get_tag_time(*tags, range_opt='-d'):
     formatted_tags = ''
     for tag in tags:
         formatted_tags += ' -T ' + tag
-    tag_report = popen(fmt.format(opt=range_opt, tags=formatted_tags))
+    tag_report = popen(fmt.format(opt=range_opt, tags=formatted_tags)).readlines()
 
-    for line in tag_report:
-        last_line = line
+    last_line = tag_report[-1]
 
     tag_time_raw = last_line[last_line.find(':') + 1:].strip()
     tag_time = ' '.join(tag_time_raw.split()[:-1])
@@ -57,15 +56,15 @@ if __name__ == "__main__":
 
         pttrn = re.compile('([0-9][0-9]h )?([0-9][0-9]m )?[0-9][0-9]s')
         log_output = popen('watson log -d -G')
-        _ = log_output.readline()
-        current_log = log_output.readline()
+        log_lines = log_output.readlines()
+        current_log = log_lines[1]
         match = pttrn.search(current_log)
 
         currtime = style_time(match.group())
         daytime = get_tag_time(primary_tag)
         weektime = get_tag_time(primary_tag, range_opt=week_range)
 
-        fmt = '{project}   <icon=vline.xbm/>   {tag}   <icon=vline.xbm/>   ({currtime} / {daytime} / {weektime})'
+        fmt = '{project}   |   {tag}   |   ({currtime} / {daytime} / {weektime})'
         print(fmt.format(project=project,
                          tag=primary_tag.upper(),
                          currtime=currtime,
@@ -78,6 +77,4 @@ if __name__ == "__main__":
         dev_time = get_tag_time('Dev', range_opt=week_range)
         meta_time = get_tag_time('Meta', range_opt=week_range)
 
-        print(fmt.format(study_time,
-                         dev_time,
-                         meta_time))
+        print(fmt.format(study_time, dev_time, meta_time))

@@ -5,18 +5,23 @@ import subprocess as sp
 import re
 
 
-inactive_fmt = 'Study: {}   /   Dev: {}   /   Meta: {}'
-active_fmt = '{project}   |   {tag}   |   ({currtime} / {daytime} / {weektime})'
+inactive_fmt = 'Study:  [{} / {}]         Dev:  [{} / {}]         Meta:  [{} / {}]'
+active_fmt = '{tag}   |   {project}   |   ({currtime} / {daytime} / {weektime})       [{totaltime}]'
 
 
-def get_tag_time(tag, interval: 'day|week'):
+def _get_tag_time(tag, interval: 'day | week'):
+    now = dt.datetime.now().astimezone(dt.timezone.utc)
+
     if interval == 'week':
-        week_ago = dt.datetime.now() - dt.timedelta(days=7)
-        start = '{0}-{1:02d}-{2:02d}'.format(week_ago.year, week_ago.month, week_ago.day)
+        date = now - dt.timedelta(days=7)
     elif interval == 'day':
-        start = '6:00'
+        if now.hour < 10:
+            date = now - dt.timedelta(days=1)
+        else:
+            date = now
 
-    child = sp.Popen(['timew', 'summary', 'from', start, 'to', 'now', tag], stdout=sp.PIPE)
+    start = '{0}-{1:02d}-{2:02d}T10:00:00Z'.format(date.year, date.month, date.day)
+    child = sp.Popen(['timew', 'summary', 'from', start, 'to', 'tomorrow', tag], stdout=sp.PIPE)
     output = child.communicate()[0].decode()
 
     if output.startswith('No'):
@@ -28,7 +33,7 @@ def get_tag_time(tag, interval: 'day|week'):
     return match.strip()
 
 
-def style_time(time_str: 'HH:MM:SS'):
+def _style_time(time_str: 'HH:MM:SS | H:MM:SS'):
     col = time_str.find(':')
 
     hours = int(time_str[:col])
@@ -39,13 +44,28 @@ def style_time(time_str: 'HH:MM:SS'):
     return '{0:.1f}h'.format(styled)
 
 
+def styled_tag_time(t, i):
+    return _style_time(_get_tag_time(t, i))
+
+
+def add_times(*tag_times):
+    totaltime = 0
+    for tt in tag_times:
+        totaltime += float(tt[:-1])
+    return '{0:.1f}h'.format(float(totaltime))
+
+
 def parse_status(status):
     pttrn = 'Tracking (?:([A-Za-z\. ]*)|"([^"]*)"){2}\n[\s\S]*([0-9]?[0-9]:[0-9][0-9]:[0-9][0-9])'
     tags, project, raw_currtime = re.findall(pttrn, status)[0]
 
+    if len(project) > 65:
+        project = project[:65]
+        project = project[:project.rfind(' ')] + '...'
     project = project.replace('Project: ', '')
+    project = project.strip('[]')
 
-    currtime = style_time(raw_currtime)
+    currtime = _style_time(raw_currtime)
 
     all_tags = tags.split()
     if all_tags:
@@ -56,26 +76,32 @@ def parse_status(status):
     return project, primary_tag, currtime
 
 
-def transform(t, i):
-    return style_time(get_tag_time(t, i))
-
-
 if __name__ == "__main__":
     child = sp.Popen(['timew'], stdout=sp.PIPE)
     output = child.communicate()[0].decode()
 
+    study_week = styled_tag_time('Study', 'week')
+    dev_week = styled_tag_time('Dev', 'week')
+    meta_week = styled_tag_time('Meta', 'week')
+
     if child.returncode:
-        study_time = transform('Study', 'week')
-        dev_time = transform('Dev', 'week')
-        meta_time = transform('Meta', 'week')
-        print(inactive_fmt.format(study_time, dev_time, meta_time))
+        study_day = styled_tag_time('Study', 'day')
+        dev_day = styled_tag_time('Dev', 'day')
+        meta_day = styled_tag_time('Meta', 'day')
+
+        print(inactive_fmt.format(study_day, study_week,
+                                  dev_day, dev_week,
+                                  meta_day, meta_week))
     else:
         project, tag, currtime = parse_status(output)
-        daytime = transform(tag, 'day')
-        weektime = transform(tag, 'week')
+        daytime = styled_tag_time(tag, 'day')
+        weektime = styled_tag_time(tag, 'week')
+
+        totaltime = add_times(study_week, dev_week, meta_week)
 
         print(active_fmt.format(project=project,
                          tag=tag.upper(),
                          currtime=currtime,
                          daytime=daytime,
-                         weektime=weektime))
+                         weektime=weektime,
+                         totaltime=totaltime))

@@ -5,7 +5,7 @@ import subprocess
 
 subprocess.call(['task', 'start.not:', 'done'])
 
-ready_tasks_cmd = "task rc.verbose=nothing rc._forcecolor=no next +READY"
+ready_tasks_cmd = "task rc.defaultwidth=500 rc.verbose=nothing rc._forcecolor=no next +READY"
 ready_tasks = os.popen(ready_tasks_cmd)
 task = ready_tasks.readline()
 temp = ready_tasks.readline()
@@ -26,3 +26,4 @@ else:
 
 next_task_id = next_task.split()[0]
 subprocess.call(['task', 'start', next_task_id])
+subprocess.call(['task_refresh', '-T'])

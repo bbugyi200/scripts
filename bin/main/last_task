@@ -16,3 +16,5 @@ try:
 except subprocess.CalledProcessError as e:
     subprocess.call(['notify-send', 'Last Task', 'Failed to start last task.'])
     sys.exit(1)
+else:
+    subprocess.call(['task_refresh', '-T'])

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+CURRENT_TASK_UUID="$1"; shift
+
+if [[ -n "$CURRENT_TASK_UUID" ]]; then
+    task start $CURRENT_TASK_UUID
+fi

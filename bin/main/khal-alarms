@@ -9,7 +9,7 @@ get_next_time() { echo $(khal list --notstarted --day-format '' now | head -n 1 
 
 new_time="$(get_next_time $k)"
 while [[ "$new_time" != "No events" ]]; do
-    alarm-xmonad "$new_time"
+    alarm "$new_time"
 
     if [[ "$new_time" < "$(date +%s)" ]]; then
         break

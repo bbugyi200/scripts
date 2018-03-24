@@ -11,7 +11,7 @@ new_time="$(get_next_time $k)"
 while [[ "$new_time" != "No events" ]]; do
     alarm "$new_time"
 
-    if [[ "$new_time" < "$(date +%s)" ]]; then
+    if [[ "$?" -ne 0 ]]; then
         break
     fi
     new_time="$(get_next_time $k)"

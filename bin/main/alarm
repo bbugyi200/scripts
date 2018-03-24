@@ -46,34 +46,33 @@ fi
 
 
 # ---------- Another Alarm is Already Running ----------
-# I am not sure why '-ge 3' instead of '-ge 2' but it is correct
-# Maybe because pgrep counts itself?
-if [[ -f $PID_FILE ]] || [[ "$(pgrep $(basename $0) | wc -l)" -ge 3 ]]; then
-    if [[ "$resume" = true ]]; then
-        echo "No need to restart! An alarm is already running!" | tee >(logger -t "$(basename $0)")
-        exit 2
-    fi
+if [[ -f $PID_FILE ]]; then
+    if kill -0 "$(cat $PID_FILE)" &> /dev/null; then
+        if [[ "$resume" = true ]]; then
+            echo "No need to restart! An alarm is already running!" | tee >(logger -t "$(basename $0)")
+            exit 2
+        fi
 
-    echo "An alarm is already running! Stopping existing alarm!" | tee >(logger -t "$(basename $0)")
+        echo "An alarm is already running! Stopping existing alarm!" | tee >(logger -t "$(basename $0)")
 
-    if [[ -f $PID_FILE ]]; then
-        cat $PID_FILE | xargs kill
-    else
-        pgrep "$(basename $0)" | grep -v $$ | xargs kill
-    fi
+        if [[ -f $PID_FILE ]]; then
+            cat $PID_FILE | xargs kill
+        else
+            pgrep "$(basename $0)" | grep -v $$ | xargs kill
+        fi
 
-    rm $TIMESTAMP_FILE
-	printf "\n" > "$FIFO"
-    if pgrep dunst; then
-        sleep 0.5
-        xdotool key ctrl+space  # Shortcut to close dunst notification
+        rm $TIMESTAMP_FILE
+        printf "\n" > "$FIFO"
+        if pgrep dunst; then
+            sleep 0.5
+            xdotool key ctrl+space  # Shortcut to close dunst notification
+        fi
+        exit 0
     fi
-	exit 0
 fi
 
 
 echo $$ > $PID_FILE
-trap 'rm $PID_FILE' EXIT
 trap ':' SIGPIPE
 
 

@@ -1,1 +1,0 @@
-alias T='pytest -v tests'

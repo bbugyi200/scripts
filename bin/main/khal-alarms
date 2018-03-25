@@ -2,17 +2,22 @@
 
 if [[ "$1" == "-d" ]]; then
     PS4='$LINENO: '
-    set -x
+    set -x; shift
 fi
 
-get_next_time() { echo $(khal list --notstarted --day-format '' now | head -n 1 | awk -F'-' '{ print $1; }'); }
+echo $$ > /tmp/khal-alarms.pid
 
-new_time="$(get_next_time $k)"
-while [[ "$new_time" != "No events" ]]; do
-    alarm "$new_time"
+get_next_time() { 
+    echo $(khal list --notstarted --day-format '' now | head -n 1 |\
+        awk -F'-[0-9][0-9]:[0-9]| ' '{ $2=""; print $0; }')
+}
+
+args="$(get_next_time)"
+while [[ "$args" != "No events" ]]; do
+    alarm "${args%% *}" "${args#* }"
 
     if [[ "$?" -ne 0 ]]; then
         break
     fi
-    new_time="$(get_next_time $k)"
+    args="$(get_next_time)"
 done

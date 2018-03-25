@@ -83,7 +83,7 @@ else
     if [[ -z "$1" ]]; then
         alrm_time="$(echo | dmenu -p "Alarm:")"
     else
-        alrm_time=$1
+        alrm_time=$1; shift
     fi
 
     if [[ -z "$alrm_time" ]]; then
@@ -105,6 +105,13 @@ else
     echo $stop_time > $TIMESTAMP_FILE
 fi
 
+# ---------- Set Notification Message ----------
+if [[ -z "$1" ]]; then
+    NOTIFICATION="THE TIMER IS DONE!"
+else
+    NOTIFICATION="$1"; shift
+fi
+
 
 # ---------- Main Output ----------
 iclock="<icon=clock.xbm/>"
@@ -124,8 +131,6 @@ done > "$FIFO"
 
 
 # ---------- Timer Finished ----------
-notify-send -u critical -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "$(basename $0)" "THE TIMER IS DONE!"
-
+notify-send -u critical -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "$(basename $0)" "$NOTIFICATION"
 printf "\n" > "$FIFO"
-
 rm $TIMESTAMP_FILE

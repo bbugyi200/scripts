@@ -4,8 +4,7 @@ socket_name="$(tm-socket)"
 
 if [[ -n "$socket_name" ]]; then
     SESSION_NAME=$(tmux -L "$socket_name" display-message -p "#S")
-    tmux -L "$socket_name" switchc -n
-    tmux -L "$socket_name" kill-session -t "$SESSION_NAME"
+    tmux -L "$socket_name" confirm-before -p "Confirm 'kill-session'? (y/n)" " switch-client -n; kill-session -t $SESSION_NAME"
 else
     exit 1
 fi

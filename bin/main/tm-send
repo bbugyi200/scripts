@@ -80,4 +80,10 @@ case "$action" in
         esac
 esac
 
-tmux send-keys $PRE "$CMD" $POST "Enter"
+socket_name="$(tm-verify)"
+
+if [[ -n "$socket_name" ]]; then
+    tmux -L "$socket_name" send-keys $PRE "$CMD" $POST "Enter"
+else
+    exit 1
+fi

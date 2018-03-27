@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#############################################
+# Verifies that a terminal is open          #
+#                                           #
+# If so, the socket name is send to stdout. #
+# Otherwise, exit with nonzero status.      #
+#############################################
+
+pid="$(xprop -id `xdpyinfo | grep -Eo 'window 0x[^,]+' | cut -d" " -f2` | grep PID | awk -F ' = ' '{ print $2 }')"
+full_name="$(wmctrl -lxp | grep $pid | awk -F ' ' '{ print $4 }')"
+
+if [[ "$full_name" = *"URxvt" ]]; then
+    app_name="$(echo $full_name | sed 's/\..*//g')"
+
+    if [[ "$app_name" == "urxvt" ]]; then
+        socket_name="default"
+    else
+        socket_name="$app_name"
+    fi
+
+    echo "$socket_name"
+else
+    exit 1
+fi

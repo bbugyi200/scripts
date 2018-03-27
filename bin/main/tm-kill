@@ -1,9 +1,15 @@
 #!/bin/bash
 
-SESSION_NAME=$(tmux display-message -p "#S")
-tmux switchc -n
-if [[ -f ~/Dropbox/dotfiles/.config/tmuxinator/$SESSION_NAME.yml ]]; then
-    tmuxinator stop "$SESSION_NAME"
+socket_name="$(tm-verify)"
+
+if [[ -n "$socket_name" ]]; then
+    SESSION_NAME=$(tmux display-message -p "#S")
+    tmux switchc -n
+    if [[ -f ~/Dropbox/dotfiles/.config/tmuxinator/$SESSION_NAME.yml ]]; then
+        tmuxinator stop "$SESSION_NAME"
+    else
+        tmux confirm-before "kill-session -t ''"
+    fi
 else
-    tmux kill-session -t $SESSION_NAME
+    exit 1
 fi

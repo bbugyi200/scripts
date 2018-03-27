@@ -31,21 +31,18 @@ get_title() {
     echo $(khal list --notstarted --day-format '' --format '{title}' now | head -n "$N" | tail -n 1)
 }
 
-while [[ -z "$(get_start_time)" ]]; do
-    N="$((N + 1))"
-done
-
-starttime="$(get_start_time)"
-title="$(get_title)"
-
-while [[ "$args" != "No"* ]]; do
-    print_event
-    alarm "$starttime" "$title"
-
-    if [[ "$?" -ne 0 ]]; then
-        break
-    fi
+while true; do
+    while [[ -z "$(get_start_time)" ]]; do
+        N="$((N + 1))"
+    done
 
     starttime="$(get_start_time)"
     title="$(get_title)"
+
+    [[ "$title" != "No"* ]] || break
+
+    print_event
+    alarm "$starttime" "$title"
+
+    [[ "$?" -eq 0 ]] || break
 done

@@ -131,6 +131,6 @@ done > "$FIFO"
 
 
 # ---------- Timer Finished ----------
-notify-send -u critical -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "$(basename $0)" "$NOTIFICATION"
+notify-send -u critical -t 0 -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "Alarm" "$NOTIFICATION"
 printf "\n" > "$FIFO"
 rm $TIMESTAMP_FILE

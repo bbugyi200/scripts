@@ -1,5 +1,6 @@
 #!/bin/bash
 
-task start.not: modify start: wait:3h
+task start.any: modify start: wait:3h
 timew delete @1
 next_task
+

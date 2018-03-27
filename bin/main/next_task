@@ -3,7 +3,7 @@
 import os
 import subprocess
 
-subprocess.call(['task', 'start.not:', 'done'])
+subprocess.call(['task', 'start.any:', 'done'])
 
 ready_tasks_cmd = "task rc.defaultwidth=500 rc.verbose=nothing rc._forcecolor=no next +READY"
 ready_tasks = os.popen(ready_tasks_cmd)

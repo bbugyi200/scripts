@@ -5,7 +5,7 @@ import subprocess as sp
 import re
 
 
-inactive_fmt = 'Study:  [{} / {}]         Dev:  [{} / {}]         Meta:  [{} / {}]'
+inactive_fmt = 'Study:  ({} / {})        Dev:  ({} / {})        Meta:  ({} / {})             [{}]'
 active_fmt = '{tag}   |   {project}   |   ({currtime} / {daytime} / {weektime})       [{totaltime}]'
 
 
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     study_week = styled_tag_time('Study', 'week')
     dev_week = styled_tag_time('Dev', 'week')
     meta_week = styled_tag_time('Meta', 'week')
+    totaltime = add_times(study_week, dev_week, meta_week)
 
     if child.returncode:
         study_day = styled_tag_time('Study', 'day')
@@ -91,13 +92,12 @@ if __name__ == "__main__":
 
         print(inactive_fmt.format(study_day, study_week,
                                   dev_day, dev_week,
-                                  meta_day, meta_week))
+                                  meta_day, meta_week,
+                                  totaltime))
     else:
         project, tag, currtime = parse_status(output)
         daytime = styled_tag_time(tag, 'day')
         weektime = styled_tag_time(tag, 'week')
-
-        totaltime = add_times(study_week, dev_week, meta_week)
 
         print(active_fmt.format(project=project,
                          tag=tag.upper(),

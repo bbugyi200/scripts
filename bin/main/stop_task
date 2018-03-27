@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CURRENT_TASK_UUID=$(task +ACTIVE uuids)
-task start.not: stop &> /dev/null
+task start.any: stop &> /dev/null
 
 if [[ -n "$CURRENT_TASK_UUID" ]]; then
     printf "$CURRENT_TASK_UUID"

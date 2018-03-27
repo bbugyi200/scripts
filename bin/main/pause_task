@@ -16,7 +16,7 @@ idle_time="$(xprintidle)"
 while [ $idle_time -ge 500 ]; do
     sleep 1
     seconds=$((idle_time/1000))
-    printf "( PAUSED FOR ${seconds}s )  |  \n" > $FIFO
+    printf "( PAUSED ${seconds}s )  |  \n" > $FIFO
     idle_time="$(xprintidle)"
 done
 

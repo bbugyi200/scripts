@@ -9,7 +9,7 @@ ID=$1; shift
 if [[ -z "$1" ]] || [[ "$1" == "-"* ]]; then
     REPO=scripts
 else
-    REPO=$2; shift
+    REPO=$1; shift
 fi
 
 eval "ghi open \"$(task _get ${ID}.description)\" $@ -- bbugyi200/$REPO" && confirm "task $ID done && task_refresh"

@@ -1,5 +1,5 @@
 #!/bin/bash
 
-filename=$(echo | dmenu -p "Screenshot Filename?: ")
-scrot -s ~/Dropbox/notes/misc/refs/Receipts/$filename.png
+filename=$(rofi -p "Screenshot Filename?" -dmenu)
+scrot -s ~/Dropbox/notes/Receipts/$filename.png
 notify-send -u low "Saved Receipt as: $filename.png"

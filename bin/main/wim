@@ -16,10 +16,10 @@ SCRIPT_NAME="$1"; shift
 SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name $SCRIPT_NAME)"
 
 if [[ -n "$SCRIPT_PATH" ]]; then
-    vim "$SCRIPT_PATH"
+    vim -c "normal g;" "$SCRIPT_PATH"
 else
     LOCATION="$(ag "^[A-z]*[ ]*$SCRIPT_NAME[ =(]" ~/Dropbox/dotfiles | awk -F: '{ print "+"$2 " " $1 }')"
 
-    # LOCATION is now a string of the form '+<N> <path>'
+    # LOCATION is now a string of the form "+<N> <path>"
     eval "vim $LOCATION"
 fi

@@ -1,22 +1,51 @@
 #!/bin/bash
 
+PID_FILE=/tmp/khal-alarms.pid
+FIFO=/tmp/calevent-fifo
+
+[[ -p $FIFO ]] || mkfifo $FIFO
+
 if [[ "$1" == "-d" ]]; then
     PS4='$LINENO: '
     set -x; shift
 fi
 
-echo $$ > /tmp/khal-alarms.pid
-
-get_next_time() { 
-    echo $(khal list --notstarted --day-format '' --format '{start-time} {title}' now | head -n 1)
+print_event() {
+    printf "\"$title\" at $starttime\n" > "$FIFO"
 }
 
-args="$(get_next_time)"
+N=1
+if [[ -f $PID_FILE ]]; then
+    if kill -0 "$(cat $PID_FILE)" &> /dev/null; then
+        cat $PID_FILE | xargs kill
+    fi
+fi
+
+echo $$ > $PID_FILE
+
+get_start_time() { 
+    echo $(khal list --notstarted --day-format '' --format '{start-time}' now | head -n "$N" | tail -n 1)
+}
+
+get_title() { 
+    echo $(khal list --notstarted --day-format '' --format '{title}' now | head -n "$N" | tail -n 1)
+}
+
+while [[ -z "$(get_start_time)" ]]; do
+    N="$((N + 1))"
+done
+
+starttime="$(get_start_time)"
+title="$(get_title)"
+
 while [[ "$args" != "No"* ]]; do
-    alarm "${args%% *}" "${args#* }"
+    print_event
+    alarm "$starttime" "$title"
 
     if [[ "$?" -ne 0 ]]; then
         break
     fi
-    args="$(get_next_time)"
+
+    starttime="$(get_start_time)"
+    title="$(get_title)"
 done

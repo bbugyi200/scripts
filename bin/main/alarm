@@ -55,11 +55,7 @@ if [[ -f $PID_FILE ]]; then
 
         echo "An alarm is already running! Stopping existing alarm!" | tee >(logger -t "$(basename $0)")
 
-        if [[ -f $PID_FILE ]]; then
-            cat $PID_FILE | xargs kill
-        else
-            pgrep "$(basename $0)" | grep -v $$ | xargs kill
-        fi
+        cat $PID_FILE | xargs kill
 
         rm $TIMESTAMP_FILE
         printf "\n" > "$FIFO"

@@ -3,7 +3,7 @@
 #############################################
 # Verifies that a terminal is open          #
 #                                           #
-# If so, the socket name is send to stdout. #
+# If so, the socket name is sent to stdout. #
 # Otherwise, exit with nonzero status.      #
 #############################################
 
@@ -19,7 +19,7 @@ if [[ "$full_name" = *"URxvt" ]]; then
         socket_name="$app_name"
     fi
 
-    echo "$socket_name"
+    printf "$socket_name\n"
 else
     exit 1
 fi

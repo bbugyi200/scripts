@@ -19,14 +19,15 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-pane_current_command=$(tmux -L "$socket_name" display-message -p '#{pane_current_command}')
-pane_title=$(tmux -L "$socket_name" display-message -p '#{pane_title}')
-active_program="$pane_current_command $pane_title"
-
 PRE=
 POST=
 
 if [[ -n "$socket_name" ]]; then
+
+    pane_current_command=$(tmux -L "$socket_name" display-message -p '#{pane_current_command}')
+    pane_title=$(tmux -L "$socket_name" display-message -p '#{pane_title}')
+    active_program="$pane_current_command $pane_title"
+
     case "$action" in
         'clear' )
             case $active_program in

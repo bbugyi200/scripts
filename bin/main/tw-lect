@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+
+import argparse
+import subprocess
+
+description = "Logs a lecture into TimeWarrior"
+
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('start', help='Start Time')
+parser.add_argument('end', help='End Time')
+parser.add_argument('course', help='Course Name')
+args = parser.parse_args()
+
+subprocess.call(['timew', 'track', args.start, '-', args.end, 'Study', 'Study.{}'.format(args.course), '[Project: Lecture]'])

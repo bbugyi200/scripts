@@ -6,7 +6,7 @@ import re
 
 
 inactive_fmt = 'Study:  ({} / {})        Dev:  ({} / {})        Meta:  ({} / {})             [{}]'
-active_fmt = '{tag}   |   {project}   |   ({currtime} / {daytime} / {weektime})       [{totaltime}]'
+active_fmt = '{tag}          "{project}"          ({currtime} / {daytime} / {weektime})               [{totaltime}]'
 
 
 def _get_tag_time(tag, interval: 'day | week'):

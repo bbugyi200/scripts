@@ -1,7 +1,12 @@
 #!/bin/bash
 
-if ping -c 1 -W 1 www.google.com &> /dev/null; then
+PID=$$
+
+if ping -c 1 -w 1 www.google.com &> /dev/null; then
     echo "You are already connected to the internet."
-else
-    systemctl restart netctl-auto@wlo1.service
-fi
+    kill $PID
+fi & 
+
+sleep 3
+echo $! | xargs kill
+systemctl restart netctl-auto@wlo1.service

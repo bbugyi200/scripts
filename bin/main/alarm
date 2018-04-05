@@ -20,7 +20,7 @@ time_left() {
 
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "d,r" -l "debug,resume" -- "$@")
+eval set -- $(getopt -o "d,r,s" -l "debug,resume,stop" -- "$@")
 
 while [[ -n "$1" ]]; do
 	case $1 in
@@ -29,6 +29,8 @@ while [[ -n "$1" ]]; do
             set -x;;
         -r|--resume )
             resume=true;;
+        -s|--stop )
+            stop=true;;
 		-- )
 			shift
 			break;;
@@ -39,6 +41,10 @@ done
 
 if [[ "$resume" = true && ! -f $TIMESTAMP_FILE ]]; then
     exit 1
+fi
+
+if [[ "$stop" = true ]]; then
+    exec 1> /dev/null
 fi
 
 
@@ -67,6 +73,9 @@ if [[ -f $PID_FILE ]]; then
     fi
 fi
 
+if [[ "$stop" = true ]]; then
+    exit 1
+fi
 
 echo $$ > $PID_FILE
 trap ':' SIGPIPE

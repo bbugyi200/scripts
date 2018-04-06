@@ -1,0 +1,3 @@
+#!/bin/bash
+
+urxvt -name big-floater -e zsh -i -c "$* | less"

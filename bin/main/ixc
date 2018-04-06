@@ -1,0 +1,7 @@
+#!/bin/bash
+
+TEMP=/tmp/ixc.code
+cp /dev/null $TEMP
+
+vim $TEMP
+cat $TEMP | ix | xclip -sel clipboard

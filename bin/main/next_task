@@ -26,4 +26,4 @@ else:
 
 next_task_id = next_task.split()[0]
 subprocess.call(['task', 'start', next_task_id])
-subprocess.call(['task_refresh', '-T'])
+subprocess.call(['task_refresh'])

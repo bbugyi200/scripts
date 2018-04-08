@@ -3,10 +3,7 @@
 TASK="tc"
 TIME="twc"
 KHAL="kc"
-if [[ -n "$TASK_SEND_ENABLED" ]] || [[ "$1" == "-T" ]]; then
-    tmux -L GTD send-keys -t GTD:0.0 "$TASK" "Enter"
-    tmux -L GTD send-keys -t GTD:1.0 "$TIME" "Enter"
-    tmux -L GTD send-keys -t GTD:2.0 "$KHAL" "Enter"
-else
-    eval "$CMD"
-fi
+
+tmux -L GTD send-keys -t GTD:0.0 "$TASK" "Enter"
+tmux -L GTD send-keys -t GTD:1.0 "$TIME" "Enter"
+tmux -L GTD send-keys -t GTD:2.0 "$KHAL" "Enter"

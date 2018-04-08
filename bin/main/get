@@ -17,6 +17,6 @@ else
         tmux send-keys "makepkg -si"
     else
         echo "Package not found in AUR!"
-        return 1
+        exit 1
     fi
 fi

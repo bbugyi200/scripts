@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+    git checkout "$@"
+else
+    git checkout @{-1}  # Last Branch (aka 'git checkout -')
+fi

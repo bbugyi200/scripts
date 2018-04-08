@@ -16,7 +16,7 @@ if [[ "$1" == "-d" ]]; then
 fi
 
 if [[ -z "$1" ]]; then
-    echo "usage: wim <SCRIPT>"
+    echo "usage: wim <command>"
     exit 1
 fi
 

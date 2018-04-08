@@ -1,0 +1,5 @@
+#!/bin/bash
+# Trace through Python program execution (python near-equivalent to 'set -x' in bash)
+
+target=$(which $1); [[ $target == *"not found" ]] && target=$1; shift
+python -m trace --ignore-dir $(python -c 'import os, sys; print(os.pathsep.join(sys.path[1:]))') -t $target "$@"

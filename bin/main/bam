@@ -5,11 +5,11 @@ import argparse
 
 description = "Opens up a temporary terminal to run a single command."
 pipe_help = "send stdout of the main command to stdin of this command"
-args_help = 'main command to run'
+cmd_help = 'main command to run'
 
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument('-P', dest='pipe_cmd', help=pipe_help)
-parser.add_argument('args', nargs=argparse.REMAINDER, help=args_help)
+parser.add_argument('cmd', nargs=argparse.REMAINDER, help=cmd_help)
 args = parser.parse_args()
 
 if args.pipe_cmd is None:
@@ -18,4 +18,4 @@ else:
     pipe = ' | ' + args.pipe_cmd
 
 cmdfmt = 'urxvt -name big-floater -e zsh -i -c "{}{}"'
-subprocess.call(cmdfmt.format(' '.join(args.args), pipe), shell=True)
+subprocess.call(cmdfmt.format(' '.join(args.cmd), pipe), shell=True)

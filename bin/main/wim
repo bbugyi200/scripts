@@ -1,5 +1,14 @@
 #!/bin/bash
 
+############################################################################
+#  usage: `wim <command>`                                                  # 
+#                                                                          #
+# If <command> is a script, finds script's location and opens it in vim.   #
+# Otherwise, assumes <command> is an alias or function definition and      #
+# searches dotfiles for it. Once found it opens that dotfile in vim and    #
+# jumps to the line number of the correpsonding alias/function definition. #
+############################################################################       
+
 if [[ "$1" == "-d" ]]; then
     PS4='$LINENO: '
     set -x
@@ -11,14 +20,13 @@ if [[ -z "$1" ]]; then
     exit 1
 fi
 
-SCRIPT_NAME="$1"; shift
-
-SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name $SCRIPT_NAME)"
+CMD="$1"; shift
+SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name $CMD)"
 
 if [[ -n "$SCRIPT_PATH" ]]; then
-    vim -c "normal g;" "$SCRIPT_PATH"
+    vim -c "silent! normal g;" "$SCRIPT_PATH"
 else
-    LOCATION="$(ag "^[A-z]*[ ]*$SCRIPT_NAME[ =(]" ~/Dropbox/dotfiles | awk -F: '{ print "+"$2 " " $1 }')"
+    LOCATION="$(ag "^[A-z]*[ ]*$CMD[ =(]" ~/Dropbox/dotfiles | awk -F: '{ print "+"$2 " " $1 }')"
 
     # LOCATION is now a string of the form "+<N> <path>"
     eval "vim $LOCATION"

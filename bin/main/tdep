@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ -n "$2" ]]; then
+    task "$1" mod depends:"$2"
+else
+    task "$1" mod depends:+"$(task _get $(task +LATEST uuids).id)"
+fi

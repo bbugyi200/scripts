@@ -1,0 +1,16 @@
+#!/bin/bash
+
+####################################################################
+#  usage: `mim <GLOBAL_MARK>`                                      #
+#                                                                  #
+# Opens vim and goes to <GLOBAL_MARK>.                             #
+####################################################################
+
+if [[ -z "$1" ]]; then
+    echo "usage: mim <mark>"
+    return 1
+fi
+
+GLOBAL_MARK=${1^^}; shift
+
+vim -c "normal \`$GLOBAL_MARK" -c "bdelete 1" -c "silent! normal g;"

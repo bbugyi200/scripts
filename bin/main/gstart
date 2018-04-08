@@ -8,6 +8,6 @@ fi
 BRANCH="$1"; shift
 ISSUE_NUMBER="${BRANCH%%-*}"
 
-task project:Dev.$(git remote show origin | grep bbugyi200 | head -n 1 | awk -F: '{ print $3; }' | sed 's/.*\///g' | sed 's/\..*//g')  /\#"$ISSUE_NUMBER":/ status:pending start && task_refresh -T
+task rc.context:none project:Dev.$(git remote show origin | grep bbugyi200 | head -n 1 | awk -F: '{ print $3; }' | sed 's/.*\///g' | sed 's/\..*//g')  /\#"$ISSUE_NUMBER":/ status:pending start && task_refresh -T
 
 git checkout -b $BRANCH && git push --set-upstream origin $BRANCH

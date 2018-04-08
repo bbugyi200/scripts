@@ -58,6 +58,7 @@ while true; do
     [[ "$title" != "No"* ]] || break
 
     print_event
+
     alarm "$starttime" "$title"
 
     [[ "$?" -eq 0 ]] || break

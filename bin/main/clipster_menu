@@ -1,40 +1,49 @@
 #!/usr/bin/env python
 
+import argparse
 import json
 import subprocess as sp
-import re
 
 history_file = '/home/bryan/.local/share/clipster/history'
 MAX_LINE = 60
 
+description = "Takes the history file that clipster uses to store the clipboard history\
+               and sends it to rofi. The user's choice is then loaded to the clipboard."
 
-def truncate(clip):
+parser = argparse.ArgumentParser(description=description)
+parser.parse_args()
+
+
+def transform(clip):
     lines = clip.count('\n')
     if lines > 0:
-        if len(clip[:clip.find('\n')]) > MAX_LINE:
-            clip = '{}... (lines {})'.format(clip[:MAX_LINE], lines)
-        else:
-            clip = re.sub('\n[\s\S]*', ' ({} lines)'.format(lines), clip, count=1)
+        first = clip[:clip.find('\n')]
+        if len(first) > MAX_LINE:
+            first = '{}...'.format(clip[:MAX_LINE])
+
+        clip = '{} ({} lines)'.format(first, lines)
     else:
         if len(clip) > MAX_LINE:
             clip = '{}...'.format(clip[:MAX_LINE])
 
+    clip = clip.replace('\\', '\\\\')
     return clip
 
 
 raw_clipboard = json.load(open(history_file))['CLIPBOARD']
 
+# gets rid of duplicates
 clipboard = []
 for clip in raw_clipboard:
     if clip not in clipboard:
         clipboard.append(clip)
-
 clipboard.reverse()
-transformed = list(map(truncate, clipboard))
+transformed = list(map(transform, clipboard))
 
 ps = sp.Popen(['printf', '{}'.format('\n'.join(transformed))], stdout=sp.PIPE)
-out = sp.check_output(['rofi', '-p', 'clip', '-dmenu'], stdin=ps.stdout).decode('utf-8')[:-1]
+out = sp.check_output(['rofi', '-m', '0', '-p', 'clip', '-dmenu'], stdin=ps.stdout)
+choice = out.decode('utf-8').replace('\\', '\\\\')[:-1]  # [:-1] gets rid of newline that rofi adds
+new_clip = clipboard[transformed.index(choice)].encode('utf-8')
 
-new_clip = clipboard[transformed.index(out)].encode('utf-8')
 ps = sp.Popen(['xclip', '-sel', 'clipboard'], stdin=sp.PIPE)
 ps.communicate(input=new_clip)

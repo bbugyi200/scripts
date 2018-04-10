@@ -30,13 +30,7 @@ def transform(clip):
     return clip
 
 
-raw_clipboard = json.load(open(history_file))['CLIPBOARD']
-
-# gets rid of duplicates
-clipboard = []
-for clip in raw_clipboard:
-    if clip not in clipboard:
-        clipboard.append(clip)
+clipboard = json.load(open(history_file))['CLIPBOARD']
 clipboard.reverse()
 transformed = list(map(transform, clipboard))
 

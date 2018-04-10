@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+import time
+import shutil
+import subprocess as sp
+
+clipster_binds = """
+"xdotool key --clearmodifiers Up"
+   Control + p + Release
+
+"xdotool key --clearmodifiers Down"
+   Control + n + Release
+"""
+
+shutil.copy('/home/bryan/.xbindkeysrc', '/tmp/clipster.xbindkeysrc')
+
+with open('/tmp/clipster.xbindkeysrc', 'a') as F:
+    F.write(clipster_binds)
+
+sp.call(['xbindkeys', '-f', '/tmp/clipster.xbindkeysrc'])
+sp.call(['clipster', '-s'])
+
+# sleep until clipster's selection widget closes
+while True:
+    time.sleep(0.5)
+    output = sp.check_output(['wmctrl', '-lx']).decode('utf-8')
+    if 'clipster.Clipster' not in output:
+        break
+
+# reset bindings
+sp.call(['killall', 'xbindkeys'])
+sp.call(['xbindkeys'])

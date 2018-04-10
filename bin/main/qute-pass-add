@@ -30,6 +30,6 @@ username = subprocess.check_output(command.format(options=options), shell=True).
 url = url + '/' + username
 
 if username in options:
-    subprocess.call(['termite', '-r', 'qute-editor', '--class', 'qute-editor', '-e', 'pass edit {}'.format(url)])
+    subprocess.call(['urxvt', '-name', 'qute-editor', '-e', 'zsh', '-c', 'pass edit {}'.format(url)])
 else:
-    subprocess.call(['termite', '-r', 'qute-editor', '--class', 'qute-editor', '-e', 'pass insert {}'.format(url)])
+    subprocess.call(['urxvt', '-name', 'qute-editor', '-e', 'zsh', '-c', 'pass insert {}'.format(url)])

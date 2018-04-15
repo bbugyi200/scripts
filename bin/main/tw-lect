@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
+""" Logs a lecture into TimeWarrior """
+
 import argparse
 import subprocess
 
-description = "Logs a lecture into TimeWarrior"
-
-parser = argparse.ArgumentParser(description=description)
+parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('start', help='Start Time')
 parser.add_argument('end', help='End Time')
 parser.add_argument('course', help='Course Name')

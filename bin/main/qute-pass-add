@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+""" Adds a password to 'pass' storage. """
+
 import argparse
 import os
 import getpass
@@ -8,9 +10,7 @@ import re
 
 os.environ['EDITOR'] = '/usr/bin/vim'
 
-description = "Adds a password to 'pass' storage."
-
-parser = argparse.ArgumentParser(description=description)
+parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('raw_url', help="The URL of the website (before being cleaned).")
 
 args = parser.parse_args()

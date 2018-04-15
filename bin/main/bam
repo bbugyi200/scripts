@@ -2,7 +2,7 @@
 
 """ Opens up a temporary terminal to run a single command. """
 
-import subprocess
+import subprocess as sp
 import argparse
 
 pipe_cmd_help = "send stdout of the main command to stdin of this command"
@@ -19,4 +19,4 @@ else:
     pipe = ' | ' + args.pipe_cmd
 
 cmd_fmt = 'urxvt -name big-floater -e zsh -i -c "{}{}"'
-subprocess.call(cmd_fmt.format(' '.join(args.cmd), pipe), shell=True)
+sp.call(cmd_fmt.format(' '.join(args.cmd), pipe), shell=True)

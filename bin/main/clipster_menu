@@ -4,7 +4,7 @@ import argparse
 import json
 import subprocess as sp
 
-history_file = '/home/bryan/.local/share/clipster/history'
+history_file = '/home/bryan/Dropbox/logs/clipster.history'
 MAX_LINE = 60
 
 description = "Takes the history file that clipster uses to store the clipboard history\
@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description=description)
 parser.parse_args()
 
 
-def transform(clip):
+def shorten(clip):
     lines = clip.count('\n')
     if lines > 0:
         first = clip[:clip.find('\n')]
@@ -30,14 +30,14 @@ def transform(clip):
     return clip
 
 
-clipboard = json.load(open(history_file))['CLIPBOARD']
-clipboard.reverse()
-transformed = list(map(transform, clipboard))
+clips = json.load(open(history_file))['CLIPBOARD']
+clips.reverse()
+short_clips = list(map(shorten, clips))
 
-ps = sp.Popen(['printf', '{}'.format('\n'.join(transformed))], stdout=sp.PIPE)
+ps = sp.Popen(['printf', '{}'.format('\n'.join(short_clips))], stdout=sp.PIPE)
 out = sp.check_output(['rofi', '-m', '0', '-p', 'clip', '-dmenu'], stdin=ps.stdout)
 choice = out.decode('utf-8').replace('\\', '\\\\')[:-1]  # [:-1] gets rid of newline that rofi adds
-new_clip = clipboard[transformed.index(choice)].encode('utf-8')
+new_clip = clips[short_clips.index(choice)].encode('utf-8')
 
 ps = sp.Popen(['xclip', '-sel', 'clipboard'], stdin=sp.PIPE)
 ps.communicate(input=new_clip)

@@ -8,7 +8,7 @@
 
 if [[ -z "$1" ]]; then
     echo "usage: mim <mark>"
-    return 1
+    exit 1
 fi
 
 GLOBAL_MARK=${1^^}; shift

@@ -12,4 +12,4 @@ else
     REPO=$1; shift
 fi
 
-eval "ghi open \"$(task _get ${ID}.description)\" $* -- bbugyi200/$REPO" && confirm "task $ID done"
+ghi open "$(task _get ${ID}.description)" "$@" -- bbugyi200/$REPO && confirm "task $ID done"

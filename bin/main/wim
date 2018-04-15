@@ -26,7 +26,7 @@ SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name $CMD)"
 if [[ -n "$SCRIPT_PATH" ]]; then
     vim -c "silent! normal g;" "$SCRIPT_PATH"
 else
-    LOCATION="$(ag "^[A-z]*[ ]*$CMD[ =(]" ~/Dropbox/dotfiles | awk -F: '{ print "+"$2 " " $1 }')"
+    LOCATION="$(ag "^[A-z]*[ ]*$CMD[ =(]" ~/Dropbox/dotfiles | awk -F: '{ print "+" $2 " " $1 }')"
 
     # LOCATION is now a string of the form "+<N> <path>"
     eval "vim $LOCATION"

@@ -12,4 +12,4 @@ else
 fi
 
 git pull --rebase && git merge --ff-only $TARGET_BRANCH && git push --delete origin $TARGET_BRANCH && git branch -d $TARGET_BRANCH &&\
-    task rc.context:none start.any: done && task_refresh -T
+    task rc.context:none start.any: done && task_refresh

@@ -10,14 +10,25 @@ switch_help = "Switch to primary GTD window when done refreshing windows."
 mode_opts = ['full', 'main', 'context']
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('-S', '--switch', dest='switch', action='store_true', help=switch_help)
 parser.add_argument('-M', '--mode', dest='mode', choices=mode_opts, default='main', help=mode_help)
+parser.add_argument('-S', '--switch', dest='switch', action='store_true', help=switch_help)
 args = parser.parse_args()
 
 
-def send_keys(pane, keys):
+def tmux_cmd(cmd, window, cmd_args=None):
+    """ Run Pre-formatted 'tmux <cmd>' Command """
+    subprocess_command = ['tmux', '-L', 'GTD', cmd, '-t', 'GTD:{}.0'.format(window)]
+    if cmd_args is not None:
+        if isinstance(cmd_args, str):
+            cmd_args = (cmd_args,)
+        for arg in cmd_args:
+            subprocess_command.append(arg)
+    sp.call(subprocess_command)
+
+
+def send_keys(window, keys):
     """ Run Pre-formatted 'tmux send-keys' Command """
-    sp.call(['tmux', '-L', 'GTD', 'send-keys', '-t', 'GTD:{}.0'.format(pane), keys, 'Enter'])
+    tmux_cmd('send-keys', window, (keys, 'Enter'))
 
 
 if args.mode in ['full', 'context']:
@@ -28,14 +39,12 @@ if args.mode in ['full', 'context']:
         temp = out.split()[1]
         current_context = temp.strip("'").upper()
 
-    sp.call(['tmux', '-L', 'GTD', 'rename-window',
-             '-t', 'GTD:0.0', current_context])
-
+    tmux_cmd('rename-window', 0, current_context)
     send_keys(3, ':e')
 
 if args.mode in ['full', 'main']:
-    for pane, keys in [(0, 'tc'), (1, 'twc'), (2, 'kc')]:
-        send_keys(pane, keys)
+    for window, keys in [(0, 'tc'), (1, 'twc'), (2, 'kc')]:
+        send_keys(window, keys)
 
 if args.switch:
-    sp.call(['tmux', '-L', 'GTD', 'select-window', '-t', 'GTD:0.0'])
+    tmux_cmd('select-window', 0)

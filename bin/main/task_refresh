@@ -9,10 +9,13 @@ mode_help = "Determines what information is refreshed. (Defaults to 'main')."
 switch_help = "Switch to primary GTD window when done refreshing windows."
 mode_opts = ['full', 'main', 'context']
 
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('-M', '--mode', dest='mode', choices=mode_opts, default='main', help=mode_help)
-parser.add_argument('-S', '--switch', dest='switch', action='store_true', help=switch_help)
-args = parser.parse_args()
+
+class Win:
+    """ Tmux Window Numbers """
+    MAIN = 0
+    TIMEW = 1
+    KHAL = 2
+    CONFIG = 3
 
 
 def tmux_cmd(cmd, window, cmd_args=None):
@@ -31,20 +34,26 @@ def send_keys(window, keys):
     tmux_cmd('send-keys', window, (keys, 'Enter'))
 
 
-if args.mode in ['full', 'context']:
-    out = sp.check_output(['task', 'context', 'show']).decode('utf-8')
-    if out.startswith('No'):
-        current_context = 'NONE'
-    else:
-        temp = out.split()[1]
-        current_context = temp.strip("'").upper()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-M', '--mode', dest='mode', choices=mode_opts, default='main', help=mode_help)
+    parser.add_argument('-S', '--switch', dest='switch', action='store_true', help=switch_help)
+    args = parser.parse_args()
 
-    tmux_cmd('rename-window', 0, current_context)
-    send_keys(3, ':e')
+    if args.mode in ['full', 'context']:
+        out = sp.check_output(['task', 'context', 'show']).decode('utf-8')
+        if out.startswith('No'):
+            current_context = 'NONE'
+        else:
+            temp = out.split()[1]
+            current_context = temp.strip("'").upper()
 
-if args.mode in ['full', 'main']:
-    for window, keys in [(0, 'tc'), (1, 'twc'), (2, 'kc')]:
-        send_keys(window, keys)
+        tmux_cmd('rename-window', Win.MAIN, current_context)
+        send_keys(Win.CONFIG, ':e')
 
-if args.switch:
-    tmux_cmd('select-window', 0)
+    if args.mode in ['full', 'main']:
+        for window, keys in [(Win.MAIN, 'tc'), (Win.TIMEW, 'twc'), (Win.KHAL, 'kc')]:
+            send_keys(window, keys)
+
+    if args.switch:
+        tmux_cmd('select-window', Win.MAIN)

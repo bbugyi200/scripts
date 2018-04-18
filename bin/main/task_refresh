@@ -4,14 +4,14 @@
 
 import argparse
 import subprocess as sp
-import sys
 
-full_help = "perform a full refresh"
-context_help = "refresh context information only"
+mode_help = "Determines what information is refreshed. (Defaults to 'main')."
+switch_help = "Switch to primary GTD window when done refreshing windows."
+mode_opts = ['full', 'main', 'context']
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('-F', '--full', dest='full', action='store_true', help=full_help)
-parser.add_argument('-C', '--context', dest='context', action='store_true', help=context_help)
+parser.add_argument('-S', '--switch', dest='switch', action='store_true', help=switch_help)
+parser.add_argument('-M', '--mode', dest='mode', choices=mode_opts, default='main', help=mode_help)
 args = parser.parse_args()
 
 
@@ -20,7 +20,7 @@ def send_keys(pane, keys):
     sp.call(['tmux', '-L', 'GTD', 'send-keys', '-t', 'GTD:{}.0'.format(pane), keys, 'Enter'])
 
 
-if args.full or args.context:
+if args.mode in ['full', 'context']:
     out = sp.check_output(['task', 'context', 'show']).decode('utf-8')
     if out.startswith('No'):
         current_context = 'NONE'
@@ -33,8 +33,9 @@ if args.full or args.context:
 
     send_keys(3, ':e')
 
-if args.context:
-    sys.exit(0)
+if args.mode in ['full', 'main']:
+    for pane, keys in [(0, 'tc'), (1, 'twc'), (2, 'kc')]:
+        send_keys(pane, keys)
 
-for pane, keys in [(0, 'tc'), (1, 'twc'), (2, 'kc')]:
-    send_keys(pane, keys)
+if args.switch:
+    sp.call(['tmux', '-L', 'GTD', 'select-window', '-t', 'GTD:0.0'])

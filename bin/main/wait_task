@@ -2,4 +2,4 @@
 
 task start.any: modify start: wait:"$(rofi -p 'How long to wait?' -dmenu)"
 timew delete @1
-next_task
+task_refresh

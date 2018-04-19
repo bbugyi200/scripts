@@ -15,14 +15,6 @@ SECONDS_IN_HOUR = 3600
 delay_help = "Delay starting the script for DELAY seconds. Defaults to 0."
 timeout_help = "Time (in hours) to attempt to complete download before timing out. Defaults to 1."
 
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('magnet', help='The torrent magnet file.')
-parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
-parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
-args = parser.parse_args()
-
-time.sleep(args.delay)
-
 DEVNULL = open(os.devnull, 'w')
 # DEVNULL = None
 
@@ -32,49 +24,58 @@ def textme(msg):
     sp.call(['textme', msg], stdout=DEVNULL)
 
 
-try:
-    sp.check_call(['PIA', 'start', 'nyc'], stdout=DEVNULL)
-    sp.check_call(['transmission-daemon'], stdout=DEVNULL)
-except sp.CalledProcessError as e:
-    textme('Failed to start the VPN and/or the transmission daemon! :(')
-    sys.exit(1)
-else:
-    i = 0
-    while True:
-        time.sleep(1)
-        try:
-            sp.check_call(['transmission-remote', '-a', args.magnet], stdout=DEVNULL)
-        except sp.CalledProcessError as e:
-            i += 1
-            if i <= 10:
-                continue
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('magnet', help='The torrent magnet file.')
+    parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
+    parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
+    args = parser.parse_args()
+
+    time.sleep(args.delay)
+
+    try:
+        sp.check_call(['PIA', 'start', 'nyc'], stdout=DEVNULL)
+        sp.check_call(['transmission-daemon'], stdout=DEVNULL)
+    except sp.CalledProcessError as e:
+        textme('Failed to start the VPN and/or the transmission daemon! :(')
+        sys.exit(1)
+    else:
+        i = 0
+        while True:
+            time.sleep(1)
+            try:
+                sp.check_call(['transmission-remote', '-a', args.magnet], stdout=DEVNULL)
+            except sp.CalledProcessError as e:
+                i += 1
+                if i <= 10:
+                    continue
+                else:
+                    textme('Failed to start torrent! :(')
+                    raise
             else:
-                textme('Failed to start torrent! :(')
-                raise
-        else:
-            break
+                break
 
-    i = 0
-    while True:
-        SLEEP_TIME = 5
+        i = 0
+        while True:
+            SLEEP_TIME = 5
 
-        i += 1
-        if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
-            msg = "Torrent is still attempting to download after {0:.1f} hour(s) elapsed time.\
-                   Shutting down early! :(".format(args.timeout)
-            textme(msg)
-            sys.exit(1)
+            i += 1
+            if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
+                msg = "Torrent is still attempting to download after {0:.1f} hour(s) elapsed time.\
+                       Shutting down early! :(".format(args.timeout)
+                textme(msg)
+                sys.exit(1)
 
-        time.sleep(SLEEP_TIME)
+            time.sleep(SLEEP_TIME)
 
-        p = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
-        output = p.communicate()[0].decode('utf-8')
-        if 'finished' in output.lower():
-            break
+            p = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
+            output = p.communicate()[0].decode('utf-8')
+            if 'finished' in output.lower():
+                break
 
-    textme('Your movie has finished downloading! :)')
+        textme('Your movie has finished downloading! :)')
 
-finally:
-    sp.call(['transmission-remote', '-t1', '-r'], stdout=DEVNULL)
-    sp.call(['killall', '-9', 'transmission-daemon'], stdout=DEVNULL)
-    sp.call(['PIA', 'stop'], stdout=DEVNULL)
+    finally:
+        sp.call(['transmission-remote', '-t1', '-r'], stdout=DEVNULL)
+        sp.call(['killall', '-9', 'transmission-daemon'], stdout=DEVNULL)
+        sp.call(['PIA', 'stop'], stdout=DEVNULL)

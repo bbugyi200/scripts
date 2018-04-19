@@ -1,5 +1,22 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-task start.any: modify start: wait:"$(rofi -p 'How long to wait?' -dmenu)"
-timew delete @1
-task_refresh
+""" Waits Currently Active Task """
+
+import argparse
+import subprocess as sp
+
+next_help = "start next most urgent task"
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-n', '--next', dest='start_next', action='store_true', help=next_help)
+    args = parser.parse_args()
+
+    out = sp.check_output(['rofi', '-p', 'How long to wait?', '-dmenu']).decode('utf-8')
+    sp.call('task start.any: modify start: wait:{}'.format(out), shell=True)
+    sp.call(['timew', 'delete', '@1'])
+
+    if args.start_next:
+        sp.call(['next_task'])
+    else:
+        sp.call(['task_refresh'])

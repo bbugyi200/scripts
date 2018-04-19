@@ -6,7 +6,6 @@ import argparse
 import os
 import subprocess as sp
 
-task_choices = []
 custom_columns = ['id', 'start.age', 'entry.age', 'depends', 'priority', 'project',
         'tags', 'recur', 'scheduled.countdown', 'due.relative','until.remaining',
         'description.count', 'urgency']
@@ -25,10 +24,14 @@ if __name__ == "__main__":
 
     temp = first
     temp_urg = first_urg
+    task_choices = []
     while temp_urg == first_urg:
         task_choices.append(temp)
         temp = ready_tasks.readline()
-        temp_urg = float(temp.split()[-1])
+        if temp:
+            temp_urg = float(temp.split()[-1])
+        else:
+            break
 
     if len(task_choices) > 1:
         cmd_fmt = ready_tasks_cmd + ' | head -n {0:d} | rofi -p "Next Task" -dmenu'

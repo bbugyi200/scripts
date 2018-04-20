@@ -5,18 +5,26 @@
 import argparse
 import subprocess as sp
 
-next_help = "start next most urgent task"
+next_help = "If this option is specified, the next most urgent task will be started after "\
+        "the current task is waited."
+duration_help = "How long should task be set to wait? If this option is not given, user will "\
+        "be prompted for duration via rofi. (Example Duration Values: '1h', '30min', '1d')"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-n', '--next', dest='start_next', action='store_true', help=next_help)
+    parser.add_argument('-N', '--next', dest='next', action='store_true', help=next_help)
+    parser.add_argument('-D', '--duration', dest='duration', help=duration_help)
     args = parser.parse_args()
 
-    out = sp.check_output(['rofi', '-p', 'How long to wait?', '-dmenu']).decode('utf-8')
-    sp.call('task start.any: modify start: wait:{}'.format(out), shell=True)
+    if args.duration is None:
+        duration = sp.check_output(['rofi', '-p', 'How long to wait?', '-dmenu']).decode('utf-8')
+    else:
+        duration = args.duration
+
+    sp.call('task start.any: modify start: wait:{}'.format(duration), shell=True)
     sp.call(['timew', 'delete', '@1'])
 
-    if args.start_next:
+    if args.next:
         sp.call(['next_task'])
     else:
         sp.call(['task_refresh'])

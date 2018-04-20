@@ -5,9 +5,11 @@
 import argparse
 import subprocess as sp
 
-mode_help = "Determines what information is refreshed. (Defaults to 'main')."
-switch_help = "Switch to primary GTD window when done refreshing windows."
-mode_opts = ['full', 'main', 'context']
+flag_opts = ['all', 'config', 'rename', 'taskw', 'timew', 'khal']
+flags_help = "The mode determines what information is refreshed. This option "\
+        "accepts a comma-separated list containing one or more of the following "\
+        "options: {{{}}}. Defaults to 'taskw,timew,khal'.".format(','.join(flag_opts))
+select_window_help = "Switch to WINDOW after all refreshes are complete."
 
 
 class Win:
@@ -31,16 +33,27 @@ def tmux_cmd(cmd, window, cmd_args=None, *, pane=0):
 
 def send_keys(window, keys, *, pane=0):
     """ Run Pre-formatted 'tmux send-keys' Command """
-    tmux_cmd('send-keys', window, (keys, 'Enter'), pane=pane)
+    tmux_cmd('send-keys', window, ('q', 'C-u', keys, 'Enter'), pane=pane)
+
+
+def check_flag(*flags):
+    """ Boolean Function that Checks if Any of the Given Flags are Enabled """
+    good_flags = list(flags)
+    good_flags.append('all')
+    for flag in args.flags.split(','):
+        if flag.strip() in good_flags:
+            return True
+
+    return False
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-m', '--mode', dest='mode', choices=mode_opts, default='main', help=mode_help)
-    parser.add_argument('-s', '--switch', dest='switch', action='store_true', help=switch_help)
+    parser.add_argument('-F', '--flags', dest='flags', default='taskw,timew,khal', help=flags_help)
+    parser.add_argument('-w', '--select-window', dest='window', help=select_window_help)
     args = parser.parse_args()
 
-    if args.mode in ['full', 'context']:
+    if check_flag('rename'):
         out = sp.check_output(['task', 'context', 'show']).decode('utf-8')
         if out.startswith('No'):
             current_context = 'NONE'
@@ -49,12 +62,18 @@ if __name__ == "__main__":
             current_context = temp.strip("'").upper()
 
         tmux_cmd('rename-window', Win.MAIN, current_context)
+
+    if check_flag('config'):
         send_keys(Win.CONFIG, ':e')
 
-    if args.mode in ['full', 'main']:
-        send_keys(Win.MAIN, 'clear' if args.switch else 'tc', pane=(1 if args.switch else 0))
+    if check_flag('taskw'):
+        send_keys(Win.MAIN, 'clear' if args.window else 'tc', pane=(1 if args.window else 0))
+
+    if check_flag('timew'):
         send_keys(Win.TIMEW, 'twc')
+
+    if check_flag('khal'):
         send_keys(Win.KHAL, 'kc')
 
-    if args.switch:
-        tmux_cmd('select-window', Win.MAIN)
+    if args.window is not None:
+        tmux_cmd('select-window', args.window)

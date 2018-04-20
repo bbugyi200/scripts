@@ -12,7 +12,7 @@ import subprocess as sp
 import sys
 
 SECONDS_IN_HOUR = 3600
-delay_help = "Delay starting the script for DELAY seconds. Defaults to 0."
+delay_help = "Delay starting the script for DELAY seconds. Defaults to 5."
 timeout_help = "Time (in hours) to attempt to complete download before timing out. Defaults to 1."
 
 DEVNULL = open(os.devnull, 'w')
@@ -27,7 +27,7 @@ def textme(msg):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('magnet', help='The torrent magnet file.')
-    parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
+    parser.add_argument('-D', type=int, dest='delay', default=5, help=delay_help)
     parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
     args = parser.parse_args()
 

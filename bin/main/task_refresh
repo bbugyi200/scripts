@@ -38,10 +38,10 @@ def send_keys(window, keys, *, pane=0):
 
 def check_flag(*flags):
     """ Boolean Function that Checks if Any of the Given Flags are Enabled """
-    good_flags = list(flags)
-    good_flags.append('all')
-    for flag in args.flags.split(','):
-        if flag.strip() in good_flags:
+    desired_flags = list(flags)
+    desired_flags.append('all')
+    for flag in enabled_flags:
+        if flag in desired_flags:
             return True
 
     return False
@@ -52,6 +52,8 @@ if __name__ == "__main__":
     parser.add_argument('-F', '--flags', dest='flags', default='taskw,timew,khal', help=flags_help)
     parser.add_argument('-w', '--select-window', dest='window', help=select_window_help)
     args = parser.parse_args()
+
+    enabled_flags = [flag.strip() for flag in args.flags.split(',')]
 
     if check_flag('rename'):
         out = sp.check_output(['task', 'context', 'show']).decode('utf-8')

@@ -68,14 +68,9 @@ if __name__ == "__main__":
     if check_flag('config'):
         send_keys(Win.CONFIG, ':e')
 
-    if check_flag('taskw'):
-        send_keys(Win.MAIN, 'clear' if args.window else 'tc', pane=(1 if args.window else 0))
-
-    if check_flag('timew'):
-        send_keys(Win.TIMEW, 'twc')
-
-    if check_flag('khal'):
-        send_keys(Win.KHAL, 'kc')
+    for window, cmd, flag in [(Win.MAIN, 'tc', 'taskw'), (Win.TIMEW, 'twc', 'timew'), (Win.KHAL, 'kc', 'khal')]:
+        if check_flag(flag):
+            send_keys(window, 'clear' if args.window else cmd, pane=(1 if args.window else 0))
 
     if args.window is not None:
         tmux_cmd('select-window', args.window)

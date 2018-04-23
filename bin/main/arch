@@ -4,7 +4,12 @@
 
 import argparse
 from enum import Enum, auto
+import os
 import subprocess as sp
+
+
+ARCH_DIR = 'archive'
+TARGZ_FILE = '.archive.tar.gz'
 
 
 class Action(Enum):
@@ -14,22 +19,34 @@ class Action(Enum):
     EXTRACT = auto()
 
 
-def archive():
+def archive(auto_compress=False):
     """ Archive Items """
+    if not os.path.isdir(ARCH_DIR):
+        auto_compress = True
+        if os.path.isfile(TARGZ_FILE):
+            extract(verbose=False)
+        else:
+            os.makedirs(ARCH_DIR)
+
     for item in args.items:
-        sp.call(['mv', item, 'archive/'])
+        sp.call(['mv', item, ARCH_DIR])
+
+    if auto_compress:
+        compress(verbose=False)
 
 
-def compress():
+def compress(verbose=True):
     """ Compress Archive Folder """
-    sp.check_call(['tar', 'czvf', '.archive.tar.gz', 'archive'])
-    sp.call(['rm', '-rf', 'archive'])
+    flags = 'czvf' if verbose else 'czf'
+    sp.check_call(['tar', flags, TARGZ_FILE, ARCH_DIR])
+    sp.call(['rm', '-rf', ARCH_DIR])
 
 
-def extract():
+def extract(verbose=True):
     """ Extract Archive Folder """
-    sp.check_call(['tar', 'xzvf', '.archive.tar.gz'])
-    sp.call(['rm', '-f', '.archive.tar.gz'])
+    flags = 'xzvf' if verbose else 'xzf'
+    sp.check_call(['tar', flags, TARGZ_FILE])
+    sp.call(['rm', '-f', TARGZ_FILE])
 
 
 if __name__ == "__main__":

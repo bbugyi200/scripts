@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Starts Bedtime Story (i.e. Book) Task and Adds TV Event to Khal,
+""" Starts Bedtime Story (i.e. Book) Task and Adds Event to Khal,
 which is set to start MINUTES minutes from now."""
 
 import argparse
@@ -8,7 +8,7 @@ import datetime as dt
 import os
 import subprocess as sp
 
-name_help = "Name of the event to be added to khal. Defaults to 'TV'."
+name_help = "Name of the event to be added to khal. Defaults to 'Sleep'."
 minutes_help = "Relative time (in minutes) from now to set TV khal event. Defaults to 30 minutes."
 
 DEVNULL = open(os.devnull, 'w')
@@ -16,7 +16,7 @@ DEVNULL = open(os.devnull, 'w')
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('ID', help='Task ID for Book.')
-    parser.add_argument('-n', '--event-name', dest='event_name', default='TV', help=name_help)
+    parser.add_argument('-n', '--event-name', dest='event_name', default='Sleep', help=name_help)
     parser.add_argument('-T', '--time-till', dest='minutes', type=int, default=30, help=minutes_help)
     args = parser.parse_args()
 

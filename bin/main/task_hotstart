@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-""" Creates and Immediately Starts New Task """
+""" Creates and immediately starts new task. Uses rofi to prompt
+for arguments to 'task add'.
+"""
 
 import argparse
 import subprocess as sp

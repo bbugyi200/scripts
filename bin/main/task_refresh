@@ -6,7 +6,7 @@ import argparse
 import subprocess as sp
 
 flag_opts = ['all', 'config', 'rename', 'taskw', 'timew', 'khal']
-flags_help = "The mode determines what information is refreshed. This option "\
+flags_help = "These flags determine what information is refreshed. This option "\
         "accepts a comma-separated list containing one or more of the following "\
         "options: {{{}}}. Defaults to 'taskw,timew,khal'.".format(','.join(flag_opts))
 select_window_help = "Switch to WINDOW after all refreshes are complete."
@@ -36,7 +36,7 @@ def send_keys(window, keys, *, pane=0):
     tmux_cmd('send-keys', window, ('q', 'C-u', keys, 'Enter'), pane=pane)
 
 
-def check_flag(*flags):
+def check_flags(*flags):
     """ Boolean Function that Checks if Any of the Given Flags are Enabled """
     desired_flags = list(flags)
     desired_flags.append('all')
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     enabled_flags = [flag.strip() for flag in args.flags.split(',')]
 
-    if check_flag('rename'):
+    if check_flags('rename'):
         out = sp.check_output(['task', 'context', 'show']).decode('utf-8')
         if out.startswith('No'):
             current_context = 'NONE'
@@ -65,11 +65,11 @@ if __name__ == "__main__":
 
         tmux_cmd('rename-window', Win.MAIN, current_context)
 
-    if check_flag('config'):
+    if check_flags('config'):
         send_keys(Win.CONFIG, ':e')
 
     for window, cmd, flag in [(Win.MAIN, 'tc', 'taskw'), (Win.TIMEW, 'twc', 'timew'), (Win.KHAL, 'kc', 'khal')]:
-        if check_flag(flag):
+        if check_flags(flag):
             send_keys(window, 'clear' if args.window else cmd, pane=(1 if args.window else 0))
 
     if args.window is not None:

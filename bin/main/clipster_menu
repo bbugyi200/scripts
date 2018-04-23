@@ -9,7 +9,7 @@ import argparse
 import json
 import subprocess as sp
 
-history_file = '/home/bryan/Dropbox/logs/clipster.history'
+history_file = '/home/bryan/Dropbox/var/clipster.history'
 MAX_LINE = 60
 
 parser = argparse.ArgumentParser(description=__doc__)
@@ -28,7 +28,7 @@ def shorten(clip):
         if len(clip) > MAX_LINE:
             clip = '{}...'.format(clip[:MAX_LINE])
 
-    clip = clip.replace('\\', '\\\\')
+    clip = clip.replace('\\', '\\\\').replace('%', '%%')
     return clip
 
 
@@ -38,7 +38,7 @@ short_clips = list(map(shorten, clips))
 
 ps = sp.Popen(['printf', '{}'.format('\n'.join(short_clips))], stdout=sp.PIPE)
 out = sp.check_output(['rofi', '-m', '0', '-p', 'clip', '-dmenu'], stdin=ps.stdout)
-choice = out.decode('utf-8').replace('\\', '\\\\')[:-1]  # [:-1] gets rid of newline that rofi adds
+choice = out.decode('utf-8').replace('\\', '\\\\').replace('%%', '%')[:-1]  # [:-1] gets rid of newline that rofi adds
 new_clip = clips[short_clips.index(choice)].encode('utf-8')
 
 ps = sp.Popen(['xclip', '-sel', 'clipboard'], stdin=sp.PIPE)

@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+
+""" Archive Utility. Used to Archive and Compress Local Files/Directories. """
+
+import argparse
+import subprocess as sp
+
+
+class Flags:
+    ARCHIVE = 0
+    COMPRESS = 1
+    EXTRACT = 2
+
+
+def archive():
+    for item in args.items:
+        sp.call(['mv', item, 'archive/'])
+
+
+def compress():
+    sp.check_call(['tar', 'czvf', '.archive.tar.gz', 'archive'])
+    sp.call(['rm', '-rf', 'archive'])
+
+
+def extract():
+    sp.check_call(['tar', 'xzvf', '.archive.tar.gz'])
+    sp.call(['rm', '-f', '.archive.tar.gz'])
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('items', nargs=argparse.REMAINDER, help='File(s) or directory(s) to archive.')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-c', dest='action', action='store_const', const=Flags.COMPRESS, help='Compress archive folder.')
+    group.add_argument('-x', dest='action', action='store_const', const=Flags.EXTRACT, help='Extract archive folder.')
+    group.set_defaults(action=Flags.ARCHIVE)
+    args = parser.parse_args()
+
+    {Flags.ARCHIVE: archive,
+     Flags.COMPRESS: compress,
+     Flags.EXTRACT: extract}[args.action]()

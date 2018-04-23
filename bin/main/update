@@ -1,0 +1,6 @@
+#!/bin/bash
+
+confirm "reflector --verbose --latest 5 --sort rate --save /home/bryan/Dropbox/etc/pacman.d/mirrorlist"
+confirm "sudo pacman -Syyu"
+confirm "mkdir /tmp/builds; cd /tmp/builds && cower -vud && buildall"
+confirm "gem update"

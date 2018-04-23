@@ -55,7 +55,7 @@ while true; do
     starttime="$(get_start_time)"
     title="$(get_title)"
 
-    [[ "$title" != "No"* ]] || break
+    [[ "$title" != "No "* ]] || break
 
     print_event
 

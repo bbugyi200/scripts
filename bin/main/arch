@@ -5,10 +5,13 @@
 import argparse
 from enum import Enum, auto
 import os
+import shutil
 import subprocess as sp
+import sys
 
 
 ARCH_DIR = 'archive'
+GLOB_ARCH_DIR = '/media/bryan/hercules/archive'
 TARGZ_FILE = '.archive.tar.gz'
 
 
@@ -17,6 +20,7 @@ class Action(Enum):
     ARCHIVE = auto()
     COMPRESS = auto()
     EXTRACT = auto()
+    GLOBAL = auto()
 
 
 def archive(auto_compress=False):
@@ -29,7 +33,7 @@ def archive(auto_compress=False):
             os.makedirs(ARCH_DIR)
 
     for f in args.files:
-        sp.call(['mv', f, ARCH_DIR])
+        shutil.move(f, ARCH_DIR)
 
     if auto_compress:
         compress(verbose=False)
@@ -39,25 +43,49 @@ def compress(verbose=True):
     """ Compress Archive Folder """
     flags = 'czvf' if verbose else 'czf'
     sp.check_call(['tar', flags, TARGZ_FILE, ARCH_DIR])
-    sp.call(['rm', '-rf', ARCH_DIR])
+    shutil.rmtree(ARCH_DIR)
 
 
 def extract(verbose=True):
     """ Extract Archive Folder """
     flags = 'xzvf' if verbose else 'xzf'
     sp.check_call(['tar', flags, TARGZ_FILE])
-    sp.call(['rm', '-f', TARGZ_FILE])
+    os.remove(TARGZ_FILE)
+
+
+def move_to_global():
+    """ Move Archived Files to Global Archive """
+    if not os.path.isdir(ARCH_DIR):
+        if os.path.isfile(TARGZ_FILE):
+            extract(verbose=False)
+        else:
+            print("Neither an '{}' directory nor an '{}' file exist!".format(ARCH_DIR, TARGZ_FILE), file=sys.stderr)
+            sys.exit(1)
+
+    cwd = os.getcwd()
+    global_replica = '{}/{}'.format(GLOB_ARCH_DIR, cwd[1:])
+    if not os.path.isdir(global_replica):
+        os.makedirs(global_replica)
+
+    for filename in os.listdir(ARCH_DIR):
+        shutil.move('{}/{}'.format(ARCH_DIR, filename), global_replica)
+
+    os.rmdir(ARCH_DIR)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('files', nargs=argparse.REMAINDER, help='file(s) to archive')
+
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-c', dest='action', action='store_const', const=Action.COMPRESS, help='compress archive directory')
     group.add_argument('-x', dest='action', action='store_const', const=Action.EXTRACT, help='extract archive directory')
+    group.add_argument('-G', dest='action', action='store_const', const=Action.GLOBAL, help='move local archive to global archive')
     group.set_defaults(action=Action.ARCHIVE)
+
     args = parser.parse_args()
 
     {Action.ARCHIVE: archive,
      Action.COMPRESS: compress,
-     Action.EXTRACT: extract}[args.action]()
+     Action.EXTRACT: extract,
+     Action.GLOBAL: move_to_global}[args.action]()

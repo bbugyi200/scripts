@@ -25,6 +25,15 @@ class Action(Enum):
 
 def archive(auto_compress=False):
     """ Archive Files/Directories """
+    if not args.files:
+        print("Must provide files/directories to archive!\n", file=sys.stderr)
+        sys.exit(1)
+
+    for f in args.files:
+        if not os.path.exists(f):
+            print("{} does not exist!\n".format(f), file=sys.stderr)
+            sys.exit(2)
+
     if not os.path.isdir(ARCH_DIR):
         auto_compress = True
         if os.path.isfile(TARGZ_FILE):
@@ -58,8 +67,8 @@ def move_to_global():
     if not os.path.isdir(ARCH_DIR):
         if os.path.isfile(TARGZ_FILE):
             extract(verbose=False)
-        else:
-            print("Neither an '{}' directory nor an '{}' file exist!".format(ARCH_DIR, TARGZ_FILE), file=sys.stderr)
+        elif not args.files:
+            print("Neither an {} directory nor an {} file exist!\n\nEither create a local archive before using the -G option, or provide the file(s) you would like to archive via the command line! (e.g. 'arch -G <file1> ... <fileN>').".format(ARCH_DIR, TARGZ_FILE), file=sys.stderr)
             sys.exit(1)
 
     cwd = os.getcwd()
@@ -67,8 +76,14 @@ def move_to_global():
     if not os.path.isdir(global_replica):
         os.makedirs(global_replica)
 
-    for filename in os.listdir(ARCH_DIR):
-        shutil.move('{}/{}'.format(ARCH_DIR, filename), global_replica)
+    for f in args.files:
+        shutil.move(f, global_replica)
+
+    if not os.path.isdir(ARCH_DIR):
+        sys.exit(0)
+
+    for f in os.listdir(ARCH_DIR):
+        shutil.move('{}/{}'.format(ARCH_DIR, f), global_replica)
 
     os.rmdir(ARCH_DIR)
 

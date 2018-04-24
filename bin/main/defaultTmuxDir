@@ -4,7 +4,7 @@ import sys
 import os
 import pickle
 
-fpath = '/home/bryan/Dropbox/scripts/python/objs/default_dirs'
+fpath = '/home/bryan/Dropbox/var/default_dirs'
 
 default_dirs = dict()
 if not os.path.isfile(fpath):

@@ -15,6 +15,9 @@ GLOB_ARCH_DIR = '/media/bryan/hercules/archive'
 TARGZ_FILE = '.archive.tar.gz'
 
 
+class Error(Exception): pass
+
+
 class Action(enum.Enum):
     """ Action Flags """
     ARCHIVE = enum.auto()
@@ -23,21 +26,14 @@ class Action(enum.Enum):
     GLOBAL = enum.auto()
 
 
-def _printerr(msg):
-    """ Prints Error Message to STDERR """
-    print('{}\n'.format(msg), file=sys.stderr)
-
-
 def archive(auto_compress=False):
     """ Archive Files/Directories """
     if not args.files:
-        _printerr("Must provide files/directories to archive!")
-        sys.exit(1)
+        raise Error("Must provide files/directories to archive!")
 
     for f in args.files:
         if not os.path.exists(f):
-            _printerr("{} does not exist!".format(f))
-            sys.exit(2)
+            raise Error("{} does not exist!".format(f))
 
     if not os.path.isdir(ARCH_DIR):
         auto_compress = True
@@ -69,11 +65,10 @@ def extract(verbose=True):
 def global_archive():
     """ Add Files to Global Archive """
     if not any([os.path.isdir(ARCH_DIR), os.path.isfile(TARGZ_FILE), args.files]):
-        msgfmt = "Neither an {} directory nor an {} file exist! Either create a local "\
+        msgfmt = "Neither an {} directory nor an {} file exist!\n\nEither create a local "\
                  "archive before using this option, or provide the file(s) you would "\
                  "like to archive as command line arguments."
-        _printerr(msgfmt.format(ARCH_DIR, TARGZ_FILE))
-        sys.exit(1)
+        raise Error(msgfmt.format(ARCH_DIR, TARGZ_FILE))
 
     cwd = os.getcwd()
     global_replica = '{}/{}'.format(GLOB_ARCH_DIR, cwd[1:])
@@ -105,7 +100,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    {Action.ARCHIVE: archive,
-     Action.COMPRESS: compress,
-     Action.EXTRACT: extract,
-     Action.GLOBAL: global_archive}[args.action]()
+    try:
+        {Action.ARCHIVE: archive,
+         Action.COMPRESS: compress,
+         Action.EXTRACT: extract,
+         Action.GLOBAL: global_archive}[args.action]()
+    except Error as e:
+        print('{}\n'.format(str(e)), file=sys.stderr)
+        sys.exit(1)

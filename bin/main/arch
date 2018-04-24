@@ -56,8 +56,7 @@ def archive(auto_compress=False):
 def compress(verbose=True):
     """ Compress Archive Folder """
     flags = 'czvf' if verbose else 'czf'
-    sp.check_call(['tar', flags, TARGZ_FILE, ARCH_DIR])
-    shutil.rmtree(ARCH_DIR)
+    sp.check_call(['tar', flags, TARGZ_FILE, '--remove-files', ARCH_DIR])
 
 
 def extract(verbose=True):

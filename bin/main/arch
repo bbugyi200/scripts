@@ -3,7 +3,7 @@
 """ Archive Utility. Used to Archive and Compress Local Files and Directories. """
 
 import argparse
-from enum import Enum, auto
+import enum
 import os
 import shutil
 import subprocess as sp
@@ -15,23 +15,28 @@ GLOB_ARCH_DIR = '/media/bryan/hercules/archive'
 TARGZ_FILE = '.archive.tar.gz'
 
 
-class Action(Enum):
+class Action(enum.Enum):
     """ Action Flags """
-    ARCHIVE = auto()
-    COMPRESS = auto()
-    EXTRACT = auto()
-    GLOBAL = auto()
+    ARCHIVE = enum.auto()
+    COMPRESS = enum.auto()
+    EXTRACT = enum.auto()
+    GLOBAL = enum.auto()
+
+
+def _printerr(msg):
+    """ Prints Error Message to STDERR """
+    print('{}\n'.format(msg), file=sys.stderr)
 
 
 def archive(auto_compress=False):
     """ Archive Files/Directories """
     if not args.files:
-        print("Must provide files/directories to archive!\n", file=sys.stderr)
+        _printerr("Must provide files/directories to archive!")
         sys.exit(1)
 
     for f in args.files:
         if not os.path.exists(f):
-            print("{} does not exist!\n".format(f), file=sys.stderr)
+            _printerr("{} does not exist!".format(f))
             sys.exit(2)
 
     if not os.path.isdir(ARCH_DIR):
@@ -62,14 +67,14 @@ def extract(verbose=True):
     os.remove(TARGZ_FILE)
 
 
-def move_to_global():
-    """ Move Archived Files to Global Archive """
-    if not os.path.isdir(ARCH_DIR):
-        if os.path.isfile(TARGZ_FILE):
-            extract(verbose=False)
-        elif not args.files:
-            print("Neither an {} directory nor an {} file exist!\n\nEither create a local archive before using the -G option, or provide the file(s) you would like to archive via the command line! (e.g. 'arch -G <file1> ... <fileN>').".format(ARCH_DIR, TARGZ_FILE), file=sys.stderr)
-            sys.exit(1)
+def global_archive():
+    """ Add Files to Global Archive """
+    if not any([os.path.isdir(ARCH_DIR), os.path.isfile(TARGZ_FILE), args.files]):
+        msgfmt = "Neither an {} directory nor an {} file exist! Either create a local "\
+                 "archive before using this option, or provide the file(s) you would "\
+                 "like to archive as command line arguments."
+        _printerr(msgfmt.format(ARCH_DIR, TARGZ_FILE))
+        sys.exit(1)
 
     cwd = os.getcwd()
     global_replica = '{}/{}'.format(GLOB_ARCH_DIR, cwd[1:])
@@ -79,13 +84,13 @@ def move_to_global():
     for f in args.files:
         shutil.move(f, global_replica)
 
-    if not os.path.isdir(ARCH_DIR):
-        sys.exit(0)
+    if os.path.isfile(TARGZ_FILE):
+        extract(verbose=False)
 
-    for f in os.listdir(ARCH_DIR):
-        shutil.move('{}/{}'.format(ARCH_DIR, f), global_replica)
-
-    os.rmdir(ARCH_DIR)
+    if os.path.isdir(ARCH_DIR):
+        for f in os.listdir(ARCH_DIR):
+            shutil.move('{}/{}'.format(ARCH_DIR, f), global_replica)
+        os.rmdir(ARCH_DIR)
 
 
 if __name__ == "__main__":
@@ -93,9 +98,10 @@ if __name__ == "__main__":
     parser.add_argument('files', nargs=argparse.REMAINDER, help='file(s) to archive')
 
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-c', dest='action', action='store_const', const=Action.COMPRESS, help='compress archive directory')
-    group.add_argument('-x', dest='action', action='store_const', const=Action.EXTRACT, help='extract archive directory')
-    group.add_argument('-G', dest='action', action='store_const', const=Action.GLOBAL, help='move local archive to global archive')
+    group.add_argument('-a', dest='action', action='store_const', const=Action.ARCHIVE, help='add FILES to local archive (default)')
+    group.add_argument('-A', dest='action', action='store_const', const=Action.GLOBAL, help='add FILES to global archive')
+    group.add_argument('-c', dest='action', action='store_const', const=Action.COMPRESS, help='compress local archive')
+    group.add_argument('-x', dest='action', action='store_const', const=Action.EXTRACT, help='extract local archive')
     group.set_defaults(action=Action.ARCHIVE)
 
     args = parser.parse_args()
@@ -103,4 +109,4 @@ if __name__ == "__main__":
     {Action.ARCHIVE: archive,
      Action.COMPRESS: compress,
      Action.EXTRACT: extract,
-     Action.GLOBAL: move_to_global}[args.action]()
+     Action.GLOBAL: global_archive}[args.action]()

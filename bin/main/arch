@@ -49,19 +49,6 @@ def archive(auto_compress=False):
         compress(verbose=False)
 
 
-def compress(verbose=True):
-    """ Compress Archive Folder """
-    flags = 'czvf' if verbose else 'czf'
-    sp.check_call(['tar', flags, TARGZ_FILE, '--remove-files', ARCH_DIR])
-
-
-def extract(verbose=True):
-    """ Extract Archive Folder """
-    flags = 'xzvf' if verbose else 'xzf'
-    sp.check_call(['tar', flags, TARGZ_FILE])
-    os.remove(TARGZ_FILE)
-
-
 def global_archive():
     """ Add Files to Global Archive """
     if not any([os.path.isdir(ARCH_DIR), os.path.isfile(TARGZ_FILE), args.files]):
@@ -87,24 +74,35 @@ def global_archive():
         os.rmdir(ARCH_DIR)
 
 
+def compress(verbose=True):
+    """ Compress Archive Folder """
+    flags = 'czvf' if verbose else 'czf'
+    sp.check_call(['tar', flags, TARGZ_FILE, '--remove-files', ARCH_DIR])
+
+
+def extract(verbose=True):
+    """ Extract Archive Folder """
+    flags = 'xzvf' if verbose else 'xzf'
+    sp.check_call(['tar', flags, TARGZ_FILE])
+    os.remove(TARGZ_FILE)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('files', nargs=argparse.REMAINDER, help='file(s) to archive')
-
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-a', dest='action', action='store_const', const=Action.ARCHIVE, help='add FILES to local archive (default)')
     group.add_argument('-A', dest='action', action='store_const', const=Action.GLOBAL, help='add FILES to global archive')
     group.add_argument('-c', dest='action', action='store_const', const=Action.COMPRESS, help='compress local archive')
     group.add_argument('-x', dest='action', action='store_const', const=Action.EXTRACT, help='extract local archive')
     group.set_defaults(action=Action.ARCHIVE)
-
     args = parser.parse_args()
 
     try:
         {Action.ARCHIVE: archive,
+         Action.GLOBAL: global_archive,
          Action.COMPRESS: compress,
-         Action.EXTRACT: extract,
-         Action.GLOBAL: global_archive}[args.action]()
+         Action.EXTRACT: extract}[args.action]()
     except Error as e:
         print('{}\n'.format(str(e)), file=sys.stderr)
         sys.exit(1)

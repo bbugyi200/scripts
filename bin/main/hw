@@ -21,4 +21,4 @@ if [[ ! -f HW$N/HW$N.tex ]]; then
     sed -i "s/@@@:@@/$COURSE:$SECTION/g" HW$N/HW$N.tex
 fi
 
-tmux send-keys "vim -c'1,/Local Custom/mark c' -c'1,/^\\\\end{enumerate}/mark s' HW$N/HW$N.tex" "Enter"
+tmux send-keys "vim -c'1,/Local Custom/mark a' -c'1,/^\\\\end{enumerate}/mark s' HW$N/HW$N.tex" "Enter"

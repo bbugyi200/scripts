@@ -5,20 +5,26 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
-if [[ $(hostname) == "athena" ]]; then
-	stow --dir=/home/bryan/Dropbox/scripts/bin --target=/etc -R cron.jobs
+if [[ -z "$1" ]]; then
+    FLAG=-R
+else
+    FLAG=$1
 fi
 
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R main
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R xmonad
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R LocalAlias
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin -R ProtectMyLaptop
+if [[ $(hostname) == "athena" ]]; then
+	stow --dir=/home/bryan/Dropbox/scripts/bin --target=/etc $FLAG cron.jobs
+fi
 
-stow --dir=/home/bryan/Dropbox --target=/home/bryan -R dotfiles
-stow --dir=/home/bryan/Dropbox --target=/root -R dotfiles
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG main
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG xmonad
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG LocalAlias
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG ProtectMyLaptop
 
-stow --dir=/home/bryan/Dropbox --target=/etc -R etc
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan $FLAG home
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/root $FLAG home
 
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src -R src
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include -R include
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib -R lib
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/etc $FLAG etc
+
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src $FLAG src
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include $FLAG include
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib $FLAG lib

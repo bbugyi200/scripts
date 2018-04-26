@@ -52,7 +52,7 @@ def archive(auto_compress=False):
 def global_archive():
     """ Add Files to Global Archive """
     if not any([os.path.isdir(ARCH_DIR), os.path.isfile(TARGZ_FILE), args.files]):
-        msgfmt = "Neither an {} directory nor an {} file exist!\n\nEither create a local "\
+        msgfmt = "Neither a {} directory nor a {} file exist!\n\nEither create a local "\
                  "archive before using this option, or provide the file(s) you would "\
                  "like to archive as command line arguments."
         raise Error(msgfmt.format(ARCH_DIR, TARGZ_FILE))

@@ -1,6 +1,12 @@
 #!/bin/bash
 
-. /home/bryan/Dropbox/scripts/lemonbar/panel_config
+# My Colors
+GREEN="#0BF816"
+YELLOW="#EBEE27"
+RED="#FB0611"
+BLUE="#3C4BF7"
+WHITE="#FFFFFF"
+GREY="#D9D9D9"
 
 eval set -- $(getopt -o 'd' -l 'debug' -- "$@")
 

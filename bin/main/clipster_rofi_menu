@@ -1,0 +1,19 @@
+#!/usr/bin/env python
+
+"""
+Takes the history file that clipster uses to store the clipboard history
+and sends it to rofi. The user's choice is then loaded to the clipboard.
+"""
+
+import argparse
+import subprocess as sp
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.parse_args()
+
+if __name__ == "__main__":
+    out = sp.check_output(r"clipster -o -n 10000 -0 | rofi -dmenu -sep '\x00'", shell=True)
+    new_clip = out.decode('utf-8')[:-1]
+
+    ps = sp.Popen(['xclip', '-sel', 'clipboard'], stdin=sp.PIPE)
+    ps.communicate(input=new_clip.encode('utf-8'))

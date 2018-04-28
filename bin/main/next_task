@@ -6,6 +6,7 @@ import argparse
 import os
 import subprocess as sp
 
+MAX_URG_DIFF = 0.1
 custom_columns = ['id', 'start.age', 'entry.age', 'depends', 'priority', 'project',
         'tags', 'recur', 'scheduled.countdown', 'due.relative','until.remaining',
         'description.count', 'urgency']
@@ -25,7 +26,7 @@ if __name__ == "__main__":
     temp = first
     temp_urg = first_urg
     task_choices = []
-    while temp_urg == first_urg:
+    while abs(first_urg - temp_urg) <= MAX_URG_DIFF:
         task_choices.append(temp)
         temp = ready_tasks.readline()
         if temp:

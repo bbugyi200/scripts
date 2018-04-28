@@ -1,0 +1,3 @@
+#!/bin/bash
+
+clipster -o -n 10000 -0 | rofi -dmenu -sep '\x00' | clipster -c

@@ -10,7 +10,7 @@ import json
 import subprocess as sp
 
 history_file = '/home/bryan/Dropbox/var/clipster.history'
-MAX_LINE = 60
+MAX_LINE = 64
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.parse_args()

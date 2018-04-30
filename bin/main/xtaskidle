@@ -12,28 +12,36 @@ import sys
 
 from systemd.journal import JournalHandler
 
-formatter = logging.Formatter('(%(asctime)s) [%(levelname)s] %(message)s',
-                              datefmt='%Y-%m-%d %H:%M:%S')
-sh = logging.StreamHandler()
-sh.setFormatter(formatter)
-sh.setLevel(logging.ERROR)
-jh = JournalHandler()
-jh.setFormatter(formatter)
-jh.setLevel(logging.INFO)
-fh = logging.FileHandler('/var/tmp/{}.log'.format(os.path.basename(__file__)))
-fh.setFormatter(formatter)
-fh.setLevel(logging.DEBUG)
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
-log.addHandler(sh)
-log.addHandler(jh)
-log.addHandler(fh)
 
 max_help = 'max amount of idletime (in minutes) to allow before stopping task'
 delay_help = 'time (in seconds) to delay between calls to xprintidle'
 waittime_help = 'time (in minutes) to wait for activity after stopping task'
+pidfile = "/tmp/{}.pid".format(os.path.basename(__file__))
+
 MILLISECONDS_IN_MINUTE = 60000
 DEVNULL = open(os.devnull, 'w')
+
+
+class DuplicateProcess(Exception): pass
+
+
+def init_pidfile():
+    """ Writes PID to File """
+    if os.path.isfile(pidfile):
+        old_pid = open(pidfile, 'r').read()
+        try:
+            os.kill(int(old_pid), 0)
+        except OSError as e:
+            pass
+        except ValueError as e:
+            if old_pid != '':
+                raise
+        else:
+            msg = 'Another instance of {} is already running.'
+            raise DuplicateProcess(msg.format(os.path.basename(__file__)))
+    pid = os.getpid()
+    open(pidfile, 'w').write(str(pid))
 
 
 def xprintidle():
@@ -43,6 +51,22 @@ def xprintidle():
 
 
 if __name__ == "__main__":
+    formatter = logging.Formatter('(%(asctime)s) [%(levelname)s] %(message)s',
+                                  datefmt='%Y-%m-%d %H:%M:%S')
+    sh = logging.StreamHandler()
+    sh.setFormatter(formatter)
+    sh.setLevel(logging.ERROR)
+    jh = JournalHandler()
+    jh.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+    jh.setLevel(logging.INFO)
+    fh = logging.FileHandler('/var/tmp/{}.log'.format(os.path.basename(__file__)))
+    fh.setFormatter(formatter)
+    fh.setLevel(logging.DEBUG)
+    log.setLevel(logging.DEBUG)
+    log.addHandler(sh)
+    log.addHandler(jh)
+    log.addHandler(fh)
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-t', '--idletime', nargs='?', type=float, default=5, help=max_help)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
@@ -54,14 +78,19 @@ if __name__ == "__main__":
         for handler in log.handlers:
             handler.setLevel(logging.DEBUG)
 
-    log.info('Starting...')
-
     try:
         assert (args.waittime > args.idletime), "Max wait time must be greater than max idletime."
+        init_pidfile()
     except AssertionError as e:
-        log.error('{}\n'.format(str(e)))
+        log.error(str(e))
+        print()
         parser.print_help()
         sys.exit(1)
+    except DuplicateProcess as e:
+        log.error(str(e))
+        sys.exit(2)
+
+    log.info('Starting...')
 
     MAX_IDLE = args.idletime * MILLISECONDS_IN_MINUTE
     MAX_WAIT = args.waittime * MILLISECONDS_IN_MINUTE
@@ -71,22 +100,21 @@ if __name__ == "__main__":
             try:
                 sp.check_call(['task', 'start.any:', 'stop'], stdout=DEVNULL, stderr=DEVNULL)
             except sp.CalledProcessError as e:
-                log.info('Failed to stop task. No task is currently started.')
-                time.sleep(args.delay*2)
-                continue
+                log.error('Failed to stop task. No task is currently started.')
+                sys.exit(3)
         else:
             time.sleep(args.delay)
             continue
 
-        log.info('Stopped current task.')
+        log.info('Stopping current task...')
         while True:
             time.sleep(1)
             idletime = xprintidle()
             if idletime <= MAX_IDLE:
-                log.info('Restarting last task.')
+                log.info('Restarting last task...')
                 sp.call(['last_task'], stdout=DEVNULL, stderr=DEVNULL)
                 sp.call(['notify-send', sys.argv[0], 'The last active TaskWarrior task has been restarted.'])
                 break
             elif idletime >= MAX_WAIT:
-                log.info('Timed out. Forgetting stopped task.')
-                break
+                log.info('Timed out. Terminating...')
+                sys.exit(0)

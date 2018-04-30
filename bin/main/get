@@ -12,6 +12,7 @@ else
     echo "Package not found in official repositories!"
     if cower -s "^$1\$" &> /dev/null; then
         mkdir /tmp/builds &> /dev/null
+        cd /tmp/builds
         cower -d $1
         tmux send-keys "cd /tmp/builds/$1 && tree" "Enter"
         tmux send-keys "makepkg -si"

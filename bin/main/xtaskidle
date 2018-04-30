@@ -55,6 +55,7 @@ if __name__ == "__main__":
             idletime = xprintidle()
             if idletime <= MAX_IDLE:
                 sp.call(['last_task'], stdout=DEVNULL, stderr=DEVNULL)
+                sp.call(['notify-send', sys.argv[0], 'The last active TaskWarrior task has been restarted.'])
                 break
             elif idletime >= MAX_WAIT:
                 break

@@ -99,10 +99,10 @@ if __name__ == "__main__":
     log.addHandler(fh)
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-t', '--idletime', nargs='?', type=float, default=5, help=max_help)
+    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=5, help=max_help)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
-    parser.add_argument('-D', '--delay', dest='delay', nargs='?', type=int, default=30, help=delay_help)
-    parser.add_argument('-w', '--waittime', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)
+    parser.add_argument('-D', dest='delay', nargs='?', type=int, default=30, help=delay_help)
+    parser.add_argument('-w', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)
     args = parser.parse_args()
 
     if args.debug:

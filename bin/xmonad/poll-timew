@@ -27,7 +27,7 @@ def _get_tag_time(tag, interval: 'day | week'):
     if output.startswith('No'):
         return '0:00:00'
 
-    pttrn = '[\s\S]*([0-9\s][0-9]:[0-9][0-9]:[0-9][0-9])[^A-Za-z][\s\S]*?'
+    pttrn = r'[\s\S]*([0-9\s][0-9]:[0-9][0-9]:[0-9][0-9])[^A-Za-z][\s\S]*?'
     match = re.findall(pttrn, output)[0]
 
     return match.strip()
@@ -56,7 +56,7 @@ def add_times(*tag_times):
 
 
 def parse_status(status):
-    pttrn = 'Tracking (?:([A-Za-z\. ]*)|"([^"]*)"){2}\n[\s\S]*([0-9]?[0-9]:[0-9][0-9]:[0-9][0-9])'
+    pttrn = r'Tracking (?:([A-Za-z0-9\. ]*)|"([^"]*)"){2}\n[\s\S]*([0-9]?[0-9]:[0-9][0-9]:[0-9][0-9])'
     tags, project, raw_currtime = re.findall(pttrn, status)[0]
 
     if len(project) > 65:

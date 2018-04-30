@@ -9,6 +9,10 @@ from systemd.journal import JournalHandler
 log = logging.getLogger(__name__)
 
 
+def main():
+    pass
+
+
 if __name__ == "__main__":
     formatter = logging.Formatter('(%(asctime)s) [%(levelname)s] %(message)s',
                                   datefmt='%Y-%m-%d %H:%M:%S')
@@ -33,3 +37,9 @@ if __name__ == "__main__":
     if args.debug:
         for handler in log.handlers:
             handler.setLevel(logging.DEBUG)
+
+    try:
+        main()
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

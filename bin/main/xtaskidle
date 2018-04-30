@@ -26,7 +26,7 @@ DEVNULL = open(os.devnull, 'w')
 class DuplicateProcess(Exception): pass
 
 
-def init_pidfile():
+def create_pidfile():
     """ Writes PID to File """
     if os.path.isfile(pidfile):
         old_pid = open(pidfile, 'r').read()
@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     try:
         assert (args.waittime > args.idletime), "Max wait time must be greater than max idletime."
-        init_pidfile()
+        create_pidfile()
         main()
     except AssertionError as e:
         log.error(str(e))

@@ -47,6 +47,11 @@ def xprintidle():
     return int(out.decode())
 
 
+def check_call(*args):
+    """ Wrapper for subprocess.check_call """
+    sp.check_call(args, stdout=DEVNULL, stderr=DEVNULL)
+
+
 def main():
     log.info('Starting...')
 
@@ -56,21 +61,21 @@ def main():
     while True:
         if xprintidle() >= MAX_IDLE:
             try:
-                sp.check_call(['task', 'start.any:', 'stop'], stdout=DEVNULL, stderr=DEVNULL)
+                log.info('Stopping current task...')
+                check_call('task', 'start.any:', 'stop')
             except sp.CalledProcessError as e:
                 raise RuntimeError('Failed to stop task. No task is currently started.')
         else:
             time.sleep(args.delay)
             continue
 
-        log.info('Stopping current task...')
         while True:
             time.sleep(1)
             idletime = xprintidle()
             if idletime <= MAX_IDLE:
                 log.info('Restarting last task...')
-                sp.call(['last_task'], stdout=DEVNULL, stderr=DEVNULL)
-                sp.call(['notify-send', sys.argv[0], 'The last active TaskWarrior task has been restarted.'])
+                check_call('last_task')
+                check_call('notify-send', sys.argv[0], 'The last active TaskWarrior task has been restarted.')
                 break
             elif idletime >= MAX_WAIT:
                 log.info('Timed out. Terminating...')

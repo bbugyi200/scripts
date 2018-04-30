@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Daemon that Stops Current Task if Computer Idles for Too Long """
+""" Stops Current TaskWarrior Task if Machine Idles for Too Long """
 
 import argparse
 import os
@@ -14,17 +14,18 @@ DEVNULL = open(os.devnull, 'w')
 
 
 def xprintidle():
+    """ Returns Machine's Current Idletime """
     out = sp.check_output(['xprintidle'])
     return int(out.decode())
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('max', type=float, help=max_help)
+    parser.add_argument('max_idle', type=float, help=max_help)
     parser.add_argument('-D', '--delay', dest='delay', nargs='?', type=int, default=30, help=delay_help)
     args = parser.parse_args()
 
-    MAX_IDLE = args.max * MILLISECONDS_IN_MINUTE
+    MAX_IDLE = args.max_idle * MILLISECONDS_IN_MINUTE
 
     while True:
         if xprintidle() >= MAX_IDLE:

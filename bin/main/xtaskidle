@@ -14,15 +14,20 @@ from systemd.journal import JournalHandler
 
 formatter = logging.Formatter('(%(asctime)s) [%(levelname)s] %(message)s',
                               datefmt='%Y-%m-%d %H:%M:%S')
-jrnl = JournalHandler()
-jrnl.setFormatter(formatter)
-jrnl.setLevel(logging.INFO)
-stm = logging.StreamHandler()
-stm.setFormatter(formatter)
-stm.setLevel(logging.ERROR)
+sh = logging.StreamHandler()
+sh.setFormatter(formatter)
+sh.setLevel(logging.ERROR)
+jh = JournalHandler()
+jh.setFormatter(formatter)
+jh.setLevel(logging.INFO)
+fh = logging.FileHandler('/var/tmp/{}.log'.format(os.path.basename(__file__)))
+fh.setFormatter(formatter)
+fh.setLevel(logging.DEBUG)
 log = logging.getLogger(__name__)
-log.addHandler(stm)
-log.addHandler(jrnl)
+log.setLevel(logging.DEBUG)
+log.addHandler(sh)
+log.addHandler(jh)
+log.addHandler(fh)
 
 max_help = 'max amount of idletime (in minutes) to allow before stopping task'
 delay_help = 'time (in seconds) to delay between calls to xprintidle'
@@ -46,7 +51,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.debug:
-        log.setLevel(logging.DEBUG)
         for handler in log.handlers:
             handler.setLevel(logging.DEBUG)
 

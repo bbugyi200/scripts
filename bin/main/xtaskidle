@@ -14,11 +14,8 @@ from systemd.journal import JournalHandler
 
 log = logging.getLogger(__name__)
 
-max_help = 'max amount of idletime (in minutes) to allow before stopping task'
-delay_help = 'time (in seconds) to delay between calls to xprintidle'
-waittime_help = 'time (in minutes) to wait for activity after stopping task'
-
-PIDFILE = "/tmp/{}.pid".format(os.path.basename(__file__))
+NAME = os.path.basename(__file__)
+PIDFILE = "/tmp/{}.pid".format(NAME)
 MILLISECONDS_IN_MINUTE = 60000
 DEVNULL = open(os.devnull, 'w')
 
@@ -36,7 +33,7 @@ def create_pidfile():
                 raise
         else:
             msg = 'Another instance of {} is already running.'
-            raise RuntimeError(msg.format(os.path.basename(__file__)))
+            raise RuntimeError(msg.format(NAME))
     pid = os.getpid()
     open(PIDFILE, 'w').write(str(pid))
 
@@ -57,6 +54,7 @@ def main():
 
     MAX_IDLE = args.idletime * MILLISECONDS_IN_MINUTE
     MAX_WAIT = args.waittime * MILLISECONDS_IN_MINUTE
+    DELAY = args.delay * 60
 
     while True:
         if xprintidle() >= MAX_IDLE:
@@ -66,7 +64,7 @@ def main():
             except sp.CalledProcessError as e:
                 raise RuntimeError('Failed to stop task. No task is currently started.')
         else:
-            time.sleep(args.delay)
+            time.sleep(DELAY)
             continue
 
         while True:
@@ -75,7 +73,7 @@ def main():
             if idletime <= MAX_IDLE:
                 log.info('Restarting last task...')
                 check_call('last_task')
-                check_call('notify-send', sys.argv[0], 'The last active TaskWarrior task has been restarted.')
+                check_call('notify-send', NAME, 'The last active TaskWarrior task has been restarted.')
                 break
             elif idletime >= MAX_WAIT:
                 log.info('Timed out. Terminating...')
@@ -86,7 +84,7 @@ def start_logging(log):
     """ Initializes Log Handlers """
     sh = logging.StreamHandler()
     jh = JournalHandler()
-    fh = logging.FileHandler('/var/tmp/{}.log'.format(os.path.basename(__file__)))
+    fh = logging.FileHandler('/var/tmp/{}.log'.format(NAME))
 
     basic_formatting = '[%(levelname)s] %(message)s'
     formatter = logging.Formatter(basic_formatting)
@@ -108,10 +106,14 @@ def start_logging(log):
 if __name__ == "__main__":
     start_logging(log)
 
+    max_help = 'max amount of idletime (in minutes) to allow before stopping task'
+    delay_help = 'time (in minutes) to delay between calls to xprintidle'
+    waittime_help = 'time (in minutes) to wait for activity after stopping task'
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=5, help=max_help)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
-    parser.add_argument('-D', dest='delay', nargs='?', type=int, default=30, help=delay_help)
+    parser.add_argument('-D', dest='delay', nargs='?', type=float, default=0.5, help=delay_help)
     parser.add_argument('-w', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)
     args = parser.parse_args()
 

@@ -6,10 +6,15 @@ when the download is finished, and then texts me.
 """
 
 import argparse
+import logging
 import os
 import time
 import subprocess as sp
 import sys
+
+import easylog
+
+log = easylog.getEasyLogger(__name__)
 
 SECONDS_IN_HOUR = 3600
 delay_help = "Delay starting the script for DELAY seconds. Defaults to 5."
@@ -21,24 +26,19 @@ DEVNULL = open(os.devnull, 'w')
 
 def textme(msg):
     """ Sends SMS Message to my Cell Phone """
+    log.info('SMS Message Sent: {}'.format(msg))
     sp.call(['textme', msg], stdout=DEVNULL)
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('magnet', help='The torrent magnet file.')
-    parser.add_argument('-D', type=int, dest='delay', default=5, help=delay_help)
-    parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
-    args = parser.parse_args()
-
+def main():
     time.sleep(args.delay)
 
     try:
+        log.info('Connecting to VPN and starting transmission daemon...')
         sp.check_call(['PIA', 'start', 'nyc'], stdout=DEVNULL)
         sp.check_call(['transmission-daemon'], stdout=DEVNULL)
     except sp.CalledProcessError as e:
-        textme('Failed to start the VPN and/or the transmission daemon! :(')
-        sys.exit(1)
+        raise RuntimeError('Failed to start the VPN and/or the transmission daemon! :(')
     else:
         i = 0
         while True:
@@ -63,8 +63,7 @@ if __name__ == "__main__":
             if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
                 msg = "Torrent is still attempting to download after {0:.1f} hour(s) elapsed time.\
                        Shutting down early! :(".format(args.timeout)
-                textme(msg)
-                sys.exit(1)
+                raise RuntimeError(msg)
 
             time.sleep(SLEEP_TIME)
 
@@ -79,3 +78,26 @@ if __name__ == "__main__":
         sp.call(['transmission-remote', '-t1', '-r'], stdout=DEVNULL)
         sp.call(['killall', '-9', 'transmission-daemon'], stdout=DEVNULL)
         sp.call(['PIA', 'stop'], stdout=DEVNULL)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('magnet', help='The torrent magnet file.')
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    parser.add_argument('-D', type=int, dest='delay', default=5, help=delay_help)
+    parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
+    args = parser.parse_args()
+
+    if args.debug:
+        for handler in log.handlers:
+            handler.setLevel(logging.DEBUG)
+
+    try:
+        main()
+    except RuntimeError as e:
+        log.error(str(e))
+        textme(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

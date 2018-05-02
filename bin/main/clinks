@@ -19,6 +19,7 @@ stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG main
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG xmonad
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG LocalAlias
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG ProtectMyLaptop
+stow --dir=/home/bryan/Dropbox/scripts --target=/home/bryan/.local/lib/python3.6/site-packages $FLAG pymodules
 
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan $FLAG home
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/root $FLAG home

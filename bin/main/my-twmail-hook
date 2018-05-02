@@ -11,15 +11,21 @@
 # TWMAIL_SUBJECT
 # TWMAIL_BODY
 
+import argparse
 import datetime as dt
+import logging
 import os
 import subprocess
 
-# log = open('/home/bryan/twmail.log', 'w')
+import easylog
+
+log = easylog.getEasyLogger(__name__)
 
 START_OF_DAY = 6  # Hour that day starts
 
-if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
+
+def main():
+    log.info('Adding "{}" to Inbox...'.format(os.environ['TWMAIL_SUBJECT']))
     subprocess.call('task add +inbox {}'.format(os.environ['TWMAIL_SUBJECT']), shell=True)
 
     utc_email_datetime = dt.datetime.strptime(os.environ['TWMAIL_DATE'], r'%Y-%m-%dT%H:%M:%S\+00:00').replace(tzinfo=dt.timezone.utc)
@@ -30,5 +36,22 @@ if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
     today_date = today_datetime.date()
 
     if email_date < today_date:
+        log.info('Task was not added to Inbox recently. Removing wait...')
         uuid = subprocess.check_output('task +LATEST uuids', shell=True).decode('utf-8')
         subprocess.call(['task', uuid, 'modify', 'due:due-1d', 'wait:due'])
+
+
+if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    args = parser.parse_args()
+
+    if args.debug:
+        for handler in log.handlers:
+            handler.setLevel(logging.DEBUG)
+
+    try:
+        main()
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

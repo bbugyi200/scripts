@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python
 
 from dateutil.parser import parse
 from datetime import datetime, date, timedelta

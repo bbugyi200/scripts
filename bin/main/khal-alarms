@@ -43,9 +43,16 @@ echo $$ > $PID_FILE
 
 # ---------- MAIN
 while true; do
+    MAX_IDENTICAL_LOOPS=5
+    count=0
     while [[ -z "$(get_start_time)" ]]; do
         if [[ "$(get_title)" == "$last_title" ]]; then
-            break 2
+            count=$((count + 1))
+            if [[ $count -ge $MAX_IDENTICAL_LOOPS ]]; then
+                break 2
+            fi
+        else
+            count=0
         fi
 
         last_title="$(get_title)"

@@ -50,8 +50,7 @@ def main():
                 if i <= 10:
                     continue
                 else:
-                    textme('Failed to start torrent! :(')
-                    raise
+                    raise RuntimeError('Failed to start torrent! :(')
             else:
                 break
 

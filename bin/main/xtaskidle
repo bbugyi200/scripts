@@ -4,9 +4,11 @@
 and Restarts the Task when Activity Resumes """
 
 import argparse
+import datetime as dt
 import logging
 import os
 import time
+import signal
 import subprocess as sp
 import sys
 
@@ -33,9 +35,23 @@ def create_pidfile():
                 raise
         else:
             msg = 'Another instance of {} is already running.'
-            raise RuntimeError(msg.format(NAME))
+            log.info(msg.format(NAME))
+            kill(old_pid)
     pid = os.getpid()
     open(PIDFILE, 'w').write(str(pid))
+
+
+def kill(pid):
+    """ Send Kill Signal to PID """
+    log.debug('Attempting to kill {}...'.format(pid))
+    os.kill(int(pid), signal.SIGTERM)
+    time.sleep(1)
+    try:
+        os.kill(int(pid), 0)
+    except OSError as e:
+        pass
+    else:
+        raise RuntimeError('Failed to kill old instance of {}.'.format(NAME))
 
 
 def xprintidle():
@@ -50,15 +66,16 @@ def check_call(*args):
 
 
 def main():
-    log.info('Starting...')
+    log.info('Starting {}.'.format(NAME))
 
     MAX_IDLE = args.idletime * MILLISECONDS_IN_MINUTE
-    MAX_WAIT = args.waittime * MILLISECONDS_IN_MINUTE
     DELAY = args.delay * 60
 
     while True:
-        if xprintidle() >= MAX_IDLE:
+        idletime = xprintidle()
+        if idletime >= MAX_IDLE:
             try:
+                log.debug('System has been idle for {} milliseconds.'.format(idletime))
                 log.info('Stopping current task...')
                 check_call('task', 'start.any:', 'stop')
             except sp.CalledProcessError as e:
@@ -67,6 +84,7 @@ def main():
             time.sleep(DELAY)
             continue
 
+        dt_timeout = dt.datetime.now() + dt.timedelta(minutes=args.waittime)
         while True:
             time.sleep(1)
             idletime = xprintidle()
@@ -75,8 +93,8 @@ def main():
                 check_call('last_task')
                 check_call('notify-send', NAME, 'The last active TaskWarrior task has been restarted.')
                 break
-            elif idletime >= MAX_WAIT:
-                log.info('Timed out. Terminating...')
+            elif dt_timeout <= dt.datetime.now():
+                log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
                 sys.exit(0)
 
 

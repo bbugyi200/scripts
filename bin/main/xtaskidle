@@ -5,7 +5,6 @@ and Restarts the Task when Activity Resumes """
 
 import argparse
 import datetime as dt
-import logging
 import os
 import pickle
 import time
@@ -124,8 +123,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.debug:
-        for handler in log.handlers:
-            handler.setLevel(logging.DEBUG)
+        easylog.enableDebugMode(log)
 
     try:
         assert (args.waittime > args.idletime), "Max wait time must be greater than max idletime."

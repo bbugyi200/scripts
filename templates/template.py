@@ -3,7 +3,6 @@
 """ TEMPLATE """
 
 import argparse
-import logging
 
 import easylog
 
@@ -20,8 +19,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.debug:
-        for handler in log.handlers:
-            handler.setLevel(logging.DEBUG)
+        easylog.enableDebugMode(log)
 
     try:
         main()

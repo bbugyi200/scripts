@@ -32,3 +32,11 @@ def getEasyLogger(name):
     log.addHandler(fh)
 
     return log
+
+
+def enableDebugMode(log):
+    """ Sets Log Level of StreamHandler Handlers to DEBUG """
+    for handler in log.handlers:
+        if isinstance(handler, logging.StreamHandler):
+            handler.setLevel(logging.DEBUG)
+    log.debug('Debugging mode enabled.')

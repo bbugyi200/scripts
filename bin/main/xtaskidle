@@ -7,6 +7,7 @@ import argparse
 import datetime as dt
 import logging
 import os
+import pickle
 import time
 import signal
 import subprocess as sp
@@ -18,40 +19,63 @@ log = easylog.getEasyLogger(__name__)
 
 NAME = os.path.basename(__file__)
 PIDFILE = "/tmp/{}.pid".format(NAME)
+ARGSFILE = "/tmp/{}.args".format(NAME)
 MILLISECONDS_IN_MINUTE = 60000
 DEVNULL = open(os.devnull, 'w')
+
+
+def main():
+    log.info('Starting {}.'.format(NAME))
+
+    while True:
+        idletime = xprintidle()
+        if idletime >= args.idletime * MILLISECONDS_IN_MINUTE:
+            try:
+                log.debug('System has been idle for {} milliseconds.'.format(idletime))
+                log.info('Stopping current task...')
+                check_call('task', 'start.any:', 'stop')
+            except sp.CalledProcessError as e:
+                raise RuntimeError('Failed to stop task. No task is currently started.')
+        else:
+            time.sleep(args.delay * 60)
+            continue
+
+        dt_timeout = dt.datetime.now() + dt.timedelta(minutes=(args.waittime - args.idletime))
+        while True:
+            time.sleep(1)
+            idletime = xprintidle()
+            if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
+                log.info('Restarting last task...')
+                check_call('last_task')
+                check_call('notify-send', NAME, 'The last active TaskWarrior task has been restarted.')
+                break
+            elif dt_timeout <= dt.datetime.now():
+                log.debug('Time is now past: {}'.format(dt_timeout))
+                log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
+                sys.exit(0)
 
 
 def create_pidfile():
     """ Writes PID to File """
     if os.path.isfile(PIDFILE):
-        old_pid = open(PIDFILE, 'r').read()
+        old_pid = int(open(PIDFILE, 'r').read())
         try:
-            os.kill(int(old_pid), 0)
+            os.kill(old_pid, 0)
         except OSError as e:
             pass
         except ValueError as e:
             if old_pid != '':
                 raise
         else:
-            msg = 'Another instance of {} is already running.'
+            log.debug('Sending SIGUSR1 to active running instance...')
+            os.kill(old_pid, signal.SIGUSR1)
+
+            msg = 'Another instance of {} is already running. Terminating this instance.'
             log.info(msg.format(NAME))
-            kill(old_pid)
+            sys.exit(0)
+
     pid = os.getpid()
     open(PIDFILE, 'w').write(str(pid))
-
-
-def kill(pid):
-    """ Send Kill Signal to PID """
-    log.debug('Attempting to kill {}...'.format(pid))
-    os.kill(int(pid), signal.SIGTERM)
-    time.sleep(1)
-    try:
-        os.kill(int(pid), 0)
-    except OSError as e:
-        pass
-    else:
-        raise RuntimeError('Failed to kill old instance of {}.'.format(NAME))
 
 
 def xprintidle():
@@ -65,37 +89,26 @@ def check_call(*args):
     sp.check_call(args, stdout=DEVNULL, stderr=DEVNULL)
 
 
-def main():
-    log.info('Starting {}.'.format(NAME))
+def usr1_handler(signum, frame):
+    """ Signal Handler used to Load args Variable from Another Running Instance """
+    log.debug('Received SIGUSR1 signal.')
+    load_args()
 
-    MAX_IDLE = args.idletime * MILLISECONDS_IN_MINUTE
-    DELAY = args.delay * 60
 
-    while True:
-        idletime = xprintidle()
-        if idletime >= MAX_IDLE:
-            try:
-                log.debug('System has been idle for {} milliseconds.'.format(idletime))
-                log.info('Stopping current task...')
-                check_call('task', 'start.any:', 'stop')
-            except sp.CalledProcessError as e:
-                raise RuntimeError('Failed to stop task. No task is currently started.')
-        else:
-            time.sleep(DELAY)
-            continue
+def load_args():
+    """ Load args Variable from Data File """
+    global args
+    log.debug('Reloading args from: {}'.format(ARGSFILE))
+    with open(ARGSFILE, 'rb') as f:
+        args = pickle.load(f)
+    log.debug('New args variable loaded: {}'.format(args))
 
-        dt_timeout = dt.datetime.now() + dt.timedelta(minutes=args.waittime)
-        while True:
-            time.sleep(1)
-            idletime = xprintidle()
-            if idletime <= MAX_IDLE:
-                log.info('Restarting last task...')
-                check_call('last_task')
-                check_call('notify-send', NAME, 'The last active TaskWarrior task has been restarted.')
-                break
-            elif dt_timeout <= dt.datetime.now():
-                log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
-                sys.exit(0)
+
+def dump_args():
+    """ Dump args Variable to Data File """
+    log.debug('Dumping args variable to: {}'.format(ARGSFILE))
+    with open(ARGSFILE, 'wb') as f:
+        pickle.dump(args, f)
 
 
 if __name__ == "__main__":
@@ -116,6 +129,8 @@ if __name__ == "__main__":
 
     try:
         assert (args.waittime > args.idletime), "Max wait time must be greater than max idletime."
+        signal.signal(signal.SIGUSR1, usr1_handler)
+        dump_args()
         create_pidfile()
         main()
     except AssertionError as e:

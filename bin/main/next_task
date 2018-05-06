@@ -42,4 +42,4 @@ if __name__ == "__main__":
 
     next_task_id = next_task.split()[0]
     sp.call(['task', 'start', next_task_id])
-    sp.call(['task_refresh -w 0'])
+    sp.call(['task_refresh', '-w', '0'])

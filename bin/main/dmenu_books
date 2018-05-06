@@ -14,47 +14,6 @@ log = easylog.getEasyLogger(__name__)
 CACHE_FILE = '/home/bryan/Dropbox/var/dmenu_books.db'
 
 
-def shell(cmd, new_type=str):
-    out = sp.check_output(cmd, shell=True)
-    return new_type(out.decode().strip())
-
-
-def promote_cached_docs(docs, cached_docs):
-    D = docs[:]
-    for c in list(reversed(cached_docs)):
-        if c in D:
-            D.remove(c)
-            D.insert(0, c)
-    return D
-
-
-def purge_open_docs(docs, open_docs):
-    D = docs[:]
-    for od in open_docs:
-        for d in docs:
-            if od in d:
-                D.remove(d)
-    return D
-
-
-def add_to_cache(doc):
-    if os.path.isfile(CACHE_FILE):
-        with open(CACHE_FILE, 'r') as f:
-            cached_docs = f.read().strip().split('\n')
-            log.debug('Cache File Contents: {}'.format(cached_docs))
-
-        if doc in cached_docs:
-            cached_docs.remove(doc)
-
-        cached_docs.insert(0, doc)
-
-        with open(CACHE_FILE, 'w') as f:
-            f.write('\n'.join(cached_docs[:100]))
-    else:
-        with open(CACHE_FILE, 'w') as f:
-            f.write(doc)
-
-
 def main():
     open_docs = shell('wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- | grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"', new_type=lambda x: x.split('\n'))
     log.debug('Open Books: {}'.format(open_docs))
@@ -82,6 +41,51 @@ def main():
         os.kill(pid, signal.SIGTERM)
 
     shell('zathura "{}" &> /dev/null &'.format(choice))
+
+
+def shell(cmd, new_type=str):
+    """ Run Shell Command """
+    out = sp.check_output(cmd, shell=True)
+    return new_type(out.decode().strip())
+
+
+def promote_cached_docs(docs, cached_docs):
+    """ Docs in Cache File are Brought to the Top of the List of Options """
+    D = docs[:]
+    for c in list(reversed(cached_docs)):
+        if c in D:
+            D.remove(c)
+            D.insert(0, c)
+    return D
+
+
+def purge_open_docs(docs, open_docs):
+    """ Open Docs are Removed from the List of Options """
+    D = docs[:]
+    for od in open_docs:
+        for d in docs:
+            if od in d:
+                D.remove(d)
+    return D
+
+
+def add_to_cache(doc):
+    """ Adds/moves doc to the Top of the Cache File """
+    if os.path.isfile(CACHE_FILE):
+        with open(CACHE_FILE, 'r') as f:
+            cached_docs = f.read().strip().split('\n')
+            log.debug('Cache File Contents: {}'.format(cached_docs))
+
+        if doc in cached_docs:
+            cached_docs.remove(doc)
+
+        cached_docs.insert(0, doc)
+
+        with open(CACHE_FILE, 'w') as f:
+            f.write('\n'.join(cached_docs[:100]))
+    else:
+        with open(CACHE_FILE, 'w') as f:
+            f.write(doc)
 
 
 if __name__ == "__main__":

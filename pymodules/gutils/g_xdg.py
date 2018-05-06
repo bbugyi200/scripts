@@ -5,6 +5,8 @@ import getpass
 import inspect
 import os
 
+import gutils.shared as shared
+
 _user = getpass.getuser()
 
 
@@ -28,7 +30,7 @@ def getdir(key, stack=None):
 def _getter_factory(ENVIRONMENT_VARIABLE, dirfmt):
     """ Returns XDG Getter Function that serves to fetch some XDG Standard Directory """
     def _getter(stack):
-        scriptname = os.path.basename(stack[1].filename.rstrip('.py'))
+        scriptname = shared.scriptname(stack)
 
         if ENVIRONMENT_VARIABLE in os.environ:
             xdg_dir = '{}/{}'.format(os.environ[ENVIRONMENT_VARIABLE], scriptname)

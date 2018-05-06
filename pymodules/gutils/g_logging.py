@@ -2,11 +2,11 @@
 
 import inspect
 import logging
-import os
 
 from systemd.journal import JournalHandler
 
 import gutils.g_xdg as xdg
+import gutils.shared as shared
 
 _basic_formatting = '[%(levelname)s] %(message)s'
 
@@ -38,12 +38,8 @@ def enableDebugMode(log):
         if isinstance(handler, logging.StreamHandler):
             handler.setLevel(logging.DEBUG)
 
-    log_file = '{}/debug.log'.format(xdg.getdir('data', stack=inspect.stack()))
-
-    # Append newline to the end of log file. Adds seperation between different instances.
-    if os.path.isfile(log_file):
-        with open(log_file, 'a') as f:
-            f.write('\n')
+    stack = inspect.stack()
+    log_file = '{}/{}.log'.format(xdg.getdir('data', stack=stack), shared.scriptname(stack))
 
     fh = logging.FileHandler(log_file)
     fh.setFormatter(logging.Formatter('[%(process)s] (%(asctime)s) {}'.format(_basic_formatting),

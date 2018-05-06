@@ -13,7 +13,7 @@ if sys.argv[1] == "--update":
 
 
 elif sys.argv[1] == "--cleanup":
-    date_str = open('/home/bryan/.cleanup-tmstmp.log', 'r').read().rstrip()
+    date_str = open('/home/bryan/.local/share/cleanup/timestamp', 'r').read().rstrip()
     last_clean = parse(date_str)
     delta = datetime.today() - last_clean
 

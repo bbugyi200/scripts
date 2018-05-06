@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+
+""" Zathura Helper Script. Used to Open Documents. """
+
+import argparse
+import os
+import signal
+import subprocess as sp
+import sys
+
+import easylog
+
+log = easylog.getEasyLogger(__name__)
+CACHE_FILE = '/home/bryan/Dropbox/var/zopen.db'
+
+
+def main():
+    try:
+        open_docs = shell('wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- | grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"', new_type=lambda x: x.split('\n'))
+        log.debug('Open Docs: {}'.format(' '.join(open_docs)))
+    except sp.CalledProcessError as e:
+        open_docs = None
+        log.debug('No documents currently open in zathura.')
+
+    all_docs = shell('find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu" -o -name "*.ps"')
+
+    cached_docs = shell('cat {}'.format(CACHE_FILE))
+
+    ordered_docs = promote_cached_docs(all_docs.split('\n'), cached_docs.split('\n'))
+
+    if open_docs:
+        ordered_docs = purge_open_docs(ordered_docs, open_docs)
+
+    doc_options = '\n'.join(ordered_docs)
+    choice = shell('printf "{}" | rofi -p "Document" -m -4 -dmenu'.format(doc_options))
+
+    add_to_cache(choice)
+
+    if shell('active_window_class') == 'Zathura':
+        pid = shell('active_window_pid', new_type=int)
+        log.debug('Killing Zathura Instance: {}'.format(pid))
+        os.kill(pid, signal.SIGTERM)
+
+    log.debug('Opening {} in zathura...'.format(choice))
+    shell('zathura "{}" &> /dev/null &'.format(choice))
+
+
+def shell(cmd, new_type=str):
+    """ Run Shell Command """
+    out = sp.check_output(cmd, shell=True)
+    return new_type(out.decode().strip())
+
+
+def promote_cached_docs(docs, cached_docs):
+    """ Docs in Cache File are Brought to the Top of the List of Options """
+    D = docs[:]
+    for c in list(reversed(cached_docs)):
+        if c in D:
+            D.remove(c)
+            D.insert(0, c)
+    return D
+
+
+def purge_open_docs(docs, open_docs):
+    """ Open Docs are Removed from the List of Options """
+    D = docs[:]
+    for odoc in open_docs:
+        for doc in docs:
+            if odoc in doc:
+                D.remove(doc)
+    return D
+
+
+def add_to_cache(doc):
+    """ Adds/moves doc to the Top of the Cache File """
+    log.debug('Adding {} to cache file...'.format(doc))
+    if os.path.isfile(CACHE_FILE):
+        with open(CACHE_FILE, 'r') as f:
+            cached_docs = f.read().strip().split('\n')
+
+        if doc in cached_docs:
+            cached_docs.remove(doc)
+
+        cached_docs.insert(0, doc)
+
+        with open(CACHE_FILE, 'w') as f:
+            f.write('\n'.join(cached_docs[:100]))
+    else:
+        with open(CACHE_FILE, 'w') as f:
+            f.write(doc)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    args = parser.parse_args()
+
+    if args.debug:
+        easylog.enableDebugMode(log)
+
+    try:
+        main()
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

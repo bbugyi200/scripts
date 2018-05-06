@@ -11,9 +11,16 @@ def getEasyLogger(name):
     """ Initializes Log Handlers """
     log = logging.getLogger(name)
 
+    log_file = '/var/tmp/{}.log'.format(os.path.basename(inspect.stack()[1].filename.rstrip('.py')))
+
+    # Append newline to the end of log file. Adds seperation between different instances.
+    if os.path.isfile(log_file):
+        with open(log_file, 'a') as f:
+            f.write('\n')
+
     jh = JournalHandler()
     sh = logging.StreamHandler()
-    fh = logging.FileHandler('/var/tmp/{}.log'.format(os.path.basename(inspect.stack()[1].filename.rstrip('.py'))))
+    fh = logging.FileHandler(log_file)
 
     basic_formatting = '[%(levelname)s] %(message)s'
     formatter = logging.Formatter(basic_formatting)

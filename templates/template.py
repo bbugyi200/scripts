@@ -3,6 +3,7 @@
 """ TEMPLATE """
 
 import argparse
+import sys
 
 import easylog
 
@@ -23,6 +24,9 @@ if __name__ == "__main__":
 
     try:
         main()
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
     except Exception as e:
         log.error('{}: {}'.format(type(e).__name__, str(e)))
         raise

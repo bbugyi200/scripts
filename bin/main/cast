@@ -30,25 +30,27 @@ q       // quit
 
 def main():
     ps = sp.Popen(['find', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.avi', '-o', '-name', '*.mkv'], stdout=sp.PIPE)
-    out = sp.check_output(['rofi', '-p', 'Video File', '-dmenu'], stdin=ps.stdout)
-    video_file = out.decode().strip()
-    log.debug('Video File: {}'.format(video_file))
 
-    if video_file == '':
+    try:
+        out = sp.check_output(['rofi', '-p', 'Video File', '-dmenu'], stdin=ps.stdout)
+        video_file = out.decode().strip()
+        log.debug('Video File: {}'.format(video_file))
+    except sp.CalledProcessError as e:
         raise RuntimeError('No video file selected.')
 
     opts = [video_file]
 
     if args.subs:
-        ps = sp.Popen(['find', '/home/bryan/Downloads', '-name', '*.srt'], stdout=sp.PIPE)
-        out = sp.check_output(['rofi', '-p', 'Subtitles', '-dmenu'], stdin=ps.stdout)
-        srt_file = out.decode().strip()
-        log.debug('Subtitles File: {}'.format(srt_file))
+        log.debug('Prompting for subtitle file.')
+        ps = sp.Popen(['find', '/home/bryan/Downloads', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.srt'], stdout=sp.PIPE)
 
-        opts.extend(['--subtitles', srt_file])
-
-        if srt_file == '':
-            raise RuntimeError('No subtitles file selected.')
+        try:
+            out = sp.check_output(['rofi', '-p', 'Subtitles', '-dmenu'], stdin=ps.stdout)
+            srt_file = out.decode().strip()
+            opts.extend(['--subtitles', srt_file])
+            log.debug('Subtitles File: {}'.format(srt_file))
+        except sp.CalledProcessError as e:
+            log.debug('No subtitles file selected.')
 
     print(PLAYER_CONTROLS)
 
@@ -59,7 +61,7 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-s', '--subs', action='store_true', help='show list of available srt files')
+    parser.add_argument('--nosubs', dest='subs', action='store_false', help='disables subtitle file prompt')
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     args = parser.parse_args()
 

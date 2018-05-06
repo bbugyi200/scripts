@@ -62,6 +62,8 @@ if [[ -n "$socket_name" ]]; then
                 *"WeeChat"* )
                     PRE="a C-u"
                     CMD="/quit";;
+                *"bc"* )
+                    CMD="quit";;
                 *"vim"* )
                     CMD=":qa";;
                 * )

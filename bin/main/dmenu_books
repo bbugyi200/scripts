@@ -51,7 +51,7 @@ fi
 
 case $application in
     'zathura' )
-        xdotool key q && zathura "$CHOICE_PATH" &> /dev/null &;;
+        xdotool key x && zathura "$CHOICE_PATH" &> /dev/null &;;
     'okular' )
         okular --unique "$CHOICE_PATH" &> /dev/null &
 esac

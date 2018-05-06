@@ -66,7 +66,7 @@ def create_pidfile():
             if old_pid != '':
                 raise
         else:
-            log.debug('Sending SIGUSR1 to active running instance...')
+            log.debug('Sending SIGUSR1 to active instance: {}'.format(old_pid))
             os.kill(old_pid, signal.SIGUSR1)
 
             msg = 'Another instance of {} is already running. Terminating this instance.'
@@ -88,8 +88,14 @@ def check_call(*args):
     sp.check_call(args, stdout=DEVNULL, stderr=DEVNULL)
 
 
+def term_handler(signum, frame):
+    """ SIGTERM Handler """
+    log.info('Terminated via SIGTERM signal.')
+    sys.exit(0)
+
+
 def usr1_handler(signum, frame):
-    """ Signal Handler used to Load args Variable from Another Running Instance """
+    """ SIGUSR1 Handler """
     log.debug('Received SIGUSR1 signal.')
     load_args()
 
@@ -125,9 +131,11 @@ if __name__ == "__main__":
     if args.debug:
         easylog.enableDebugMode(log)
 
+    signal.signal(signal.SIGUSR1, usr1_handler)
+    signal.signal(signal.SIGTERM, term_handler)
+
     try:
         assert (args.waittime > args.idletime), "Max wait time must be greater than max idletime."
-        signal.signal(signal.SIGUSR1, usr1_handler)
         dump_args()
         create_pidfile()
         main()

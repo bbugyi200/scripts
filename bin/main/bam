@@ -9,14 +9,8 @@ pipe_cmd_help = "send stdout of the main command to stdin of this command"
 cmd_help = 'main command to run'
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('-P', dest='pipe_cmd', help=pipe_cmd_help)
 parser.add_argument('cmd', nargs=argparse.REMAINDER, help=cmd_help)
 args = parser.parse_args()
 
-if args.pipe_cmd is None:
-    pipe = ''
-else:
-    pipe = ' | ' + args.pipe_cmd
-
-cmd_fmt = 'urxvt -name big-floater -e zsh -i -c "{}{}"'
-sp.call(cmd_fmt.format(' '.join(args.cmd), pipe), shell=True)
+cmd_fmt = 'urxvt -name big-floater -e zsh -i -c "{}"'
+sp.call(cmd_fmt.format(' '.join(args.cmd)), shell=True)

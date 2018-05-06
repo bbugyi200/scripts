@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+
+""" Wrapper for castnow """
+
+import argparse
+import subprocess as sp
+import sys
+
+import easylog
+
+log = easylog.getEasyLogger(__name__)
+
+PLAYER_CONTROLS = """
+========================================
+=       CASTNOW PLAYER CONTROLS        =
+========================================
+
+space   // toggle between play and pause
+m       // toggle mute
+t       // toggle subtitles
+up      // volume up
+down    // volume down
+left    // seek backward (keep pressed / multiple press for faster seek)
+right   // seek forward (keep pressed / multiple press for faster seek)
+n       // next item in the playlist (only supported in launch-mode)
+s       // stop playback
+q       // quit
+"""
+
+
+def main():
+    ps = sp.Popen(['find', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.avi', '-o', '-name', '*.mkv'], stdout=sp.PIPE)
+    out = sp.check_output(['rofi', '-p', 'Video File', '-dmenu'], stdin=ps.stdout)
+    video_file = out.decode().strip()
+    log.debug('Video File: {}'.format(video_file))
+
+    if video_file == '':
+        raise RuntimeError('No video file selected.')
+
+    opts = [video_file]
+
+    if args.subs:
+        ps = sp.Popen(['find', '/home/bryan/Downloads', '-name', '*.srt'], stdout=sp.PIPE)
+        out = sp.check_output(['rofi', '-p', 'Subtitles', '-dmenu'], stdin=ps.stdout)
+        srt_file = out.decode().strip()
+        log.debug('Subtitles File: {}'.format(srt_file))
+
+        opts.extend(['--subtitles', srt_file])
+
+        if srt_file == '':
+            raise RuntimeError('No subtitles file selected.')
+
+    print(PLAYER_CONTROLS)
+
+    cmd_list = ['castnow']
+    cmd_list.extend(opts)
+    sp.check_call(cmd_list)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-s', '--subs', action='store_true', help='show list of available srt files')
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    args = parser.parse_args()
+
+    if args.debug:
+        easylog.enableDebugMode(log)
+
+    try:
+        main()
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

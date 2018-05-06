@@ -31,13 +31,17 @@ Note: you can supply custom mpv path and options with the MPV environment
 """
 
 import argparse
-import os
 import errno
+import os
 import subprocess
 import fcntl
 import string
 
-FIFO = os.path.join(os.getenv("HOME"), ".umpv_fifo")
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+FIFO = "{}/fifo".format(gutils.xdg.getdir('runtime'))
+log.debug(FIFO)
 
 
 # this is the same method mpv uses to decide this

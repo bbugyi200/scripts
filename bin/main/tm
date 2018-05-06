@@ -27,5 +27,6 @@ case $1 in
             erb name=$SESSION_NAME $MUX_CONFIG_DIR/default.yml > $MUX_CONFIG_DIR/$SESSION_NAME.yml
         fi
 
-        tmuxinator start $SESSION_NAME root=$(defaultTmuxDir --get $SESSION_NAME);;
+        tmuxinator start $SESSION_NAME root=$(tmdir --get $SESSION_NAME);;
 esac
+

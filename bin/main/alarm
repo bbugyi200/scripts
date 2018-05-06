@@ -9,10 +9,14 @@ WHITE="#FFFFFF"
 GREY="#D9D9D9"
 
 
-PID_FILE=/tmp/alarm.pid
-TIMESTAMP_FILE=/home/bryan/.alarm.ts
-FIFO=/tmp/counter-fifo
+RUNTIME_DIR=$XDG_RUNTIME_DIR/$(basename $0)
+DATA_DIR=/home/$USER/.local/share/$(basename $0)
+PID_FILE=$RUNTIME_DIR/pid
+TIMESTAMP_FILE=$DATA_DIR/timestamp
+FIFO=$RUNTIME_DIR/fifo
 
+[[ -d $RUNTIME_DIR ]] || mkdir $RUNTIME_DIR
+[[ -d $DATA_DIR ]] || mkdir $DATA_DIR
 
 time_left() {
 	echo $(($stop_time - $(date --date="now" +%s)))
@@ -46,7 +50,6 @@ fi
 if [[ "$stop" = true ]]; then
     exec 1> /dev/null
 fi
-
 
 [[ -p $FIFO ]] || mkfifo $FIFO
 
@@ -139,3 +142,4 @@ done > "$FIFO"
 notify-send -u critical -t 0 -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "Alarm" "$NOTIFICATION"
 printf "\n" > "$FIFO"
 rm $TIMESTAMP_FILE
+

@@ -1,6 +1,9 @@
 #!/bin/bash
 
-FIFO=/tmp/volume-fifo
+FIFO=$XDG_RUNTIME_DIR/volume.fifo
+
+set -x
+
 [[ -p $FIFO ]] || mkfifo $FIFO
 
 while true; do

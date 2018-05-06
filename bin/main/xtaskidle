@@ -12,13 +12,13 @@ import signal
 import subprocess as sp
 import sys
 
-import easylog
+import gutils
 
-log = easylog.getEasyLogger(__name__)
+log = gutils.logging.getEasyLogger(__name__)
 
 NAME = os.path.basename(__file__)
-PIDFILE = "/tmp/{}.pid".format(NAME)
-ARGSFILE = "/tmp/{}.args".format(NAME)
+PIDFILE = "{}/pid".format(gutils.xdg.getdir('runtime'))
+ARGSFILE = "{}/args".format(gutils.xdg.getdir('data'))
 MILLISECONDS_IN_MINUTE = 60000
 DEVNULL = open(os.devnull, 'w')
 
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.debug:
-        easylog.enableDebugMode(log)
+        gutils.logging.enableDebugMode(log)
 
     signal.signal(signal.SIGUSR1, usr1_handler)
     signal.signal(signal.SIGTERM, term_handler)

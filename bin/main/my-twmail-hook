@@ -17,9 +17,9 @@ import logging
 import os
 import subprocess
 
-import easylog
+import gutils
 
-log = easylog.getEasyLogger(__name__)
+log = gutils.logging.getEasyLogger(__name__)
 
 START_OF_DAY = 6  # Hour that day starts
 

@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # ---------- GLOBALS
-PID_FILE=/tmp/khal-alarms.pid
-FIFO=/tmp/calevent-fifo
+RUNTIME_DIR=$XDG_RUNTIME_DIR/$(basename $0)
+PID_FILE=$RUNTIME_DIR/pid
+FIFO=$RUNTIME_DIR/fifo
 N=1
 
+[[ -d $RUNTIME_DIR ]] || mkdir $RUNTIME_DIR
 [[ -p $FIFO ]] || mkfifo $FIFO
 
 # ---------- ARGUEMENT PARSING

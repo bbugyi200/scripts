@@ -5,9 +5,9 @@
 import argparse
 import sys
 
-import easylog
+import gutils
 
-log = easylog.getEasyLogger(__name__)
+log = gutils.logging.getEasyLogger(__name__)
 
 
 def main():
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.debug:
-        easylog.enableDebugMode(log)
+        gutils.logging.enableDebugMode(log)
 
     try:
         main()

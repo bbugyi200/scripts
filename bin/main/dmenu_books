@@ -1,57 +1,102 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-CACHE_FILE=/home/bryan/Dropbox/var/dmenu_books.db
-PATH_LIST=$(find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu" -o -name "*.ps")
+""" Zathura Helper Script. Used to Open Documents. """
 
-eval set -- $(getopt -o "da:" -l "debug,application:" -- "$@")
+import argparse
+import os
+import signal
+import subprocess as sp
+import sys
 
-application="zathura"
-debug=0
-while [[ -n "$1" ]]; do
-    case $1 in
-        '-d' | '--debug' )
-            PS4='$LINENO: '
-            set -x;;
-        '-a' | '--application' )
-            shift
-            application="$1";;
-        '--' )
-            shift
-            break;;
-    esac
-    shift
-done
+import easylog
 
-OPEN_BOOK=$(wmctrl -lx | grep "$application" | tr -s " " | cut -d' ' -f5- | grep -o ".*\.\(pdf\|djvu\|epub\)" | tail -1)
-if [[ -z "$OPEN_BOOK" ]]; then
-    OPEN_BOOK="!@#$%^&*!@#$%^&*"  # Garbage
-fi
+log = easylog.getEasyLogger(__name__)
+CACHE_FILE = '/home/bryan/Dropbox/var/dmenu_books.db'
 
-CHOICE=$(printf "$PATH_LIST\n" | sed -e 's/.*\///g' | cat $CACHE_FILE - | sed "/$OPEN_BOOK/d" | gawk '!a[$0]++' | dmenu -i)
 
-if [[ -z "$CHOICE" ]]; then
-    exit 1
-fi
+def shell(cmd, new_type=str):
+    out = sp.check_output(cmd, shell=True)
+    return new_type(out.decode().strip())
 
-if [[ -f $CACHE_FILE ]]; then
-    sed -i "1s/^/$CHOICE\n/" $CACHE_FILE
-    gawk -i inplace '!a[$0]++' $CACHE_FILE
-else
-    echo $CHOICE > $CACHE_FILE
-fi
 
-CHOICE_PATH=$(printf "$PATH_LIST\n" | grep -F "$CHOICE" | head -1)
+def promote_cached_docs(docs, cached_docs):
+    D = docs[:]
+    for c in list(reversed(cached_docs)):
+        if c in D:
+            D.remove(c)
+            D.insert(0, c)
+    return D
 
-if [[ -z "$CHOICE_PATH" ]]; then
-    ESCAPED_CHOICE=$(echo $CHOICE | sed 's/\[/\\[/g' | sed 's/\]/\\]/g')
-    sed -i "/$ESCAPED_CHOICE/d" $CACHE_FILE
-    notify-send -u critical "dmenu_books" "The document $CHOICE was not found. It has been purged from the cache file."
-    exit 2
-fi
 
-case $application in
-    'zathura' )
-        xdotool key x && zathura "$CHOICE_PATH" &> /dev/null &;;
-    'okular' )
-        okular --unique "$CHOICE_PATH" &> /dev/null &
-esac
+def purge_open_docs(docs, open_docs):
+    D = docs[:]
+    for od in open_docs:
+        for d in docs:
+            if od in d:
+                D.remove(d)
+    return D
+
+
+def add_to_cache(doc):
+    if os.path.isfile(CACHE_FILE):
+        with open(CACHE_FILE, 'r') as f:
+            cached_docs = f.read().strip().split('\n')
+            log.debug('Cache File Contents: {}'.format(cached_docs))
+
+        if doc in cached_docs:
+            cached_docs.remove(doc)
+
+        cached_docs.insert(0, doc)
+
+        with open(CACHE_FILE, 'w') as f:
+            f.write('\n'.join(cached_docs[:100]))
+    else:
+        with open(CACHE_FILE, 'w') as f:
+            f.write(doc)
+
+
+def main():
+    open_docs = shell('wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- | grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"', new_type=lambda x: x.split('\n'))
+    log.debug('Open Books: {}'.format(open_docs))
+
+    all_docs = shell('find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu" -o -name "*.ps"')
+
+    cached_docs = shell('cat {}'.format(CACHE_FILE))
+    log.debug('Cached Docs: {}'.format(cached_docs))
+
+    ordered_docs = promote_cached_docs(all_docs.split('\n'), cached_docs.split('\n'))
+    log.debug('First 5 of Ordered Docs: {}'.format(ordered_docs[:5]))
+
+    clean_docs = purge_open_docs(ordered_docs, open_docs)
+    log.debug('First 5 of Clean Docs: {}'.format(clean_docs[:5]))
+
+    doc_options = '\n'.join(clean_docs)
+    choice = shell('printf "{}" | rofi -p "Document" -m -4 -dmenu'.format(doc_options))
+    log.debug('Choice: {}'.format(choice))
+
+    add_to_cache(choice)
+
+    if shell('active_window_class') == 'Zathura':
+        pid = shell('active_window_pid', new_type=int)
+        log.debug('Killing Zathura Instance: {}'.format(pid))
+        os.kill(pid, signal.SIGTERM)
+
+    shell('zathura "{}" &> /dev/null &'.format(choice))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    args = parser.parse_args()
+
+    if args.debug:
+        easylog.enableDebugMode(log)
+
+    try:
+        main()
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

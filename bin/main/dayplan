@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+
+""" Script to Manage dayplan.txt """
+
+import argparse
+import datetime as dt
+from dateutil.parser import parse
+import subprocess as sp
+import sys
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+DAYPLAN_FILE = '/home/bryan/Dropbox/notes/dayplan.txt'
+TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.getdir('data'))
+DATE_FMT = '%A %Y-%m-%d'
+MAX_DAYS = 5
+
+
+def main():
+    try:
+        last_dt = get_last_dt()
+    except FileNotFoundError as e:
+        last_dt = dt.datetime.now() - dt.timedelta(days=MAX_DAYS)
+        log.debug('Timestamp file not found. Setting last date to {}-{}-{}.'.format(last_dt.year, last_dt.month, last_dt.day))
+
+    today_dt = dt.datetime.now()
+    delta = today_dt - last_dt
+    if delta.days > MAX_DAYS:
+        log.debug('Reducing delta.days to {}.'.format(MAX_DAYS))
+        last_dt = today_dt - dt.timedelta(days=MAX_DAYS)
+        delta = today_dt - last_dt
+
+    log.debug('delta.days = {}'.format(delta.days))
+
+    temp_dt = today_dt + dt.timedelta(days=MAX_DAYS) - dt.timedelta(days=delta.days)
+    with open(DAYPLAN_FILE, 'a+') as f:
+        for i in range(delta.days):
+            pretty_date = temp_dt.strftime(DATE_FMT)
+            f.write('{}\n\n'.format(pretty_date.upper()))
+            temp_dt = temp_dt + dt.timedelta(days=1)
+
+    record_dt(today_dt)
+
+    sp.call(['vim', DAYPLAN_FILE])
+
+
+def get_last_dt():
+    """ Returns Last Datetime that this Script was Run """
+    with open(TIMESTAMP_FILE, 'r') as f:
+        dt_string = f.read().strip()
+        return parse(dt_string)
+
+
+def record_dt(this_dt):
+    """ Records Datetime to Timestamp File """
+    with open(TIMESTAMP_FILE, 'w') as f:
+        dt_string = this_dt.strftime(DATE_FMT)
+        f.write(dt_string)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    args = parser.parse_args()
+
+    if args.debug:
+        gutils.logging.enableDebugMode(log)
+
+    try:
+        main()
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

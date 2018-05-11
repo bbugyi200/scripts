@@ -4,7 +4,9 @@ import sys
 import os
 import pickle
 
-fpath = '/home/bryan/.local/share/{}.db'.format(os.path.basename(__file__))
+import gutils
+
+fpath = '{}/default-dirs.pickle'.format(gutils.xdg.getdir('data'))
 
 default_dirs = dict()
 if not os.path.isfile(fpath):

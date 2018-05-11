@@ -11,11 +11,11 @@ _user = getpass.getuser()
 
 
 def getdir(key, stack=None):
-    """ Returns XDG Standard Locations
-
-    @key: Must be in {'config','data','runtime','cache'}
-    """
+    """ Returns XDG Standard Locations """
     key = key.lower()
+    key_opts = {'config', 'data', 'runtime', 'cache'}
+    assert key in key_opts, "key MUST be in {}".format(key_opts)
+
     getters = {'config': _getter_factory('XDG_CONFIG_HOME', '/home/{}/.config/{}'),
                'data': _getter_factory('XDG_DATA_HOME', '/home/{}/.local/share/{}'),
                'runtime': _getter_factory('XDG_RUNTIME_DIR', '/run/user/1000/{}'),

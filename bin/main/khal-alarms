@@ -75,3 +75,4 @@ done
 
 alarm --stop
 printf "\n" > "$FIFO"
+printf "\n" > "$XDG_RUNTIME_DIR/alarm/fifo"

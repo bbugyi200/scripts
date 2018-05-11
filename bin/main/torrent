@@ -6,8 +6,11 @@ when the download is finished, and then texts me.
 """
 
 import argparse
+import collections
 import os
+import pickle
 import time
+import signal
 import subprocess as sp
 import sys
 
@@ -16,11 +19,11 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 SECONDS_IN_HOUR = 3600
-delay_help = "Delay starting the script for DELAY seconds. Defaults to 5."
-timeout_help = "Time (in hours) to attempt to complete download before timing out. Defaults to 1."
-
+MAGNET_FILE = '{}/magnet'.format(gutils.xdg.getdir('data'))
 DEVNULL = open(os.devnull, 'w')
 # DEVNULL = None
+
+magnet_queue = collections.deque()
 
 
 def textme(msg):
@@ -31,6 +34,7 @@ def textme(msg):
 
 def main():
     time.sleep(args.delay)
+    magnet_queue.append(args.magnet)
 
     try:
         log.info('Connecting to VPN and starting transmission daemon...')
@@ -39,58 +43,92 @@ def main():
     except sp.CalledProcessError as e:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon! :(')
     else:
-        i = 0
-        while True:
-            time.sleep(1)
-            try:
-                sp.check_call(['transmission-remote', '-a', args.magnet], stdout=DEVNULL)
-            except sp.CalledProcessError as e:
-                i += 1
-                if i <= 10:
-                    continue
+        magnet_count = 0
+        while len(magnet_queue) > 0:
+            magnet = magnet_queue.popleft()
+            magnet_count += 1
+
+            i = 0
+            while True:
+                time.sleep(1)
+                try:
+                    sp.check_call(['transmission-remote', '-a', magnet], stdout=DEVNULL)
+                except sp.CalledProcessError as e:
+                    i += 1
+                    if i <= 10:
+                        continue
+                    else:
+                        raise RuntimeError('Failed to start torrent! :(')
                 else:
-                    raise RuntimeError('Failed to start torrent! :(')
-            else:
-                break
+                    break
 
-        i = 0
-        while True:
-            SLEEP_TIME = 5
+            i = 0
+            while True:
+                SLEEP_TIME = 5
 
-            i += 1
-            if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
-                msg = "Torrent is still attempting to download after {0:.1f} hour(s) elapsed time.\
-                       Shutting down early! :(".format(args.timeout)
-                raise RuntimeError(msg)
+                i += 1
+                if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
+                    msg = "Torrent is still attempting to download after {0:.1f} hour(s) elapsed time.\
+                           Shutting down early! :(".format(args.timeout)
+                    raise RuntimeError(msg)
 
-            time.sleep(SLEEP_TIME)
+                time.sleep(SLEEP_TIME)
 
-            p = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
-            output = p.communicate()[0].decode('utf-8')
-            if 'finished' in output.lower():
-                break
+                p = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
+                output = p.communicate()[0].decode('utf-8')
+                if 'finished' in output.lower():
+                    break
 
-        textme('Your movie has finished downloading! :)')
+            sp.call(['transmission-remote', '-t{}'.format(magnet_count), '-r'], stdout=DEVNULL)
+
+        completed_msg = 'All torrents are complete! :)'
+        if args.textme:
+            textme(completed_msg)
+        else:
+            sp.check_call(['notify-send', '-t', '0', os.path.basename(__file__), completed_msg])
 
     finally:
-        sp.call(['transmission-remote', '-t1', '-r'], stdout=DEVNULL)
         sp.call(['killall', '-9', 'transmission-daemon'], stdout=DEVNULL)
         sp.call(['PIA', 'stop'], stdout=DEVNULL)
 
 
+def usr1_handler(signum, frame):
+    log.debug('SIGUSR1 signal received.')
+    with open(MAGNET_FILE, 'rb') as f:
+        magnet = pickle.load(f)
+        magnet_queue.append(magnet)
+    log.debug('Added {} to Magnet Queue.'.format(magnet))
+
+
 if __name__ == "__main__":
+    delay_help = "Delay starting the script for DELAY seconds. Defaults to 5."
+    timeout_help = "Time (in hours) to attempt to complete download before timing out. Defaults to 1."
+    textme_help = "Send me an SMS message when all torrents are complete."
+
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('magnet', help='The torrent magnet file.')
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', type=int, dest='delay', default=5, help=delay_help)
     parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
+    parser.add_argument('-t', '--textme', dest='textme', action='store_true', help=textme_help)
     args = parser.parse_args()
 
     if args.debug:
         gutils.logging.enableDebugMode(log)
 
+    signal.signal(signal.SIGUSR1, usr1_handler)
+
     try:
+        gutils.create_pidfile()
         main()
+    except gutils.OldInstanceAliveException as e:
+        log.debug('Sending SIGUSR1 to {}'.format(e.pid))
+
+        with open(MAGNET_FILE, 'wb') as f:
+            pickle.dump(args.magnet, f)
+
+        os.kill(e.pid, signal.SIGUSR1)
+        sys.exit(0)
     except RuntimeError as e:
         log.error(str(e))
         textme(str(e))

@@ -5,7 +5,6 @@ import logging
 
 from systemd.journal import JournalHandler
 
-import gutils.g_xdg as xdg
 import gutils.shared as shared
 
 _basic_formatting = '[%(levelname)s] %(message)s'
@@ -39,7 +38,7 @@ def enableDebugMode(log):
             handler.setLevel(logging.DEBUG)
 
     stack = inspect.stack()
-    log_file = '{}/{}.log'.format(xdg.getdir('data', stack=stack), shared.scriptname(stack))
+    log_file = '/var/tmp/{}.log'.format(shared.scriptname(stack))
 
     fh = logging.FileHandler(log_file)
     fh.setFormatter(logging.Formatter('[%(process)s] (%(asctime)s) {}'.format(_basic_formatting),

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+QUICKMARKS_PATH=/home/bryan/.config/qutebrowser/quickmarks
+sort $QUICKMARKS_PATH > /tmp/quickmarks
+mv /tmp/quickmarks $QUICKMARKS_PATH

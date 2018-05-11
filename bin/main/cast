@@ -29,10 +29,10 @@ q       // quit
 
 
 def main():
-    ps = sp.Popen(['find', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.avi', '-o', '-name', '*.mkv'], stdout=sp.PIPE)
+    ps = sp.Popen(['find', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.avi', '-o', '-name', '*.mkv', '-o', '-name', '*.mp4'], stdout=sp.PIPE)
 
     try:
-        out = sp.check_output(['rofi', '-p', 'Video File', '-dmenu'], stdin=ps.stdout)
+        out = sp.check_output(['rofi', '-p', 'Video File', '-dmenu', '-i'], stdin=ps.stdout)
         video_file = out.decode().strip()
         log.debug('Video File: {}'.format(video_file))
     except sp.CalledProcessError as e:
@@ -40,12 +40,15 @@ def main():
 
     opts = [video_file]
 
+    if video_file.endswith('.avi'):
+        opts.extend(['--tomp4'])
+
     if args.subs:
         log.debug('Prompting for subtitle file.')
         ps = sp.Popen(['find', '/home/bryan/Downloads', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.srt'], stdout=sp.PIPE)
 
         try:
-            out = sp.check_output(['rofi', '-p', 'Subtitles', '-dmenu'], stdin=ps.stdout)
+            out = sp.check_output(['rofi', '-p', 'Subtitles', '-dmenu', '-i'], stdin=ps.stdout)
             srt_file = out.decode().strip()
             opts.extend(['--subtitles', srt_file])
             log.debug('Subtitles File: {}'.format(srt_file))

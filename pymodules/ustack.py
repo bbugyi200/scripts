@@ -1,10 +1,12 @@
 import os
 import pickle
 
+import gutils
+
 
 class UStack:
     def __init__(self):
-        self.fpath = '/var/tmp/used_directory_stack.db'
+        self.fpath = '{}/dirstack.pickle'.format(gutils.xdg.getdir('data'))
         if os.path.isfile(self.fpath):
             with open(self.fpath, 'rb') as f:
                 self.stack = pickle.load(f)

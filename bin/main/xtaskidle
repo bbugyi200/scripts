@@ -56,25 +56,14 @@ def main():
 
 def create_pidfile():
     """ Writes PID to File """
-    if os.path.isfile(PIDFILE):
-        old_pid = int(open(PIDFILE, 'r').read())
-        try:
-            os.kill(old_pid, 0)
-        except OSError as e:
-            pass
-        except ValueError as e:
-            if old_pid != '':
-                raise
-        else:
-            log.debug('Sending SIGUSR1 to active instance: {}'.format(old_pid))
-            os.kill(old_pid, signal.SIGUSR1)
+    try:
+        gutils.create_pidfile()
+    except gutils.OldInstanceAliveException as e:
+        log.debug('Sending SIGUSR1 to active instance: {}'.format(e.pid))
+        os.kill(e.pid, signal.SIGUSR1)
 
-            msg = 'Another instance of {} is already running. Terminating this instance.'
-            log.info(msg.format(NAME))
-            sys.exit(0)
-
-    pid = os.getpid()
-    open(PIDFILE, 'w').write(str(pid))
+        msg = 'Another instance of {} is already running. Terminating this instance.'
+        raise RuntimeError(msg.format(NAME))
 
 
 def xprintidle():

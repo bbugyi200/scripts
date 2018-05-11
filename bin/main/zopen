@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-""" Zathura Helper Script. Used to Open Documents. """
+""" Zathura Helper Script. Used to Search for and then Open Documents in Zathura. """
 
 import argparse
-import getpass
 import os
 import signal
 import subprocess as sp
@@ -12,8 +11,7 @@ import sys
 import gutils
 
 log = gutils.logging.getEasyLogger(__name__)
-DATA_DIR = '/home/{}/.local/share/{}'.format(getpass.getuser(), os.path.basename(__file__))
-CACHE_FILE = '{}/recently-opened.txt'.format(DATA_DIR)
+CACHE_FILE = '{}/recently-opened.txt'.format(gutils.xdg.getdir('data'))
 
 
 def main():
@@ -22,7 +20,7 @@ def main():
         log.debug('Open Docs: {}'.format(' '.join(open_docs)))
     except sp.CalledProcessError as e:
         open_docs = None
-        log.debug('No documents currently open in zathura.')
+        log.debug('No documents are currently open in zathura.')
 
     all_docs = shell('find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu" -o -name "*.ps"')
     cached_docs = shell('cat {}'.format(CACHE_FILE))
@@ -32,7 +30,7 @@ def main():
         ordered_docs = purge_open_docs(ordered_docs, open_docs)
 
     doc_options = '\n'.join(ordered_docs)
-    choice = shell('printf "{}" | rofi -p "Document" -m -4 -dmenu'.format(doc_options))
+    choice = shell('printf "{}" | rofi -p "Document" -m -4 -dmenu -i'.format(doc_options))
 
     add_to_cache(choice)
 
@@ -86,9 +84,6 @@ def add_to_cache(doc):
         with open(CACHE_FILE, 'w') as f:
             f.write('\n'.join(cached_docs[:100]))
     else:
-        if not os.path.isdir(DATA_DIR):
-            os.mkdir(DATA_DIR)
-
         with open(CACHE_FILE, 'w') as f:
             f.write(doc)
 

@@ -35,6 +35,8 @@ def main():
                 check_call('task', 'start.any:', 'stop')
             except sp.CalledProcessError as e:
                 raise RuntimeError('Failed to stop task. No task is currently started.')
+            else:
+                check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
         else:
             time.sleep(args.delay * 60)
             continue
@@ -58,7 +60,7 @@ def create_pidfile():
     """ Writes PID to File """
     try:
         gutils.create_pidfile()
-    except gutils.OldInstanceAliveException as e:
+    except gutils.StillAliveException as e:
         log.debug('Sending SIGUSR1 to active instance: {}'.format(e.pid))
         os.kill(e.pid, signal.SIGUSR1)
 
@@ -106,12 +108,12 @@ def dump_args():
 
 
 if __name__ == "__main__":
-    max_help = 'max amount of idletime (in minutes) to allow before stopping task'
+    idle_help = 'max amount of idletime (in minutes) to allow before stopping task'
     delay_help = 'time (in minutes) to delay between calls to xprintidle'
     waittime_help = 'time (in minutes) to wait for activity after stopping task'
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=5, help=max_help)
+    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=10, help=idle_help)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', dest='delay', nargs='?', type=float, default=0.5, help=delay_help)
     parser.add_argument('-w', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)
@@ -124,7 +126,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, term_handler)
 
     try:
-        assert (args.waittime > args.idletime), "Max wait time must be greater than max idletime."
         dump_args()
         create_pidfile()
         main()

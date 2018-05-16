@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+
+""" Uses rofi to Help Select a Video File (with subtitles) to Play in mpv """
+
+import argparse
+import subprocess as sp
+import sys
+
+import gutils
+import videos
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main():
+    video_file = videos.get('video')
+
+    opts = [video_file]
+    srt_file = videos.get('subs')
+
+    if srt_file is not None:
+        opts.extend(['--sub-file', srt_file])
+
+    cmd_list = ['mpv']
+    cmd_list.extend(opts)
+    sp.check_call(cmd_list)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    args = parser.parse_args()
+
+    if args.debug:
+        gutils.logging.enableDebugMode(log)
+
+    try:
+        main()
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

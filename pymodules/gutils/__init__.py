@@ -2,12 +2,13 @@
 
 import inspect
 import os
+import subprocess as sp
 
 import gutils.g_logging as logging  # noqa: F401
 import gutils.g_xdg as xdg  # noqa: F401
 
 
-class OldInstanceAliveException(Exception):
+class StillAliveException(Exception):
     pid = -1
 
 
@@ -24,9 +25,15 @@ def create_pidfile():
             if old_pid != '':
                 raise
         else:
-            e = OldInstanceAliveException()
+            e = StillAliveException()
             e.pid = old_pid
             raise e
 
     pid = os.getpid()
     open(PIDFILE, 'w').write(str(pid))
+
+
+def shell(cmd, cast=str):
+    """ Run Shell Command """
+    out = sp.check_output(cmd, shell=True)
+    return cast(out.decode().strip())

@@ -9,7 +9,8 @@ inactive_fmt = 'Study:  ({} / {})        Dev:  ({} / {})        Meta:  ({} / {})
 active_fmt = '{tag}          "{project}"          ({currtime} / {daytime} / {weektime})               [{totaltime}]'
 
 
-def _get_tag_time(tag, interval: 'day | week'):
+def _get_tag_time(tag, interval):
+    assert interval == 'day' or interval == 'week', 'Interval must be in {day,week}'
     now = dt.datetime.now().astimezone(dt.timezone.utc)
 
     if interval == 'week':

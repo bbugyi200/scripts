@@ -7,6 +7,7 @@ import subprocess as sp
 import sys
 
 import gutils
+import videos
 
 log = gutils.logging.getEasyLogger(__name__)
 
@@ -29,14 +30,7 @@ q       // quit
 
 
 def main():
-    ps = sp.Popen(['find', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.avi', '-o', '-name', '*.mkv', '-o', '-name', '*.mp4'], stdout=sp.PIPE)
-
-    try:
-        out = sp.check_output(['rofi', '-p', 'Video File', '-dmenu', '-i'], stdin=ps.stdout)
-        video_file = out.decode().strip()
-        log.debug('Video File: {}'.format(video_file))
-    except sp.CalledProcessError as e:
-        raise RuntimeError('No video file selected.')
+    video_file = videos.get('video')
 
     opts = [video_file]
 
@@ -44,16 +38,9 @@ def main():
         opts.extend(['--tomp4'])
 
     if args.subs:
-        log.debug('Prompting for subtitle file.')
-        ps = sp.Popen(['find', '/home/bryan/Downloads', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.srt'], stdout=sp.PIPE)
-
-        try:
-            out = sp.check_output(['rofi', '-p', 'Subtitles', '-dmenu', '-i'], stdin=ps.stdout)
-            srt_file = out.decode().strip()
+        srt_file = videos.get('subs')
+        if srt_file is not None:
             opts.extend(['--subtitles', srt_file])
-            log.debug('Subtitles File: {}'.format(srt_file))
-        except sp.CalledProcessError as e:
-            log.debug('No subtitles file selected.')
 
     print(PLAYER_CONTROLS)
 

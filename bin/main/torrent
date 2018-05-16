@@ -29,7 +29,7 @@ magnet_queue = collections.deque()
 def textme(msg):
     """ Sends SMS Message to my Cell Phone """
     log.info('SMS Message Sent: {}'.format(msg))
-    sp.call(['textme', msg], stdout=DEVNULL)
+    sp.check_call(['textme', msg], stdout=DEVNULL)
 
 
 def main():
@@ -93,11 +93,16 @@ def main():
 
 
 def usr1_handler(signum, frame):
+    """ Adds New Magnet File to Queue """
     log.debug('SIGUSR1 signal received.')
     with open(MAGNET_FILE, 'rb') as f:
         magnet = pickle.load(f)
         magnet_queue.append(magnet)
     log.debug('Added {} to Magnet Queue.'.format(magnet))
+
+
+def term_handler(signum, frame):
+    sys.exit(2)
 
 
 if __name__ == "__main__":
@@ -117,16 +122,17 @@ if __name__ == "__main__":
         gutils.logging.enableDebugMode(log)
 
     signal.signal(signal.SIGUSR1, usr1_handler)
+    signal.signal(signal.SIGTERM, term_handler)
 
     try:
         gutils.create_pidfile()
         main()
-    except gutils.OldInstanceAliveException as e:
-        log.debug('Sending SIGUSR1 to {}'.format(e.pid))
-
+    except gutils.StillAliveException as e:
+        log.debug('Dumping {} to {}.'.format(args.magnet, MAGNET_FILE))
         with open(MAGNET_FILE, 'wb') as f:
             pickle.dump(args.magnet, f)
 
+        log.debug('Sending SIGUSR1 to {}'.format(e.pid))
         os.kill(e.pid, signal.SIGUSR1)
         sys.exit(0)
     except RuntimeError as e:

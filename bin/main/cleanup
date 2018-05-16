@@ -17,8 +17,8 @@ confirm "rm /var/tmp/*.log"
 
 confirm "sort_qb_quickmarks"
 
-printf "\nList of Foreign Packages (pacman -Qm):"
-confirm "pacman -Qm"
+printf "\nList of Foreign Packages (pacman -Qm):\n"
+pacman -Qm
 printf "\nIt is up to you to manually remove the packages above that you are no longer using.\n\n"
 
 date +"%m/%d/%y" > $TIMESTAMP_FILE

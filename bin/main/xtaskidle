@@ -36,6 +36,7 @@ def main():
             except sp.CalledProcessError as e:
                 raise RuntimeError('Failed to stop task. No task is currently started.')
             else:
+                log.debug('Shortening last timewarrior event by {} minutes.'.format(args.idletime))
                 check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
         else:
             time.sleep(args.delay * 60)
@@ -70,8 +71,7 @@ def create_pidfile():
 
 def xprintidle():
     """ Returns Machine's Current Idletime """
-    out = sp.check_output(['xprintidle'])
-    return int(out.decode())
+    return gutils.shell('xprintidle', cast=int)
 
 
 def check_call(*args):

@@ -9,7 +9,9 @@ import gutils.g_xdg as xdg  # noqa: F401
 
 
 class StillAliveException(Exception):
-    pid = -1
+    """ Raised when Old Instance of Script is Still Running """
+    def __init__(self, pid):
+        self.pid = pid
 
 
 def create_pidfile():
@@ -25,9 +27,7 @@ def create_pidfile():
             if old_pid != '':
                 raise
         else:
-            e = StillAliveException()
-            e.pid = old_pid
-            raise e
+            raise StillAliveException(old_pid)
 
     pid = os.getpid()
     open(PIDFILE, 'w').write(str(pid))

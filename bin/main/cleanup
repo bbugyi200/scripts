@@ -6,13 +6,19 @@ TIMESTAMP_FILE=$DATA_DIR/timestamp
 [[ -d $DATA_DIR ]] || mkdir $DATA_DIR
 
 confirm "sudo pacman -Rns $(pacman -Qtdq)"
+
 printf "\nls ~/Downloads\n\n"
 ls ~/Downloads
 confirm "rm -Rf ~/Downloads/*"
+
 confirm "sudo paccache -r"
-printf "\nList of Foreign Packages (pacman -Qm):\n\n"
+
 confirm "rm /var/tmp/*.log"
+
 confirm "sort_qb_quickmarks"
+
+printf "\nList of Foreign Packages (pacman -Qm):"
 confirm "pacman -Qm"
 printf "\nIt is up to you to manually remove the packages above that you are no longer using.\n\n"
+
 date +"%m/%d/%y" > $TIMESTAMP_FILE

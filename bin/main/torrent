@@ -23,6 +23,7 @@ MAGNET_FILE = '{}/magnet'.format(gutils.xdg.getdir('data'))
 DEVNULL = open(os.devnull, 'w')
 # DEVNULL = None
 
+magnet_count = 1
 magnet_queue = collections.deque()
 
 
@@ -43,10 +44,8 @@ def main():
     except sp.CalledProcessError as e:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon! :(')
     else:
-        magnet_count = 0
         while len(magnet_queue) > 0:
             magnet = magnet_queue.popleft()
-            magnet_count += 1
 
             i = 0
             while True:
@@ -79,17 +78,23 @@ def main():
                 if 'finished' in output.lower():
                     break
 
-            sp.call(['transmission-remote', '-t{}'.format(magnet_count), '-r'], stdout=DEVNULL)
+            tsm_remove()
 
         completed_msg = 'All torrents are complete! :)'
+        sp.check_call(['notify-send', '-t', '0', os.path.basename(__file__), completed_msg])
         if args.textme:
             textme(completed_msg)
-        else:
-            sp.check_call(['notify-send', '-t', '0', os.path.basename(__file__), completed_msg])
 
     finally:
         sp.call(['killall', '-9', 'transmission-daemon'], stdout=DEVNULL)
         sp.call(['PIA', 'stop'], stdout=DEVNULL)
+
+
+def tsm_remove():
+    """ Removes Transmission Magnet File """
+    global magnet_count
+    sp.call(['transmission-remote', '-t{}'.format(magnet_count), '-r'], stdout=DEVNULL)
+    magnet_count += 1
 
 
 def usr1_handler(signum, frame):
@@ -102,20 +107,21 @@ def usr1_handler(signum, frame):
 
 
 def term_handler(signum, frame):
+    tsm_remove()
     sys.exit(2)
 
 
 if __name__ == "__main__":
     delay_help = "Delay starting the script for DELAY seconds. Defaults to 5."
     timeout_help = "Time (in hours) to attempt to complete download before timing out. Defaults to 1."
-    textme_help = "Send me an SMS message when all torrents are complete."
+    notext_help = "Send me an SMS message when all torrents are complete."
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('magnet', help='The torrent magnet file.')
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', type=int, dest='delay', default=5, help=delay_help)
     parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
-    parser.add_argument('-t', '--textme', dest='textme', action='store_true', help=textme_help)
+    parser.add_argument('--no-text', dest='textme', action='store_false', help=notext_help)
     args = parser.parse_args()
 
     if args.debug:

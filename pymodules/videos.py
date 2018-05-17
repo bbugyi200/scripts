@@ -1,6 +1,6 @@
 import subprocess as sp
 
-_rofi_cmd_fmt = 'rofi -p {} -width 90 -dmenu -i'
+_rofi_cmd_fmt = 'rofi -p {} -m -4 -width 90 -dmenu -i'
 
 
 def get(opt):

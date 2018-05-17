@@ -2,7 +2,7 @@
 
 # Remember to run 'mount /dev/sdc /media/bryan/perseus' first!
 
-rsync -av --delete /media/bryan/hercules/archive /media/bryan/perseus/archive
+rsync -av --delete /media/bryan/hercules/archive/ /media/bryan/perseus/archive
 rsync -av --delete /media/bryan/hercules/backup /media/bryan/perseus/backup
-date > /media/bryan/perseus/backup/external.txt
+date > /media/bryan/perseus/external.txt
 notify-send "External Backup is Complete! :)"

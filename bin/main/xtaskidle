@@ -46,7 +46,7 @@ def main():
             continue
 
         dt_timeout = dt.datetime.now() + dt.timedelta(minutes=(args.waittime - args.idletime))
-        shortened_timew = False
+        already_shortened_timew = False
         while True:
             time.sleep(1)
             idletime = xprintidle()
@@ -60,12 +60,12 @@ def main():
                 log.debug('Time is now past: {}'.format(dt_timeout))
                 log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
                 sys.exit(0)
-            elif (idletime >= 2 * args.idletime * MILLISECONDS_IN_MINUTE) and not shortened_timew:
+            elif (idletime >= 2 * args.idletime * MILLISECONDS_IN_MINUTE) and not already_shortened_timew:
                 msg = 'Shortening last timewarrior event by {} minutes.'.format(args.idletime)
                 log.debug(msg)
                 check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
                 check_call('notify-send', NAME, msg)
-                shortened_timew = True
+                already_shortened_timew = True
 
 
 def create_pidfile():

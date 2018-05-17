@@ -31,21 +31,25 @@ def main():
         if idletime >= args.idletime * MILLISECONDS_IN_MINUTE:
             try:
                 log.debug('System has been idle for {} milliseconds.'.format(idletime))
+
+                curr_tw_event = gutils.shell('timew | head -n 1')
+                if 'Study' not in curr_tw_event:
+                    raise RuntimeError('Current Task is NOT Related to Studying.')
+
                 log.info('Stopping current task...')
                 check_call('task', 'start.any:', 'stop')
             except sp.CalledProcessError as e:
                 raise RuntimeError('Failed to stop task. No task is currently started.')
-            else:
-                log.debug('Shortening last timewarrior event by {} minutes.'.format(args.idletime))
-                check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
         else:
             time.sleep(args.delay * 60)
             continue
 
         dt_timeout = dt.datetime.now() + dt.timedelta(minutes=(args.waittime - args.idletime))
+        shortened_timew = False
         while True:
             time.sleep(1)
             idletime = xprintidle()
+
             if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
                 log.info('Restarting last task...')
                 check_call('last_task')
@@ -55,6 +59,12 @@ def main():
                 log.debug('Time is now past: {}'.format(dt_timeout))
                 log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
                 sys.exit(0)
+            elif (idletime >= 2 * args.idletime * MILLISECONDS_IN_MINUTE) and not shortened_timew:
+                msg = 'Shortening last timewarrior event by {} minutes.'.format(args.idletime)
+                log.debug(msg)
+                check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
+                check_call('notify-send', NAME, msg)
+                shortened_timew = True
 
 
 def create_pidfile():
@@ -113,7 +123,7 @@ if __name__ == "__main__":
     waittime_help = 'time (in minutes) to wait for activity after stopping task'
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=10, help=idle_help)
+    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=5, help=idle_help)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', dest='delay', nargs='?', type=float, default=0.5, help=delay_help)
     parser.add_argument('-w', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)

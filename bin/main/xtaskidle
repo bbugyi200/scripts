@@ -20,6 +20,7 @@ NAME = os.path.basename(__file__)
 PIDFILE = "{}/pid".format(gutils.xdg.getdir('runtime'))
 ARGSFILE = "{}/args".format(gutils.xdg.getdir('data'))
 MILLISECONDS_IN_MINUTE = 60000
+ACCEPTABLE_PROJECTS = ['Study', 'Dev']
 DEVNULL = open(os.devnull, 'w')
 
 
@@ -33,8 +34,8 @@ def main():
                 log.debug('System has been idle for {} milliseconds.'.format(idletime))
 
                 curr_tw_event = gutils.shell('timew | head -n 1')
-                if 'Study' not in curr_tw_event:
-                    raise RuntimeError('Current Task is NOT Related to Studying.')
+                if all([project not in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
+                    raise RuntimeError('Current Task\'s corresponding project is not in {}.'.format(ACCEPTABLE_PROJECTS))
 
                 log.info('Stopping current task...')
                 check_call('task', 'start.any:', 'stop')

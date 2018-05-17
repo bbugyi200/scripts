@@ -34,7 +34,7 @@ def main():
                 log.debug('System has been idle for {} milliseconds.'.format(idletime))
 
                 curr_tw_event = gutils.shell('timew | head -n 1')
-                if all([project not in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
+                if not any([' {} '.format(project) in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
                     raise RuntimeError('Current Task\'s corresponding project is not in {}.'.format(ACCEPTABLE_PROJECTS))
 
                 log.info('Stopping current task...')

@@ -5,18 +5,29 @@
 import subprocess as sp
 import argparse
 
-pipe_cmd_help = "send stdout of the main command to stdin of this command"
-cmd_help = 'main command to run'
+import gutils
 
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('-P', dest='pipe_cmd', help=pipe_cmd_help)
-parser.add_argument('cmd', nargs=argparse.REMAINDER, help=cmd_help)
-args = parser.parse_args()
+log = gutils.logging.getEasyLogger(__name__)
 
-if args.pipe_cmd is None:
-    pipe = ''
-else:
-    pipe = ' | ' + args.pipe_cmd
+if __name__ == "__main__":
+    pipe_cmd_help = "send stdout of the main command to stdin of this command"
+    cmd_help = 'main command to run'
 
-cmd_fmt = 'urxvt -name big-floater -e zsh -i -c "{}{}"'
-sp.call(cmd_fmt.format(' '.join(args.cmd), pipe), shell=True)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    parser.add_argument('-P', dest='pipe_cmd', help=pipe_cmd_help)
+    parser.add_argument('cmd', nargs=argparse.REMAINDER, help=cmd_help)
+    args = parser.parse_args()
+
+    if args.debug:
+        gutils.logging.enableDebugMode(log)
+
+    if args.pipe_cmd is None:
+        pipe = ''
+    else:
+        pipe = ' | ' + args.pipe_cmd
+
+    cmd_fmt = 'urxvt -name big-floater -e zsh -i -c "{}{}"'
+    cmd = cmd_fmt.format(' '.join(args.cmd), pipe)
+    log.debug('Running: {}'.format(cmd))
+    sp.call(cmd, shell=True)

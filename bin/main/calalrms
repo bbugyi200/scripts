@@ -21,7 +21,7 @@ FIFO = '{}/fifo'.format(RUNTIME_DIR)
 
 
 def main():
-    end_date = dt.date.today() + dt.timedelta(days=2)
+    end_date = dt.date.today() + dt.timedelta(days=1)
     end_date_string = end_date.strftime('%Y-%m-%d')
 
     raw_event_list = gutils.shell("khal list --notstarted --day-format '' --format '{{start-time}} {{title}}' now {}".format(end_date_string))

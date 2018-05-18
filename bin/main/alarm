@@ -22,9 +22,14 @@ time_left() {
 	echo $(($stop_time - $(date --date="now" +%s)))
 }
 
+exit_handler() {
+    printf "\n" > "$FIFO"
+    rm $TIMESTAMP_FILE
+}
+
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "d,r,s" -l "debug,resume,stop" -- "$@")
+eval set -- $(getopt -o "d,r,s,T" -l "debug,resume,stop,tomorrow" -- "$@")
 
 while [[ -n "$1" ]]; do
 	case $1 in
@@ -35,6 +40,8 @@ while [[ -n "$1" ]]; do
             resume=true;;
         -s|--stop )
             stop=true;;
+        -T|--tomorrow )
+            tomorrow=true;;
 		-- )
 			shift
 			break;;
@@ -82,6 +89,7 @@ fi
 
 echo $$ > $PID_FILE
 trap ':' SIGPIPE
+trap 'exit_handler; exit 1' SIGINT
 
 
 # ---------- Set Alarm Time ----------
@@ -103,7 +111,7 @@ else
         stop_time=$(date --date="${alrm_time%s} seconds" +%s)
     elif [[ $alrm_time == *":"* ]]; then
         stop_time=$(date --date="$alrm_time" +%s)
-        if [[ $(date +%s) -ge $stop_time ]]; then
+        if [[ $(date +%s) -ge $stop_time ]] || [[ "$tomorrow" = true ]]; then
             stop_time=$(date --date="$alrm_time tomorrow" +%s)
         fi
     else
@@ -140,6 +148,4 @@ done > "$FIFO"
 
 # ---------- Timer Finished ----------
 notify-send -u critical -t 0 -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "Alarm" "$NOTIFICATION"
-printf "\n" > "$FIFO"
-rm $TIMESTAMP_FILE
-
+exit_handler

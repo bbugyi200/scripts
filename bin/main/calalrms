@@ -18,27 +18,43 @@ log = gutils.logging.getEasyLogger(__name__)
 RUNTIME_DIR = gutils.xdg.getdir('runtime')
 PID_FILE = '{}/pid'.format(RUNTIME_DIR)
 FIFO = '{}/fifo'.format(RUNTIME_DIR)
+TOMORROW_MARKER = '@'
 
 
 def main():
-    end_date = dt.date.today() + dt.timedelta(days=1)
+    end_date = dt.date.today() + dt.timedelta(days=2)
     end_date_string = end_date.strftime('%Y-%m-%d')
 
-    raw_event_list = gutils.shell("khal list --notstarted --day-format '' --format '{{start-time}} {{title}}' now {}".format(end_date_string))
+    raw_event_list = gutils.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
 
     if raw_event_list.startswith('No'):
         sys.exit(0)
 
-    event_list = list(map(lambda event: event.split(maxsplit=1), raw_event_list.split('\n')))
+    event_list = raw_event_list.split('\n')
+    if 'Today' in event_list[0]:
+        event_list = event_list[1:]
     log.debug('Event List: {}'.format(event_list))
 
+    split_event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
+    log.debug('Split Event List: {}'.format(split_event_list))
+
+    tmmrw_index = len(split_event_list)
+    for i, event in enumerate(event_list):
+        if 'Tomorrow, ' in event:
+            tmmrw_index = i
+            break
+
+    marked_event_list = split_event_list[:tmmrw_index]
+    marked_event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in split_event_list[tmmrw_index+1:]])
+    log.debug('Marked Event List: {}'.format(marked_event_list))
+
     unique_events = collections.OrderedDict()
-    for start1 in [s for s, _ in event_list]:
+    for start1 in [s for s, _ in marked_event_list]:
         if start1 in unique_events:
             continue
 
         unique_events[start1] = set()
-        for start2, title in event_list:
+        for start2, title in marked_event_list:
             if start1 == start2:
                 unique_events[start1].add(title)
 
@@ -52,7 +68,16 @@ def main():
             fifo.write('{}\n'.format(title))
 
         try:
-            sp.check_call(['alarm', start, title])
+            cmd_list = ['alarm']
+            opts = []
+
+            if start[0] == TOMORROW_MARKER:
+                start = start[1:]
+                opts.extend(['-T'])
+
+            opts.extend([start, title])
+            cmd_list.extend(opts)
+            sp.check_call(cmd_list)
         except sp.CalledProcessError as e:
             raise RuntimeError('Current alarm was interupted.')
 
@@ -83,7 +108,8 @@ def stop_alarm():
         fifo.write('\n')
 
 
-def exit_handler(signum, frame):
+def clean_exit(signum, frame):
+    stop_alarm()
     sys.exit(1)
 
 
@@ -95,8 +121,8 @@ if __name__ == "__main__":
     if args.debug:
         gutils.logging.enableDebugMode(log)
 
-    signal.signal(signal.SIGTERM, exit_handler)
-    signal.signal(signal.SIGINT, exit_handler)
+    signal.signal(signal.SIGTERM, clean_exit)
+    signal.signal(signal.SIGINT, clean_exit)
 
     try:
         stop_alarm()

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+task start.any: stop &> /dev/null
+dbox_sync && notify-send $(basename $0) $(shutdown now)

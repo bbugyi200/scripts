@@ -67,7 +67,6 @@ if [[ -f $PID_FILE ]]; then
         cat $PID_FILE | xargs kill
 
         rm $TIMESTAMP_FILE
-        printf "\n" > "$FIFO"
         if pgrep dunst; then
             sleep 0.5
             xdotool key ctrl+space  # Shortcut to close dunst notification
@@ -77,6 +76,7 @@ if [[ -f $PID_FILE ]]; then
 fi
 
 if [[ "$stop" = true ]]; then
+    printf "\n" > "$FIFO"
     exit 1
 fi
 

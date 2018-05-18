@@ -78,6 +78,8 @@ def mkfifo():
 @atexit.register
 def stop_alarm():
     sp.call(['alarm', '--stop'])
+    with open(FIFO, 'w') as fifo:
+        fifo.write('\n')
 
 
 if __name__ == "__main__":

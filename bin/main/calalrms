@@ -1,0 +1,101 @@
+#!/usr/bin/env python
+
+""" Set Alarms Based on Upcoming Khal Events """
+
+import argparse
+import atexit
+import collections
+import datetime as dt
+import os
+import signal
+import subprocess as sp
+import sys
+import time
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+RUNTIME_DIR = gutils.xdg.getdir('runtime')
+PID_FILE = '{}/pid'.format(RUNTIME_DIR)
+FIFO = '{}/fifo'.format(RUNTIME_DIR)
+
+
+def main():
+    end_date = dt.date.today() + dt.timedelta(days=2)
+    end_date_string = end_date.strftime('%Y-%m-%d')
+
+    raw_event_list = gutils.shell("khal list --notstarted --day-format '' --format '{{start-time}} {{title}}' now {}".format(end_date_string))
+
+    if raw_event_list.startswith('No'):
+        sys.exit(0)
+
+    event_list = list(map(lambda event: event.split(), raw_event_list.split('\n')))
+
+    unique_event_list = collections.OrderedDict()
+    for start1 in [k for k, _ in event_list]:
+        if start1 in unique_event_list:
+            continue
+
+        unique_event_list[start1] = set()
+        for start2, title in event_list:
+            if start1 == start2:
+                unique_event_list[start1].add(title)
+
+    log.debug('Unique Events: {}'.format(unique_event_list))
+
+    for start, title_set in unique_event_list.items():
+        title = ' + '.join(title_set)
+
+        with open(FIFO, 'w') as fifo:
+            log.debug('Writing {} to {}.'.format(title, FIFO))
+            fifo.write('{}\n'.format(title))
+
+        try:
+            sp.check_call(['alarm', start, title])
+        except sp.CalledProcessError as e:
+            raise RuntimeError('Current alarm was interupted.')
+
+
+def create_pidfile():
+    try:
+        gutils.create_pidfile()
+    except gutils.StillAliveException as e:
+        log.debug('Previous instance of {} is still alive. Sending SIGTERM...'.format(os.path.basename(__file__)))
+        os.kill(e.pid, signal.SIGTERM)
+        time.sleep(1)
+        gutils.create_pidfile()
+
+
+def mkfifo():
+    try:
+        os.mkfifo(FIFO)
+        log.debug('Named Pipe {} Created.'.format(FIFO))
+    except OSError as e:
+        log.debug('Named Pipe {} Already Exists'.format(FIFO))
+        pass
+
+
+@atexit.register
+def stop_alarm():
+    sp.call(['alarm', '--stop'])
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    args = parser.parse_args()
+
+    if args.debug:
+        gutils.logging.enableDebugMode(log)
+
+    try:
+        stop_alarm()
+        create_pidfile()
+        mkfifo()
+        main()
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

@@ -52,12 +52,16 @@ def shell_cmd(cmd):
     urxvt_cmd_list = ['urxvt', '-name', 'big-floater', '-e']
     zsh_cmd_list = ['zsh', '-i', '-c']
 
-    if cmd[0] != '/':
-        log.debug('Will run "{}" in the background.'.format(cmd))
-    else:
-        log.debug('Using urxvt Command List.')
+    marker = cmd[0]
+    if marker in ['/', '@']:
+        log.debug('Using urxvt command list.')
         cmd = cmd[1:]
         cmd_list.extend(urxvt_cmd_list)
+        if marker == '@':
+            log.debug('Piping output of "{}" to less.'.format(cmd))
+            cmd = '{}{}'.format(cmd, ' | less')
+    else:
+        log.debug('Will run "{}" in the background.'.format(cmd))
 
     cmd_list.extend(zsh_cmd_list)
     cmd_list.extend([cmd])

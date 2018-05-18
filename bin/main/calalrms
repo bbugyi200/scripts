@@ -29,7 +29,8 @@ def main():
     if raw_event_list.startswith('No'):
         sys.exit(0)
 
-    event_list = list(map(lambda event: event.split(), raw_event_list.split('\n')))
+    event_list = list(map(lambda event: event.split(maxsplit=1), raw_event_list.split('\n')))
+    log.debug('Event List: {}'.format(event_list))
 
     unique_events = collections.OrderedDict()
     for start1 in [s for s, _ in event_list]:
@@ -82,6 +83,10 @@ def stop_alarm():
         fifo.write('\n')
 
 
+def exit_handler(signum, frame):
+    sys.exit(1)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
@@ -89,6 +94,9 @@ if __name__ == "__main__":
 
     if args.debug:
         gutils.logging.enableDebugMode(log)
+
+    signal.signal(signal.SIGTERM, exit_handler)
+    signal.signal(signal.SIGINT, exit_handler)
 
     try:
         stop_alarm()

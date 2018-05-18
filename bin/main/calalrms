@@ -61,20 +61,21 @@ def main():
     for start, titles in unique_events.items():
         title = ' + '.join(titles)
 
+        cmd_list = ['alarm']
+        opts = []
+
+        if start[0] == TOMORROW_MARKER:
+            start = start[1:]
+            opts.extend(['-T'])
+
+        opts.extend([start, title])
+        cmd_list.extend(opts)
+
         with open(FIFO, 'w') as fifo:
-            log.debug('Writing {} to {}.'.format(title, FIFO))
-            fifo.write('{}\n'.format(title))
+            log.debug('Writing "{}" to {}.'.format(title, FIFO))
+            fifo.write('"{}" at {}\n'.format(title, start))
 
         try:
-            cmd_list = ['alarm']
-            opts = []
-
-            if start[0] == TOMORROW_MARKER:
-                start = start[1:]
-                opts.extend(['-T'])
-
-            opts.extend([start, title])
-            cmd_list.extend(opts)
             sp.check_call(cmd_list)
         except sp.CalledProcessError as e:
             raise RuntimeError('Current alarm was interupted.')

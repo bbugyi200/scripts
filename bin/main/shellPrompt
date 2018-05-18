@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+
+""" Uses rofi to Prompt for a Shell Command to Run.
+
+Intended to serve as a replacement for XMonad.Prompt.Shell.shellPrompt.
+"""
+
+import argparse
+import subprocess as sp  # noqa: F401
+import sys
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main():
+    rofi_cmd_list = rofi_cmd()
+
+    ps = sp.Popen(rofi_cmd_list, stdout=sp.PIPE)
+    cmd = ps.communicate()[0].decode().strip()
+
+    if cmd == '':
+        sys.exit(1)
+
+    shell_cmd_list = shell_cmd(cmd)
+    ps = sp.Popen(shell_cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+
+def rofi_cmd():
+    """ Returns Rofi Command List """
+    cmd_list = ['rofi']
+
+    opts = ['-m', '-4', '-lines', '0']
+    prompt = ['-p', '']
+    location = ['-location', '6']
+    theme = ['-theme', 'Pop-Dark.rasi']
+    opts.extend(prompt)
+    opts.extend(location)
+    opts.extend(theme)
+    opts.extend(['-dmenu'])
+
+    cmd_list.extend(opts)
+    log.debug('Rofi Command List: {}'.format(cmd_list))
+
+    return cmd_list
+
+
+def shell_cmd(cmd):
+    """ Returns Shell Command List """
+    cmd_list = []
+    urxvt_cmd_list = ['urxvt', '-name', 'big-floater', '-e']
+    zsh_cmd_list = ['zsh', '-i', '-c']
+
+    if cmd[0] != '/':
+        log.debug('Will run "{}" in the background.'.format(cmd))
+    else:
+        log.debug('Using urxvt Command List.')
+        cmd = cmd[1:]
+        cmd_list.extend(urxvt_cmd_list)
+
+    cmd_list.extend(zsh_cmd_list)
+    cmd_list.extend([cmd])
+    log.debug('Shell Command List: {}'.format(cmd_list))
+
+    return cmd_list
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    args = parser.parse_args()
+
+    if args.debug:
+        gutils.logging.enableDebugMode(log)
+
+    try:
+        main()
+    except RuntimeError as e:
+        log.error(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

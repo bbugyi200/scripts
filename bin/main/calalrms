@@ -49,14 +49,12 @@ def main():
     log.debug('Marked Event List: {}'.format(marked_event_list))
 
     unique_events = collections.OrderedDict()
-    for start1 in [s for s, _ in marked_event_list]:
-        if start1 in unique_events:
-            continue
-
-        unique_events[start1] = set()
-        for start2, title in marked_event_list:
-            if start1 == start2:
-                unique_events[start1].add(title)
+    for start1, _ in marked_event_list:
+        if start1 not in unique_events:
+            unique_events[start1] = set()
+            for start2, title in marked_event_list:
+                if start1 == start2:
+                    unique_events[start1].add(title)
 
     log.debug('Unique Events: {}'.format(unique_events))
 

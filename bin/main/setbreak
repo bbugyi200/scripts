@@ -14,7 +14,7 @@ log = gutils.logging.getEasyLogger(__name__)
 def main():
     breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
     gutils.shell('khal new {} "Study Break"'.format(breaktime_dt.strftime('%Y-%m-%d %H:%M')))
-    gutils.shell('nohup khal-alarms &> /dev/null & disown')
+    gutils.shell('nohup calalrms &> /dev/null & disown')
 
 
 if __name__ == "__main__":

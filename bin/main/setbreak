@@ -18,7 +18,7 @@ def main():
 
 
 if __name__ == "__main__":
-    minutes_help = 'how many minutes from now break will be set for'
+    minutes_help = 'how many minutes from now the next break will be set for'
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('minutes', nargs='?', type=int, default=50, help=minutes_help)

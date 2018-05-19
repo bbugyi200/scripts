@@ -63,7 +63,7 @@ def main():
 
 
 def torrent(magnet):
-    """Thread worker
+    """ Thread worker
 
     Downloads the torrent given by the @magnet string.
     """
@@ -130,12 +130,12 @@ def remove_magnet(magnet_id):
 
 
 def prettyMagnet(magnet):
-    """Parses title out of magnet string."""
+    """ Parses title out of magnet string. """
     return re.search('&dn=(.*?)&', magnet).group(1)
 
 
 def notify(msg):
-    """ Sends Desktop Notification and (possibly) an SMS Notification """
+    """ Sends Desktop Notification and (possibly) SMS Notification """
     log.debug('Sending Notification: {}'.format(msg))
     gutils.notify('-t', '0', msg)
     if args.textme and not args.debug:

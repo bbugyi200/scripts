@@ -1,4 +1,4 @@
-"""Automates Logging Initialization"""
+""" Automates Logging Initialization """
 
 import inspect
 import logging
@@ -10,7 +10,7 @@ import gutils.shared as shared
 
 
 def getEasyLogger(name):
-    """Initializes Log Handlers"""
+    """ Initializes Log Handlers """
     log = logging.getLogger(name)
 
     jh = JournalHandler()
@@ -32,7 +32,7 @@ def getEasyLogger(name):
 
 
 def enableDebugMode(log):
-    """Sets Log Level of StreamHandler Handlers to DEBUG"""
+    """ Sets Log Level of StreamHandler Handlers to DEBUG """
     for handler in log.handlers:
         if isinstance(handler, logging.StreamHandler):
             handler.setLevel(logging.DEBUG)
@@ -51,7 +51,7 @@ def enableDebugMode(log):
 
 
 def _get_log_fmt(frame):
-    """Get Logging Format String
+    """ Get Logging Format String
 
     Returns a log formatting string, which can be used as the first argument to
     the logging.Formatter constructor.
@@ -66,7 +66,7 @@ def _get_log_fmt(frame):
 
 
 def _has_threading(frame):
-    """Determines Whether or not the Given Frame has the 'threading' Module in Scope"""
+    """ Determines Whether or not the Given Frame has the 'threading' Module in Scope """
     try:
         return isinstance(frame.f_globals['threading'], types.ModuleType)
     except KeyError as e:

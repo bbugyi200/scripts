@@ -151,11 +151,11 @@ def usr1_handler(signum, frame):
     with open(MAGNET_FILE, 'rb') as f:
         magnet = pickle.load(f)
 
+    enqueue_magnet(magnet)
+
     t = threading.Thread(target=torrent, args=(magnet,), daemon=True)
     t.start()
     threads.append(t)
-
-    enqueue_magnet(magnet)
 
 
 def enqueue_magnet(magnet):

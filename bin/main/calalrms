@@ -81,17 +81,6 @@ def main():
             raise RuntimeError('Current alarm was interupted.')
 
 
-def create_pidfile():
-    """ Manages duplicate processes """
-    try:
-        gutils.create_pidfile()
-    except gutils.StillAliveException as e:
-        log.debug('Previous instance of {} is still alive. Sending SIGTERM...'.format(os.path.basename(__file__)))
-        os.kill(e.pid, signal.SIGTERM)
-        time.sleep(1)
-        gutils.create_pidfile()
-
-
 def mkfifo():
     """ Creates fifo if it does not already exist """
     try:
@@ -102,7 +91,7 @@ def mkfifo():
         pass
 
 
-def exit(signum, frame):
+def term_handler(signum, frame):
     """ Signal Handler that Exits Gracefully """
     stop_alarm()
     sys.exit(1)
@@ -124,14 +113,19 @@ if __name__ == "__main__":
     if args.debug:
         gutils.logging.enableDebugMode(log)
 
-    signal.signal(signal.SIGTERM, exit)
-    signal.signal(signal.SIGINT, exit)
+    signal.signal(signal.SIGTERM, term_handler)
+    signal.signal(signal.SIGINT, term_handler)
 
     try:
         stop_alarm()
-        create_pidfile()
+        gutils.create_pidfile()
         mkfifo()
         main()
+    except gutils.StillAliveException as e:
+        log.debug('Previous instance of {} is still alive. Sending SIGTERM...'.format(os.path.basename(__file__)))
+        os.kill(e.pid, signal.SIGTERM)
+        time.sleep(1)
+        gutils.create_pidfile()
     except RuntimeError as e:
         log.error(str(e))
         sys.exit(1)

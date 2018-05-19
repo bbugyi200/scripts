@@ -1,4 +1,4 @@
-""" Automates Logging Initialization """
+"""Automates Logging Initialization"""
 
 import inspect
 import logging
@@ -8,22 +8,15 @@ from systemd.journal import JournalHandler
 
 import gutils.shared as shared
 
-_basic_formatting = '[%(levelname)s] %(message)s'
-_thread_formatting = '[%(levelname)s] <%(threadName)s> %(message)s'
-
 
 def getEasyLogger(name):
-    """ Initializes Log Handlers """
+    """Initializes Log Handlers"""
     log = logging.getLogger(name)
-
-    if _has_threading(inspect.stack()[1].frame):
-        base_formatting = _thread_formatting
-    else:
-        base_formatting = _basic_formatting
 
     jh = JournalHandler()
     sh = logging.StreamHandler()
 
+    base_formatting = _get_log_fmt(inspect.stack()[1].frame)
     formatter = logging.Formatter(base_formatting)
     jh.setFormatter(formatter)
     sh.setFormatter(formatter)
@@ -39,12 +32,7 @@ def getEasyLogger(name):
 
 
 def enableDebugMode(log):
-    """ Sets Log Level of StreamHandler Handlers to DEBUG """
-    if _has_threading(inspect.stack()[1].frame):
-        base_formatting = _thread_formatting
-    else:
-        base_formatting = _basic_formatting
-
+    """Sets Log Level of StreamHandler Handlers to DEBUG"""
     for handler in log.handlers:
         if isinstance(handler, logging.StreamHandler):
             handler.setLevel(logging.DEBUG)
@@ -53,6 +41,7 @@ def enableDebugMode(log):
     log_file = '/var/tmp/{}.log'.format(shared.scriptname(stack))
 
     fh = logging.FileHandler(log_file)
+    base_formatting = _get_log_fmt(inspect.stack()[1].frame)
     fh.setFormatter(logging.Formatter('[%(process)s] (%(asctime)s) {}'.format(base_formatting),
                                       datefmt='%Y-%m-%d %H:%M:%S'))
     fh.setLevel(logging.DEBUG)
@@ -61,8 +50,23 @@ def enableDebugMode(log):
     log.debug('Debugging mode enabled.')
 
 
+def _get_log_fmt(frame):
+    """Get Logging Format String
+
+    Returns a log formatting string, which can be used as the first argument to
+    the logging.Formatter constructor.
+    """
+    basic_formatting = '[%(levelname)s] %(message)s'
+    thread_formatting = '[%(levelname)s] <%(threadName)s> %(message)s'
+
+    if _has_threading(frame):
+        return thread_formatting
+    else:
+        return basic_formatting
+
+
 def _has_threading(frame):
-    """ Determines Whether or not the Given Frame has the 'threading' Module in Scope """
+    """Determines Whether or not the Given Frame has the 'threading' Module in Scope"""
     try:
         return isinstance(frame.f_globals['threading'], types.ModuleType)
     except KeyError as e:

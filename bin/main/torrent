@@ -107,6 +107,8 @@ def usr1_handler(signum, frame):
 
 
 def term_handler(signum, frame):
+    """ Remove Last Magnet File before Terminating """
+    log.debug('SIGTERM signal received.')
     tsm_remove()
     sys.exit(2)
 

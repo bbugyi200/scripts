@@ -25,4 +25,5 @@ if __name__ == "__main__":
 
     sp.call(['task', 'start', args.ID])
     sp.call(['khal', 'new', khal_start, args.event_name])
-    sp.call('nohup khal-alarms & disown', stdout=DEVNULL, stderr=DEVNULL, shell=True)
+    sp.call('nohup calalrms & disown', stdout=DEVNULL, stderr=DEVNULL, shell=True)
+

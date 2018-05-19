@@ -3,6 +3,7 @@
 """ TEMPLATE """
 
 import argparse
+import subprocess as sp  # noqa: F401
 import sys
 
 import gutils

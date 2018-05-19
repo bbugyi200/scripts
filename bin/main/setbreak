@@ -4,6 +4,7 @@
 
 import argparse
 import datetime as dt
+import subprocess as sp
 import sys
 
 import gutils
@@ -13,15 +14,17 @@ log = gutils.logging.getEasyLogger(__name__)
 
 def main():
     breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
-    gutils.shell('khal new {} "Study Break"'.format(breaktime_dt.strftime('%Y-%m-%d %H:%M')))
-    gutils.shell('nohup calalrms &> /dev/null & disown')
+    gutils.shell('khal new {} "{}"'.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), args.event_name))
+    sp.Popen(['calalrms'])
 
 
 if __name__ == "__main__":
     minutes_help = 'how many minutes from now the next break will be set for'
+    event_name_help = 'name of the khal event that will be created'
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('minutes', nargs='?', type=int, default=50, help=minutes_help)
+    parser.add_argument('-n', dest='event_name', default='Study Break', help=event_name_help)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     args = parser.parse_args()
 

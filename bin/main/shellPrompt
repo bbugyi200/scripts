@@ -24,17 +24,18 @@ def main():
         sys.exit(1)
 
     shell_cmd_list = shell_cmd(cmd)
-    ps = sp.Popen(shell_cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
+    sp.Popen(shell_cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
 def rofi_cmd():
     """ Returns Rofi Command List """
     cmd_list = ['rofi']
 
-    opts = ['-m', '-4', '-lines', '0']
     prompt = ['-p', '']
     location = ['-location', '6']
     theme = ['-theme', 'Pop-Dark.rasi']
+
+    opts = ['-m', '-4', '-lines', '0']
     opts.extend(prompt)
     opts.extend(location)
     opts.extend(theme)

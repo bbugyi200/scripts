@@ -31,9 +31,4 @@ def test_shell(cmd,cast,expected):
 
 
 def test_notify():
-    gutils.notify('Test Notification', timeout=2)
-
-
-def test_notify_failure():
-    with pytest.raises(AssertionError):
-        gutils.notify('Bad Timeout Value', timeout=2.5)
+    gutils.notify('Test Notification', '-t', '2000')

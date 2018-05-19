@@ -61,9 +61,9 @@ def main():
 
 
 def torrent(magnet):
-    log.debug('Attempting to add "{}" to Magnet Queue...'.format(getTitle(magnet)))
+    log.debug('Attempting to add "{}" to Magnet Queue...'.format(prettyMagnet(magnet)))
     magnet_queue.put(magnet)
-    N = magnet_counter.increment()
+    magnet_id = magnet_counter.increment()
 
     i = 0
     while True:
@@ -75,10 +75,10 @@ def torrent(magnet):
             if i <= 10:
                 continue
             else:
-                notify('Failed to start "{}"! :('.format(getTitle(magnet)))
+                notify('Failed to start "{}"! :('.format(prettyMagnet(magnet)))
                 sys.exit(3)
         else:
-            log.debug('Successfully added "{}".'.format(getTitle(magnet)))
+            log.debug('Successfully added "{}".'.format(prettyMagnet(magnet)))
             break
 
     i = 0
@@ -88,7 +88,7 @@ def torrent(magnet):
         i += 1
         if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
             msg = "Torrent is still attempting to download \"{}\" after {0:.1f} hour(s) elapsed time.\
-                   Shutting down early! :(".format(getTitle(magnet), args.timeout)
+                   Shutting down early! :(".format(prettyMagnet(magnet), args.timeout)
             notify(msg)
             sys.exit(3)
 
@@ -99,30 +99,30 @@ def torrent(magnet):
         out_lines = [line.strip() for line in out.split('\n')]
 
         for line in out_lines:
-            if line[0] == str(N):
+            if line[0] == str(magnet_id):
                 status_line = line.lower()
                 break
 
         if '100%' in status_line:
             break
 
-    tsm_remove(N)
-    gutils.notify('Finished Downloading {}! :)'.format(getTitle(magnet)))
+    remove_magnet(magnet_id)
+    gutils.notify('Finished Downloading {}! :)'.format(prettyMagnet(magnet)))
 
     magnet_queue.get()
     magnet_queue.task_done()
 
 
-def tsm_remove(N):
+def remove_magnet(magnet_id):
     """ Removes Transmission Magnet File """
     try:
-        sp.check_call(['transmission-remote', '-t{}'.format(N), '-r'], stdout=sp.DEVNULL)
-        log.debug('Successfully removed magnet #{}.'.format(N))
+        sp.check_call(['transmission-remote', '-t{}'.format(magnet_id), '-r'], stdout=sp.DEVNULL)
+        log.debug('Successfully removed magnet #{}.'.format(magnet_id))
     except sp.CalledProcessError as e:
-        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(N))
+        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(magnet_id))
 
 
-def getTitle(magnet):
+def prettyMagnet(magnet):
     return re.search('&dn=(.*?)&', magnet).group(1)
 
 
@@ -149,7 +149,7 @@ def term_handler(signum, frame):
     """ Remove All Magnet Files before Terminating """
     log.debug('Terminating signal received. Cleaning up magnets...')
     for i in range(1, magnet_counter.count+1):
-        tsm_remove(i)
+        remove_magnet(i)
     sys.exit(2)
 
 

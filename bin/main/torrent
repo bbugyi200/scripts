@@ -56,61 +56,64 @@ def main():
         t.start()
         threads.append(t)
 
+        log.debug('Adding "{}" to Magnet Queue...'.format(prettyMagnet(args.magnet)))
+        magnet_queue.put(args.magnet)
         magnet_queue.join()
         notify('All torrents are complete! :)')
 
 
 def torrent(magnet):
-    log.debug('Attempting to add "{}" to Magnet Queue...'.format(prettyMagnet(magnet)))
-    magnet_queue.put(magnet)
     magnet_id = magnet_counter.increment()
 
-    i = 0
-    while True:
-        time.sleep(1)
-        try:
-            sp.check_call(['transmission-remote', '-a', magnet], stdout=sp.DEVNULL)
-        except sp.CalledProcessError as e:
-            i += 1
-            if i <= 10:
-                continue
+    try:
+        i = 0
+        while True:
+            time.sleep(1)
+            try:
+                sp.check_call(['transmission-remote', '-a', magnet], stdout=sp.DEVNULL)
+            except sp.CalledProcessError as e:
+                i += 1
+                if i <= 10:
+                    continue
+                else:
+                    raise RuntimeError('Failed to start "{}"! :('.format(prettyMagnet(magnet)))
             else:
-                notify('Failed to start "{}"! :('.format(prettyMagnet(magnet)))
-                sys.exit(3)
-        else:
-            log.debug('Successfully added "{}".'.format(prettyMagnet(magnet)))
-            break
-
-    i = 0
-    while True:
-        SLEEP_TIME = 5
-
-        i += 1
-        if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
-            msg = "Torrent is still attempting to download \"{}\" after {0:.1f} hour(s) elapsed time.\
-                   Shutting down early! :(".format(prettyMagnet(magnet), args.timeout)
-            notify(msg)
-            sys.exit(3)
-
-        time.sleep(SLEEP_TIME)
-
-        ps = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
-        out = ps.communicate()[0].decode()
-        out_lines = [line.strip() for line in out.split('\n')]
-
-        for line in out_lines:
-            if line[0] == str(magnet_id):
-                status_line = line.lower()
+                log.debug('Successfully added "{}".'.format(prettyMagnet(magnet)))
                 break
 
-        if '100%' in status_line:
-            break
+        i = 0
+        while True:
+            SLEEP_TIME = 5
 
-    remove_magnet(magnet_id)
-    gutils.notify('Finished Downloading {}! :)'.format(prettyMagnet(magnet)))
+            i += 1
+            if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
+                msg = "Torrent is still attempting to download \"{}\" after {0:.1f} hour(s) elapsed time.\
+                       Shutting down early! :(".format(prettyMagnet(magnet), args.timeout)
+                raise RuntimeError(msg)
 
-    magnet_queue.get()
-    magnet_queue.task_done()
+            time.sleep(SLEEP_TIME)
+
+            ps = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
+            out = ps.communicate()[0].decode()
+            out_lines = [line.strip() for line in out.split('\n')]
+
+            for line in out_lines:
+                if line[0] == str(magnet_id):
+                    status_line = line.lower()
+                    break
+
+            if '100%' in status_line:
+                break
+    except RuntimeError as e:
+        log.error(str(e))
+        notify(str(e))
+        sys.exit(1)
+    else:
+        gutils.notify('Finished Downloading {}! :)'.format(prettyMagnet(magnet)))
+    finally:
+        remove_magnet(magnet_id)
+        magnet_queue.get()
+        magnet_queue.task_done()
 
 
 def remove_magnet(magnet_id):
@@ -128,7 +131,7 @@ def prettyMagnet(magnet):
 
 def notify(msg):
     """ Sends Desktop Notification and (possibly) an SMS Notification """
-    log.debug(msg)
+    log.debug('Sending Notification: {}'.format(msg))
     gutils.notify('-t', '0', msg)
     if args.textme and not args.debug:
         gutils.textme(msg)
@@ -143,6 +146,9 @@ def usr1_handler(signum, frame):
     t = threading.Thread(target=torrent, args=(magnet,), daemon=True)
     t.start()
     threads.append(t)
+
+    log.debug('Adding "{}" to Magnet Queue...'.format(prettyMagnet(magnet)))
+    magnet_queue.put(magnet)
 
 
 def term_handler(signum, frame):

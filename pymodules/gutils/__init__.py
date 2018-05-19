@@ -40,9 +40,12 @@ def shell(cmd, cast=str):
     return cast(out.decode().strip())
 
 
-def notify(msg, *args):
+def notify(*args):
     """ Sends Desktop Notification """
+    assert len(args) > 0, 'No notification message specified.'
+
     cmd_list = ['notify-send']
+    cmd_list.extend([shared.scriptname(inspect.stack())])
     cmd_list.extend(args)
-    cmd_list.extend([shared.scriptname(inspect.stack()), msg])
+
     sp.Popen(cmd_list)

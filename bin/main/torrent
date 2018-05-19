@@ -81,7 +81,7 @@ def main():
             tsm_remove()
 
         completed_msg = 'All torrents are complete! :)'
-        gutils.notify(completed_msg, '-t', '0')
+        gutils.notify('-t', '0', completed_msg)
         if args.textme:
             textme(completed_msg)
 

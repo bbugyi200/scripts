@@ -32,3 +32,8 @@ def test_shell(cmd,cast,expected):
 
 def test_notify():
     gutils.notify('Test Notification', '-t', '2000')
+
+
+def test_notify_failure():
+    with pytest.raises(AssertionError):
+        gutils.notify()

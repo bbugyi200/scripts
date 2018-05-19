@@ -174,7 +174,7 @@ def exit_handler():
 if __name__ == "__main__":
     delay_help = "Delay starting the script for DELAY seconds. Defaults to 5."
     timeout_help = "Time (in hours) to attempt to complete download before timing out. Defaults to 1."
-    notext_help = "Send me an SMS message when all torrents are complete."
+    notext_help = "Do NOT use SMS to send notifications."
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('magnet', help='The torrent magnet file.')

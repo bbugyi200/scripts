@@ -63,6 +63,10 @@ def main():
 
 
 def torrent(magnet):
+    """Thread worker
+
+    Downloads the torrent given by the @magnet string.
+    """
     magnet_id = magnet_counter.increment()
 
     try:
@@ -126,6 +130,7 @@ def remove_magnet(magnet_id):
 
 
 def prettyMagnet(magnet):
+    """Parses title out of magnet string."""
     return re.search('&dn=(.*?)&', magnet).group(1)
 
 

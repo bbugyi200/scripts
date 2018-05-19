@@ -32,7 +32,7 @@ class MagnetCounter:
             return self.count
 
 
-log = gutils.logging.getEasyLogger(__name__, threads=True)
+log = gutils.logging.getEasyLogger(__name__)
 
 SECONDS_IN_HOUR = 3600
 MAGNET_FILE = '{}/magnet'.format(gutils.xdg.getdir('data'))
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.debug:
-        gutils.logging.enableDebugMode(log, threads=True)
+        gutils.logging.enableDebugMode(log)
 
     signal.signal(signal.SIGUSR1, usr1_handler)
     signal.signal(signal.SIGTERM, term_handler)

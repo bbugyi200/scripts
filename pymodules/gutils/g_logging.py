@@ -2,6 +2,7 @@
 
 import inspect
 import logging
+import types
 
 from systemd.journal import JournalHandler
 
@@ -11,11 +12,11 @@ _basic_formatting = '[%(levelname)s] %(message)s'
 _thread_formatting = '[%(levelname)s] <%(threadName)s> %(message)s'
 
 
-def getEasyLogger(name, *, threads=False):
+def getEasyLogger(name):
     """ Initializes Log Handlers """
     log = logging.getLogger(name)
 
-    if threads:
+    if _has_threading(inspect.stack()[1].frame):
         base_formatting = _thread_formatting
     else:
         base_formatting = _basic_formatting
@@ -37,9 +38,9 @@ def getEasyLogger(name, *, threads=False):
     return log
 
 
-def enableDebugMode(log, *, threads=False):
+def enableDebugMode(log):
     """ Sets Log Level of StreamHandler Handlers to DEBUG """
-    if threads:
+    if _has_threading(inspect.stack()[1].frame):
         base_formatting = _thread_formatting
     else:
         base_formatting = _basic_formatting
@@ -58,3 +59,11 @@ def enableDebugMode(log, *, threads=False):
     log.addHandler(fh)
 
     log.debug('Debugging mode enabled.')
+
+
+def _has_threading(frame):
+    """ Determines Whether or not the Given Frame has the 'threading' Module in Scope """
+    try:
+        return isinstance(frame.f_globals['threading'], types.ModuleType)
+    except KeyError as e:
+        return False

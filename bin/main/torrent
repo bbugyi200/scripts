@@ -131,7 +131,11 @@ def remove_magnet(magnet_id):
 
 def prettyMagnet(magnet):
     """ Parses title out of magnet string. """
-    return re.search('&dn=(.*?)&', magnet).group(1)
+    match = re.search('&dn=(.*?)&', magnet)
+    if match:
+        return match.group(1)
+    else:
+        return 'UNKNOWN TITLE'
 
 
 def notify(msg):

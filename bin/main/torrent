@@ -5,96 +5,133 @@ Connects to a VPN, torrents a movie, disconnects from the VPN
 when the download is finished, and then texts me.
 """
 
+import atexit
 import argparse
-import collections
 import os
 import pickle
+import threading
 import time
 import signal
+import re
 import subprocess as sp
 import sys
+import queue
 
 import gutils
 
-log = gutils.logging.getEasyLogger(__name__)
+
+class MagnetCounter:
+    """ Thread-Safe Counter of Magnet Files """
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.count = 0
+
+    def increment(self):
+        with self.lock:
+            self.count += 1
+            return self.count
+
+
+log = gutils.logging.getEasyLogger(__name__, threads=True)
 
 SECONDS_IN_HOUR = 3600
 MAGNET_FILE = '{}/magnet'.format(gutils.xdg.getdir('data'))
-DEVNULL = open(os.devnull, 'w')
-# DEVNULL = None
 
-magnet_count = 1
-magnet_queue = collections.deque()
-
-
-def textme(msg):
-    """ Sends SMS Message to my Cell Phone """
-    log.info('SMS Message Sent: {}'.format(msg))
-    sp.check_call(['textme', msg], stdout=DEVNULL)
+magnet_counter = MagnetCounter()
+magnet_queue = queue.Queue(3)
+threads = []
 
 
 def main():
     time.sleep(args.delay)
-    magnet_queue.append(args.magnet)
 
     try:
         log.info('Connecting to VPN and starting transmission daemon...')
-        sp.check_call(['PIA', 'start', 'nyc'], stdout=DEVNULL)
-        sp.check_call(['transmission-daemon'], stdout=DEVNULL)
+        sp.check_call(['PIA', 'start', 'east'], stdout=sp.DEVNULL)
+        sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
     except sp.CalledProcessError as e:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon! :(')
     else:
-        while len(magnet_queue) > 0:
-            magnet = magnet_queue.popleft()
+        t = threading.Thread(target=torrent, args=(args.magnet,), daemon=True)
+        t.start()
+        threads.append(t)
 
-            i = 0
-            while True:
-                time.sleep(1)
-                try:
-                    sp.check_call(['transmission-remote', '-a', magnet], stdout=DEVNULL)
-                except sp.CalledProcessError as e:
-                    i += 1
-                    if i <= 10:
-                        continue
-                    else:
-                        raise RuntimeError('Failed to start torrent! :(')
-                else:
-                    break
-
-            i = 0
-            while True:
-                SLEEP_TIME = 5
-
-                i += 1
-                if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
-                    msg = "Torrent is still attempting to download after {0:.1f} hour(s) elapsed time.\
-                           Shutting down early! :(".format(args.timeout)
-                    raise RuntimeError(msg)
-
-                time.sleep(SLEEP_TIME)
-
-                p = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
-                output = p.communicate()[0].decode('utf-8')
-                if 'finished' in output.lower():
-                    break
-
-            tsm_remove()
-
-        completed_msg = 'All torrents are complete! :)'
-        gutils.notify('-t', '0', completed_msg)
-        if args.textme:
-            textme(completed_msg)
-
-    finally:
-        sp.call(['killall', '-9', 'transmission-daemon'], stdout=DEVNULL)
-        sp.call(['PIA', 'stop'], stdout=DEVNULL)
+        magnet_queue.join()
+        notify('All torrents are complete! :)')
 
 
-def tsm_remove():
+def torrent(magnet):
+    log.debug('Attempting to add "{}" to Magnet Queue...'.format(getTitle(magnet)))
+    magnet_queue.put(magnet)
+    N = magnet_counter.increment()
+
+    i = 0
+    while True:
+        time.sleep(1)
+        try:
+            sp.check_call(['transmission-remote', '-a', magnet], stdout=sp.DEVNULL)
+        except sp.CalledProcessError as e:
+            i += 1
+            if i <= 10:
+                continue
+            else:
+                notify('Failed to start "{}"! :('.format(getTitle(magnet)))
+                sys.exit(3)
+        else:
+            log.debug('Successfully added "{}".'.format(getTitle(magnet)))
+            break
+
+    i = 0
+    while True:
+        SLEEP_TIME = 5
+
+        i += 1
+        if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
+            msg = "Torrent is still attempting to download \"{}\" after {0:.1f} hour(s) elapsed time.\
+                   Shutting down early! :(".format(getTitle(magnet), args.timeout)
+            notify(msg)
+            sys.exit(3)
+
+        time.sleep(SLEEP_TIME)
+
+        ps = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
+        out = ps.communicate()[0].decode()
+        out_lines = [line.strip() for line in out.split('\n')]
+
+        for line in out_lines:
+            if line[0] == str(N):
+                status_line = line.lower()
+                break
+
+        if '100%' in status_line:
+            break
+
+    tsm_remove(N)
+    gutils.notify('Finished Downloading {}! :)'.format(getTitle(magnet)))
+
+    magnet_queue.get()
+    magnet_queue.task_done()
+
+
+def tsm_remove(N):
     """ Removes Transmission Magnet File """
-    global magnet_count
-    sp.call(['transmission-remote', '-t{}'.format(magnet_count), '-r'], stdout=DEVNULL)
-    magnet_count += 1
+    try:
+        sp.check_call(['transmission-remote', '-t{}'.format(N), '-r'], stdout=sp.DEVNULL)
+        log.debug('Successfully removed magnet #{}.'.format(N))
+    except sp.CalledProcessError as e:
+        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(N))
+
+
+def getTitle(magnet):
+    return re.search('&dn=(.*?)&', magnet).group(1)
+
+
+def notify(msg):
+    """ Sends Desktop Notification and (possibly) an SMS Notification """
+    log.debug(msg)
+    gutils.notify('-t', '0', msg)
+    if args.textme and not args.debug:
+        gutils.textme(msg)
 
 
 def usr1_handler(signum, frame):
@@ -102,15 +139,25 @@ def usr1_handler(signum, frame):
     log.debug('SIGUSR1 signal received.')
     with open(MAGNET_FILE, 'rb') as f:
         magnet = pickle.load(f)
-        magnet_queue.append(magnet)
-    log.debug('Added {} to Magnet Queue.'.format(magnet))
+
+    t = threading.Thread(target=torrent, args=(magnet,), daemon=True)
+    t.start()
+    threads.append(t)
 
 
 def term_handler(signum, frame):
-    """ Remove Last Magnet File before Terminating """
-    log.debug('SIGTERM signal received.')
-    tsm_remove()
+    """ Remove All Magnet Files before Terminating """
+    log.debug('Terminating signal received. Cleaning up magnets...')
+    for i in range(1, magnet_counter.count+1):
+        tsm_remove(i)
     sys.exit(2)
+
+
+@atexit.register
+def exit_handler():
+    """ Stop Transmission Daemon and Disconnect from VPN """
+    sp.Popen(['killall', '-9', 'transmission-daemon'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+    sp.Popen(['PIA', 'stop'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
 if __name__ == "__main__":
@@ -121,16 +168,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('magnet', help='The torrent magnet file.')
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
-    parser.add_argument('-D', type=int, dest='delay', default=5, help=delay_help)
+    parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
     parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
     parser.add_argument('--no-text', dest='textme', action='store_false', help=notext_help)
     args = parser.parse_args()
 
     if args.debug:
-        gutils.logging.enableDebugMode(log)
+        gutils.logging.enableDebugMode(log, threads=True)
 
     signal.signal(signal.SIGUSR1, usr1_handler)
     signal.signal(signal.SIGTERM, term_handler)
+    signal.signal(signal.SIGINT, term_handler)
 
     try:
         gutils.create_pidfile()
@@ -142,10 +190,10 @@ if __name__ == "__main__":
 
         log.debug('Sending SIGUSR1 to {}'.format(e.pid))
         os.kill(e.pid, signal.SIGUSR1)
-        sys.exit(0)
+        os._exit(0)
     except RuntimeError as e:
         log.error(str(e))
-        textme(str(e))
+        notify(str(e))
         sys.exit(1)
     except Exception as e:
         log.error('{}: {}'.format(type(e).__name__, str(e)))

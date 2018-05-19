@@ -40,7 +40,7 @@ def main():
         os.kill(pid, signal.SIGTERM)
 
     log.debug('Opening {} in zathura...'.format(choice))
-    gutils.shell('zathura "{}" &> /dev/null &'.format(choice))
+    sp.Popen(['zathura', choice], stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
 def promote_cached_docs(docs, cached_docs):

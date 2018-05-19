@@ -27,7 +27,7 @@ START_OF_DAY = 6  # Hour that day starts
 def main():
     notification_msg = 'Adding "{}" to Inbox.'.format(os.environ['TWMAIL_SUBJECT'])
     log.info(notification_msg)
-    subprocess.call(['notify-send', os.path.basename(__file__), notification_msg])
+    gutils.notify(notification_msg)
     subprocess.call('task add +inbox {}'.format(os.environ['TWMAIL_SUBJECT']), shell=True)
 
     utc_email_datetime = dt.datetime.strptime(os.environ['TWMAIL_DATE'], r'%Y-%m-%dT%H:%M:%S\+00:00').replace(tzinfo=dt.timezone.utc)

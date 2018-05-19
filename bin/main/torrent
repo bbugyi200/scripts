@@ -81,7 +81,7 @@ def main():
             tsm_remove()
 
         completed_msg = 'All torrents are complete! :)'
-        sp.check_call(['notify-send', '-t', '0', os.path.basename(__file__), completed_msg])
+        gutils.notify(completed_msg, timeout=0)
         if args.textme:
             textme(completed_msg)
 

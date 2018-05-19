@@ -40,7 +40,7 @@ def shell(cmd, cast=str):
     return cast(out.decode().strip())
 
 
-def notify(msg, timeout=None):
+def notify(msg, *, timeout=None):
     """ Sends Desktop Notification
 
     @timeout: notification expire-time (in seconds)

@@ -56,8 +56,7 @@ def main():
         t.start()
         threads.append(t)
 
-        log.debug('Adding "{}" to Magnet Queue...'.format(prettyMagnet(args.magnet)))
-        magnet_queue.put(args.magnet)
+        enqueue_magnet(args.magnet)
         magnet_queue.join()
         notify('All torrents are complete! :)')
 
@@ -156,6 +155,11 @@ def usr1_handler(signum, frame):
     t.start()
     threads.append(t)
 
+    enqueue_magnet(magnet)
+
+
+def enqueue_magnet(magnet):
+    """ Adds magnet file to queue. """
     log.debug('Adding "{}" to Magnet Queue...'.format(prettyMagnet(magnet)))
     magnet_queue.put(magnet)
 

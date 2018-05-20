@@ -122,9 +122,9 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, term_handler)
 
     try:
+        mkfifo()
         stop_alarm()
         gutils.create_pidfile()
-        mkfifo()
         main()
     except gutils.StillAliveException as e:
         log.debug('Previous instance of {} is still alive. Sending SIGTERM...'.format(os.path.basename(__file__)))

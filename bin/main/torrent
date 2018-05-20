@@ -59,12 +59,6 @@ def main():
         notify('All torrents are complete! :)')
 
 
-def wait():
-    """ Wait until first magnet is added to queue. """
-    while magnet_queue.empty():
-        pass
-
-
 def usr1_handler(signum, frame):
     """ Adds New Magnet File to Queue """
     log.debug('SIGUSR1 signal received.')
@@ -73,6 +67,12 @@ def usr1_handler(signum, frame):
 
     wait()
     torrent(magnet)
+
+
+def wait():
+    """ Wait until first magnet is added to queue. """
+    while magnet_queue.empty():
+        pass
 
 
 def torrent(magnet):
@@ -143,7 +143,7 @@ def _torrent(magnet):
         log.error('{}: {}'.format(type(e).__name__, str(e)))
         raise
     else:
-        gutils.notify('Finished Downloading {}! :)'.format(prettyMagnet(magnet)))
+        gutils.notify('Finished Downloading "{}"! :)'.format(prettyMagnet(magnet)))
     finally:
         remove_magnet(magnet_id)
         magnet_queue.get()
@@ -215,11 +215,11 @@ if __name__ == "__main__":
         gutils.create_pidfile()
         main()
     except gutils.StillAliveException as e:
-        log.debug('Dumping {} to {}.'.format(prettyMagnet(args.magnet), MAGNET_FILE))
+        log.debug('Dumping "{}" to {}.'.format(prettyMagnet(args.magnet), MAGNET_FILE))
         with open(MAGNET_FILE, 'wb') as f:
             pickle.dump(args.magnet, f)
 
-        log.debug('Sending SIGUSR1 to {}'.format(e.pid))
+        log.debug('Sending SIGUSR1 to {}.'.format(e.pid))
         os.kill(e.pid, signal.SIGUSR1)
         os._exit(0)
     except RuntimeError as e:

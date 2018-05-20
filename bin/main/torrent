@@ -146,10 +146,14 @@ def _torrent(magnet):
             out = ps.communicate()[0].decode()
             out_lines = [line.strip() for line in out.split('\n')]
 
+            status_line = None
             for line in out_lines:
                 if line[0] == str(magnet_id):
                     status_line = line.lower()
                     break
+
+            if status_line is None:
+                raise RuntimeError('{} has been lost somehow.'.format(prettyMagnet(magnet)))
 
             if '100%' in status_line:
                 break

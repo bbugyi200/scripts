@@ -52,9 +52,7 @@ def main():
     except sp.CalledProcessError as e:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon! :(')
     else:
-        t = threading.Thread(target=torrent, args=(args.magnet,), daemon=True)
-        t.start()
-        threads.append(t)
+        torrent(args.magnet)
 
         # busy wait until first magnet is added to queue
         while magnet_queue.empty():
@@ -64,7 +62,49 @@ def main():
         notify('All torrents are complete! :)')
 
 
+def remove_magnet(magnet_id):
+    """ Removes Transmission Magnet File """
+    try:
+        sp.check_call(['transmission-remote', '-t{}'.format(magnet_id), '-r'], stdout=sp.DEVNULL)
+        log.debug('Successfully removed magnet #{}.'.format(magnet_id))
+    except sp.CalledProcessError as e:
+        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(magnet_id))
+
+
+def prettyMagnet(magnet):
+    """ Parses title out of magnet string. """
+    match = re.search('&dn=(.*?)&', magnet)
+    if match:
+        return match.group(1)
+    else:
+        return 'UNKNOWN TITLE'
+
+
+def notify(msg):
+    """ Sends Desktop Notification and (possibly) SMS Notification """
+    log.debug('Sending Notification: {}'.format(msg))
+    gutils.notify('-t', '0', msg)
+    if args.textme and not args.debug:
+        gutils.textme(msg)
+
+
+def usr1_handler(signum, frame):
+    """ Adds New Magnet File to Queue """
+    log.debug('SIGUSR1 signal received.')
+    with open(MAGNET_FILE, 'rb') as f:
+        magnet = pickle.load(f)
+
+    torrent(magnet)
+
+
 def torrent(magnet):
+    """ Creates new torrent thread worker. """
+    t = threading.Thread(target=_torrent, args=(magnet,), daemon=True)
+    t.start()
+    threads.append(t)
+
+
+def _torrent(magnet):
     """ Thread worker
 
     Downloads the torrent given by the @magnet string.
@@ -125,43 +165,6 @@ def torrent(magnet):
         magnet_queue.task_done()
 
 
-def remove_magnet(magnet_id):
-    """ Removes Transmission Magnet File """
-    try:
-        sp.check_call(['transmission-remote', '-t{}'.format(magnet_id), '-r'], stdout=sp.DEVNULL)
-        log.debug('Successfully removed magnet #{}.'.format(magnet_id))
-    except sp.CalledProcessError as e:
-        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(magnet_id))
-
-
-def prettyMagnet(magnet):
-    """ Parses title out of magnet string. """
-    match = re.search('&dn=(.*?)&', magnet)
-    if match:
-        return match.group(1)
-    else:
-        return 'UNKNOWN TITLE'
-
-
-def notify(msg):
-    """ Sends Desktop Notification and (possibly) SMS Notification """
-    log.debug('Sending Notification: {}'.format(msg))
-    gutils.notify('-t', '0', msg)
-    if args.textme and not args.debug:
-        gutils.textme(msg)
-
-
-def usr1_handler(signum, frame):
-    """ Adds New Magnet File to Queue """
-    log.debug('SIGUSR1 signal received.')
-    with open(MAGNET_FILE, 'rb') as f:
-        magnet = pickle.load(f)
-
-    t = threading.Thread(target=torrent, args=(magnet,), daemon=True)
-    t.start()
-    threads.append(t)
-
-
 def term_handler(signum, frame):
     """ Remove All Magnet Files before Terminating """
     log.debug('Terminating signal received. Cleaning up magnets...')
@@ -186,7 +189,7 @@ if __name__ == "__main__":
     parser.add_argument('magnet', help='The torrent magnet file.')
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
-    parser.add_argument('-T', type=float, dest='timeout', default=1, help=timeout_help)
+    parser.add_argument('-T', type=float, dest='timeout', default=8, help=timeout_help)
     parser.add_argument('--no-text', dest='textme', action='store_false', help=notext_help)
     args = parser.parse_args()
 

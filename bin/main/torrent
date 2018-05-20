@@ -47,7 +47,7 @@ def main():
 
     try:
         log.info('Connecting to VPN and starting transmission daemon...')
-        sp.check_call(['PIA', 'start', 'east'], stdout=sp.DEVNULL)
+        sp.check_call(['PIA', 'start', 'nyc'], stdout=sp.DEVNULL)
         sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
     except sp.CalledProcessError as e:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon! :(')
@@ -59,30 +59,10 @@ def main():
         notify('All torrents are complete! :)')
 
 
-def remove_magnet(magnet_id):
-    """ Removes Transmission Magnet File """
-    try:
-        sp.check_call(['transmission-remote', '-t{}'.format(magnet_id), '-r'], stdout=sp.DEVNULL)
-        log.debug('Successfully removed magnet #{}.'.format(magnet_id))
-    except sp.CalledProcessError as e:
-        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(magnet_id))
-
-
-def prettyMagnet(magnet):
-    """ Parses title out of magnet string. """
-    match = re.search('&dn=(.*?)&', magnet)
-    if match:
-        return match.group(1)
-    else:
-        return 'UNKNOWN TITLE'
-
-
-def notify(msg):
-    """ Sends Desktop Notification and (possibly) SMS Notification """
-    log.debug('Sending Notification: {}'.format(msg))
-    gutils.notify('-t', '0', msg)
-    if args.textme and not args.debug:
-        gutils.textme(msg)
+def wait():
+    """ Wait until first magnet is added to queue. """
+    while magnet_queue.empty():
+        pass
 
 
 def usr1_handler(signum, frame):
@@ -93,12 +73,6 @@ def usr1_handler(signum, frame):
 
     wait()
     torrent(magnet)
-
-
-def wait():
-    """ Wait until first magnet is added to queue. """
-    while magnet_queue.empty():
-        pass
 
 
 def torrent(magnet):
@@ -170,6 +144,32 @@ def _torrent(magnet):
         remove_magnet(magnet_id)
         magnet_queue.get()
         magnet_queue.task_done()
+
+
+def remove_magnet(magnet_id):
+    """ Removes Transmission Magnet File """
+    try:
+        sp.check_call(['transmission-remote', '-t{}'.format(magnet_id), '-r'], stdout=sp.DEVNULL)
+        log.debug('Successfully removed magnet #{}.'.format(magnet_id))
+    except sp.CalledProcessError as e:
+        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(magnet_id))
+
+
+def prettyMagnet(magnet):
+    """ Parses title out of magnet string. """
+    match = re.search('&dn=(.*?)&', magnet)
+    if match:
+        return match.group(1)
+    else:
+        return 'UNKNOWN TITLE'
+
+
+def notify(msg):
+    """ Sends Desktop Notification and (possibly) SMS Notification """
+    log.debug('Sending Notification: {}'.format(msg))
+    gutils.notify('-t', '0', msg)
+    if args.textme and not args.debug:
+        gutils.textme(msg)
 
 
 def term_handler(signum, frame):

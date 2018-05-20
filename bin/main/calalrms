@@ -69,8 +69,8 @@ def main():
             start = start[1:]
 
             # check if day has changed
-            day = dt.date.today().day
-            if today.day == day:
+            current_day = dt.date.today().day
+            if today.day == current_day:
                 opts.extend(['-T'])
 
         opts.extend([start, title])

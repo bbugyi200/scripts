@@ -138,6 +138,10 @@ def _torrent(magnet):
     except RuntimeError as e:
         log.error(str(e))
         notify(str(e))
+        raise
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise
     else:
         gutils.notify('Finished Downloading {}! :)'.format(prettyMagnet(magnet)))
     finally:

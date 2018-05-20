@@ -19,6 +19,7 @@ RUNTIME_DIR = gutils.xdg.getdir('runtime')
 PID_FILE = '{}/pid'.format(RUNTIME_DIR)
 FIFO = '{}/fifo'.format(RUNTIME_DIR)
 TOMORROW_MARKER = '@'
+today = dt.date.today()
 
 
 def main():
@@ -66,7 +67,11 @@ def main():
 
         if start[0] == TOMORROW_MARKER:
             start = start[1:]
-            opts.extend(['-T'])
+
+            # check if day has changed
+            day = dt.date.today().day
+            if today.day == day:
+                opts.extend(['-T'])
 
         opts.extend([start, title])
         cmd_list.extend(opts)

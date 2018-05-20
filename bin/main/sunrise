@@ -1,3 +1,3 @@
 #!/bin/bash
 
-sundata rise
+sunwait list 1 sunrise $LATITUDE $LONGITUDE

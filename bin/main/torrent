@@ -56,7 +56,10 @@ def main():
         t.start()
         threads.append(t)
 
-        enqueue_magnet(args.magnet)
+        # busy wait until first magnet is added to queue
+        while magnet_queue.empty():
+            pass
+
         magnet_queue.join()
         notify('All torrents are complete! :)')
 
@@ -66,6 +69,9 @@ def torrent(magnet):
 
     Downloads the torrent given by the @magnet string.
     """
+    log.debug('Adding "{}" to Magnet Queue...'.format(prettyMagnet(magnet)))
+    magnet_queue.put(magnet)
+
     magnet_id = magnet_counter.increment()
 
     try:
@@ -151,17 +157,9 @@ def usr1_handler(signum, frame):
     with open(MAGNET_FILE, 'rb') as f:
         magnet = pickle.load(f)
 
-    enqueue_magnet(magnet)
-
     t = threading.Thread(target=torrent, args=(magnet,), daemon=True)
     t.start()
     threads.append(t)
-
-
-def enqueue_magnet(magnet):
-    """ Adds magnet file to queue. """
-    log.debug('Adding "{}" to Magnet Queue...'.format(prettyMagnet(magnet)))
-    magnet_queue.put(magnet)
 
 
 def term_handler(signum, frame):

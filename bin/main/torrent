@@ -126,7 +126,7 @@ def _torrent(magnet):
 
             status_line = None
             for line in out_lines:
-                if line[0] == str(magnet_id):
+                if re.match(r'^{}\s.*'.format(magnet_id), line):
                     status_line = line.lower()
                     break
 
@@ -211,7 +211,7 @@ if __name__ == "__main__":
         gutils.create_pidfile()
         main()
     except gutils.StillAliveException as e:
-        log.debug('Dumping {} to {}.'.format(args.magnet, MAGNET_FILE))
+        log.debug('Dumping {} to {}.'.format(prettyMagnet(args.magnet), MAGNET_FILE))
         with open(MAGNET_FILE, 'wb') as f:
             pickle.dump(args.magnet, f)
 

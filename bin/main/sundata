@@ -1,0 +1,9 @@
+#!/bin/bash
+
+option=$1
+
+if [[ $option == "rise" ]]; then
+    sunwait list 1 sunrise $LATITUDE $LONGITUDE
+elif [[ $option == "set" ]]; then
+    sunwait list 1 sunset $LATITUDE $LONGITUDE
+fi

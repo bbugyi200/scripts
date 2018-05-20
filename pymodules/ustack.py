@@ -1,3 +1,5 @@
+""" Stack Used by popu and pushu Scripts """
+
 import os
 import pickle
 
@@ -15,16 +17,16 @@ class UStack:
 
     def push(self, directory):
         self.stack.append(directory)
-        self.save()
+        self._save()
 
     def pop(self):
         try:
             directory = self.stack.pop()
-            self.save()
+            self._save()
             return directory
         except IndexError as e:
             return os.getcwd()
 
-    def save(self):
+    def _save(self):
         with open(self.fpath, 'wb+') as f:
             pickle.dump(self.stack, f)

@@ -54,10 +54,7 @@ def main():
     else:
         torrent(args.magnet)
 
-        # busy wait until first magnet is added to queue
-        while magnet_queue.empty():
-            pass
-
+        wait()
         magnet_queue.join()
         notify('All torrents are complete! :)')
 
@@ -94,7 +91,14 @@ def usr1_handler(signum, frame):
     with open(MAGNET_FILE, 'rb') as f:
         magnet = pickle.load(f)
 
+    wait()
     torrent(magnet)
+
+
+def wait():
+    """ Wait until first magnet is added to queue. """
+    while magnet_queue.empty():
+        pass
 
 
 def torrent(magnet):

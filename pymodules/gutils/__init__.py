@@ -1,4 +1,12 @@
-""" Global Utilities """
+""" Global Utilities
+
+Modules:
+    logging: Provides a template for setting up logging in python scripts.
+    xdg: Provides an easy way to retrieve (and, if necessary, create) the directories specified
+        by the XDG standard.
+    shared: Utility module used by this package internally. Not intended to be used outside of
+        this package.
+"""
 
 import inspect
 import os

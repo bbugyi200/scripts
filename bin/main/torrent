@@ -50,13 +50,13 @@ def main():
         sp.check_call(['PIA', 'start', 'nyc'], stdout=sp.DEVNULL)
         sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
     except sp.CalledProcessError as e:
-        raise RuntimeError('Failed to start the VPN and/or the transmission daemon! :(')
+        raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
     else:
         torrent(args.magnet)
 
         wait()
         magnet_queue.join()
-        notify('All torrents are complete! :)')
+        notify('All torrents are complete.')
 
 
 def usr1_handler(signum, frame):
@@ -70,7 +70,7 @@ def usr1_handler(signum, frame):
 
 
 def wait():
-    """ Wait until first magnet is added to queue. """
+    """ Blocks until first magnet is added to queue. """
     while magnet_queue.empty():
         pass
 
@@ -103,7 +103,7 @@ def _torrent(magnet):
                 if i <= 10:
                     continue
                 else:
-                    raise RuntimeError('Failed to start "{}"! :('.format(prettyMagnet(magnet)))
+                    raise RuntimeError('Failed to start "{}".'.format(prettyMagnet(magnet)))
             else:
                 log.debug('Successfully added "{}".'.format(prettyMagnet(magnet)))
                 break
@@ -114,8 +114,8 @@ def _torrent(magnet):
 
             i += 1
             if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
-                msg = "Torrent is still attempting to download \"{}\" after {0:.1f} hour(s) elapsed time.\
-                       Shutting down early! :(".format(prettyMagnet(magnet), args.timeout)
+                msg = "Torrent is still attempting to download \"{0}\" after {1:.1f} hour(s) "\
+                      " elapsed time. Shutting down early.".format(prettyMagnet(magnet), args.timeout)
                 raise RuntimeError(msg)
 
             time.sleep(SLEEP_TIME)
@@ -131,19 +131,21 @@ def _torrent(magnet):
                     break
 
             if status_line is None:
-                raise RuntimeError('{} has been lost somehow.'.format(prettyMagnet(magnet)))
+                msg = "Unable to parse 'transmission-remote -l' output. \"{}\" has been "\
+                      "lost somehow.".format(prettyMagnet(magnet))
+                raise RuntimeError(msg)
 
             if '100%' in status_line:
                 break
     except RuntimeError as e:
         log.error(str(e))
         notify(str(e))
-        raise
+        sys.exit(1)
     except Exception as e:
         log.error('{}: {}'.format(type(e).__name__, str(e)))
         raise
     else:
-        gutils.notify('Finished Downloading "{}"! :)'.format(prettyMagnet(magnet)))
+        gutils.notify('Finished Downloading "{}".'.format(prettyMagnet(magnet)))
     finally:
         remove_magnet(magnet_id)
         magnet_queue.get()
@@ -170,7 +172,7 @@ def prettyMagnet(magnet):
 
 def notify(msg):
     """ Sends Desktop Notification and (possibly) SMS Notification """
-    log.debug('Sending Notification: {}'.format(msg))
+    log.debug('Sending notification to user.'.format(msg))
     gutils.notify('-t', '0', msg)
     if args.textme and not args.debug:
         gutils.textme(msg)

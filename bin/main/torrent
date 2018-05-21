@@ -219,6 +219,11 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
 
-    with gutils.logging.context(log, debug=args.debug, notify=True):
+    with gutils.logging.context(log, debug=args.debug):
         create_pidfile()
-        main()
+
+        try:
+            main()
+        except RuntimeError as e:
+            notify(str(e))
+            raise

@@ -8,7 +8,6 @@ import sys
 
 from systemd.journal import JournalHandler
 
-import gutils
 import gutils.shared as shared
 
 
@@ -35,7 +34,7 @@ def getEasyLogger(name):
 
 
 @contextlib.contextmanager
-def context(log, *, debug=False, notify=False):
+def context(log, *, debug=False):
     """ Exception Context Manager
 
     Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.
@@ -47,8 +46,6 @@ def context(log, *, debug=False, notify=False):
         yield
     except RuntimeError as e:
         log.error(str(e))
-        if notify:
-            gutils.sp.notify(str(e))
         sys.exit(1)
     except Exception as e:
         log.error('{}: {}'.format(type(e).__name__, str(e)))

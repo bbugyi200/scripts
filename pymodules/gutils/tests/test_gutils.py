@@ -1,6 +1,7 @@
 import os
 
 import pytest
+import unittest.mock as mock
 
 import gutils
 
@@ -27,13 +28,28 @@ params = [('echo "Hi There!"', str, 'Hi There!'),
 
 @pytest.mark.parametrize('cmd,cast,expected', params)
 def test_shell(cmd,cast,expected):
-    assert expected == gutils.shell(cmd,cast)
+    assert expected == gutils.sp.shell(cmd,cast)
 
 
 def test_notify():
-    gutils.notify('Test Notification', '-t', '2000')
+    gutils.sp.notify('Test Notification', '-t', '2000')
 
 
 def test_notify_failure():
     with pytest.raises(AssertionError):
-        gutils.notify()
+        gutils.sp.notify()
+
+
+@mock.patch('sys.exit')
+def test_log_errors_runtime(exit):
+    log = mock.Mock()
+    with gutils.logging.log_errors(log):
+        raise RuntimeError('Error Message')
+    log.error.assert_called()
+
+
+def test_log_errors_generic():
+    log = mock.Mock()
+    with pytest.raises(KeyError), gutils.logging.log_errors(log):
+        raise KeyError
+    log.error.assert_called()

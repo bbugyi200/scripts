@@ -92,64 +92,59 @@ def _torrent(magnet):
 
     magnet_id = magnet_counter.increment()
 
-    try:
-        i = 0
-        while True:
-            time.sleep(1)
-            try:
-                sp.check_call(['transmission-remote', '-a', magnet], stdout=sp.DEVNULL)
-            except sp.CalledProcessError as e:
-                i += 1
-                if i <= 10:
-                    continue
+    with gutils.logging.log_errors(log, notify=True):
+        try:
+            i = 0
+            while True:
+                time.sleep(1)
+                try:
+                    sp.check_call(['transmission-remote', '-a', magnet], stdout=sp.DEVNULL)
+                except sp.CalledProcessError as e:
+                    i += 1
+                    if i <= 10:
+                        continue
+                    else:
+                        raise RuntimeError('Failed to start "{}".'.format(prettyMagnet(magnet)))
                 else:
-                    raise RuntimeError('Failed to start "{}".'.format(prettyMagnet(magnet)))
-            else:
-                log.debug('Successfully added "{}".'.format(prettyMagnet(magnet)))
-                break
-
-        i = 0
-        while True:
-            SLEEP_TIME = 5
-
-            i += 1
-            if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
-                msg = "Torrent is still attempting to download \"{0}\" after {1:.1f} hour(s) "\
-                      " elapsed time. Shutting down early.".format(prettyMagnet(magnet), args.timeout)
-                raise RuntimeError(msg)
-
-            time.sleep(SLEEP_TIME)
-
-            ps = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
-            out = ps.communicate()[0].decode()
-            out_lines = [line.strip() for line in out.split('\n')]
-
-            status_line = None
-            for line in out_lines:
-                if re.match(r'^{}\s.*'.format(magnet_id), line):
-                    status_line = line.lower()
+                    log.debug('Successfully added "{}".'.format(prettyMagnet(magnet)))
                     break
 
-            if status_line is None:
-                msg = "Unable to parse 'transmission-remote -l' output. \"{}\" has been "\
-                      "lost somehow.".format(prettyMagnet(magnet))
-                raise RuntimeError(msg)
+            i = 0
+            while True:
+                SLEEP_TIME = 5
 
-            if '100%' in status_line:
-                break
-    except RuntimeError as e:
-        log.error(str(e))
-        notify(str(e))
-        sys.exit(1)
-    except Exception as e:
-        log.error('{}: {}'.format(type(e).__name__, str(e)))
-        raise
-    else:
-        gutils.notify('Finished Downloading "{}".'.format(prettyMagnet(magnet)))
-    finally:
-        remove_magnet(magnet_id)
-        magnet_queue.get()
-        magnet_queue.task_done()
+                i += 1
+                if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
+                    msg = "Torrent is still attempting to download \"{0}\" after {1:.1f} hour(s) "\
+                          " elapsed time. Shutting down early.".format(prettyMagnet(magnet), args.timeout)
+                    raise RuntimeError(msg)
+
+                time.sleep(SLEEP_TIME)
+
+                ps = sp.Popen(['transmission-remote', '-l'], stdout=sp.PIPE)
+                out = ps.communicate()[0].decode()
+                out_lines = [line.strip() for line in out.split('\n')]
+
+                status_line = None
+                for line in out_lines:
+                    if re.match(r'^{}\s.*'.format(magnet_id), line):
+                        status_line = line.lower()
+                        break
+
+                if status_line is None:
+                    msg = 'The magnet "{}" has been lost somehow. The download was perhaps '\
+                          'stopped manually?'.format(prettyMagnet(magnet))
+                    raise RuntimeError(msg)
+
+                if '100%' in status_line:
+                    break
+
+            gutils.sp.notify('Finished Downloading "{}".'.format(prettyMagnet(magnet)))
+
+        finally:
+            remove_magnet(magnet_id)
+            magnet_queue.get()
+            magnet_queue.task_done()
 
 
 def remove_magnet(magnet_id):
@@ -173,9 +168,23 @@ def prettyMagnet(magnet):
 def notify(msg):
     """ Sends Desktop Notification and (possibly) SMS Notification """
     log.debug('Sending notification to user.'.format(msg))
-    gutils.notify('-t', '0', msg)
+    gutils.sp.notify('-t', '0', msg)
     if args.textme and not args.debug:
-        gutils.textme(msg)
+        gutils.sp.textme(msg)
+
+
+def create_pidfile():
+    """ Duplicate Process Management """
+    try:
+        gutils.create_pidfile()
+    except gutils.StillAliveException as e:
+        log.debug('Dumping "{}" to {}.'.format(prettyMagnet(args.magnet), MAGNET_FILE))
+        with open(MAGNET_FILE, 'wb') as f:
+            pickle.dump(args.magnet, f)
+
+        log.debug('Sending SIGUSR1 to {}.'.format(e.pid))
+        os.kill(e.pid, signal.SIGUSR1)
+        os._exit(0)
 
 
 def term_handler(signum, frame):
@@ -213,21 +222,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
 
-    try:
-        gutils.create_pidfile()
+    with gutils.logging.log_errors(log, notify=True):
+        create_pidfile()
         main()
-    except gutils.StillAliveException as e:
-        log.debug('Dumping "{}" to {}.'.format(prettyMagnet(args.magnet), MAGNET_FILE))
-        with open(MAGNET_FILE, 'wb') as f:
-            pickle.dump(args.magnet, f)
-
-        log.debug('Sending SIGUSR1 to {}.'.format(e.pid))
-        os.kill(e.pid, signal.SIGUSR1)
-        os._exit(0)
-    except RuntimeError as e:
-        log.error(str(e))
-        notify(str(e))
-        sys.exit(1)
-    except Exception as e:
-        log.error('{}: {}'.format(type(e).__name__, str(e)))
-        raise

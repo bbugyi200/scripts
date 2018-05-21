@@ -5,18 +5,18 @@ Modules:
     xdg: Provides an easy way to retrieve (and, if necessary, create) the directories specified
         by the XDG standard.
     debug: Debugging utilities.
+    sp: Utilities for spawning subprocesses.
     shared: Utility module used by this package internally. Not intended to be used outside of
         this package.
 """
 
 import inspect
 import os
-import subprocess as sp
 
 import gutils.g_logging as logging  # noqa: F401
 import gutils.g_xdg as xdg  # noqa: F401
 import gutils.g_debug as debug  # noqa: F401
-import gutils.shared as shared
+import gutils.g_subprocess as sp  # noqa: F401
 
 
 class StillAliveException(Exception):
@@ -42,25 +42,3 @@ def create_pidfile():
 
     pid = os.getpid()
     open(PIDFILE, 'w').write(str(pid))
-
-
-def shell(cmd, cast=str):
-    """ Run Shell Command """
-    out = sp.check_output(cmd, shell=True)
-    return cast(out.decode().strip())
-
-
-def notify(*args):
-    """ Sends Desktop Notification """
-    assert len(args) > 0, 'No notification message specified.'
-
-    cmd_list = ['notify-send']
-    cmd_list.extend([shared.scriptname(inspect.stack())])
-    cmd_list.extend(args)
-
-    sp.Popen(cmd_list)
-
-
-def textme(msg):
-    """ Sends SMS Message to my Cell Phone """
-    sp.check_call(['textme', msg], stdout=sp.DEVNULL, stderr=sp.STDOUT)

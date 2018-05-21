@@ -1,11 +1,14 @@
 """ Debugging Utilities """
 
+import functools
+
 
 def trace(func):
     """ Decorator that prints signature of function calls.
 
     Useful when debugging recursive functions.
     """
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         result = func(*args, **kwargs)
 

@@ -1,11 +1,14 @@
 """ Automates Logging Initialization """
 
+import contextlib
 import inspect
 import logging
 import types
+import sys
 
 from systemd.journal import JournalHandler
 
+import gutils
 import gutils.shared as shared
 
 
@@ -71,3 +74,21 @@ def _has_threading(frame):
         return isinstance(frame.f_globals['threading'], types.ModuleType)
     except KeyError as e:
         return False
+
+
+@contextlib.contextmanager
+def log_errors(log, *, notify=False):
+    """ Exception Context Manager
+
+    Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.
+    """
+    try:
+        yield
+    except RuntimeError as e:
+        log.error(str(e))
+        if notify:
+            gutils.sp.notify(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise

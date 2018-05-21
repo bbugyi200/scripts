@@ -31,7 +31,7 @@ def main():
         if idletime >= args.idletime * MILLISECONDS_IN_MINUTE:
             log.debug('System has been idle for {} milliseconds.'.format(idletime))
 
-            curr_tw_event = gutils.shell('timew | head -n 1')
+            curr_tw_event = gutils.sp.shell('timew | head -n 1')
             if not any([' {} '.format(project) in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
                 raise RuntimeError('Either no task is started or current task\'s corresponding project is not in {}.'.format(ACCEPTABLE_PROJECTS))
 
@@ -50,7 +50,7 @@ def main():
             if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
                 log.info('Restarting last task...')
                 check_call('last_task')
-                gutils.notify('The last active TaskWarrior task has been restarted.')
+                gutils.sp.notify('The last active TaskWarrior task has been restarted.')
                 break
             elif dt_timeout <= dt.datetime.now():
                 log.debug('Time is now past: {}'.format(dt_timeout))
@@ -60,7 +60,7 @@ def main():
                 msg = 'Shortening last timewarrior event by {} minutes.'.format(args.idletime)
                 log.debug(msg)
                 check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
-                gutils.notify(msg)
+                gutils.sp.notify(msg)
                 already_shortened_timew = True
 
 
@@ -78,7 +78,7 @@ def create_pidfile():
 
 def xprintidle():
     """ Returns Machine's Current Idletime """
-    return gutils.shell('xprintidle', cast=int)
+    return gutils.sp.shell('xprintidle', cast=int)
 
 
 def check_call(*args):

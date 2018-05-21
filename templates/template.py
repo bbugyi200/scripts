@@ -4,7 +4,6 @@
 
 import argparse
 import subprocess as sp  # noqa: F401
-import sys
 
 import gutils
 
@@ -23,11 +22,5 @@ if __name__ == "__main__":
     if args.debug:
         gutils.logging.enableDebugMode(log)
 
-    try:
+    with gutils.logging.log_errors(log):
         main()
-    except RuntimeError as e:
-        log.error(str(e))
-        sys.exit(1)
-    except Exception as e:
-        log.error('{}: {}'.format(type(e).__name__, str(e)))
-        raise

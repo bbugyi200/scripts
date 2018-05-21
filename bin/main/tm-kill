@@ -7,9 +7,9 @@ if [[ -n "$socket_name" ]]; then
     N=$(tmux -L "$socket_name" ls | wc -l)
 
     if [[ "$N" -gt 1 ]]; then
-        tmux -L "$socket_name" confirm-before -p "Confirm 'kill-session'? (y/n)" " switch-client -n; new-window 'tmuxinator stop $SESSION_NAME'"
+        tmux -L "$socket_name" confirm-before -p "Confirm 'kill-session'? (y/n)" " switch-client -n; run-shell 'tmuxinator stop $SESSION_NAME'"
     else
-        tmux -L "$socket_name" confirm-before -p "Confirm 'kill-session'? (y/n)" "new-window 'tmuxinator stop $SESSION_NAME'"
+        tmux -L "$socket_name" confirm-before -p "Confirm 'kill-session'? (y/n)" "run-shell 'tmuxinator stop $SESSION_NAME'"
     fi
 else
     exit 1

@@ -46,16 +46,29 @@ def create_pidfile():
     open(PIDFILE, 'w').write(str(pid))
 
 
-def ArgumentParser(description):
+def ArgumentParser(*args, description=None, formatter_class=None, **kwargs):
     """ Wrapper for argparse.ArgumentParser.
 
     Args:
-        description: describes what the script does.
+        description (optional): Describes what the script does.
+        formatter_class (optional): A class for customizing the help output.
 
     Returns:
         An argparse.ArgumentParser object.
     """
-    parser = argparse.ArgumentParser(description=description,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    if description is None:
+        try:
+            frame = inspect.stack()[1].frame
+            description = frame.f_globals['__doc__']
+        except KeyError as e:
+            pass
+
+    if formatter_class is None:
+        formatter_class = argparse.ArgumentDefaultsHelpFormatter
+
+    parser = argparse.ArgumentParser(*args,
+                                     description=description,
+                                     formatter_class=formatter_class,
+                                     **kwargs)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     return parser

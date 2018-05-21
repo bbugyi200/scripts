@@ -2,9 +2,12 @@
 
 Public Modules:
     logging: Provides a template for setting up generic logging in python scripts.
+
     xdg: Provides an easy way to retrieve (and, if necessary, create) the directories specified
         by the XDG standard.
+
     debug: Debugging utilities.
+
     sp: Utilities for spawning subprocesses.
 """
 

@@ -21,8 +21,3 @@ def notify(*args):
     cmd_list.extend(args)
 
     sp.Popen(cmd_list)
-
-
-def textme(msg):
-    """ Sends SMS Message to my Cell Phone """
-    sp.check_call(['textme', msg], stdout=sp.DEVNULL, stderr=sp.STDOUT)

@@ -25,7 +25,7 @@ def main():
     end_date = dt.date.today() + dt.timedelta(days=2)
     end_date_string = end_date.strftime('%Y-%m-%d')
 
-    raw_event_list = gutils.sp.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
+    raw_event_list = gutils.subprocess.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
 
     if raw_event_list.startswith('No'):
         sys.exit(0)

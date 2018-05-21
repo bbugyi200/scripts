@@ -136,7 +136,7 @@ def _torrent(magnet):
                 if '100%' in status_line:
                     break
 
-            gutils.sp.notify('Finished Downloading "{}".'.format(magnet_pprint(magnet)))
+            gutils.subprocess.notify('Finished Downloading "{}".'.format(magnet_pprint(magnet)))
 
         finally:
             remove_magnet(magnet_id)
@@ -160,9 +160,9 @@ def runtime_context():
 def notify(msg):
     """ Sends Desktop Notification and (possibly) SMS Notification """
     log.debug('Sending notification to user.'.format(msg))
-    gutils.sp.notify('-t', '0', msg)
+    gutils.subprocess.notify('-t', '0', msg)
     if args.textme:
-        gutils.sp.textme(msg)
+        sp.check_call(['textme', msg])
 
 
 def remove_magnet(magnet_id):

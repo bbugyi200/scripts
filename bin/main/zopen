@@ -16,26 +16,26 @@ CACHE_FILE = '{}/recently-opened.txt'.format(gutils.xdg.getdir('data'))
 
 def main():
     try:
-        open_docs = gutils.sp.shell('wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- | grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"', cast=lambda x: x.split('\n'))
+        open_docs = gutils.subprocess.shell('wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- | grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"', cast=lambda x: x.split('\n'))
         log.debug('Open Docs: {}'.format(' '.join(open_docs)))
     except sp.CalledProcessError as e:
         open_docs = None
         log.debug('No documents are currently open in zathura.')
 
-    all_docs = gutils.sp.shell('find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu" -o -name "*.ps"')
-    cached_docs = gutils.sp.shell('cat {}'.format(CACHE_FILE))
+    all_docs = gutils.subprocess.shell('find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu" -o -name "*.ps"')
+    cached_docs = gutils.subprocess.shell('cat {}'.format(CACHE_FILE))
     ordered_docs = promote_cached_docs(all_docs.split('\n'), cached_docs.split('\n'))
 
     if open_docs:
         ordered_docs = purge_open_docs(ordered_docs, open_docs)
 
     doc_options = '\n'.join(ordered_docs)
-    choice = gutils.sp.shell('printf "{}" | rofi -p "Document" -m -4 -dmenu -i'.format(doc_options))
+    choice = gutils.subprocess.shell('printf "{}" | rofi -p "Document" -m -4 -dmenu -i'.format(doc_options))
 
     add_to_cache(choice)
 
-    if gutils.sp.shell('active_window_class') == 'Zathura':
-        pid = gutils.sp.shell('active_window_pid', cast=int)
+    if gutils.subprocess.shell('active_window_class') == 'Zathura':
+        pid = gutils.subprocess.shell('active_window_pid', cast=int)
         log.debug('Killing Zathura Instance: {}'.format(pid))
         os.kill(pid, signal.SIGTERM)
 

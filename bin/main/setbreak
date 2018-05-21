@@ -14,7 +14,7 @@ log = gutils.logging.getEasyLogger(__name__)
 
 def main():
     breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
-    gutils.sp.shell('khal new {} "{}"'.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), args.event_name))
+    gutils.subprocess.shell('khal new {} "{}"'.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), args.event_name))
     sp.Popen(['calalrms'])
 
 

@@ -126,24 +126,10 @@ if __name__ == "__main__":
     parser.add_argument('-w', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)
     args = parser.parse_args()
 
-    if args.debug:
-        gutils.logging.enableDebugMode(log)
-
     signal.signal(signal.SIGUSR1, usr1_handler)
     signal.signal(signal.SIGTERM, term_handler)
 
-    try:
+    with gutils.logging.context(log, debug=args.debug):
         dump_args()
         create_pidfile()
         main()
-    except AssertionError as e:
-        log.error(str(e))
-        print('\n')
-        parser.print_help()
-        sys.exit(1)
-    except RuntimeError as e:
-        log.error(str(e))
-        sys.exit(2)
-    except Exception as e:
-        log.error('{}: {}'.format(type(e).__name__, str(e)))
-        raise

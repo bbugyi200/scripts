@@ -2,7 +2,6 @@
 
 """ Set Alarms Based on Upcoming Khal Events """
 
-import argparse
 import atexit
 import collections
 import datetime as dt
@@ -122,8 +121,7 @@ def stop_alarm():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
     signal.signal(signal.SIGTERM, term_handler)

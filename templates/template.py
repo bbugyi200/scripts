@@ -14,7 +14,7 @@ def main():
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser(__doc__)
+    parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):

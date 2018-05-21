@@ -3,7 +3,6 @@
 """ Stops Current TaskWarrior Task if Machine Idles for Too Long
 and Restarts the Task when Activity Resumes """
 
-import argparse
 import datetime as dt
 import os
 import pickle
@@ -119,9 +118,8 @@ if __name__ == "__main__":
     delay_help = 'time (in minutes) to delay between calls to xprintidle'
     waittime_help = 'time (in minutes) to wait for activity after stopping task'
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = gutils.ArgumentParser()
     parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=5, help=idle_help)
-    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', dest='delay', nargs='?', type=float, default=0.5, help=delay_help)
     parser.add_argument('-w', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)
     args = parser.parse_args()

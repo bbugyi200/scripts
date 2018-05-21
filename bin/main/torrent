@@ -232,7 +232,7 @@ if __name__ == "__main__":
     maxsize_help = 'max number of torrents allowed to download at one time (additional torrents '\
             'will be enqueued and start when a space opens up)'
 
-    parser = gutils.ArgumentParser(__doc__)
+    parser = gutils.ArgumentParser()
     parser.add_argument('magnet', help='The torrent magnet file.')
     parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
     parser.add_argument('-t', type=float, dest='timeout', default=8, help=timeout_help)

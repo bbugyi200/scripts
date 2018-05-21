@@ -41,15 +41,15 @@ def test_notify_failure():
 
 
 @mock.patch('sys.exit')
-def test_log_errors_runtime(exit):
+def test_context_runtime(exit):
     log = mock.Mock()
-    with gutils.logging.log_errors(log):
+    with gutils.logging.context(log):
         raise RuntimeError('Error Message')
     log.error.assert_called()
 
 
-def test_log_errors_generic():
+def test_context_generic():
     log = mock.Mock()
-    with pytest.raises(KeyError), gutils.logging.log_errors(log):
+    with pytest.raises(KeyError), gutils.logging.context(log):
         raise KeyError
     log.error.assert_called()

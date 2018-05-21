@@ -92,7 +92,7 @@ def _torrent(magnet):
 
     magnet_id = magnet_counter.increment()
 
-    with gutils.logging.log_errors(log, notify=True):
+    with gutils.logging.context(log, notify=True):
         try:
             i = 0
             while True:
@@ -219,6 +219,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
 
-    with gutils.logging.log_errors(log, debug=args.debug, notify=True):
+    with gutils.logging.context(log, debug=args.debug, notify=True):
         create_pidfile()
         main()

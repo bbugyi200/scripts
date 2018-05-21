@@ -35,7 +35,7 @@ def getEasyLogger(name):
 
 
 @contextlib.contextmanager
-def log_errors(log, *, debug=False, notify=False):
+def context(log, *, debug=False, notify=False):
     """ Exception Context Manager
 
     Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.

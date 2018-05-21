@@ -152,7 +152,7 @@ def notify(msg):
     """ Sends Desktop Notification and (possibly) SMS Notification """
     log.debug('Sending notification to user.'.format(msg))
     gutils.sp.notify('-t', '0', msg)
-    if args.textme and not args.debug:
+    if args.textme:
         gutils.sp.textme(msg)
 
 
@@ -216,14 +216,14 @@ def exit_handler():
 if __name__ == "__main__":
     delay_help = "Delay starting the script for DELAY seconds. Defaults to 5."
     timeout_help = "Time (in hours) to attempt to complete download before timing out. Defaults to 1."
-    notext_help = "Do NOT use SMS to send notifications."
+    textme_help = "Forward notifications via SMS messages (i.e. enable text notifications)."
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('magnet', help='The torrent magnet file.')
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
-    parser.add_argument('-T', type=float, dest='timeout', default=8, help=timeout_help)
-    parser.add_argument('--no-text', dest='textme', action='store_false', help=notext_help)
+    parser.add_argument('-t', type=float, dest='timeout', default=8, help=timeout_help)
+    parser.add_argument('-T', '--textme', dest='textme', action='store_true', help=textme_help)
     args = parser.parse_args()
 
     signal.signal(signal.SIGUSR1, usr1_handler)

@@ -2,7 +2,6 @@
 
 """ TEMPLATE """
 
-import argparse
 import subprocess as sp  # noqa: F401
 
 import gutils
@@ -15,8 +14,7 @@ def main():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    parser = gutils.ArgumentParser(__doc__)
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):

@@ -1,15 +1,23 @@
 """ Global Utilities
 
+--- Public Interface ---
 Modules:
     logging: Provides a template for setting up generic logging in python scripts.
     xdg: Provides an easy way to retrieve (and, if necessary, create) the directories specified
         by the XDG standard.
     debug: Debugging utilities.
     sp: Utilities for spawning subprocesses.
-    shared: Utility module used by this package internally. Not intended to be used outside of
-        this package.
+
+Exceptions:
+    StillAliveException: raised when a PID file is unable to be overwritten due to the previous
+        instance of the script still being alive.
+
+Functions:
+    create_pidfile: creates a PID file.
+    ArgumentParser: wrapper for argparse.ArgumentParser.
 """
 
+import argparse
 import inspect
 import os
 
@@ -42,3 +50,11 @@ def create_pidfile():
 
     pid = os.getpid()
     open(PIDFILE, 'w').write(str(pid))
+
+
+def ArgumentParser(description):
+    """ Wrapper for argparse.ArgumentParser """
+    parser = argparse.ArgumentParser(description=description,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    return parser

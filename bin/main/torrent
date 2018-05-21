@@ -6,12 +6,12 @@ Connects to a VPN (using Private Internet Access), downloads the torrent (using 
 disconnects from the VPN when the download is finished, and then sends me a text message to let
 me know the download is complete.
 
-Multiple torrents can be downloaded at the same time. If another instance of this script is
-running, the primary instance will be signaled to enqueue the new magnet file for download.
+Multiple torrents can be downloaded at the same time by simply running this script multiple times
+(using different magnet files). If another instance of this script is running, the primary instance
+will be signaled to enqueue the new magnet file for download.
 """
 
 import atexit
-import argparse
 import contextlib
 import os
 import pickle
@@ -232,11 +232,8 @@ if __name__ == "__main__":
     maxsize_help = 'max number of torrents allowed to download at one time (additional torrents '\
             'will be enqueued and start when a space opens up)'
 
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-
+    parser = gutils.ArgumentParser(__doc__)
     parser.add_argument('magnet', help='The torrent magnet file.')
-    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
     parser.add_argument('-t', type=float, dest='timeout', default=8, help=timeout_help)
     parser.add_argument('-T', '--textme', dest='textme', action='store_true', help=textme_help)

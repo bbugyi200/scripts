@@ -34,7 +34,28 @@ def getEasyLogger(name):
     return log
 
 
-def enableDebugMode(log):
+@contextlib.contextmanager
+def log_errors(log, *, debug=False, notify=False):
+    """ Exception Context Manager
+
+    Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.
+    """
+    if debug:
+        enableDebugMode(log, frame=inspect.stack()[1].frame)
+
+    try:
+        yield
+    except RuntimeError as e:
+        log.error(str(e))
+        if notify:
+            gutils.sp.notify(str(e))
+        sys.exit(1)
+    except Exception as e:
+        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        raise
+
+
+def enableDebugMode(log, *, frame=None):
     """ Sets Log Level of StreamHandler Handlers to DEBUG """
     for handler in log.handlers:
         if isinstance(handler, logging.StreamHandler):
@@ -44,7 +65,11 @@ def enableDebugMode(log):
     log_file = '/var/tmp/{}.log'.format(shared.scriptname(stack))
 
     fh = logging.FileHandler(log_file)
-    base_formatting = _get_log_fmt(inspect.stack()[1].frame)
+
+    if frame is None:
+        frame = inspect.stack()[1].frame
+
+    base_formatting = _get_log_fmt(frame)
     fh.setFormatter(logging.Formatter('[%(process)s] (%(asctime)s) {}'.format(base_formatting),
                                       datefmt='%Y-%m-%d %H:%M:%S'))
     fh.setLevel(logging.DEBUG)
@@ -74,21 +99,3 @@ def _has_threading(frame):
         return isinstance(frame.f_globals['threading'], types.ModuleType)
     except KeyError as e:
         return False
-
-
-@contextlib.contextmanager
-def log_errors(log, *, notify=False):
-    """ Exception Context Manager
-
-    Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.
-    """
-    try:
-        yield
-    except RuntimeError as e:
-        log.error(str(e))
-        if notify:
-            gutils.sp.notify(str(e))
-        sys.exit(1)
-    except Exception as e:
-        log.error('{}: {}'.format(type(e).__name__, str(e)))
-        raise

@@ -19,8 +19,5 @@ if __name__ == "__main__":
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     args = parser.parse_args()
 
-    if args.debug:
-        gutils.logging.enableDebugMode(log)
-
-    with gutils.logging.log_errors(log):
+    with gutils.logging.log_errors(log, debug=args.debug):
         main()

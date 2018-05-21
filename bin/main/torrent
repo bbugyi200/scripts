@@ -215,13 +215,10 @@ if __name__ == "__main__":
     parser.add_argument('--no-text', dest='textme', action='store_false', help=notext_help)
     args = parser.parse_args()
 
-    if args.debug:
-        gutils.logging.enableDebugMode(log)
-
     signal.signal(signal.SIGUSR1, usr1_handler)
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
 
-    with gutils.logging.log_errors(log, notify=True):
+    with gutils.logging.log_errors(log, debug=args.debug, notify=True):
         create_pidfile()
         main()

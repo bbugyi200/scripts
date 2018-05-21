@@ -7,6 +7,7 @@ when the download is finished, and then texts me.
 
 import atexit
 import argparse
+import contextlib
 import os
 import pickle
 import threading
@@ -59,16 +60,6 @@ def main():
         notify('All torrents are complete.')
 
 
-def usr1_handler(signum, frame):
-    """ Adds New Magnet File to Queue """
-    log.debug('SIGUSR1 signal received.')
-    with open(MAGNET_FILE, 'rb') as f:
-        magnet = pickle.load(f)
-
-    wait()
-    torrent(magnet)
-
-
 def wait():
     """ Blocks until first magnet is added to queue. """
     while magnet_queue.empty():
@@ -92,7 +83,7 @@ def _torrent(magnet):
 
     magnet_id = magnet_counter.increment()
 
-    with gutils.logging.context(log, notify=True):
+    with gutils.logging.context(log), runtime_context():
         try:
             i = 0
             while True:
@@ -147,22 +138,14 @@ def _torrent(magnet):
             magnet_queue.task_done()
 
 
-def remove_magnet(magnet_id):
-    """ Removes Transmission Magnet File """
+@contextlib.contextmanager
+def runtime_context():
+    """ Context manager that makes sure users are notified of runtime exceptions. """
     try:
-        sp.check_call(['transmission-remote', '-t{}'.format(magnet_id), '-r'], stdout=sp.DEVNULL)
-        log.debug('Successfully removed magnet #{}.'.format(magnet_id))
-    except sp.CalledProcessError as e:
-        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(magnet_id))
-
-
-def prettyMagnet(magnet):
-    """ Parses title out of magnet string. """
-    match = re.search('&dn=(.*?)&', magnet)
-    if match:
-        return match.group(1)
-    else:
-        return 'UNKNOWN TITLE'
+        yield
+    except RuntimeError as e:
+        notify(str(e))
+        raise
 
 
 def notify(msg):
@@ -171,6 +154,15 @@ def notify(msg):
     gutils.sp.notify('-t', '0', msg)
     if args.textme and not args.debug:
         gutils.sp.textme(msg)
+
+
+def remove_magnet(magnet_id):
+    """ Removes Transmission Magnet File """
+    try:
+        sp.check_call(['transmission-remote', '-t{}'.format(magnet_id), '-r'], stdout=sp.DEVNULL)
+        log.debug('Successfully removed magnet #{}.'.format(magnet_id))
+    except sp.CalledProcessError as e:
+        log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(magnet_id))
 
 
 def create_pidfile():
@@ -185,6 +177,25 @@ def create_pidfile():
         log.debug('Sending SIGUSR1 to {}.'.format(e.pid))
         os.kill(e.pid, signal.SIGUSR1)
         os._exit(0)
+
+
+def prettyMagnet(magnet):
+    """ Parses title out of magnet string. """
+    match = re.search('&dn=(.*?)&', magnet)
+    if match:
+        return match.group(1)
+    else:
+        return 'UNKNOWN TITLE'
+
+
+def usr1_handler(signum, frame):
+    """ Adds New Magnet File to Queue """
+    log.debug('SIGUSR1 signal received.')
+    with open(MAGNET_FILE, 'rb') as f:
+        magnet = pickle.load(f)
+
+    wait()
+    torrent(magnet)
 
 
 def term_handler(signum, frame):
@@ -219,11 +230,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
 
-    with gutils.logging.context(log, debug=args.debug):
+    with gutils.logging.context(log, debug=args.debug), runtime_context():
         create_pidfile()
-
-        try:
-            main()
-        except RuntimeError as e:
-            notify(str(e))
-            raise
+        main()

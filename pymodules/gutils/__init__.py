@@ -4,6 +4,7 @@ Modules:
     logging: Provides a template for setting up logging in python scripts.
     xdg: Provides an easy way to retrieve (and, if necessary, create) the directories specified
         by the XDG standard.
+    debug: Debugging utilities.
     shared: Utility module used by this package internally. Not intended to be used outside of
         this package.
 """
@@ -14,6 +15,7 @@ import subprocess as sp
 
 import gutils.g_logging as logging  # noqa: F401
 import gutils.g_xdg as xdg  # noqa: F401
+import gutils.g_debug as debug  # noqa: F401
 import gutils.shared as shared
 
 

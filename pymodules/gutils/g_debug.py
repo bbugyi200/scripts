@@ -7,6 +7,9 @@ def trace(log):
     """ Decorator that prints signature of function calls.
 
     Useful when debugging recursive functions.
+
+    Args:
+        log: logging.Logger object.
     """
     def decorator(func):
         @functools.wraps(func)

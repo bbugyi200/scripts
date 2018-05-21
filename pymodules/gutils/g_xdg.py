@@ -10,11 +10,19 @@ import gutils.shared as shared
 _user = getpass.getuser()
 
 
-def getdir(key, stack=None):
-    """ Returns XDG Standard Locations """
-    key = key.lower()
-    key_opts = {'config', 'data', 'runtime', 'cache'}
-    assert key in key_opts, "key MUST be in {}".format(key_opts)
+def getdir(userdir, stack=None):
+    """ Returns XDG Standard Locations
+
+    Args:
+        userdir: one of the four defined XDG user directories (config, data, runtime, or cache).
+        stack (optional): stack object (see inspect module)
+
+    Returns:
+        Full user directory path, as specified by the XDG standard.
+    """
+    userdir = userdir.lower()
+    userdir_opts = {'config', 'data', 'runtime', 'cache'}
+    assert userdir in userdir_opts, "userdir MUST be in {}".format(userdir_opts)
 
     getters = {'config': _getter_factory('XDG_CONFIG_HOME', '/home/{}/.config/{}'),
                'data': _getter_factory('XDG_DATA_HOME', '/home/{}/.local/share/{}'),
@@ -24,11 +32,20 @@ def getdir(key, stack=None):
     if stack is None:
         stack = inspect.stack()
 
-    return getters[key](stack)
+    return getters[userdir](stack)
 
 
 def _getter_factory(envvar, dirfmt):
-    """ Returns XDG Getter Function that serves to fetch some XDG Standard Directory """
+    """ Returns XDG Getter Function that serves to fetch some XDG Standard Directory
+
+    Args:
+        envvar: one of the four defined XDG environment variables that correspond to the XDG
+            user directories.
+        dirfmt: format string used to model the default path for the given XDG user directory.
+
+    Returns:
+        Function that retrieves the full path for the desired XDG user directory.
+    """
     def _getter(stack):
         scriptname = shared.scriptname(stack)
 
@@ -46,7 +63,11 @@ def _getter_factory(envvar, dirfmt):
 
 
 def _create_dir(directory):
-    """ Create Directory if it Does Not Already Exist """
+    """ Create Directory if it Does Not Already Exist
+
+    Args:
+        directory: full directory path.
+    """
     try:
         os.makedirs(directory)
     except OSError as e:

@@ -12,7 +12,14 @@ import gutils.shared as shared
 
 
 def getEasyLogger(name):
-    """ Initializes Log Handlers """
+    """ Initializes Log Handlers
+
+    Args:
+        name: name of the logger to create and return.
+
+    Returns:
+        A logging.Logger object.
+    """
     log = logging.getLogger(name)
 
     jh = JournalHandler()
@@ -38,6 +45,10 @@ def context(log, *, debug=False):
     """ Exception handling context manager.
 
     Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.
+
+    Args:
+        log: logging.Logger object.
+        debug: True if debugging is enabled.
     """
     if debug:
         enableDebugMode(log, frame=inspect.stack()[1].frame)
@@ -53,7 +64,15 @@ def context(log, *, debug=False):
 
 
 def enableDebugMode(log, *, frame=None):
-    """ Sets Log Level of StreamHandler Handlers to DEBUG """
+    """ Enables debug mode.
+
+    Adds a FileHandler. Sets the logging level of this handler and any existing StreamHandlers
+    to DEBUG.
+
+    Args:
+        log: logging.Logger object.
+        frame: frame object (see inspect module).
+    """
     for handler in log.handlers:
         if isinstance(handler, logging.StreamHandler):
             handler.setLevel(logging.DEBUG)
@@ -80,6 +99,9 @@ def _get_log_fmt(frame):
 
     Returns a log formatting string, which can be used as the first argument to
     the logging.Formatter constructor.
+
+    Args:
+        frame: frame object (see inspect module).
     """
     basic_formatting = '[%(levelname)s] %(message)s'
     thread_formatting = '[%(levelname)s] <%(threadName)s> %(message)s'
@@ -91,7 +113,11 @@ def _get_log_fmt(frame):
 
 
 def _has_threading(frame):
-    """ Determines Whether or not the Given Frame has the 'threading' Module in Scope """
+    """ Determines whether or not the given frame has the 'threading' module in scope
+
+    Args:
+        frame: frame object (see inspect module).
+    """
     try:
         return isinstance(frame.f_globals['threading'], types.ModuleType)
     except KeyError as e:

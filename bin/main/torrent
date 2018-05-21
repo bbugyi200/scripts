@@ -78,7 +78,7 @@ def _torrent(magnet):
 
     Downloads the torrent given by the @magnet string.
     """
-    log.debug('Adding "{}" to Magnet Queue...'.format(prettyMagnet(magnet)))
+    log.debug('Adding "{}" to Magnet Queue...'.format(magnet_pprint(magnet)))
     magnet_queue.put(magnet)
 
     magnet_id = magnet_counter.increment()
@@ -95,9 +95,9 @@ def _torrent(magnet):
                     if i <= 10:
                         continue
                     else:
-                        raise RuntimeError('Failed to start "{}".'.format(prettyMagnet(magnet)))
+                        raise RuntimeError('Failed to start "{}".'.format(magnet_pprint(magnet)))
                 else:
-                    log.debug('Successfully added "{}".'.format(prettyMagnet(magnet)))
+                    log.debug('Successfully added "{}".'.format(magnet_pprint(magnet)))
                     break
 
             i = 0
@@ -107,7 +107,7 @@ def _torrent(magnet):
                 i += 1
                 if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
                     msg = "Torrent is still attempting to download \"{0}\" after {1:.1f} hour(s) "\
-                          " elapsed time. Shutting down early.".format(prettyMagnet(magnet), args.timeout)
+                          " elapsed time. Shutting down early.".format(magnet_pprint(magnet), args.timeout)
                     raise RuntimeError(msg)
 
                 time.sleep(SLEEP_TIME)
@@ -124,13 +124,13 @@ def _torrent(magnet):
 
                 if status_line is None:
                     msg = 'The magnet "{}" has been lost somehow. The download was perhaps '\
-                          'stopped manually?'.format(prettyMagnet(magnet))
+                          'stopped manually?'.format(magnet_pprint(magnet))
                     raise RuntimeError(msg)
 
                 if '100%' in status_line:
                     break
 
-            gutils.sp.notify('Finished Downloading "{}".'.format(prettyMagnet(magnet)))
+            gutils.sp.notify('Finished Downloading "{}".'.format(magnet_pprint(magnet)))
 
         finally:
             remove_magnet(magnet_id)
@@ -140,7 +140,10 @@ def _torrent(magnet):
 
 @contextlib.contextmanager
 def runtime_context():
-    """ Context manager that makes sure users are notified of runtime exceptions. """
+    """ RuntimeError Context Manager
+
+    Context manager that makes sure users are notified of runtime exceptions.
+    """
     try:
         yield
     except RuntimeError as e:
@@ -170,7 +173,7 @@ def create_pidfile():
     try:
         gutils.create_pidfile()
     except gutils.StillAliveException as e:
-        log.debug('Dumping "{}" to {}.'.format(prettyMagnet(args.magnet), MAGNET_FILE))
+        log.debug('Dumping "{}" to {}.'.format(magnet_pprint(args.magnet), MAGNET_FILE))
         with open(MAGNET_FILE, 'wb') as f:
             pickle.dump(args.magnet, f)
 
@@ -179,8 +182,11 @@ def create_pidfile():
         os._exit(0)
 
 
-def prettyMagnet(magnet):
-    """ Parses title out of magnet string. """
+def magnet_pprint(magnet):
+    """ Pretty print magnet string.
+
+    Parses title out of magnet string.
+    """
     match = re.search('&dn=(.*?)&', magnet)
     if match:
         return match.group(1)

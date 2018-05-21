@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
-"""
-Connects to a VPN, torrents a movie, disconnects from the VPN
-when the download is finished, and then texts me.
+""" Script to make torrenting movies and TV shows easier (uses transmission as a backend).
+
+Connects to a VPN (using Private Internet Access), downloads the torrent (using a magnet file),
+disconnects from the VPN when the download is finished, and then sends me a text message to let
+me know the download is complete.
+
+Multiple torrents can be downloaded at the same time. If another instance of this script is
+running, the primary instance will be signaled to enqueue the new magnet file for download.
 """
 
 import atexit
@@ -39,7 +44,7 @@ SECONDS_IN_HOUR = 3600
 MAGNET_FILE = '{}/magnet'.format(gutils.xdg.getdir('data'))
 
 magnet_counter = MagnetCounter()
-magnet_queue = queue.Queue(3)
+magnet_queue = queue.Queue()
 threads = []
 
 
@@ -53,6 +58,7 @@ def main():
     except sp.CalledProcessError as e:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
     else:
+        magnet_queue.maxsize = args.maxsize
         torrent(args.magnet)
 
         wait()
@@ -220,16 +226,21 @@ def exit_handler():
 
 
 if __name__ == "__main__":
-    delay_help = "Delay starting the script for DELAY seconds. Defaults to 5."
-    timeout_help = "Time (in hours) to attempt to complete download before timing out. Defaults to 1."
-    textme_help = "Forward notifications via SMS messages (i.e. enable text notifications)."
+    delay_help = "delay starting the script for DELAY seconds"
+    timeout_help = "time (in hours) to attempt to complete download before timing out"
+    textme_help = "forward notifications via SMS messages (i.e. enable text notifications)"
+    maxsize_help = 'max number of torrents allowed to download at one time (additional torrents '\
+            'will be enqueued and start when a space opens up)'
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
     parser.add_argument('magnet', help='The torrent magnet file.')
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
     parser.add_argument('-t', type=float, dest='timeout', default=8, help=timeout_help)
     parser.add_argument('-T', '--textme', dest='textme', action='store_true', help=textme_help)
+    parser.add_argument('--maxsize', dest='maxsize', default=3, help=maxsize_help)
     args = parser.parse_args()
 
     signal.signal(signal.SIGUSR1, usr1_handler)

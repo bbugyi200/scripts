@@ -11,7 +11,7 @@ import sys
 parser = argparse.ArgumentParser(description=__doc__)
 parser.parse_args()
 
-out = sp.check_output(['rofi', '-dmenu', '-p', 'Instant Start']).decode('utf-8')
+out = sp.check_output(['prompt', 'Instant Start']).decode('utf-8')
 
 if not out:
     sys.exit(1)

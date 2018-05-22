@@ -14,9 +14,7 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main():
-    rofi_cmd_list = rofi_cmd()
-
-    ps = sp.Popen(rofi_cmd_list, stdout=sp.PIPE)
+    ps = sp.Popen('prompt', stdout=sp.PIPE)
     cmd = ps.communicate()[0].decode().strip()
 
     if cmd == '':
@@ -24,26 +22,6 @@ def main():
 
     shell_cmd_list = shell_cmd(cmd)
     sp.Popen(shell_cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
-
-
-def rofi_cmd():
-    """ Returns Rofi Command List """
-    cmd_list = ['rofi']
-
-    prompt = ['-p', '']
-    location = ['-location', '6']
-    theme = ['-theme', 'Pop-Dark.rasi']
-
-    opts = ['-m', '-4', '-lines', '0']
-    opts.extend(prompt)
-    opts.extend(location)
-    opts.extend(theme)
-    opts.extend(['-dmenu'])
-
-    cmd_list.extend(opts)
-    log.debug('Rofi Command List: {}'.format(cmd_list))
-
-    return cmd_list
 
 
 def shell_cmd(cmd):

@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+""" Wrapper for rofi that implements my version of a good input prompt. """
+
+import argparse
+import subprocess as sp  # noqa: F401
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main():
+    cmd_list = ['rofi']
+
+    monitor = ['-m', '-4']
+    lines = ['-lines', '0']
+    prompt = ['-p', args.prompt]
+    location = ['-location', '6']
+    theme = ['-theme', 'Pop-Dark.rasi']
+    extra_opts = args.opts
+    log.debug('Extra Rofi Options: {}'.format(extra_opts))
+
+    opts = []
+    opts.extend(monitor)
+    opts.extend(lines)
+    opts.extend(prompt)
+    opts.extend(location)
+    opts.extend(theme)
+    opts.extend(extra_opts)
+    opts.extend(['-dmenu'])
+
+    cmd_list.extend(opts)
+    log.debug('Prompt Command List: {}'.format(cmd_list))
+
+    sp.check_call(cmd_list)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('prompt', nargs='?', default='', help='prompt to use for rofi window')
+    parser.add_argument('opts', nargs=argparse.REMAINDER, help='additional arguments to be passed to rofi')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug):
+        main()

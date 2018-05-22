@@ -11,25 +11,18 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main():
-    cmd_list = ['rofi']
-
-    monitor = ['-m', '-4']
-    lines = ['-lines', '0']
-    prompt = ['-p', args.prompt]
-    location = ['-location', '6']
-    theme = ['-theme', 'Pop-Dark.rasi']
-    extra_opts = args.opts
-    log.debug('Extra Rofi Options: {}'.format(extra_opts))
+    log.debug('Extra Rofi Options: {}'.format(args.opts))
 
     opts = []
-    opts.extend(monitor)
-    opts.extend(lines)
-    opts.extend(prompt)
-    opts.extend(location)
-    opts.extend(theme)
-    opts.extend(extra_opts)
+    opts.extend(['-m', '-4'])
+    opts.extend(['-lines', '0'])
+    opts.extend(['-p', args.prompt])
+    opts.extend(['-location', '6'])
+    opts.extend(['-theme', 'Pop-Dark.rasi'])
     opts.extend(['-dmenu'])
+    opts.extend(args.opts)
 
+    cmd_list = ['rofi']
     cmd_list.extend(opts)
     log.debug('Prompt Command List: {}'.format(cmd_list))
 

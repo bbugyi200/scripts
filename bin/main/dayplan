@@ -2,11 +2,9 @@
 
 """ Script to Manage dayplan.txt """
 
-import argparse
 import datetime as dt
 from dateutil.parser import parse
 import subprocess as sp
-import sys
 
 import gutils
 
@@ -60,18 +58,8 @@ def record_dt(this_dt):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
-    if args.debug:
-        gutils.logging.enableDebugMode(log)
-
-    try:
+    with gutils.logging.context(log, debug=args.debug):
         main()
-    except RuntimeError as e:
-        log.error(str(e))
-        sys.exit(1)
-    except Exception as e:
-        log.error('{}: {}'.format(type(e).__name__, str(e)))
-        raise

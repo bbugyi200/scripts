@@ -2,10 +2,8 @@
 
 """ Sets Break Event with khal """
 
-import argparse
 import datetime as dt
 import subprocess as sp
-import sys
 
 import gutils
 
@@ -22,20 +20,10 @@ if __name__ == "__main__":
     minutes_help = 'how many minutes from now the next break will be set for'
     event_name_help = 'name of the khal event that will be created'
 
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = gutils.ArgumentParser()
     parser.add_argument('minutes', nargs='?', type=int, default=50, help=minutes_help)
     parser.add_argument('-n', dest='event_name', default='Study Break', help=event_name_help)
-    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
     args = parser.parse_args()
 
-    if args.debug:
-        gutils.logging.enableDebugMode(log)
-
-    try:
+    with gutils.logging.context(log, debug=args.debug):
         main()
-    except RuntimeError as e:
-        log.error(str(e))
-        sys.exit(1)
-    except Exception as e:
-        log.error('{}: {}'.format(type(e).__name__, str(e)))
-        raise

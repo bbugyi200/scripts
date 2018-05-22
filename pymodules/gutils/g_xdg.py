@@ -11,7 +11,7 @@ _user = getpass.getuser()
 
 
 def getdir(userdir, stack=None):
-    """ Returns XDG Standard Locations
+    """ Get XDG User Directory.
 
     Args:
         userdir: one of the four defined XDG user directories (config, data, runtime, or cache).

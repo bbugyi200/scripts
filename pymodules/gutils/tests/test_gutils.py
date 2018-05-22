@@ -50,6 +50,6 @@ def test_context_runtime(exit):
 
 def test_context_generic():
     log = mock.Mock()
-    with pytest.raises(KeyError), gutils.logging.context(log):
-        raise KeyError
+    with pytest.raises(Exception), gutils.logging.context(log):
+        raise Exception
     log.error.assert_called()

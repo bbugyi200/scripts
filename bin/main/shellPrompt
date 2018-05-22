@@ -5,7 +5,7 @@
 Intended to serve as a replacement for XMonad.Prompt.Shell.shellPrompt.
 
 Any command starting with '!' will be run inside of a new urxvt instance. Any command starting
-with '!@' will also be piped to less.
+with '@' will also be piped to less.
 """
 
 import subprocess as sp  # noqa: F401
@@ -33,13 +33,13 @@ def shell_cmd(cmd):
     urxvt_cmd_list = ['urxvt', '-name', 'big-floater', '-e']
     zsh_cmd_list = ['zsh', '-i', '-c']
 
-    if cmd[0] == '!':
+    marker = cmd[0]
+    if marker in ['!', '@']:
         log.debug('Using urxvt command list.')
         cmd = cmd[1:]
         cmd_list.extend(urxvt_cmd_list)
-        if cmd[0] == '@':
+        if marker == '@':
             log.debug('Piping output of "{}" to less.'.format(cmd))
-            cmd = cmd[1:]
             cmd = '{}{}'.format(cmd, ' | less')
     else:
         log.debug('Will run "{}" in the background.'.format(cmd))

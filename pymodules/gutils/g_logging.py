@@ -83,7 +83,7 @@ def enableDebugMode(log, *, frame=None):
     fh = logging.FileHandler(log_file)
 
     if frame is None:
-        frame = inspect.stack()[1].frame
+        frame = stack[1].frame
 
     base_formatting = _get_log_fmt(frame)
     fh.setFormatter(logging.Formatter('[%(process)s] (%(asctime)s) {}'.format(base_formatting),

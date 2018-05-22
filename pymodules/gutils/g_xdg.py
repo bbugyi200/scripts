@@ -36,7 +36,7 @@ def getdir(userdir, stack=None):
 
 
 def _getter_factory(envvar, dirfmt):
-    """ Returns XDG Getter Function that serves to fetch some XDG Standard Directory
+    """ Returns XDG getter function that serves to fetch some XDG standard directory.
 
     Args:
         envvar: one of the four defined XDG environment variables that correspond to the XDG
@@ -63,7 +63,7 @@ def _getter_factory(envvar, dirfmt):
 
 
 def _create_dir(directory):
-    """ Create Directory if it Does Not Already Exist
+    """ Create directory if it does not already exist.
 
     Args:
         directory: full directory path.

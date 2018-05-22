@@ -1,7 +1,7 @@
 """ Core Classes and Functions
 
 This module contains the core classes and functions of this package. The contents of this module
-are intended to be imported into the package's global scope.
+are intended to be imported directly into the package's global scope.
 """
 
 import argparse

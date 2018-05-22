@@ -21,7 +21,7 @@ def shell(cmd, cast=str):
 
 
 def notify(*args):
-    """ Sends Desktop Notification
+    """ Sends desktop notification with calling script's name as the notification title.
 
     Args:
         *args: arguments to be passed to the notify-send command.
@@ -32,4 +32,4 @@ def notify(*args):
     cmd_list.extend([shared.scriptname(inspect.stack())])
     cmd_list.extend(args)
 
-    sp.Popen(cmd_list)
+    sp.check_call(cmd_list)

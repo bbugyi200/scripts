@@ -10,6 +10,6 @@ def scriptname(stack):
         stack: object returned by 'inspect.stack'
 
     Returns:
-        Module name with .py extension stripped off.
+        Filename with .py extension stripped off.
     """
     return os.path.basename(stack[1].filename.rstrip('.py'))

@@ -28,16 +28,16 @@ params = [('echo "Hi There!"', str, 'Hi There!'),
 
 @pytest.mark.parametrize('cmd,cast,expected', params)
 def test_shell(cmd,cast,expected):
-    assert expected == gutils.sp.shell(cmd,cast)
+    assert expected == gutils.subprocess.shell(cmd,cast)
 
 
 def test_notify():
-    gutils.sp.notify('Test Notification', '-t', '2000')
+    gutils.subprocess.notify('Test Notification', '-t', '2000')
 
 
 def test_notify_failure():
     with pytest.raises(AssertionError):
-        gutils.sp.notify()
+        gutils.subprocess.notify()
 
 
 @mock.patch('sys.exit')

@@ -48,12 +48,6 @@ magnet_queue = queue.Queue()
 threads = []
 
 
-def wait():
-    """ Blocks until first magnet is added to queue. """
-    while magnet_queue.empty():
-        pass
-
-
 def torrent(magnet):
     """ Creates new torrent thread worker. """
     t = threading.Thread(target=_torrent, args=(magnet,), daemon=True)
@@ -190,6 +184,12 @@ def usr1_handler(signum, frame):
 
     wait()
     torrent(magnet)
+
+
+def wait():
+    """ Blocks until first magnet is added to queue. """
+    while magnet_queue.empty():
+        pass
 
 
 def term_handler(signum, frame):

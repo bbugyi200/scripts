@@ -80,6 +80,12 @@ def enableDebugMode(log, *, frame=None):
     stack = inspect.stack()
     log_file = '/var/tmp/{}.log'.format(shared.scriptname(stack))
 
+    # return early if a FileHandler already exists
+    for handler in log.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.setLevel(logging.DEBUG)
+            return
+
     fh = logging.FileHandler(log_file)
 
     if frame is None:

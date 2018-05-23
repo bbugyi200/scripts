@@ -22,47 +22,6 @@ MILLISECONDS_IN_MINUTE = 60000
 ACCEPTABLE_PROJECTS = ['Study', 'Dev']
 
 
-def main():
-    log.info('Starting {}.'.format(NAME))
-
-    while True:
-        idletime = xprintidle()
-        if idletime >= args.idletime * MILLISECONDS_IN_MINUTE:
-            log.debug('System has been idle for {} milliseconds.'.format(idletime))
-
-            curr_tw_event = gutils.subprocess.shell('timew | head -n 1')
-            if not any([' {} '.format(project) in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
-                raise RuntimeError('Either no task is started or current task\'s corresponding project is not in {}.'.format(ACCEPTABLE_PROJECTS))
-
-            log.info('Stopping current task...')
-            check_call('task', 'start.any:', 'stop')
-        else:
-            time.sleep(args.delay * 60)
-            continue
-
-        dt_timeout = dt.datetime.now() + dt.timedelta(minutes=(args.waittime - args.idletime))
-        already_shortened_timew = False
-        while True:
-            time.sleep(1)
-            idletime = xprintidle()
-
-            if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
-                log.info('Restarting last task...')
-                check_call('last_task')
-                gutils.subprocess.notify('The last active TaskWarrior task has been restarted.')
-                break
-            elif dt_timeout <= dt.datetime.now():
-                log.debug('Time is now past: {}'.format(dt_timeout))
-                log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
-                sys.exit(0)
-            elif (idletime >= 2 * args.idletime * MILLISECONDS_IN_MINUTE) and not already_shortened_timew:
-                msg = 'Shortening last timewarrior event by {} minutes.'.format(args.idletime)
-                log.debug(msg)
-                check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
-                gutils.subprocess.notify(msg)
-                already_shortened_timew = True
-
-
 def create_pidfile():
     """ Writes PID to File """
     try:
@@ -130,4 +89,42 @@ if __name__ == "__main__":
     with gutils.logging.context(log, debug=args.debug):
         dump_args()
         create_pidfile()
-        main()
+
+        log.info('Starting {}.'.format(NAME))
+
+        while True:
+            idletime = xprintidle()
+            if idletime >= args.idletime * MILLISECONDS_IN_MINUTE:
+                log.debug('System has been idle for {} milliseconds.'.format(idletime))
+
+                curr_tw_event = gutils.subprocess.shell('timew | head -n 1')
+                if not any([' {} '.format(project) in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
+                    raise RuntimeError('Either no task is started or current task\'s corresponding project is not in {}.'.format(ACCEPTABLE_PROJECTS))
+
+                log.info('Stopping current task...')
+                check_call('task', 'start.any:', 'stop')
+            else:
+                time.sleep(args.delay * 60)
+                continue
+
+            dt_timeout = dt.datetime.now() + dt.timedelta(minutes=(args.waittime - args.idletime))
+            already_shortened_timew = False
+            while True:
+                time.sleep(1)
+                idletime = xprintidle()
+
+                if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
+                    log.info('Restarting last task...')
+                    check_call('last_task')
+                    gutils.subprocess.notify('The last active TaskWarrior task has been restarted.')
+                    break
+                elif dt_timeout <= dt.datetime.now():
+                    log.debug('Time is now past: {}'.format(dt_timeout))
+                    log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
+                    sys.exit(0)
+                elif (idletime >= 2 * args.idletime * MILLISECONDS_IN_MINUTE) and not already_shortened_timew:
+                    msg = 'Shortening last timewarrior event by {} minutes.'.format(args.idletime)
+                    log.debug(msg)
+                    check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
+                    gutils.subprocess.notify(msg)
+                    already_shortened_timew = True

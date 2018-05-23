@@ -27,30 +27,26 @@ q       // quit
 """
 
 
-def main():
-    video_file = videos.get('video')
-
-    opts = [video_file]
-
-    if video_file.endswith('.avi'):
-        opts.extend(['--tomp4'])
-
-    if args.subs:
-        srt_file = videos.get('subs')
-        if srt_file is not None:
-            opts.extend(['--subtitles', srt_file])
-
-    print(PLAYER_CONTROLS)
-
-    cmd_list = ['castnow']
-    cmd_list.extend(opts)
-    sp.check_call(cmd_list)
-
-
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('--nosubs', dest='subs', action='store_false', help='disables subtitle file prompt')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
-        main()
+        video_file = videos.get('video')
+
+        opts = [video_file]
+
+        if video_file.endswith('.avi'):
+            opts.extend(['--tomp4'])
+
+        if args.subs:
+            srt_file = videos.get('subs')
+            if srt_file is not None:
+                opts.extend(['--subtitles', srt_file])
+
+        print(PLAYER_CONTROLS)
+
+        cmd_list = ['castnow']
+        cmd_list.extend(opts)
+        sp.check_call(cmd_list)

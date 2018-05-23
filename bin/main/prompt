@@ -10,25 +10,6 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def main():
-    log.debug('Extra Rofi Options: {}'.format(args.opts))
-
-    opts = []
-    opts.extend(['-m', '-4'])
-    opts.extend(['-lines', '0'])
-    opts.extend(['-p', args.prompt])
-    opts.extend(['-location', '6'])
-    opts.extend(['-theme', 'Pop-Dark.rasi'])
-    opts.extend(['-dmenu'])
-    opts.extend(args.opts)
-
-    cmd_list = ['rofi']
-    cmd_list.extend(opts)
-    log.debug('Prompt Command List: {}'.format(cmd_list))
-
-    sp.check_call(cmd_list)
-
-
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('prompt', nargs='?', default='', help='prompt to use for rofi window')
@@ -36,4 +17,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
-        main()
+        log.debug('Extra Rofi Options: {}'.format(args.opts))
+
+        opts = []
+        opts.extend(['-m', '-4'])
+        opts.extend(['-lines', '0'])
+        opts.extend(['-p', args.prompt])
+        opts.extend(['-location', '6'])
+        opts.extend(['-theme', 'Pop-Dark.rasi'])
+        opts.extend(['-dmenu'])
+        opts.extend(args.opts)
+
+        cmd_list = ['rofi']
+        cmd_list.extend(opts)
+        log.debug('Prompt Command List: {}'.format(cmd_list))
+
+        sp.check_call(cmd_list)

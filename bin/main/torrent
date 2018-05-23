@@ -48,24 +48,6 @@ magnet_queue = queue.Queue()
 threads = []
 
 
-def main():
-    time.sleep(args.delay)
-
-    try:
-        log.info('Connecting to VPN and starting transmission daemon...')
-        sp.check_call(['PIA', 'start', 'nyc'], stdout=sp.DEVNULL)
-        sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
-    except sp.CalledProcessError as e:
-        raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
-    else:
-        magnet_queue.maxsize = args.maxsize
-        torrent(args.magnet)
-
-        wait()
-        magnet_queue.join()
-        notify('All torrents are complete.')
-
-
 def wait():
     """ Blocks until first magnet is added to queue. """
     while magnet_queue.empty():
@@ -246,4 +228,19 @@ if __name__ == "__main__":
 
     with gutils.logging.context(log, debug=args.debug), runtime_context():
         create_pidfile()
-        main()
+
+        time.sleep(args.delay)
+
+        try:
+            log.info('Connecting to VPN and starting transmission daemon...')
+            sp.check_call(['PIA', 'start', 'nyc'], stdout=sp.DEVNULL)
+            sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
+        except sp.CalledProcessError as e:
+            raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
+        else:
+            magnet_queue.maxsize = args.maxsize
+            torrent(args.magnet)
+
+            wait()
+            magnet_queue.join()
+            notify('All torrents are complete.')

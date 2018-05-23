@@ -10,12 +10,6 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def main():
-    breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
-    gutils.subprocess.shell('khal new {} "{}"'.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), args.event_name))
-    sp.Popen(['calalrms'])
-
-
 if __name__ == "__main__":
     minutes_help = 'how many minutes from now the next break will be set for'
     event_name_help = 'name of the khal event that will be created'
@@ -26,4 +20,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
-        main()
+        breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
+        gutils.subprocess.shell('khal new {} "{}"'.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), args.event_name))
+        sp.Popen(['calalrms'])

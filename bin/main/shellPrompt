@@ -16,17 +16,6 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def main():
-    ps = sp.Popen('prompt', stdout=sp.PIPE)
-    cmd = ps.communicate()[0].decode().strip()
-
-    if cmd == '':
-        sys.exit(1)
-
-    shell_cmd_list = shell_cmd(cmd)
-    sp.Popen(shell_cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
-
-
 def shell_cmd(cmd):
     """ Returns Shell Command List """
     cmd_list = []
@@ -56,4 +45,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
-        main()
+        ps = sp.Popen('prompt', stdout=sp.PIPE)
+        cmd = ps.communicate()[0].decode().strip()
+
+        if cmd == '':
+            sys.exit(1)
+
+        shell_cmd_list = shell_cmd(cmd)
+        sp.Popen(shell_cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)

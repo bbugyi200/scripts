@@ -21,70 +21,6 @@ TOMORROW_MARKER = '@'
 today = dt.date.today()
 
 
-def main():
-    end_date = dt.date.today() + dt.timedelta(days=2)
-    end_date_string = end_date.strftime('%Y-%m-%d')
-
-    raw_event_list = gutils.subprocess.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
-
-    if raw_event_list.startswith('No'):
-        sys.exit(0)
-
-    event_list = raw_event_list.split('\n')
-    if 'Today' in event_list[0]:
-        event_list = event_list[1:]
-    log.debug('Event List: {}'.format(event_list))
-
-    split_event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
-    log.debug('Split Event List: {}'.format(split_event_list))
-
-    tomorrow_index = len(split_event_list)
-    for i, event in enumerate(event_list):
-        if 'Tomorrow, ' in event:
-            tomorrow_index = i
-            break
-
-    marked_event_list = split_event_list[:tomorrow_index]
-    marked_event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in split_event_list[tomorrow_index+1:]])
-    log.debug('Marked Event List: {}'.format(marked_event_list))
-
-    unique_events = collections.OrderedDict()
-    for start1, _ in marked_event_list:
-        if start1 not in unique_events:
-            unique_events[start1] = set()
-            for start2, title in marked_event_list:
-                if start1 == start2:
-                    unique_events[start1].add(title)
-
-    log.debug('Unique Events: {}'.format(unique_events))
-
-    for start, titles in unique_events.items():
-        title = ' + '.join(titles)
-
-        cmd_list = ['alarm']
-        opts = []
-
-        if start[0] == TOMORROW_MARKER:
-            start = start[1:]
-
-            # check if day has changed
-            current_day = dt.date.today().day
-            if today.day == current_day:
-                opts.extend(['-T'])
-
-        opts.extend([start, title])
-        cmd_list.extend(opts)
-
-        with open(FIFO, 'w') as fifo:
-            log.debug('Writing "{}" to {}.'.format(title, FIFO))
-            fifo.write('"{}" at {}\n'.format(title, start))
-
-        try:
-            sp.check_call(cmd_list)
-        except sp.CalledProcessError as e:
-            raise RuntimeError('Current alarm was interupted.')
-
-
 def create_pidfile():
     """ Duplicate Process Management """
     try:
@@ -131,4 +67,65 @@ if __name__ == "__main__":
         mkfifo()
         stop_alarm()
         create_pidfile()
-        main()
+
+        end_date = dt.date.today() + dt.timedelta(days=2)
+        end_date_string = end_date.strftime('%Y-%m-%d')
+
+        raw_event_list = gutils.subprocess.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
+
+        if raw_event_list.startswith('No'):
+            sys.exit(0)
+
+        event_list = raw_event_list.split('\n')
+        if 'Today' in event_list[0]:
+            event_list = event_list[1:]
+        log.debug('Event List: {}'.format(event_list))
+
+        split_event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
+        log.debug('Split Event List: {}'.format(split_event_list))
+
+        tomorrow_index = len(split_event_list)
+        for i, event in enumerate(event_list):
+            if 'Tomorrow, ' in event:
+                tomorrow_index = i
+                break
+
+        marked_event_list = split_event_list[:tomorrow_index]
+        marked_event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in split_event_list[tomorrow_index+1:]])
+        log.debug('Marked Event List: {}'.format(marked_event_list))
+
+        unique_events = collections.OrderedDict()
+        for start1, _ in marked_event_list:
+            if start1 not in unique_events:
+                unique_events[start1] = set()
+                for start2, title in marked_event_list:
+                    if start1 == start2:
+                        unique_events[start1].add(title)
+
+        log.debug('Unique Events: {}'.format(unique_events))
+
+        for start, titles in unique_events.items():
+            title = ' + '.join(titles)
+
+            cmd_list = ['alarm']
+            opts = []
+
+            if start[0] == TOMORROW_MARKER:
+                start = start[1:]
+
+                # check if day has changed
+                current_day = dt.date.today().day
+                if today.day == current_day:
+                    opts.extend(['-T'])
+
+            opts.extend([start, title])
+            cmd_list.extend(opts)
+
+            with open(FIFO, 'w') as fifo:
+                log.debug('Writing "{}" to {}.'.format(title, FIFO))
+                fifo.write('"{}" at {}\n'.format(title, start))
+
+            try:
+                sp.check_call(cmd_list)
+            except sp.CalledProcessError as e:
+                raise RuntimeError('Current alarm was interupted.')

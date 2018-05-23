@@ -21,6 +21,17 @@ TOMORROW_MARKER = '@'
 today = dt.date.today()
 
 
+def filter_allday_events(event_list):
+    """ Filters allday events from the event list.
+
+    Yields:
+        Events without any allday events.
+    """
+    for event in event_list:
+        if event[0] != ' ':
+            yield event
+
+
 def create_pidfile():
     """ Duplicate Process Management """
     try:
@@ -72,14 +83,18 @@ if __name__ == "__main__":
         end_date_string = end_date.strftime('%Y-%m-%d')
 
         raw_event_list = gutils.subprocess.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
+        log.debug("Raw Event List: {}".format(raw_event_list))
 
-        if raw_event_list.startswith('No'):
+        if raw_event_list.strip().startswith('No'):
             sys.exit(0)
 
         event_list = raw_event_list.split('\n')
         if 'Today' in event_list[0]:
             event_list = event_list[1:]
         log.debug('Event List: {}'.format(event_list))
+
+        event_list = list(filter_allday_events(event_list))
+        log.debug('Event List (without allday events): {}'.format(event_list))
 
         split_event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
         log.debug('Split Event List: {}'.format(split_event_list))
@@ -94,17 +109,17 @@ if __name__ == "__main__":
         marked_event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in split_event_list[tomorrow_index+1:]])
         log.debug('Marked Event List: {}'.format(marked_event_list))
 
-        unique_events = collections.OrderedDict()
+        unique_event_list = collections.OrderedDict()
         for start1, _ in marked_event_list:
-            if start1 not in unique_events:
-                unique_events[start1] = set()
+            if start1 not in unique_event_list:
+                unique_event_list[start1] = set()
                 for start2, title in marked_event_list:
                     if start1 == start2:
-                        unique_events[start1].add(title)
+                        unique_event_list[start1].add(title)
 
-        log.debug('Unique Events: {}'.format(unique_events))
+        log.debug('Unique Event List: {}'.format(unique_event_list))
 
-        for start, titles in unique_events.items():
+        for start, titles in unique_event_list.items():
             title = ' + '.join(titles)
 
             cmd_list = ['alarm']

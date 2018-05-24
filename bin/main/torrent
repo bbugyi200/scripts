@@ -38,11 +38,10 @@ class MagnetCounter:
             return self.count
 
 
-log = gutils.logging.getEasyLogger(__name__)
-
 SECONDS_IN_HOUR = 3600
 MAGNET_FILE = '{}/magnet'.format(gutils.xdg.getdir('data'))
 
+log = gutils.logging.getEasyLogger(__name__)
 magnet_counter = MagnetCounter()
 magnet_queue = queue.Queue()
 threads = []

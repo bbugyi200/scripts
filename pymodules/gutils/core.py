@@ -47,7 +47,11 @@ def create_pidfile():
 
 
 def mkfifo(FIFO_PATH):
-    """ Creates fifo if it does not already exist """
+    """ Creates named pipe if it does not already exist.
+
+    Args:
+        FIFO_PATH (str): the full file path where the named pipe will be created.
+    """
     try:
         os.mkfifo(FIFO_PATH)
     except OSError as e:

@@ -53,11 +53,3 @@ def test_context_generic():
     with pytest.raises(Exception), gutils.logging.context(log):
         raise Exception
     log.error.assert_called()
-
-
-def test_compose():
-    f = lambda x: x + x
-    g = lambda y: y + 5
-
-    assert gutils.functools.compose(f, g)(5) == 20
-    assert gutils.functools.compose(g, f)(5) == 15

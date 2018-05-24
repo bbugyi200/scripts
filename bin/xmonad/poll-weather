@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+
+""" Writes a weather report to some bar using a FIFO. """
+
+import subprocess as sp  # noqa: F401
+import re
+import time
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def run_weather_report(zipcode):
+    """ Runs the 'weather-report' command.
+
+    Returns:
+        Raw output of weather-report command.
+    """
+    cmd_list = ['weather-report']
+    opts = [zipcode, '--no-cache']
+    cmd_list.extend(opts)
+
+    for i in range(5):
+        child = sp.Popen(cmd_list, stdout=sp.PIPE, stderr=sp.DEVNULL)
+        out = child.communicate()[0]
+        rc = child.returncode
+
+        if rc == 0:
+            log.debug('weather-report Attempt #{}: SUCCESS'.format(i))
+            break
+        else:
+            log.debug('weather-report Attempt #{}: FAILURE'.format(i))
+            time.sleep(3)
+
+    return out.decode().strip()
+
+
+def get_group(pttrn, string):
+    """ Returns the first group matched from a regex pattern. """
+    match = re.search(pttrn, string, re.M)
+    if match:
+        return match.groups()[0]
+    else:
+        raise RuntimeError('No match found for: {}'.format(pttrn))
+
+
+def format_report(loc, temp, sky, wind):
+    """ Formats weather report. """
+    report_fmt = '{}  |  TEMP: {}  |  SKY: {}  |  WIND: {}'
+    return report_fmt.format(loc, temp, sky, wind)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('zipcode', nargs='?', default='08060', help='zip code of location')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug):
+        raw_output = run_weather_report(args.zipcode)
+        loc = get_group('Current conditions at (.*)\n', raw_output)
+        temp = get_group(r'Temperature: ([0-9]+\.[0-9] F)', raw_output)
+        sky = get_group(r'Sky conditions: ([A-z\s]+)', raw_output)
+        wind = get_group(r'Wind: .*([0-9] MPH)', raw_output)
+
+        report = format_report(loc, temp, sky, wind)
+        print(report)

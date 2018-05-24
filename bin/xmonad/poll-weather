@@ -21,7 +21,7 @@ def run_weather_report(zipcode):
     opts = [zipcode, '--no-cache']
     cmd_list.extend(opts)
 
-    for i in range(5):
+    for i in range(1, 6):
         child = sp.Popen(cmd_list, stdout=sp.PIPE, stderr=sp.DEVNULL)
         out = child.communicate()[0]
         rc = child.returncode

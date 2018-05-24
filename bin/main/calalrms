@@ -21,6 +21,80 @@ TOMORROW_MARKER = '@'
 today = dt.date.today()
 
 
+def get_raw_event_list():
+    """ Get raw output of khal command.
+
+    Returns (str):
+        Output of 'khal list' command.
+    """
+    end_date = dt.date.today() + dt.timedelta(days=2)
+    end_date_string = end_date.strftime('%Y-%m-%d')
+    event_list = gutils.subprocess.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
+
+    if event_list.strip().startswith('No'):
+        sys.exit(0)
+
+    return event_list
+
+
+def get_NL_split_event_list(old_event_list):
+    """ Get event list split on newlines.
+
+    Args:
+        old_event_list (str): raw event list.
+
+    Returns ([str]):
+        A list of event strings.
+    """
+    event_list = old_event_list.split('\n')
+    if 'Today' in event_list[0]:
+        event_list = event_list[1:]
+    return event_list
+
+
+def get_marked_event_list(old_event_list):
+    """ Get event list with tomorrow markers added.
+
+    Args:
+        old_event_list ([[str]]): list of pairs for each event time and event name.
+
+    Returns ([[str]]):
+        A list of pairs for each event time and name (with markers added and 'Tomorrow' title
+        event removed).
+    """
+    tomorrow_index = len(old_event_list)
+    for i, event_pair in enumerate(old_event_list):
+        event_time, _ = event_pair
+        if 'Tomorrow,' == event_time:
+            tomorrow_index = i
+            break
+
+    event_list = old_event_list[:tomorrow_index]
+    event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in old_event_list[tomorrow_index+1:]])
+    return event_list
+
+
+def get_unique_event_ordered_dict(old_event_list):
+    """ Get event list where each event time is only represented once.
+
+    Args:
+        old_event_list ([[str]]): list of pairs for each event time and event name.
+
+    Returns ({str: {str}}):
+        An OrderedDict where each event time is used as a key that maps to a set containing all
+        event names that correspond to that event time.
+    """
+    event_list = collections.OrderedDict()
+    for start1, _ in old_event_list:
+        if start1 not in event_list:
+            event_list[start1] = set()
+            for start2, title in old_event_list:
+                if start1 == start2:
+                    event_list[start1].add(title)
+
+    return event_list
+
+
 def filter_allday_events(event_list):
     """ Filters allday events from the event list.
 
@@ -79,47 +153,25 @@ if __name__ == "__main__":
         stop_alarm()
         create_pidfile()
 
-        end_date = dt.date.today() + dt.timedelta(days=2)
-        end_date_string = end_date.strftime('%Y-%m-%d')
+        event_list = get_raw_event_list()
+        log.debug("Raw Event List: {}".format(event_list))
 
-        raw_event_list = gutils.subprocess.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
-        log.debug("Raw Event List: {}".format(raw_event_list))
-
-        if raw_event_list.strip().startswith('No'):
-            sys.exit(0)
-
-        event_list = raw_event_list.split('\n')
-        if 'Today' in event_list[0]:
-            event_list = event_list[1:]
-        log.debug('Event List: {}'.format(event_list))
+        event_list = get_NL_split_event_list(event_list)
+        log.debug('Newline Split Event List: {}'.format(event_list))
 
         event_list = list(filter_allday_events(event_list))
         log.debug('Event List (without allday events): {}'.format(event_list))
 
-        split_event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
-        log.debug('Split Event List: {}'.format(split_event_list))
+        event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
+        log.debug('Double Split Event List: {}'.format(event_list))
 
-        tomorrow_index = len(split_event_list)
-        for i, event in enumerate(event_list):
-            if 'Tomorrow, ' in event:
-                tomorrow_index = i
-                break
+        event_list = get_marked_event_list(event_list)
+        log.debug('Marked Event List: {}'.format(event_list))
 
-        marked_event_list = split_event_list[:tomorrow_index]
-        marked_event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in split_event_list[tomorrow_index+1:]])
-        log.debug('Marked Event List: {}'.format(marked_event_list))
+        events = get_unique_event_ordered_dict(event_list)
+        log.debug('Unique Event List: {}'.format(events))
 
-        unique_event_list = collections.OrderedDict()
-        for start1, _ in marked_event_list:
-            if start1 not in unique_event_list:
-                unique_event_list[start1] = set()
-                for start2, title in marked_event_list:
-                    if start1 == start2:
-                        unique_event_list[start1].add(title)
-
-        log.debug('Unique Event List: {}'.format(unique_event_list))
-
-        for start, titles in unique_event_list.items():
+        for start, titles in events.items():
             title = ' + '.join(titles)
 
             cmd_list = ['alarm']

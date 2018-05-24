@@ -10,7 +10,7 @@ import os
 
 import gutils.g_xdg as xdg
 
-__all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'ArgumentParser']
+__all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'mkfifo', 'ArgumentParser']
 
 
 class GUtilsError(Exception):
@@ -44,6 +44,14 @@ def create_pidfile():
 
     pid = os.getpid()
     open(PIDFILE, 'w').write(str(pid))
+
+
+def mkfifo(FIFO_PATH):
+    """ Creates fifo if it does not already exist """
+    try:
+        os.mkfifo(FIFO_PATH)
+    except OSError as e:
+        pass
 
 
 def ArgumentParser(*args, description=None, formatter_class=None, **kwargs):

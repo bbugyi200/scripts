@@ -20,10 +20,9 @@ if __name__ == "__main__":
         opts = [video_file]
         opts.extend(['-d', "Kelly's Chromecast!!!"])
 
-        if args.subs:
-            srt_file = videos.get('subs')
-            if srt_file is not None:
-                opts.extend(['-s', srt_file])
+        srt_file = videos.get('subs')
+        if srt_file is not None:
+            opts.extend(['-s', srt_file])
 
         cmd_list = ['gnomecast']
         cmd_list.extend(opts)

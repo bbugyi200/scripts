@@ -53,7 +53,7 @@ if __name__ == "__main__":
         with open(DAYPLAN_FILE, 'a+') as f:
             for i in range(delta.days):
                 pretty_date = temp_dt.strftime(DATE_FMT)
-                f.write('{}\n\n'.format(pretty_date.upper()))
+                f.write('\n{}\n'.format(pretty_date.upper()))
                 temp_dt = temp_dt + dt.timedelta(days=1)
 
         record_dt(today_dt)

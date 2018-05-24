@@ -16,7 +16,7 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 RUNTIME_DIR = gutils.xdg.getdir('runtime')
 PID_FILE = '{}/pid'.format(RUNTIME_DIR)
-FIFO = '{}/fifo'.format(RUNTIME_DIR)
+FIFO_PATH = '{}/fifo'.format(RUNTIME_DIR)
 TOMORROW_MARKER = '@'
 today = dt.date.today()
 
@@ -117,16 +117,6 @@ def create_pidfile():
         gutils.create_pidfile()
 
 
-def mkfifo():
-    """ Creates fifo if it does not already exist """
-    try:
-        os.mkfifo(FIFO)
-        log.debug('Named Pipe {} Created.'.format(FIFO))
-    except OSError as e:
-        log.debug('Named Pipe {} Already Exists'.format(FIFO))
-        pass
-
-
 def term_handler(signum, frame):
     """ Signal Handler that Exits Gracefully """
     stop_alarm()
@@ -137,7 +127,7 @@ def term_handler(signum, frame):
 def stop_alarm():
     """ Exit Handler """
     sp.call(['alarm', '--stop'])
-    with open(FIFO, 'w') as fifo:
+    with open(FIFO_PATH, 'w') as fifo:
         fifo.write('\n')
 
 
@@ -149,7 +139,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, term_handler)
 
     with gutils.logging.context(log, debug=args.debug):
-        mkfifo()
+        gutils.mkfifo(FIFO_PATH)
         stop_alarm()
         create_pidfile()
 
@@ -188,8 +178,8 @@ if __name__ == "__main__":
             opts.extend([start, title])
             cmd_list.extend(opts)
 
-            with open(FIFO, 'w') as fifo:
-                log.debug('Writing "{}" to {}.'.format(title, FIFO))
+            with open(FIFO_PATH, 'w') as fifo:
+                log.debug('Writing "{}" to {}.'.format(title, FIFO_PATH))
                 fifo.write('"{}" at {}\n'.format(title, start))
 
             try:

@@ -9,7 +9,7 @@ import gutils
 
 log = gutils.logging.getEasyLogger(__name__)
 
-NSPs = ['GTD', 'calculator', 'scratchpad', 'gtd']
+NSPs = ['GTD', 'calculator', 'scratchpad', 'weechat']
 
 
 if __name__ == "__main__":
@@ -25,4 +25,8 @@ if __name__ == "__main__":
 
         wname = out.decode().strip()
         if wname in NSPs:
+            log.debug('Hiding {}.'.format(wname))
             sp.check_call(['wmctrl', '-t', '0', '-r', ':ACTIVE:'])
+            sys.exit(0)
+
+        log.debug('No scratchpad found.')

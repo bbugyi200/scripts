@@ -1,4 +1,8 @@
-""" XDG Utilities """
+""" XDG Utilities
+
+===== Public Interface =====
+    Functions: getdir
+"""
 
 import errno
 import getpass

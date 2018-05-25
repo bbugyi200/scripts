@@ -1,14 +1,9 @@
 """ Global Utilities
 
-Public Modules:
-    logging: Provides a template for setting up generic logging in python scripts.
-
-    xdg: Provides an easy way to retrieve (and, if necessary, create) the directories specified
-        by the XDG standard.
-
-    debug: Debugging utilities.
-
-    subprocess: Utilities for spawning subprocesses.
+===== Public Interface =====
+    Modules: logging, xdg, debug, subprocess
+    Exceptions: GUtilsError, StillAliveException
+    Functions: create_pidfile, mkfifo, ArgumentParser
 """
 
 import gutils.g_logging as logging  # noqa: F401

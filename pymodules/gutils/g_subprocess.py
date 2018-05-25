@@ -1,4 +1,8 @@
-""" Utility Functions that Make use of the subprocess Module """
+""" Utility Functions that Make use of the subprocess Module
+
+===== Public Interface =====
+    Functions: shell, notify
+"""
 
 import inspect
 import subprocess as sp

@@ -10,7 +10,6 @@ params = [('config', '/home/bryan/.config/test_gutils'),
           ('runtime', '/run/user/1000/test_gutils'),
           ('cache', '/home/bryan/.cache/test_gutils')]
 
-
 @pytest.mark.parametrize('key,expected', params)
 def test_getdir(key,expected):
     assert expected == gutils.xdg.getdir(key)
@@ -24,7 +23,6 @@ def test_getdir_failure():
 
 params = [('echo "Hi There!"', str, 'Hi There!'),
           ('echo 5', int, 5)]
-
 
 @pytest.mark.parametrize('cmd,cast,expected', params)
 def test_shell(cmd,cast,expected):
@@ -53,3 +51,13 @@ def test_context_generic():
     with pytest.raises(Exception), gutils.logging.context(log):
         raise Exception
     log.error.assert_called()
+
+
+def test_context_debug():
+    log = gutils.logging.getEasyLogger(__name__)
+    with gutils.logging.context(log, debug=True):
+        log.debug('TEST')
+
+    logfile = '/var/tmp/{}.log'.format(os.path.basename(__file__).replace('.py', ''))
+    assert os.path.isfile(logfile)
+    assert 'TEST' in open(logfile, 'r').read()

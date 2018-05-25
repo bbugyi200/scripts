@@ -64,7 +64,7 @@ def getFormatter(*, frame=None, verbose=False):
 
 
 @contextlib.contextmanager
-def context(log, *, debug=False):
+def context(log, *, debug=False, quiet=False):
     """ Exception handling context manager.
 
     Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.
@@ -74,7 +74,7 @@ def context(log, *, debug=False):
         debug: True if debugging is enabled.
     """
     if debug:
-        enableDebugMode(log, frame=inspect.stack()[1].frame)
+        enableDebugMode(log, frame=inspect.stack()[1].frame, quiet=quiet)
 
     try:
         yield
@@ -86,7 +86,7 @@ def context(log, *, debug=False):
         raise
 
 
-def enableDebugMode(log, *, frame=None):
+def enableDebugMode(log, *, frame=None, quiet=False):
     """ Enables debug mode.
 
     Adds a FileHandler. Sets the logging level of this handler and any existing StreamHandlers
@@ -95,14 +95,16 @@ def enableDebugMode(log, *, frame=None):
     Args:
         log: logging.Logger object.
         frame: frame object (see inspect module).
+        quiet: if True, debug messages will only be sent to a log file (not to stdout).
     """
     stack = inspect.stack()
     if frame is None:
         frame = stack[1].frame
 
-    for handler in log.handlers:
-        if isinstance(handler, logging.StreamHandler):
-            handler.setLevel(logging.DEBUG)
+    if not quiet:
+        for handler in log.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                handler.setLevel(logging.DEBUG)
 
     # return early if a FileHandler already exists
     for handler in log.handlers:
@@ -112,7 +114,7 @@ def enableDebugMode(log, *, frame=None):
 
     log_file = '/var/tmp/{}.log'.format(shared.scriptname(stack))
     fh = logging.FileHandler(log_file)
-    formatter = getFormatter(frame=inspect.stack()[1].frame, verbose=True)
+    formatter = getFormatter(frame=frame, verbose=True)
     fh.setFormatter(formatter)
     fh.setLevel(logging.DEBUG)
     log.addHandler(fh)

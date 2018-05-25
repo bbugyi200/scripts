@@ -23,8 +23,8 @@ stow --dir=/home/bryan/Dropbox/scripts --target=/home/bryan/.local/lib/python3.6
 
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan $FLAG home
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/root $FLAG home
-
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/etc $FLAG etc
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr $FLAG usr
 
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src $FLAG src
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include $FLAG include

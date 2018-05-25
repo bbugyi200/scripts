@@ -18,7 +18,7 @@ def test_getdir(key,expected):
 
 
 def test_getdir_failure():
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         gutils.xdg.getdir('bad_key')
 
 

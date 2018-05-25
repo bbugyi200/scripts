@@ -26,7 +26,7 @@ def _get_videos():
 
 
 def _get_subs():
-    ps = sp.Popen(['find', '/home/bryan/Downloads', '/media/bryan/hercules/media/Entertainment/Videos', '-name', '*.srt'], stdout=sp.PIPE)
+    ps = sp.Popen(['find', '/home/bryan/Downloads', '/media/bryan/hercules/media/Entertainment', '-name', '*.srt'], stdout=sp.PIPE)
 
     try:
         out = sp.check_output(_rofi_cmd_fmt.format('Subtitle File').split(), stdin=ps.stdout)

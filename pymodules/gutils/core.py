@@ -58,7 +58,7 @@ def mkfifo(FIFO_PATH):
         pass
 
 
-def ArgumentParser(*args, description=None, formatter_class=None, **kwargs):
+def ArgumentParser(*args, opt_args=[], description=None, formatter_class=None, **kwargs):
     """ Wrapper for argparse.ArgumentParser.
 
     Args:
@@ -83,4 +83,8 @@ def ArgumentParser(*args, description=None, formatter_class=None, **kwargs):
                                      formatter_class=formatter_class,
                                      **kwargs)
     parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    if 'quiet' in opt_args:
+        parser.add_argument('-q', '--quiet', action='store_true',
+                            help='use with --debug to send debug messages to log file ONLY')
+
     return parser

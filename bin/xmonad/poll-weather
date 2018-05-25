@@ -36,6 +36,20 @@ def run_weather_report(zipcode):
     return out.decode().strip()
 
 
+def get_temp():
+    """ Returns temperature. """
+    temp = get_group(r'Temperature: ([0-9]+\.[0-9]) F', raw_output)
+    return str(round(float(temp)))
+
+
+def get_wind():
+    """ Returns wind description. """
+    try:
+        return get_group(r'Wind: .*?([0-9\-]+ MPH)', raw_output)
+    except RuntimeError as e:
+        return get_group(r'Wind: (.*)', raw_output)
+
+
 def get_group(pttrn, string):
     """ Returns the first group matched from a regex pattern. """
     match = re.search(pttrn, string, re.M)
@@ -47,22 +61,22 @@ def get_group(pttrn, string):
 
 def format_report(loc, temp, sky, wind):
     """ Formats weather report. """
-    report_fmt = '{}  |  TEMP: {}  |  SKY: {}  |  WIND: {}'
+    report_fmt = '{}  |  TEMP: {} F  |  SKY: {}  |  WIND: {}'
     return report_fmt.format(loc, temp, sky, wind)
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
+    parser = gutils.ArgumentParser(opt_args=['quiet'])
     parser.add_argument('zipcode', nargs='?', default='08060', help='zip code of location')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
+    with gutils.logging.context(log, debug=args.debug, quiet=args.quiet):
         raw_output = run_weather_report(args.zipcode)
 
         loc = get_group('Current conditions at (.*)\n', raw_output)
-        temp = get_group(r'Temperature: ([0-9]+\.[0-9] F)', raw_output)
+        temp = get_temp()
         sky = get_group(r'Sky conditions: ([A-z\s]+)', raw_output)
-        wind = get_group(r'Wind: .*([0-9] MPH)', raw_output)
+        wind = get_wind()
 
         report = format_report(loc, temp, sky, wind)
         print(report)

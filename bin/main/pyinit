@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+
+""" Initialize Python script using a template. """
+
+import enum
+import shutil
+import subprocess as sp  # noqa: F401
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+class Action(enum.Enum):
+    """ Action Flags """
+    NORMAL = enum.auto()
+    TEST = enum.auto()
+
+
+def create_template(tempname, scriptname):
+    """ Creates @scriptname file from the @tempname file.
+
+    Args:
+        tempname (str): template filename.
+        scriptname (str): new script filename.
+    """
+    dirfmt = '/home/bryan/Dropbox/scripts/templates/{}'
+
+    if not tempname.endswith('.py'):
+        tempname = '{}.py'.format(tempname)
+
+    shutil.copyfile(dirfmt.format(tempname), scriptname)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('scriptname', help='the new scripts name')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-n', dest='action', action='store_const', const=Action.NORMAL,
+                       help="initialize a standalone Python script")
+    group.add_argument('-t', dest='action', action='store_const', const=Action.TEST,
+                       help="initialize a Python test script")
+    group.set_defaults(action=Action.NORMAL)
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug):
+        if args.action == Action.NORMAL:
+            filename = args.scriptname
+            create_template('template.py', filename)
+        elif args.action == Action.TEST:
+            filename = 'test_{}.py'.format(args.scriptname)
+            create_template('test_template.py', filename)
+
+        sp.call(['vim', filename])

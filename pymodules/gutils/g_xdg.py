@@ -23,7 +23,9 @@ def getdir(userdir, stack=None):
     """
     userdir = userdir.lower()
     userdir_opts = {'config', 'data', 'runtime', 'cache'}
-    assert userdir in userdir_opts, "userdir MUST be in {}".format(userdir_opts)
+    if userdir not in userdir_opts:
+        raise ValueError("Argument @userdir MUST be one of the following "
+                         "options: {}".format(userdir_opts))
 
     getters = {'config': _getter_factory('XDG_CONFIG_HOME', '/home/{}/.config/{}'),
                'data': _getter_factory('XDG_DATA_HOME', '/home/{}/.local/share/{}'),

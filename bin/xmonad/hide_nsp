@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+
+""" Hides currently focused NSP (if one exists). """
+
+import subprocess as sp  # noqa: F401
+import sys
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+
+NSPs = ['GTD', 'calculator', 'scratchpad', 'gtd']
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug):
+        try:
+            out = sp.check_output('active_window_name')
+        except sp.CalledProcessError as e:
+            log.debug('No window is currently focused.')
+            sys.exit(0)
+
+        wname = out.decode().strip()
+        if wname in NSPs:
+            sp.check_call(['wmctrl', '-t', '0', '-r', ':ACTIVE:'])

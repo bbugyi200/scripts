@@ -74,7 +74,8 @@ def context(log, *, debug=False, quiet=False):
         debug: True if debugging is enabled.
     """
     if debug:
-        enableDebugMode(log, frame=inspect.stack()[1].frame, quiet=quiet)
+        # must slice stack ([1:]) to cut off contextlib module
+        enableDebugMode(log, stack=inspect.stack()[1:], quiet=quiet)
 
     try:
         yield
@@ -86,7 +87,7 @@ def context(log, *, debug=False, quiet=False):
         raise
 
 
-def enableDebugMode(log, *, frame=None, quiet=False):
+def enableDebugMode(log, *, stack=None, quiet=False):
     """ Enables debug mode.
 
     Adds a FileHandler. Sets the logging level of this handler and any existing StreamHandlers
@@ -94,12 +95,13 @@ def enableDebugMode(log, *, frame=None, quiet=False):
 
     Args:
         log: logging.Logger object.
-        frame: frame object (see inspect module).
+        stack: stack object (see inspect module).
         quiet: if True, debug messages will only be sent to a log file (not to stdout).
     """
-    stack = inspect.stack()
-    if frame is None:
-        frame = stack[1].frame
+    if stack is None:
+        stack = inspect.stack()
+
+    frame = stack[1].frame
 
     if not quiet:
         for handler in log.handlers:

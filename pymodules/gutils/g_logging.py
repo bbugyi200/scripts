@@ -25,8 +25,7 @@ def getEasyLogger(name):
     jh = JournalHandler()
     sh = logging.StreamHandler()
 
-    base_formatting = _get_log_fmt(inspect.stack()[1].frame)
-    formatter = logging.Formatter(base_formatting)
+    formatter = getFormatter(frame=inspect.stack()[1].frame)
     jh.setFormatter(formatter)
     sh.setFormatter(formatter)
 
@@ -38,6 +37,30 @@ def getEasyLogger(name):
     log.addHandler(sh)
 
     return log
+
+
+def getFormatter(*, frame=None, verbose=False):
+    """ Get log formatter.
+
+    Args:
+        frame (optional): frame obect (see inspect module).
+        verbose: True if a more verbose log format is desired.
+
+    Returns:
+        logging.Formatter object.
+    """
+    if frame is None:
+        frame = inspect.stack()[1].frame
+
+    base_formatting = _get_log_fmt(frame)
+
+    if verbose:
+        formatter = logging.Formatter('[%(process)s] (%(asctime)s) {}'.format(base_formatting),
+                                      datefmt='%Y-%m-%d %H:%M:%S')
+    else:
+        formatter = logging.Formatter(base_formatting)
+
+    return formatter
 
 
 @contextlib.contextmanager
@@ -91,9 +114,8 @@ def enableDebugMode(log, *, frame=None):
     if frame is None:
         frame = stack[1].frame
 
-    base_formatting = _get_log_fmt(frame)
-    fh.setFormatter(logging.Formatter('[%(process)s] (%(asctime)s) {}'.format(base_formatting),
-                                      datefmt='%Y-%m-%d %H:%M:%S'))
+    formatter = getFormatter(frame=inspect.stack()[1].frame, verbose=True)
+    fh.setFormatter(formatter)
     fh.setLevel(logging.DEBUG)
     log.addHandler(fh)
 

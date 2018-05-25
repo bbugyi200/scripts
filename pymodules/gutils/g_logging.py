@@ -72,6 +72,7 @@ def context(log, *, debug=False, quiet=False):
     Args:
         log: logging.Logger object.
         debug: True if debugging is enabled.
+        quiet: True if debug messages should be sent to log file ONLY.
     """
     if debug:
         # must slice stack ([1:]) to cut off contextlib module
@@ -95,8 +96,8 @@ def enableDebugMode(log, *, stack=None, quiet=False):
 
     Args:
         log: logging.Logger object.
-        stack: stack object (see inspect module).
-        quiet: if True, debug messages will only be sent to a log file (not to stdout).
+        stack (optional): stack object (see inspect module).
+        quiet: True if debug messages should be sent to log file ONLY.
     """
     if stack is None:
         stack = inspect.stack()

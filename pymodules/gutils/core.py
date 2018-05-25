@@ -62,6 +62,7 @@ def ArgumentParser(*args, opt_args=[], description=None, formatter_class=None, *
     """ Wrapper for argparse.ArgumentParser.
 
     Args:
+        opt_args ([str]): A list of optional arguments to add to the parser.
         description (optional): Describes what the script does.
         formatter_class (optional): A class for customizing the help output.
 

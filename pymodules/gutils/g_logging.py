@@ -96,12 +96,13 @@ def enableDebugMode(log, *, frame=None):
         log: logging.Logger object.
         frame: frame object (see inspect module).
     """
+    stack = inspect.stack()
+    if frame is None:
+        frame = stack[1].frame
+
     for handler in log.handlers:
         if isinstance(handler, logging.StreamHandler):
             handler.setLevel(logging.DEBUG)
-
-    stack = inspect.stack()
-    log_file = '/var/tmp/{}.log'.format(shared.scriptname(stack))
 
     # return early if a FileHandler already exists
     for handler in log.handlers:
@@ -109,11 +110,8 @@ def enableDebugMode(log, *, frame=None):
             handler.setLevel(logging.DEBUG)
             return
 
+    log_file = '/var/tmp/{}.log'.format(shared.scriptname(stack))
     fh = logging.FileHandler(log_file)
-
-    if frame is None:
-        frame = stack[1].frame
-
     formatter = getFormatter(frame=inspect.stack()[1].frame, verbose=True)
     fh.setFormatter(formatter)
     fh.setLevel(logging.DEBUG)

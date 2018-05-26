@@ -1,6 +1,5 @@
-import imp  # noqa
-import unittest.mock  # noqa
+"""TEST TEMPLATE"""
 
-import pytest  # noqa
+import unittest.mock as mock
 
-# m = imp.load_source('<Module Name>', '<Full File Path>')
+import pytest

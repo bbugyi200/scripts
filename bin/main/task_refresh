@@ -2,14 +2,11 @@
 
 """ Refresh window contents of the GTD tmux session """
 
-import argparse
 import subprocess as sp
 
-flag_opts = ['all', 'config', 'rename', 'taskw', 'timew', 'khal']
-flags_help = "These flags determine what information is refreshed. This option "\
-        "accepts a comma-separated list containing one or more of the following "\
-        "options: {{{}}}. Defaults to 'taskw,timew,khal'.".format(','.join(flag_opts))
-select_window_help = "Switch to WINDOW after all refreshes are complete."
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
 
 
 class Win:
@@ -18,6 +15,7 @@ class Win:
     TIMEW = 1
     KHAL = 2
     CONFIG = 3
+    LOGS = 5
 
 
 def tmux_cmd(cmd, window, cmd_args=None, *, pane=0):
@@ -48,29 +46,37 @@ def check_flags(*flags):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-F', '--flags', dest='flags', default='taskw,timew,khal', help=flags_help)
+    flag_opts = ['all', 'config', 'rename', 'taskw', 'timew', 'khal', 'logs']
+    flags_help = "These flags determine what information is refreshed. This option "\
+            "accepts a comma-separated list containing one or more of the following "\
+            "options: {{{}}}.".format(','.join(flag_opts))
+    select_window_help = "Switch to WINDOW after all refreshes are complete."
+
+    parser = gutils.ArgumentParser()
+    parser.add_argument('-F', '--flags', dest='flags', default='taskw,timew,khal,logs', help=flags_help)
     parser.add_argument('-w', '--select-window', dest='window', help=select_window_help)
     args = parser.parse_args()
 
-    enabled_flags = [flag.strip() for flag in args.flags.split(',')]
+    with gutils.logging.context(log, debug=args.debug):
+        enabled_flags = [flag.strip() for flag in args.flags.split(',')]
 
-    if check_flags('rename'):
-        out = sp.check_output(['task', 'context', 'show']).decode('utf-8')
-        if out.startswith('No'):
-            current_context = 'NONE'
-        else:
-            temp = out.split()[1]
-            current_context = temp.strip("'").upper()
+        if check_flags('rename'):
+            out = sp.check_output(['task', 'context', 'show']).decode('utf-8')
+            if out.startswith('No'):
+                current_context = 'NONE'
+            else:
+                temp = out.split()[1]
+                current_context = temp.strip("'").upper()
 
-        tmux_cmd('rename-window', Win.MAIN, current_context)
+            tmux_cmd('rename-window', Win.MAIN, current_context)
 
-    if check_flags('config'):
-        send_keys(Win.CONFIG, ':e')
+        for window, flag in [(Win.CONFIG, 'config'), (Win.LOGS, 'logs')]:
+            if check_flags(flag):
+                send_keys(window, ':e')
 
-    for window, cmd, flag, pane in [(Win.MAIN, 'tc', 'taskw', 1), (Win.TIMEW, 'twc', 'timew', 1), (Win.KHAL, 'kc', 'khal', 1)]:
-        if check_flags(flag):
-            send_keys(window, 'clear', pane=pane)
+        for window, cmd, flag, pane in [(Win.MAIN, 'tc', 'taskw', 1), (Win.TIMEW, 'twc', 'timew', 1), (Win.KHAL, 'kc', 'khal', 1)]:
+            if check_flags(flag):
+                send_keys(window, 'clear', pane=pane)
 
-    if args.window is not None:
-        tmux_cmd('select-window', args.window)
+        if args.window is not None:
+            tmux_cmd('select-window', args.window)

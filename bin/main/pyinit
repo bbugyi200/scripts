@@ -35,10 +35,12 @@ def create_template(tempname, scriptname):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('scriptname', help='the new scripts name')
+    parser.add_argument('-n', '--no-edit', dest='edit', action='store_false',
+                        help='create the new script without opening it in vim')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-n', dest='action', action='store_const', const=Action.NORMAL,
+    group.add_argument('--normal', dest='action', action='store_const', const=Action.NORMAL,
                        help="initialize a standalone Python script")
-    group.add_argument('-t', dest='action', action='store_const', const=Action.TEST,
+    group.add_argument('-t', '--pytest', dest='action', action='store_const', const=Action.TEST,
                        help="initialize a Python test script")
     group.set_defaults(action=Action.NORMAL)
     args = parser.parse_args()
@@ -51,4 +53,5 @@ if __name__ == "__main__":
             filename = 'test_{}.py'.format(args.scriptname)
             create_template('test_template.py', filename)
 
-        sp.call(['vim', filename])
+        if args.edit:
+            sp.call(['vim', filename])

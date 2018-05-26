@@ -30,6 +30,7 @@ def create_template(tempname, scriptname):
         tempname = '{}.py'.format(tempname)
 
     shutil.copyfile(dirfmt.format(tempname), scriptname)
+    log.info('Initialized %s.', scriptname)
 
 
 if __name__ == "__main__":
@@ -47,11 +48,11 @@ if __name__ == "__main__":
 
     with gutils.logging.context(log, debug=args.debug):
         if args.action == Action.NORMAL:
-            filename = args.scriptname
-            create_template('template.py', filename)
+            scriptname = args.scriptname
+            create_template('template.py', scriptname)
         elif args.action == Action.TEST:
-            filename = 'test_{}.py'.format(args.scriptname)
-            create_template('test_template.py', filename)
+            scriptname = 'test_{}.py'.format(args.scriptname)
+            create_template('test_template.py', scriptname)
 
         if args.edit:
-            sp.call(['vim', filename])
+            sp.call(['vim', scriptname])

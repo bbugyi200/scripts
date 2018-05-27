@@ -1,8 +1,4 @@
-""" Automates Logging Initialization
-
-===== Public Interface =====
-    Functions: getEasyLogger, getFormatter, context, enableDebugMode
-"""
+"""Automates Logging Initialization"""
 
 import contextlib
 import inspect

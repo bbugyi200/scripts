@@ -1,8 +1,4 @@
-""" Debugging Utilities
-
-===== Public Interface =====
-    Functions: trace
-"""
+"""Debugging Utilities"""
 
 import functools
 

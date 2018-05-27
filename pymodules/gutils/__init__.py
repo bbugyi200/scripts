@@ -1,9 +1,7 @@
-""" Global Utilities
+"""Global Utilities
 
-===== Public Interface =====
-    Modules: logging, xdg, debug
-    Exceptions: GUtilsError, StillAliveException
-    Functions: create_pidfile, mkfifo, ArgumentParser
+This package imports core.py into its global namespace. See help(gutils.core) for documentation
+on globally defined functions.
 """
 
 import gutils.g_logging as logging  # noqa: F401

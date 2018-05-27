@@ -1,4 +1,4 @@
-""" Internal Shared Utilities for gutils Package """
+"""Internal Shared Utilities for gutils Package"""
 
 import os
 

@@ -7,10 +7,13 @@ are intended to be imported directly into the package's global scope.
 import argparse
 import inspect
 import os
+import subprocess as sp
 
 import gutils.g_xdg as xdg
+import gutils.shared as shared
 
-__all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'mkfifo', 'ArgumentParser']
+__all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'mkfifo', 'ArgumentParser',
+           'notify']
 
 
 class GUtilsError(Exception):
@@ -89,3 +92,18 @@ def ArgumentParser(*args, opt_args=[], description=None, formatter_class=None, *
                             help='use with --debug to send debug messages to log file ONLY')
 
     return parser
+
+
+def notify(*args):
+    """ Sends desktop notification with calling script's name as the notification title.
+
+    Args:
+        *args: arguments to be passed to the notify-send command.
+    """
+    assert len(args) > 0, 'No notification message specified.'
+
+    cmd_list = ['notify-send']
+    cmd_list.extend([shared.scriptname(inspect.stack())])
+    cmd_list.extend(args)
+
+    sp.check_call(cmd_list)

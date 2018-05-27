@@ -21,5 +21,7 @@ if __name__ == "__main__":
 
     with gutils.logging.context(log, debug=args.debug):
         breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
-        gutils.subprocess.shell('khal new -a daily {} "{}"'.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), args.event_name))
+        cmd_fmt = 'khal new -a daily {} "{}"'
+        sp.check_call(cmd_fmt.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), args.event_name),
+                      shell=True)
         sp.Popen(['calalrms'])

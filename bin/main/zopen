@@ -57,26 +57,40 @@ if __name__ == "__main__":
 
     with gutils.logging.context(log, debug=args.debug):
         try:
-            open_docs = gutils.subprocess.shell('wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- | grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"', cast=lambda x: x.split('\n'))
+            cmd = 'wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- '\
+                  '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"'
+            out = sp.check_output(cmd, shell=True)
+            decoded = out.decode().strip()
+            open_docs = decoded.split('\n')
             log.debug('Open Docs: {}'.format(' '.join(open_docs)))
         except sp.CalledProcessError as e:
             open_docs = None
             log.debug('No documents are currently open in zathura.')
 
-        all_docs = gutils.subprocess.shell('find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o -name "*.epub" -o -name "*.djvu" -o -name "*.ps"')
-        cached_docs = gutils.subprocess.shell('cat {}'.format(CACHE_FILE))
+        cmd = 'find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o '\
+              '-name "*.epub" -o -name "*.djvu" -o -name "*.ps"'
+        out = sp.check_output(cmd, shell=True)
+        all_docs = out.decode().strip()
+
+        out = sp.check_output('cat {}'.format(CACHE_FILE), shell=True)
+        cached_docs = out.decode().strip()
         ordered_docs = promote_cached_docs(all_docs.split('\n'), cached_docs.split('\n'))
 
         if open_docs:
             ordered_docs = purge_open_docs(ordered_docs, open_docs)
 
         doc_options = '\n'.join(ordered_docs)
-        choice = gutils.subprocess.shell('printf "{}" | rofi -p "Document" -m -4 -dmenu -i'.format(doc_options))
+
+        cmd_fmt = 'printf "{}" | rofi -p "Document" -m -4 -dmenu -i'
+        out = sp.check_output(cmd_fmt.format(doc_options), shell=True)
+        choice = out.decode().strip()
 
         add_to_cache(choice)
 
-        if gutils.subprocess.shell('active_window_class') == 'Zathura':
-            pid = gutils.subprocess.shell('active_window_pid', cast=int)
+        out = sp.check_output(['active_window_class'])
+        if out.decode().strip() == 'Zathura':
+            out = sp.check_output(['active_window_pid'])
+            pid = int(out.decode().strip())
             log.debug('Killing Zathura Instance: {}'.format(pid))
             os.kill(pid, signal.SIGTERM)
 

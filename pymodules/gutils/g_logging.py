@@ -88,7 +88,7 @@ def context(log, *, debug=False, quiet=False):
         log.error(str(e))
         sys.exit(1)
     except Exception as e:
-        log.error('{}: {}'.format(type(e).__name__, str(e)))
+        log.exception('{}: {}'.format(type(e).__name__, str(e)))
         raise
 
 

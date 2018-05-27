@@ -29,7 +29,9 @@ def get_raw_event_list():
     """
     end_date = dt.date.today() + dt.timedelta(days=2)
     end_date_string = end_date.strftime('%Y-%m-%d')
-    event_list = gutils.subprocess.shell("khal list --notstarted --format '{{start-time}} {{title}}' now {}".format(end_date_string))
+    cmd = "khal list --notstarted --format '{{start-time}} {{title}}' now {}"
+    out = sp.check_output(cmd.format(end_date_string), shell=True)
+    event_list = out.decode().strip()
 
     if event_list.strip().startswith('No'):
         sys.exit(0)
@@ -186,3 +188,5 @@ if __name__ == "__main__":
                 sp.check_call(cmd_list)
             except sp.CalledProcessError as e:
                 raise RuntimeError('Current alarm was interupted.')
+
+        log.debug('No calendar events to set alarm for. Terminating...')

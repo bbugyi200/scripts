@@ -3,6 +3,7 @@
 """ Initialize Python script using a template. """
 
 import enum
+import os
 import shutil
 import subprocess as sp  # noqa: F401
 
@@ -51,7 +52,9 @@ if __name__ == "__main__":
             scriptname = args.scriptname
             create_template('template.py', scriptname)
         elif args.action == Action.TEST:
-            scriptname = 'test_{}.py'.format(args.scriptname)
+            script_basename = os.path.basename(args.scriptname.strip('.py')).strip('test_')
+            scriptname = '{}/test_{}.py'.format(os.path.dirname(args.scriptname),
+                                                script_basename)
             create_template('test_template.py', scriptname)
 
         if args.edit:

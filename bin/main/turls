@@ -1,0 +1,24 @@
+#!/bin/bash
+
+###################################################################################
+#  Shows list of tasks in taskwarrior belonging to projects that reference URLs.  #
+###################################################################################
+
+prompt="All(a), Blogs(b), Docs(d), or Videos(v)?: "
+read -n 1 -p "$prompt" choice
+
+case "${choice,,}" in
+    'a' )
+        filter="( project:Blogs or project:Study.Docs or project:Videos )";;
+    'b' )
+        filter="project:Blogs";;
+    'd' )
+        filter="project:Study.Docs";;
+    'v' )
+        filter="project:Videos";;
+    * )
+        exit 1;;
+esac
+
+clear
+task rc.context=none rc.verbose=blank,label rc.defaultwidth:$COLUMNS $filter -COMPLETED -DELETED all

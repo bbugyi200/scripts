@@ -12,7 +12,7 @@ params = [('config', '/home/bryan/.config/test_gutils'),
 
 
 @pytest.mark.parametrize('key,expected', params)
-def test_getdir(key,expected):
+def test_getdir(key, expected):
     assert expected == gutils.xdg.getdir(key)
     os.rmdir(expected)
 

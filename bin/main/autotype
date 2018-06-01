@@ -11,24 +11,19 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def xenter(secs=1):
-    sp.check_call(['xdotool', 'key', 'KP_Enter'])
-    time.sleep(secs)
-
-
-def xtype(string, *, delay=None):
-    if delay is None:
-        delay = 100
-
-    sp.check_call(['xdotool', 'type', '--delay', str(delay), string.strip('\n')])
-
-
 def search(line, pttrn=r'\(\(([0-9]+)\)\)'):
     return re.search(pttrn, line)
 
 
-def escape():
-    sp.check_call(['xdotool', 'key', 'Escape'])
+def xtype(string, *, delay=None):
+    if delay is None:
+        delay = 150
+
+    sp.check_call(['xdotool', 'type', '--delay', str(delay), string.strip('\n')])
+
+
+def xkey(key):
+    sp.check_call(['xdotool', 'key', key])
 
 
 def read_line(line):
@@ -38,7 +33,7 @@ def read_line(line):
 
         if start_match:
             log.debug('Start Match: {}'.format(start_match.group()))
-            delay = start_match.groups()[0]
+            type_delay = start_match.groups()[0]
             if start_match:
                 start = start_match.end()
             else:
@@ -46,18 +41,22 @@ def read_line(line):
         else:
             log.debug('No start match found.')
             start = 0
-            delay = None
+            type_delay = None
 
         line = line[start:]
 
         while True:
-            flag = search(line, r'(<<[0-9\.]+>>|@)')
+            flag = search(line, r'(<<[0-9\.]+>>|@|\[CLEAR\]|\[TAB\])')
             if flag:
                 read_line(line[:flag.start()])
                 group = flag.groups()[0]
 
                 if group == '@':
-                    escape()
+                    xkey('Escape')
+                elif group == '[CLEAR]':
+                    xkey('ctrl+u')
+                elif group == '[TAB]':
+                    xkey('Tab')
                 else:
                     time.sleep(float(flag.groups()[0].strip('<>')))
 
@@ -77,7 +76,7 @@ def read_line(line):
             log.debug('No end match found.')
             end = len(line)
 
-        xtype(line[:end], delay=delay)
+        xtype(line[:end], delay=type_delay)
 
         line = line[end:]
         log.debug('Line at end of loop: {}'.format(line))
@@ -87,18 +86,29 @@ def read_line(line):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('file', help='The file to read from.')
+    parser.add_argument('file', nargs='?', default='autotype.txt', help='The file to read from.')
+    parser.add_argument('-E', '--enter-delay', nargs=1, dest='enter_delay', default=1,
+            help='How many seconds to sleep after pressing Enter.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
         time.sleep(0.5)
         firstline = True
         for line in open(args.file, 'r'):
+            if line[0] == '#':
+                continue
             if not firstline:
-                xenter()
+                enter_delay_match = search(line, r'^<<([0-9\.]+)>>')
+                if enter_delay_match:
+                    enter_delay = enter_delay_match.groups()[0]
+                    line = line[enter_delay_match.end():]
+                else:
+                    enter_delay = args.enter_delay
+
+                xkey('KP_Enter')
+                time.sleep(float(enter_delay))
+
             firstline = False
 
             match = search(line)
-            if not match or match.start() != 0:
-                line = '((12)){}'.format(line)
             read_line(line)

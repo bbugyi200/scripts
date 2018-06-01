@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+
+""" Autotype a string of characters. """
+
+import re
+import subprocess as sp  # noqa: F401
+import time
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def xenter(secs=1):
+    sp.check_call(['xdotool', 'key', 'KP_Enter'])
+    time.sleep(secs)
+
+
+def xtype(string, *, delay=12):
+    try:
+        string = string.decode()
+    except AttributeError as e:
+        pass
+
+    sp.check_call(['xdotool', 'type', '--delay', str(delay), string.strip('\n')])
+
+
+def search(line, pttrn=r'\(\(([0-9]+)\)\)'):
+    return re.search(pttrn, line)
+
+
+def read_line(line):
+    while True:
+        log.debug('Line at start of loop: {}'.format(line))
+        start_match = search(line, r'^\(\(([0-9]+)\)\)')
+
+        if start_match:
+            log.debug('Start Match: {}'.format(start_match.group()))
+            delay = start_match.groups()[0]
+            if start_match:
+                start = start_match.end()
+            else:
+                start = 0
+        else:
+            log.debug('No start match found.')
+            start = 0
+            delay = 12
+
+        line = line[start:]
+
+        while True:
+            sleep_match = search(line, '<<([0-9]+)>>')
+            if sleep_match:
+                read_line(line[:sleep_match.start()])
+                time.sleep(int(sleep_match.groups()[0]))
+                line = line[sleep_match.end():]
+                continue
+            break
+
+        end_match = search(line)
+        if not end_match:
+            end_match = search(line, r'<<[0-9]+>>')
+
+        log.debug('Line at middle of loop: {}'.format(line))
+        if end_match:
+            log.debug('End Match: {}'.format(end_match.group()))
+            end = end_match.start()
+        else:
+            log.debug('No end match found.')
+            end = len(line)
+
+        xtype(line[:end], delay=delay)
+
+        line = line[end:]
+        log.debug('Line at end of loop: {}'.format(line))
+        if not end_match:
+            return
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('file', help='The file to read from.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug):
+        firstline = True
+        for line in open(args.file, 'r'):
+            if not firstline:
+                xenter()
+            firstline = False
+
+            match = search(line)
+            if not match or match.start() != 0:
+                line = '((12)){}'.format(line)
+            read_line(line)

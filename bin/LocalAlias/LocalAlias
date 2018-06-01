@@ -6,15 +6,15 @@
 # Allows you to create and use aliases and functions that are local to the     #
 # directory that they were created in.                                         #
 ################################################################################
-    
+
 LOCALALIAS_FILE="./.lshrc"
 
-read -d '' awkScript <<-'EOF'
-BEGIN { 
-    printf "set -- %s\\n", args
+read -r -d '' awkScript <<-'EOF'
+BEGIN {
+    printf "set -- %s\n", args
 }
 $0 ~ "^" my_func " ()" {flag=1; next}
-/^}\\s*$/{flag=0} 
+/^}\s*$/{flag=0}
 {
     if (flag) {
         gsub(/  [ ]*/, "")
@@ -23,8 +23,7 @@ $0 ~ "^" my_func " ()" {flag=1; next}
 }
 EOF
 
-
-eval set -- $(getopt -o "da:ef:pvcr:x:" -l "debug,alias:,edit,function:,print,verbose,color,remove:,execute:" -- "$@")
+eval set -- "$(getopt -o "da:ef:pvcr:x:" -l "debug,alias:,edit,function:,print,verbose,color,remove:,execute:" -- "$@")"
 
 option='print'
 while [[ -n "$1" ]]; do
@@ -85,7 +84,7 @@ remove() {
 }
 
 add_alias() {
-    printf "$WORD=''\033[1D" 
+    printf "$WORD=''\033[1D"
     IFS=
     read -n 1 C
     while [[ "$C" != "" ]]; do
@@ -105,8 +104,8 @@ add_alias() {
             Q='"'
         fi
 
-        printf "$WORD=$Q$CMD$Q\033[1D" 
-        read -n 1 C
+        printf "$WORD=$Q$CMD$Q\033[1D"
+        read -r -n 1 C
     done
 
     printf "alias $WORD=$Q$CMD$Q\n" >> $LOCALALIAS_FILE

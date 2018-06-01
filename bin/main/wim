@@ -21,7 +21,7 @@ if [[ -z "$1" ]]; then
 fi
 
 CMD="$1"; shift
-SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name $CMD)"
+SCRIPT_PATH="$(find ~/Dropbox/scripts -type f -name "$CMD")"
 
 if [[ -n "$SCRIPT_PATH" ]]; then
     vim -c "silent! normal g;" "$SCRIPT_PATH"

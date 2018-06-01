@@ -95,7 +95,7 @@ if __name__ == "__main__":
         time.sleep(0.5)
         firstline = True
         for line in open(args.file, 'r'):
-            if line[0] == '#':
+            if line[0] == '#' or line[:2] == '//':
                 continue
             if not firstline:
                 enter_delay_match = search(line, r'^<<([0-9\.]+)>>')

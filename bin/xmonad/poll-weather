@@ -27,10 +27,10 @@ def run_weather_report(zipcode):
         rc = child.returncode
 
         if rc == 0:
-            log.debug('weather-report Attempt #{}: SUCCESS'.format(i+1))
+            log.debug('weather-report Attempt #{}: SUCCESS'.format(i + 1))
             break
         else:
-            log.debug('weather-report Attempt #{}: FAILURE'.format(i+1))
+            log.debug('weather-report Attempt #{}: FAILURE'.format(i + 1))
             time.sleep(2**i)
 
     return out.decode().strip()
@@ -73,10 +73,14 @@ if __name__ == "__main__":
     with gutils.logging.context(log, debug=args.debug, quiet=args.quiet):
         raw_output = run_weather_report(args.zipcode)
 
-        loc = get_group('Current conditions at (.*)\n', raw_output)
-        temp = get_temp()
-        sky = get_group(r'Sky conditions: ([A-z\s]+)', raw_output)
-        wind = get_wind()
+        try:
+            loc = get_group('Current conditions at (.*)\n', raw_output)
+            temp = get_temp()
+            sky = get_group(r'Sky conditions: ([A-z\s]+)', raw_output)
+            wind = get_wind()
+        except RuntimeError as e:
+            log.error('Raw Output: {}'.format(raw_output))
+            raise
 
         report = format_report(loc, temp, sky, wind)
         print(report)

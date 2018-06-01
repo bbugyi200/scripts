@@ -1,6 +1,21 @@
 #!/usr/bin/env python
 
-""" Autotype a string of characters. """
+"""Automates keypresses with xdotool by reading from a simple text file
+
+Sends most text to `xdotool type` but also uses various "flags" to indicate that some
+event should occur at that point.
+
+Flags:
+    newline:     At every new line, `xdotool key KP_Enter` is run. Execution then sleeps
+                 for a default amount of time. This can be changed by using a <<N>> marker
+                 at the start of a newline. This will overwrite (NOT add to) the default
+                 "enter key delay" for this line only.
+    @:          Run `xdotool key Escape`.
+    <<N>>:      Run time.sleep(N).
+    ((N)):      Alter the --delay parameter for `xdotool type`. This persists to the end
+                of the line (or until the next ((N))) marker is reached). The next line
+                uses the default --delay value.
+"""
 
 import re
 import subprocess as sp  # noqa: F401
@@ -86,7 +101,7 @@ def read_line(line):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('file', nargs='?', default='autotype.txt', help='The file to read from.')
+    parser.add_argument('file', nargs='?', default='demo.txt', help='The file to read from.')
     parser.add_argument('-E', '--enter-delay', nargs=1, dest='enter_delay', default=1,
             help='How many seconds to sleep after pressing Enter.')
     args = parser.parse_args()

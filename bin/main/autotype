@@ -16,17 +16,19 @@ def xenter(secs=1):
     time.sleep(secs)
 
 
-def xtype(string, *, delay=12):
-    try:
-        string = string.decode()
-    except AttributeError as e:
-        pass
+def xtype(string, *, delay=None):
+    if delay is None:
+        delay = 100
 
     sp.check_call(['xdotool', 'type', '--delay', str(delay), string.strip('\n')])
 
 
 def search(line, pttrn=r'\(\(([0-9]+)\)\)'):
     return re.search(pttrn, line)
+
+
+def escape():
+    sp.check_call(['xdotool', 'key', 'Escape'])
 
 
 def read_line(line):
@@ -44,16 +46,22 @@ def read_line(line):
         else:
             log.debug('No start match found.')
             start = 0
-            delay = 12
+            delay = None
 
         line = line[start:]
 
         while True:
-            sleep_match = search(line, '<<([0-9]+)>>')
-            if sleep_match:
-                read_line(line[:sleep_match.start()])
-                time.sleep(int(sleep_match.groups()[0]))
-                line = line[sleep_match.end():]
+            flag = search(line, r'(<<[0-9\.]+>>|@)')
+            if flag:
+                read_line(line[:flag.start()])
+                group = flag.groups()[0]
+
+                if group == '@':
+                    escape()
+                else:
+                    time.sleep(float(flag.groups()[0].strip('<>')))
+
+                line = line[flag.end():]
                 continue
             break
 
@@ -83,6 +91,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
+        time.sleep(0.5)
         firstline = True
         for line in open(args.file, 'r'):
             if not firstline:

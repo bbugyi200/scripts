@@ -30,21 +30,24 @@ def xtype(string, *, delay=None):
     if delay is None:
         delay = 150
 
-    sp.check_call(['xdotool', 'type', '--delay', str(delay), string.strip('\n')])
+    string = string.strip('\n')
+
+    log.debug('xdotool type --delay {} {}'.format(delay, string))
+    sp.check_call(['xdotool', 'type', '--delay', str(delay), string])
 
 
 def xkey(key):
     sp.check_call(['xdotool', 'key', key])
 
 
-def read_line(line):
+def read_line(line, typedelay=None):
     while True:
         log.debug('Line at start of loop: {}'.format(line))
         start_match = re.search(r'^\(\(([0-9]+)\)\)', line)
 
         if start_match:
             log.debug('Start Match: {}'.format(start_match.group()))
-            type_delay = start_match.groups()[0]
+            typedelay = start_match.groups()[0]
             if start_match:
                 start = start_match.end()
             else:
@@ -52,14 +55,14 @@ def read_line(line):
         else:
             log.debug('No start match found.')
             start = 0
-            type_delay = None
+            typedelay = typedelay
 
         line = line[start:]
 
         while True:
             flag = re.search(r'(<<[0-9\.]+>>|@|\[CLEAR\]|\[TAB\])', line)
             if flag:
-                read_line(line[:flag.start()])
+                read_line(line[:flag.start()], typedelay=typedelay)
                 group = flag.groups()[0]
 
                 if group == '@':
@@ -87,7 +90,7 @@ def read_line(line):
             log.debug('No end match found.')
             end = len(line)
 
-        xtype(line[:end], delay=type_delay)
+        xtype(line[:end], delay=typedelay)
 
         line = line[end:]
         log.debug('Line at end of loop: {}'.format(line))
@@ -104,11 +107,11 @@ if __name__ == "__main__":
 
     with gutils.logging.context(log, debug=args.debug):
         time.sleep(0.5)
-        firstline = True
+        first = True
         for line in open(args.file, 'r'):
             if line[0] == '#' or line[:2] == '//':
                 continue
-            if not firstline:
+            if not first:
                 enter_delay_match = re.search(r'^<<([0-9\.]+)>>', line)
                 if enter_delay_match:
                     enter_delay = enter_delay_match.groups()[0]
@@ -118,8 +121,7 @@ if __name__ == "__main__":
 
                 xkey('KP_Enter')
                 time.sleep(float(enter_delay))
+            else:
+                first = False
 
-            firstline = False
-
-            match = re.search(r'\(\(([0-9]+)\)\)', line)
             read_line(line)

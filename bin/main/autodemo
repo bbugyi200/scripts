@@ -26,10 +26,6 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def search(line, pttrn=r'\(\(([0-9]+)\)\)'):
-    return re.search(pttrn, line)
-
-
 def xtype(string, *, delay=None):
     if delay is None:
         delay = 150
@@ -44,7 +40,7 @@ def xkey(key):
 def read_line(line):
     while True:
         log.debug('Line at start of loop: {}'.format(line))
-        start_match = search(line, r'^\(\(([0-9]+)\)\)')
+        start_match = re.search(r'^\(\(([0-9]+)\)\)', line)
 
         if start_match:
             log.debug('Start Match: {}'.format(start_match.group()))
@@ -61,7 +57,7 @@ def read_line(line):
         line = line[start:]
 
         while True:
-            flag = search(line, r'(<<[0-9\.]+>>|@|\[CLEAR\]|\[TAB\])')
+            flag = re.search(r'(<<[0-9\.]+>>|@|\[CLEAR\]|\[TAB\])', line)
             if flag:
                 read_line(line[:flag.start()])
                 group = flag.groups()[0]
@@ -79,9 +75,9 @@ def read_line(line):
                 continue
             break
 
-        end_match = search(line)
+        end_match = re.search(r'\(\(([0-9]+)\)\)', line)
         if not end_match:
-            end_match = search(line, r'<<[0-9]+>>')
+            end_match = re.search(r'<<[0-9]+>>', line)
 
         log.debug('Line at middle of loop: {}'.format(line))
         if end_match:
@@ -113,7 +109,7 @@ if __name__ == "__main__":
             if line[0] == '#' or line[:2] == '//':
                 continue
             if not firstline:
-                enter_delay_match = search(line, r'^<<([0-9\.]+)>>')
+                enter_delay_match = re.search(r'^<<([0-9\.]+)>>', line)
                 if enter_delay_match:
                     enter_delay = enter_delay_match.groups()[0]
                     line = line[enter_delay_match.end():]
@@ -125,5 +121,5 @@ if __name__ == "__main__":
 
             firstline = False
 
-            match = search(line)
+            match = re.search(r'\(\(([0-9]+)\)\)', line)
             read_line(line)

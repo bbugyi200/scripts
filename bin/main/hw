@@ -1,5 +1,23 @@
 #!/bin/bash
 
+eval set -- "$(getopt -o "dn:" -l "debug,name:" -- "$@")"
+
+HW="HW"
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x;;
+       -n|--name )
+           shift
+           HW="$1";;
+       -- )
+           shift
+           break;;
+    esac
+    shift
+done
+
 if [[ -z "$COURSE" ]] || [[ -z "$SECTION" ]]; then
     echo "The COURSE and/or SECTION environment variables are not defined!"
     exit 1
@@ -12,13 +30,13 @@ fi
 
 N=$1; shift
 
-if [[ ! -d HW$N ]]; then
-    mkdir HW$N
+if [[ ! -d $HW$N ]]; then
+    mkdir $HW$N
 fi
-if [[ ! -f HW$N/HW$N.tex ]]; then
-    cp -i $(find ~/Dropbox -name "HW_Template.tex") HW$N/HW$N.tex
-    sed -i "s/HW#/HW$N/g" HW$N/HW$N.tex
-    sed -i "s/@@@:@@/$COURSE:$SECTION/g" HW$N/HW$N.tex
+if [[ ! -f $HW$N/$HW$N.tex ]]; then
+    cp -i "$(find ~/Dropbox -name "template.tex")" $HW$N/$HW$N.tex
+    sed -i "s/HW#/$HW \\\\#$N/g" $HW$N/$HW$N.tex
+    sed -i "s/@@@:@@/$COURSE:$SECTION/g" $HW$N/$HW$N.tex
 fi
 
-tmux send-keys "vim -c'1,/Local Custom/mark a' -c'1,/^\\\\end{enumerate}/mark s' HW$N/HW$N.tex" "Enter"
+tmux send-keys "vim -c'1,/\\\\input/mark a' -c'1,/^\\\\end{enumerate}/mark s' $HW$N/$HW$N.tex ~/Dropbox/scripts/templates/HW/shared.tex" "Enter"

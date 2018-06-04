@@ -54,8 +54,8 @@ def xkey(key):
     sp.check_call(['xdotool', 'key', key])
 
 
-def interpret_line(line):
-    """Correctly interprets a single line by parsing through the defined flags
+def process_line(line):
+    """Processes a single line by parsing through the defined flags
 
     Args:
         line (str): A line from the demo text file.
@@ -116,4 +116,4 @@ if __name__ == "__main__":
             else:
                 first = False
 
-            interpret_line(line)
+            process_line(line)

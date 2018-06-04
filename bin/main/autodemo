@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 
-"""Automates keypresses with xdotool by reading from a simple text file
+"""Used to automate the demonstration of a terminal program for the purpose of creating a GIF
 
-Sends most text to `xdotool type` but also uses various "flags" to indicate that some
-event should occur at that point.
+Automates keypresses with xdotool by reading from a simple text file. Sends most text to `xdotool
+type` but also uses various "flags" embedded in the text to indicate that some event should occur
+at the point the flag was found.
 
 Flags:
-    newline:     At every new line, `xdotool key KP_Enter` is run. Execution then sleeps
-                 for a default amount of time. This can be changed by using a <<N>> marker
-                 at the start of a newline. This will overwrite (NOT add to) the default
-                 "enter key delay" for this line only.
-    @:          Run `xdotool key Escape`.
+    newline:    At every new line, `xdotool key KP_Enter` is run. Execution then sleeps
+                for a default amount of time. This can be changed by using a <<N>> marker
+                at the start of a newline. This will overwrite (NOT add to) the default
+                "enter key delay" for this line only.
+    [KEY]:      Emulate some special key-press using `xdotool key`. KEY is used to represent
+                a template value to be replaced by a valid value (i.e. [KEY] is not a valid flag).
+                Valid key flags: [ESC] [TAB] [CLEAR]
     <<N>>:      Run time.sleep(N).
     ((N)):      Alter the --delay parameter for `xdotool type`. This persists to the end
                 of the line (or until the next ((N))) marker is reached). The next line
@@ -30,76 +33,62 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def xtype(string, *, delay=None):
+def xtype(keys, *, delay=None):
+    """Wrapper for `xdotool type`
+
+    Args:
+        keys (str): Keys to type.
+        delay (optional): Typing delay.
+    """
     if delay is None:
         delay = 150
 
-    string = string.strip('\n')
+    keys = keys.strip('\n')
 
-    log.debug('xdotool type --delay {} {}'.format(delay, string))
-    sp.check_call(['xdotool', 'type', '--delay', str(delay), string])
+    log.debug('xdotool type --delay {} {}'.format(delay, keys))
+    sp.check_call(['xdotool', 'type', '--delay', str(delay), keys])
 
 
 def xkey(key):
+    """Wrapper for `xdotool key`"""
     sp.check_call(['xdotool', 'key', key])
 
 
-def read_line(line, typedelay=None):
-    while True:
-        log.debug('Line at start of loop: {}'.format(line))
-        start_match = re.search(r'^\(\(([0-9]+)\)\)', line)
+def interpret_line(line, typedelay=None):
+    """Recursive function to interpret a single line by parsing through the defined flags.
 
-        if start_match:
-            log.debug('Start Match: {}'.format(start_match.group()))
-            typedelay = start_match.groups()[0]
-            if start_match:
-                start = start_match.end()
-            else:
-                start = 0
-        else:
-            log.debug('No start match found.')
-            start = 0
-            typedelay = typedelay
+    Args:
+        line (str): A line from the demo text file.
+        typedelay (optional): Delay arg for xtype. Needed to preserve state while when making
+            recursive calls.
+    """
+    pttrn_fmt = r'(<<[0-9\.]+>>|\(\([0-9\.]+\)\)|{})'
+    key_flag_pairs = [('ESC', 'Escape'), ('CLEAR', 'ctrl+u'), ('TAB', 'Tab')]
+    key_flag_pttrn = '|'.join([r'\[{}\]'.format(flag) for flag, _ in key_flag_pairs])
+    pttrn = pttrn_fmt.format(key_flag_pttrn)
 
-        line = line[start:]
+    flag = re.search(pttrn, line)
+    while flag:
+        interpret_line(line[:flag.start()], typedelay=typedelay)
+        group = flag.groups()[0]
 
-        while True:
-            flag = re.search(r'(<<[0-9\.]+>>|@|\[CLEAR\]|\[TAB\])', line)
-            if flag:
-                read_line(line[:flag.start()], typedelay=typedelay)
-                group = flag.groups()[0]
+        for key_flag, key in key_flag_pairs:
+            if group == '[{}]'.format(key_flag):
+                xkey(key)
+                break
 
-                if group == '@':
-                    xkey('Escape')
-                elif group == '[CLEAR]':
-                    xkey('ctrl+u')
-                elif group == '[TAB]':
-                    xkey('Tab')
-                else:
-                    time.sleep(float(flag.groups()[0].strip('<>')))
+        # these checks are only relevant if no key_flag was identified
+        if group[:2] == '<<':
+            time.sleep(float(group.strip('<>')))
+        elif group[:2] == '((':
+            typedelay = group.strip('()')
 
-                line = line[flag.end():]
-                continue
-            break
+        line = line[flag.end():]
 
-        end_match = re.search(r'\(\(([0-9]+)\)\)', line)
-        if not end_match:
-            end_match = re.search(r'<<[0-9]+>>', line)
+        flag = re.search(pttrn, line)
 
-        log.debug('Line at middle of loop: {}'.format(line))
-        if end_match:
-            log.debug('End Match: {}'.format(end_match.group()))
-            end = end_match.start()
-        else:
-            log.debug('No end match found.')
-            end = len(line)
-
-        xtype(line[:end], delay=typedelay)
-
-        line = line[end:]
-        log.debug('Line at end of loop: {}'.format(line))
-        if not end_match:
-            return
+    # Normal `xdotool type` if no flags are found/left.
+    xtype(line, delay=typedelay)
 
 
 if __name__ == "__main__":
@@ -128,4 +117,4 @@ if __name__ == "__main__":
             else:
                 first = False
 
-            read_line(line)
+            interpret_line(line)

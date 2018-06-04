@@ -54,22 +54,21 @@ def xkey(key):
     sp.check_call(['xdotool', 'key', key])
 
 
-def interpret_line(line, typedelay=None):
-    """Recursive function to interpret a single line by parsing through the defined flags.
+def interpret_line(line):
+    """Correctly interprets a single line by parsing through the defined flags
 
     Args:
         line (str): A line from the demo text file.
-        typedelay (optional): Delay arg for xtype. Needed to preserve state while when making
-            recursive calls.
     """
     pttrn_fmt = r'(<<[0-9\.]+>>|\(\([0-9\.]+\)\)|{})'
     key_flag_pairs = [('ESC', 'Escape'), ('CLEAR', 'ctrl+u'), ('TAB', 'Tab')]
     key_flag_pttrn = '|'.join([r'\[{}\]'.format(flag) for flag, _ in key_flag_pairs])
     pttrn = pttrn_fmt.format(key_flag_pttrn)
 
+    typedelay = None
     flag = re.search(pttrn, line)
     while flag:
-        interpret_line(line[:flag.start()], typedelay=typedelay)
+        xtype(line[:flag.start()], delay=typedelay)
         group = flag.groups()[0]
 
         for key_flag, key in key_flag_pairs:

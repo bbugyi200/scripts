@@ -13,6 +13,10 @@ import time
 
 import gutils
 
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
 log = gutils.logging.getEasyLogger(__name__)
 RUNTIME_DIR = gutils.xdg.getdir('runtime')
 PID_FILE = '{}/pid'.format(RUNTIME_DIR)

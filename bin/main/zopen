@@ -8,6 +8,10 @@ import subprocess as sp
 
 import gutils
 
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
 log = gutils.logging.getEasyLogger(__name__)
 CACHE_FILE = '{}/recently-opened.txt'.format(gutils.xdg.getdir('data'))
 

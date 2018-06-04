@@ -6,6 +6,10 @@ import pickle
 
 import gutils
 
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
 fpath = '{}/default-dirs.pickle'.format(gutils.xdg.getdir('data'))
 
 default_dirs = dict()

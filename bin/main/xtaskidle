@@ -13,6 +13,10 @@ import sys
 
 import gutils
 
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
 log = gutils.logging.getEasyLogger(__name__)
 
 NAME = os.path.basename(__file__)

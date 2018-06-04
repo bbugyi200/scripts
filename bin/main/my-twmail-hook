@@ -17,6 +17,10 @@ import subprocess
 
 import gutils
 
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
 log = gutils.logging.getEasyLogger(__name__)
 
 START_OF_DAY = 6  # Hour that day starts

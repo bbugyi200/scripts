@@ -39,6 +39,10 @@ import string
 
 import gutils
 
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
 log = gutils.logging.getEasyLogger(__name__)
 FIFO = "{}/fifo".format(gutils.xdg.getdir('runtime'))
 log.debug(FIFO)

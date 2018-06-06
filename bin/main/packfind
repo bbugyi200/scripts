@@ -1,0 +1,6 @@
+#!/bin/bash
+
+printf "=============== Official Packages ===============\\n"
+pacman --color=always -Ss $@
+printf "\\n=============== AUR Packages ===============\\n"
+cower --color -s $@

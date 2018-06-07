@@ -26,9 +26,16 @@ def test_notify():
     gutils.notify('Test Notification', '-t', '2000')
 
 
+def test_notify_urgency():
+    gutils.notify('Low Urgency Test Notification', urgency='low')
+
+
 def test_notify_failure():
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         gutils.notify()
+
+    with pytest.raises(ValueError):
+        gutils.notify('Test Notification', urgency='bad_value')
 
 
 @mock.patch('sys.exit')

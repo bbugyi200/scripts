@@ -94,16 +94,24 @@ def ArgumentParser(*args, opt_args=[], description=None, formatter_class=None, *
     return parser
 
 
-def notify(*args):
+def notify(*args, urgency=None):
     """ Sends desktop notification with calling script's name as the notification title.
 
     Args:
         *args: arguments to be passed to the notify-send command.
     """
-    assert len(args) > 0, 'No notification message specified.'
+    try:
+        assert len(args) > 0, 'No notification message specified.'
+        assert urgency in (None, 'low', 'normal', 'high'), 'Invalid Urgency: {}'.format(urgency)
+    except AssertionError as e:
+        raise ValueError(str(e))
 
     cmd_list = ['notify-send']
     cmd_list.extend([shared.scriptname(inspect.stack())])
+
+    if urgency is not None:
+        cmd_list.extend(['-u', urgency])
+
     cmd_list.extend(args)
 
     sp.check_call(cmd_list)

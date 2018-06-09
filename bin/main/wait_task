@@ -14,6 +14,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-N', '--next', dest='next', action='store_true', help=next_help)
     parser.add_argument('-D', '--duration', dest='duration', help=duration_help)
+    parser.add_argument('--purge', action='store_true', dest='purge',
+            help="Purge this task's corresponding time segment in timew.")
     args = parser.parse_args()
 
     if args.duration is None:
@@ -22,7 +24,9 @@ if __name__ == "__main__":
         duration = args.duration
 
     sp.call('task start.any: modify start: wait:{}'.format(duration), shell=True)
-    sp.call(['timew', 'delete', '@1'])
+
+    if args.purge:
+        sp.call(['timew', 'delete', '@1'])
 
     if args.next:
         sp.call(['next_task'])

@@ -198,7 +198,7 @@ def wait():
 def term_handler(signum, frame):
     """ Remove All Magnet Files before Terminating """
     log.debug('Terminating signal received. Cleaning up magnets...')
-    for i in range(1, magnet_counter.count+1):
+    for i in range(1, magnet_counter.count + 1):
         remove_magnet(i)
     sys.exit(2)
 
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     timeout_help = "time (in hours) to attempt to complete download before timing out"
     textme_help = "forward notifications via SMS messages (i.e. enable text notifications)"
     maxsize_help = 'max number of torrents allowed to download at one time (additional torrents '\
-            'will be enqueued and start when a space opens up)'
+        'will be enqueued and start when a space opens up)'
 
     parser = gutils.ArgumentParser()
     parser.add_argument('magnet', help='The torrent magnet file.')

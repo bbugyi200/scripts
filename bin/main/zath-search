@@ -1,0 +1,77 @@
+#!/usr/bin/env python
+
+"""Zathura Search
+
+1) Prompts the user for a search term.
+2) Finds the currently opened book.
+3) Opens up another instance of that book in a new zathura window.
+4) Jumps to the start of the book (the 'S' zathura mark needs to be defined for this part).
+5) Searchs zathura using the search term provided by the user in step 1.
+"""
+
+import re
+import subprocess as sp  # noqa: F401
+import time
+
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def xtype(keys, *, delay=None):
+    if delay is None:
+        delay = 100
+    sp.check_call(['xdotool', 'type', '--delay', str(delay), keys])
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('search_term', nargs='?', default=None,
+            help='Zathura search term (optional).')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug):
+        if args.search_term is None:
+            ps = sp.Popen(['prompt', 'Search Term'], stdout=sp.PIPE)
+            search_term = ps.communicate()[0].decode().strip()
+        else:
+            search_term = args.search_term
+
+        log.debug('Search Term: {}'.format(search_term))
+
+        ps = sp.Popen(['wmctrl', '-lx'], stdout=sp.PIPE)
+        out = ps.communicate()[0].decode().strip()
+
+        zath_wmctrl_report = None
+        for line in out.split('\n'):
+            if 'zathura' in line:
+                zath_wmctrl_report = line
+                break
+
+        if zath_wmctrl_report is None:
+            msg = 'Zathura instance not found.'
+            log.error('{}\nwmctrl output: {}'.format(msg, out))
+            raise RuntimeError(msg)
+        else:
+            log.debug('Zath wmctrl Report: "{}"'.format(zath_wmctrl_report))
+
+        zath_wmctrl_list = re.split(r'\s+', zath_wmctrl_report)
+        log.debug('Zath wmctrl List: {}'.format(zath_wmctrl_list))
+
+        book_title = ' '.join(zath_wmctrl_list[4:-1])
+        log.debug('Book Title: "{}"'.format(book_title))
+
+        ps = sp.Popen('find /home/bryan/Dropbox/books -name "{}"'.format(book_title),
+                shell=True, stdout=sp.PIPE)
+        full_book_path = ps.communicate()[0].decode().strip()
+        log.debug('Full Book Path: "{}"'.format(full_book_path))
+
+        sp.Popen(['zathura', full_book_path])
+
+        time.sleep(0.3)
+        xtype('gS/{}'.format(search_term))
+        sp.check_call(['xdotool', 'key', 'KP_Enter'])

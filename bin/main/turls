@@ -5,7 +5,12 @@
 ###################################################################################
 
 prompt="All(a), Blogs(b), Docs(d), or Videos(v)?: "
-read -n 1 -p "$prompt" choice
+
+if [[ -z "$1" ]]; then
+    read -n 1 -p "$prompt" choice
+else
+    choice="$1"
+fi
 
 case "${choice,,}" in
     'a' )

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" TEMPLATE """
+"""TEMPLATE"""
 
 import subprocess as sp  # noqa: F401
 

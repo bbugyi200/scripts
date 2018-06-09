@@ -122,7 +122,7 @@ if __name__ == "__main__":
                 if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
                     log.info('Restarting last task...')
                     check_call('last_task')
-                    gutils.notify('The last active TaskWarrior task has been restarted.')
+                    gutils.notify('The last active TaskWarrior task has been restarted.', urgency='low')
                     break
                 elif dt_timeout <= dt.datetime.now():
                     log.debug('Time is now past: {}'.format(dt_timeout))

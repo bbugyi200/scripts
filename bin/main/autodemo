@@ -33,27 +33,6 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def xtype(keys, *, delay=None):
-    """Wrapper for `xdotool type`
-
-    Args:
-        keys (str): Keys to type.
-        delay (optional): Typing delay.
-    """
-    if delay is None:
-        delay = 150
-
-    keys = keys.strip('\n')
-
-    log.debug('xdotool type --delay {} {}'.format(delay, keys))
-    sp.check_call(['xdotool', 'type', '--delay', str(delay), keys])
-
-
-def xkey(key):
-    """Wrapper for `xdotool key`"""
-    sp.check_call(['xdotool', 'key', key])
-
-
 def process_line(line):
     """Processes a single line by parsing through the defined flags
 
@@ -68,12 +47,12 @@ def process_line(line):
     typedelay = None
     flag = re.search(pttrn, line)
     while flag:
-        xtype(line[:flag.start()], delay=typedelay)
+        gutils.xtype(line[:flag.start()], delay=typedelay)
         group = flag.groups()[0]
 
         for key_flag, key in key_flag_pairs:
             if group == '[{}]'.format(key_flag):
-                xkey(key)
+                gutils.xkey(key)
                 break
 
         # these checks are only relevant if no key_flag was identified
@@ -87,7 +66,7 @@ def process_line(line):
         flag = re.search(pttrn, line)
 
     # Normal `xdotool type` if no flags are found/left.
-    xtype(line, delay=typedelay)
+    gutils.xtype(line, delay=typedelay)
 
 
 if __name__ == "__main__":
@@ -111,7 +90,7 @@ if __name__ == "__main__":
                 else:
                     enter_delay = args.enter_delay
 
-                xkey('KP_Enter')
+                gutils.xkey('KP_Enter')
                 time.sleep(float(enter_delay))
             else:
                 first = False

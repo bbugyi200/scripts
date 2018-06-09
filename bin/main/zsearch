@@ -23,12 +23,6 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def xtype(keys, *, delay=None):
-    if delay is None:
-        delay = 50
-    sp.check_call(['xdotool', 'type', '--delay', str(delay), keys])
-
-
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('search_term', nargs='?', default=None,
@@ -41,7 +35,7 @@ if __name__ == "__main__":
 
     with gutils.logging.context(log, debug=args.debug):
         if args.send_keys:
-            sp.Popen(['xdotool', 'key', 'alt+super+shift+z'])
+            gutils.xkey('alt+super+shift+z')
             sys.exit(1)
 
         if args.search_term is None:
@@ -85,7 +79,7 @@ if __name__ == "__main__":
             sp.Popen(['zathura', full_book_path])
             time.sleep(0.3)
         else:
-            xtype('b0')
+            gutils.xtype('b0', delay=50)
 
-        xtype('gS/{}'.format(search_term))
+        gutils.xtype('gS/{}'.format(search_term), delay=50)
         sp.check_call(['xdotool', 'key', 'KP_Enter'])

@@ -13,7 +13,7 @@ import gutils.g_xdg as xdg
 import gutils.shared as shared
 
 __all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'mkfifo', 'ArgumentParser',
-           'notify']
+           'notify', 'xtype', 'xkey']
 
 
 class GUtilsError(Exception):
@@ -115,3 +115,23 @@ def notify(*args, urgency=None):
     cmd_list.extend(args)
 
     sp.check_call(cmd_list)
+
+
+def xtype(keys, *, delay=None):
+    """Wrapper for `xdotool type`
+
+    Args:
+        keys (str): Keys to type.
+        delay (optional): Typing delay.
+    """
+    if delay is None:
+        delay = 150
+
+    keys = keys.strip('\n')
+
+    sp.check_call(['xdotool', 'type', '--delay', str(delay), keys])
+
+
+def xkey(key):
+    """Wrapper for `xdotool key`"""
+    sp.check_call(['xdotool', 'key', key])

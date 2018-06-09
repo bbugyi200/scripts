@@ -4,13 +4,14 @@
 
 1) Prompts the user for a search term.
 2) Finds the currently opened book.
-3) Opens up another instance of that book in a new zathura window.
+3) If --new-instance is given, open up another instance of that book in a new zathura window.
 4) Jumps to the start of the book (the 'S' zathura mark needs to be defined for this part).
 5) Searchs zathura using the search term provided by the user in step 1.
 """
 
 import re
 import subprocess as sp  # noqa: F401
+import sys
 import time
 
 import gutils
@@ -32,9 +33,17 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('search_term', nargs='?', default=None,
             help='Zathura search term (optional).')
+    parser.add_argument('--new-instance', dest='new_instance', action='store_true',
+            help='Use a new Zathura instance.')
+    parser.add_argument('--keys', dest='send_keys', action='store_true',
+            help='Simulate xmonad key-bind that will rerun this program in a new workspace.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
+        if args.send_keys:
+            sp.Popen(['xdotool', 'key', 'alt+super+z'])
+            sys.exit(1)
+
         if args.search_term is None:
             ps = sp.Popen(['prompt', 'Search Term'], stdout=sp.PIPE)
             search_term = ps.communicate()[0].decode().strip()
@@ -42,6 +51,8 @@ if __name__ == "__main__":
             search_term = args.search_term
 
         log.debug('Search Term: {}'.format(search_term))
+        if search_term == '':
+            raise RuntimeError('No search term provided.')
 
         ps = sp.Popen(['wmctrl', '-lx'], stdout=sp.PIPE)
         out = ps.communicate()[0].decode().strip()
@@ -70,8 +81,11 @@ if __name__ == "__main__":
         full_book_path = ps.communicate()[0].decode().strip()
         log.debug('Full Book Path: "{}"'.format(full_book_path))
 
-        sp.Popen(['zathura', full_book_path])
+        if args.new_instance:
+            sp.Popen(['zathura', full_book_path])
+            time.sleep(0.3)
+        else:
+            xtype('b0')
 
-        time.sleep(0.3)
         xtype('gS/{}'.format(search_term))
         sp.check_call(['xdotool', 'key', 'KP_Enter'])

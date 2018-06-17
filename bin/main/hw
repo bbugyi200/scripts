@@ -31,12 +31,12 @@ fi
 N=$1; shift
 
 if [[ ! -d $HW$N ]]; then
-    mkdir $HW$N
+    mkdir "$HW$N"
 fi
 if [[ ! -f $HW$N/$HW$N.tex ]]; then
-    cp -i "$(find ~/Dropbox -name "template.tex")" $HW$N/$HW$N.tex
-    sed -i "s/HW#/$HW \\\\#$N/g" $HW$N/$HW$N.tex
-    sed -i "s/@@@:@@/$COURSE:$SECTION/g" $HW$N/$HW$N.tex
+    cp -i "$(find ~/Dropbox -name "template.tex")" "$HW$N/$HW$N".tex
+    sed -i "s/HW#/$HW \\\\#$N/g" "$HW$N/$HW$N".tex
+    sed -i "s/@@@:@@/$COURSE:$SECTION/g" "$HW$N/$HW$N".tex
 fi
 
 tmux send-keys "vim -c'1,/\\\\input/mark a' -c'1,/^\\\\end{enumerate}/mark s' $HW$N/$HW$N.tex ~/Dropbox/scripts/templates/HW/shared.tex" "Enter"

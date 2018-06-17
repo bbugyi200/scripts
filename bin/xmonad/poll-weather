@@ -44,10 +44,12 @@ def get_temp():
 
 def get_wind():
     """ Returns wind description. """
-    try:
-        return get_group(r'Wind: .*?([0-9\-]+ MPH)', raw_output)
-    except RuntimeError as e:
-        return get_group(r'Wind: (.*)', raw_output)
+    wind = get_group(r'Wind: .*?([0-9\-]+ MPH)', raw_output)
+
+    if wind is None:
+        wind = get_group(r'Wind: (.*)', raw_output)
+
+    return wind
 
 
 def get_group(pttrn, string):
@@ -56,13 +58,21 @@ def get_group(pttrn, string):
     if match:
         return match.groups()[0]
     else:
-        raise RuntimeError('No match found for: {}'.format(pttrn))
+        return None
 
 
-def format_report(loc, temp, sky, wind):
+def format_report(loc, temp, sky=None, wind=None):
     """ Formats weather report. """
-    report_fmt = '{}  |  TEMP: {} F  |  SKY: {}  |  WIND: {}'
-    return report_fmt.format(loc, temp, sky, wind)
+    report_fmt = '{}  |  TEMP: {} F'
+    report = report_fmt.format(loc, temp)
+
+    if sky is not None:
+        report = '{}  |  SKY: {}'.format(report, sky)
+
+    if wind is not None:
+        report = '{}  |  WIND: {}'.format(report, wind)
+
+    return report
 
 
 if __name__ == "__main__":
@@ -73,14 +83,10 @@ if __name__ == "__main__":
     with gutils.logging.context(log, debug=args.debug, quiet=args.quiet):
         raw_output = run_weather_report(args.zipcode)
 
-        try:
-            loc = get_group('Current conditions at (.*)\n', raw_output)
-            temp = get_temp()
-            sky = get_group(r'Sky conditions: ([A-z\s]+)', raw_output)
-            wind = get_wind()
-        except RuntimeError as e:
-            log.error('Raw Output: {}'.format(raw_output))
-            raise
+        loc = get_group('Current conditions at (.*)\n', raw_output)
+        temp = get_temp()
+        sky = get_group(r'Sky conditions: ([A-z\s]+)', raw_output)
+        wind = get_wind()
 
         report = format_report(loc, temp, sky, wind)
         print(report)

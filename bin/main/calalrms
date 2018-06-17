@@ -76,7 +76,7 @@ def get_marked_event_list(old_event_list):
             break
 
     event_list = old_event_list[:tomorrow_index]
-    event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in old_event_list[tomorrow_index+1:]])
+    event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in old_event_list[tomorrow_index + 1:]])
     return event_list
 
 
@@ -190,7 +190,7 @@ if __name__ == "__main__":
 
             try:
                 sp.check_call(cmd_list)
-            except sp.CalledProcessError as e:
+            except sp.CalledProcessError:
                 raise RuntimeError('Current alarm was interupted.')
 
         log.debug('No calendar events to set alarm for. Terminating...')

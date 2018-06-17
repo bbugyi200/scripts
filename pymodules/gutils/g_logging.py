@@ -8,7 +8,7 @@ import sys
 
 try:
     from systemd.journal import JournalHandler
-except ModuleNotFoundError as e:
+except ModuleNotFoundError:
     JournalHandler = None
 
 import gutils.shared as shared
@@ -24,7 +24,9 @@ def getEasyLogger(name):
         A logging.Logger object.
     """
     log = logging.getLogger(name)
-    log.setLevel(logging.DEBUG)
+    add_vdebug_level(logging)
+
+    log.setLevel(logging.VDEBUG)
 
     formatter = getFormatter(frame=inspect.stack()[1].frame)
 
@@ -42,6 +44,19 @@ def getEasyLogger(name):
         log.warning('The systemd module does not appear to be installed.')
 
     return log
+
+
+def add_vdebug_level(logging):
+    """Adds custom logging level for verbose debug logs."""
+    VDEBUG_LEVEL_NUM = 5
+    logging.addLevelName(VDEBUG_LEVEL_NUM, "VDEBUG")
+
+    def vdebug(self, message, *args, **kwargs):
+        if self.isEnabledFor(VDEBUG_LEVEL_NUM):
+            self._log(VDEBUG_LEVEL_NUM, message, args, **kwargs)
+
+    logging.Logger.vdebug = vdebug
+    logging.VDEBUG = VDEBUG_LEVEL_NUM
 
 
 def getFormatter(*, frame=None, verbose=False):
@@ -93,7 +108,7 @@ def context(log, *, debug=False, quiet=False):
         raise
 
 
-def enableDebugMode(log, *, stack=None, quiet=False):
+def enableDebugMode(log, *, verbose=False, stack=None, quiet=False):
     """ Enables debug mode.
 
     Adds a FileHandler. Sets the logging level of this handler and any existing StreamHandlers
@@ -108,23 +123,24 @@ def enableDebugMode(log, *, stack=None, quiet=False):
         stack = inspect.stack()
 
     frame = stack[1].frame
+    level = logging.VDEBUG if verbose else logging.DEBUG
 
     if not quiet:
         for handler in log.handlers:
             if isinstance(handler, logging.StreamHandler):
-                handler.setLevel(logging.DEBUG)
+                handler.setLevel(level)
 
     # return early if a FileHandler already exists
     for handler in log.handlers:
         if isinstance(handler, logging.FileHandler):
-            handler.setLevel(logging.DEBUG)
+            handler.setLevel(level)
             return
 
     log_file = '/var/tmp/{}.log'.format(shared.scriptname(stack))
     fh = logging.FileHandler(log_file)
     formatter = getFormatter(frame=frame, verbose=True)
     fh.setFormatter(formatter)
-    fh.setLevel(logging.DEBUG)
+    fh.setLevel(level)
     log.addHandler(fh)
 
     log.debug('Debugging mode enabled.')
@@ -156,5 +172,5 @@ def _has_threading(frame):
     """
     try:
         return isinstance(frame.f_globals['threading'], types.ModuleType)
-    except KeyError as e:
+    except KeyError:
         return False

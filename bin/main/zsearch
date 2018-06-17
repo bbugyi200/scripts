@@ -2,11 +2,13 @@
 
 """Zathura Search
 
-1) Prompts the user for a search term.
-2) Finds the currently opened book.
-3) If --new-instance is given, open up another instance of that book in a new zathura window.
-4) Jumps to the start of the book (the 'S' zathura mark needs to be defined for this part).
-5) Searchs zathura using the search term provided by the user in step 1.
+1. Prompts the user for a search term.
+2. If the --new-instance option was used:
+  (a) Find the currently opened book.
+  (b) Open up another instance of that book in a new zathura window.
+3. Saves current location to '0' bookmark.
+4. Jumps to the start of the book (the 'S' zathura mark needs to be defined for this part).
+5. Searchs zathura using the search term provided by the user in step 1.
 """
 
 import re
@@ -82,4 +84,4 @@ if __name__ == "__main__":
             gutils.xtype('b0', delay=50)
 
         gutils.xtype('gS/{}'.format(search_term), delay=50)
-        sp.check_call(['xdotool', 'key', 'KP_Enter'])
+        gutils.xkey('KP_Enter')

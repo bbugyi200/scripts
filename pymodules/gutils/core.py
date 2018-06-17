@@ -1,7 +1,8 @@
 """Core Classes and Functions
 
 This module contains the core classes and functions of this package. The contents of this module
-are intended to be imported directly into the package's global namespace.
+are intended to be imported directly into the package's global namespace. All public functions /
+classes in this module MUST be added to __all__.
 """
 
 import argparse
@@ -37,9 +38,9 @@ def create_pidfile():
         old_pid = int(open(PIDFILE, 'r').read())
         try:
             os.kill(old_pid, 0)
-        except OSError as e:
+        except OSError:
             pass
-        except ValueError as e:
+        except ValueError:
             if old_pid != '':
                 raise
         else:
@@ -57,7 +58,7 @@ def mkfifo(FIFO_PATH):
     """
     try:
         os.mkfifo(FIFO_PATH)
-    except OSError as e:
+    except OSError:
         pass
 
 
@@ -76,7 +77,7 @@ def ArgumentParser(*args, opt_args=[], description=None, formatter_class=None, *
         try:
             frame = inspect.stack()[1].frame
             description = frame.f_globals['__doc__']
-        except KeyError as e:
+        except KeyError:
             pass
 
     if formatter_class is None:

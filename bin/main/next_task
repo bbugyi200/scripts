@@ -13,7 +13,6 @@ import gutils
 
 log = gutils.logging.getEasyLogger(__name__)
 
-MAX_URG_DIFF = 0.1
 custom_columns = ['id', 'start.age', 'entry.age', 'depends', 'priority', 'project',
         'tags', 'recur', 'scheduled.countdown', 'due.relative', 'until.remaining',
         'description.count', 'urgency']
@@ -22,6 +21,10 @@ ready_tasks_cmd = "task rc.defaultwidth=500 rc.report.next.columns:{} "\
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
+    parser.add_argument('-U', '--max-urgency-difference', nargs='?', dest='max_urg_diff',
+                        default=0, metavar='UMAX',
+                        help='Prompt user to select next task if its urgency is not at least UMAX '
+                             'larger than the next most urgent task.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
@@ -34,7 +37,7 @@ if __name__ == "__main__":
         temp = first
         temp_urg = first_urg
         task_choices = []
-        while abs(first_urg - temp_urg) <= MAX_URG_DIFF:
+        while abs(first_urg - temp_urg) <= args.max_urg_diff:
             task_choices.append(temp)
             temp = ready_tasks.readline()
             if temp:
@@ -42,7 +45,7 @@ if __name__ == "__main__":
             else:
                 break
 
-        if len(task_choices) > 1:
+        if len(task_choices) > 1 and args.max_urg_diff > 0:
             cmd_fmt = ready_tasks_cmd + ' | head -n {0:d} | rofi -p "Next Task" -dmenu'
             next_task = os.popen(cmd_fmt.format(len(task_choices))).read()
         else:

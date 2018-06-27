@@ -192,7 +192,7 @@ def usr1_handler(signum, frame):
 def wait():
     """ Blocks until first magnet is added to queue. """
     while magnet_queue.empty():
-        pass
+        time.sleep(0.5)
 
 
 def term_handler(signum, frame):

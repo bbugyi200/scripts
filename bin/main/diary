@@ -9,7 +9,7 @@ START=
 COMMANDS=
 
 # Decides which file will be loaded.
-if [ "$1" == '--solutions' -o "$1" == '-s' ]; then
+if [ "$1" == '--solutions' ] || [ "$1" == '-s' ]; then
     FILE=$DIR/solutions.txt
     TITLE=$2
     BODY="\n\n  Solution Steps\n\n    START\n\n  Preventative Measures"
@@ -29,6 +29,5 @@ if [ "$TITLE" == '' ]; then
         fi
 
         printf "${TITLE^^} [$(date '+%m/%d/%Y - %H:%M:%S')]$BODY$FMT" >> "$FILE"
-         vim +$START $COMMANDS -c "startinsert" -c "set spell&" $FILE
-
+         vim +$START "$COMMANDS" -c "startinsert" -c "set spell&" "$FILE"
  fi

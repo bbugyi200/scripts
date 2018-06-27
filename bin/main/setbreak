@@ -20,12 +20,12 @@ if __name__ == "__main__":
 
     parser = gutils.ArgumentParser()
     parser.add_argument('minutes', nargs='?', type=int, default=50, help=minutes_help)
-    parser.add_argument('-n', dest='event_name', default='Study Break', help=event_name_help)
+    parser.add_argument('-n', nargs='+', dest='event_name', default='Study Break', help=event_name_help)
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
         breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
         cmd_fmt = 'khal new -a daily {} "{}"'
-        sp.check_call(cmd_fmt.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), args.event_name),
+        sp.check_call(cmd_fmt.format(breaktime_dt.strftime('%Y-%m-%d %H:%M'), ' '.join(args.event_name)),
                       shell=True)
         sp.Popen(['calalrms'])

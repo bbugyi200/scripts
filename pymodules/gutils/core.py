@@ -87,7 +87,8 @@ def ArgumentParser(*args, opt_args=[], description=None, formatter_class=None, *
                                      description=description,
                                      formatter_class=formatter_class,
                                      **kwargs)
-    parser.add_argument('-d', '--debug', action='store_true', help='enable debugging mode')
+    parser.add_argument('-d', '--debug', action='store_true', help='Enable debugging mode.')
+    parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose output.')
     if 'quiet' in opt_args:
         parser.add_argument('-q', '--quiet', action='store_true',
                             help='use with --debug to send debug messages to log file ONLY')

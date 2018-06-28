@@ -26,17 +26,53 @@ log = gutils.logging.getEasyLogger(__name__)
 START_OF_DAY = 6  # Hour that day starts
 
 
+def get_utc_dt(dt_fmt):
+    return dt.datetime.strptime(os.environ['TWMAIL_DATE'], dt_fmt).replace(tzinfo=dt.timezone.utc)
+
+
 if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
     parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
-        notification_msg = 'Adding "{}" to Inbox.'.format(os.environ['TWMAIL_SUBJECT'])
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        # Log all TWMAIL environment variable values
+        log.vdebug('Date: %s', os.environ['TWMAIL_DATE'])
+        log.vdebug('Message_id: %s', os.environ['TWMAIL_MESSAGE_ID'])
+        log.vdebug('From: %s', os.environ['TWMAIL_FROM'])
+        log.vdebug('To: %s', os.environ['TWMAIL_TO'])
+        log.vdebug('Subject: %s', os.environ['TWMAIL_SUBJECT'])
+        log.vdebug('Body: %s', os.environ['TWMAIL_BODY'])
+
+        split_subject = os.environ['TWMAIL_SUBJECT'].split(r'—\ ')
+        if len(split_subject) == 2:
+            twargs, description = split_subject
+        else:
+            twargs = ''
+            description = split_subject[0]
+
+        # Format twargs
+        twargs = twargs.replace('\\', '')
+        twargs = twargs.lower()
+        twargs = twargs.split()
+
+        # Format description
+        description = description.strip()
+        description = description.replace('\\', '')
+        description = description.capitalize()
+
+        # Send Notification
+        notification_msg = 'Adding "{}" to Inbox.'.format(description)
         log.info(notification_msg)
         gutils.notify(notification_msg)
-        subprocess.call('task add +inbox {}'.format(os.environ['TWMAIL_SUBJECT']), shell=True)
 
-        utc_email_datetime = dt.datetime.strptime(os.environ['TWMAIL_DATE'], r'%Y-%m-%dT%H:%M:%S\+00:00').replace(tzinfo=dt.timezone.utc)
+        log.debug('Description: %s', description)
+        subprocess.call(['task', 'add', '+inbox', *twargs, description])
+
+        try:
+            utc_email_datetime = get_utc_dt(r'%Y-%m-%dT%H:%M:%S\+00:00')
+        except ValueError:
+            utc_email_datetime = get_utc_dt(r'%Y-%m-%dT%H:%M:%S-04:00')
+
         email_datetime = utc_email_datetime.astimezone(tz=None)
         email_date = email_datetime.date()
 

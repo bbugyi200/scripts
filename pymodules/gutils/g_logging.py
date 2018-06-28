@@ -84,7 +84,7 @@ def getFormatter(*, frame=None, verbose=False):
 
 
 @contextlib.contextmanager
-def context(log, *, debug=False, quiet=False):
+def context(log, *, debug=False, verbose=False, quiet=False):
     """ Exception handling context manager.
 
     Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.
@@ -96,7 +96,7 @@ def context(log, *, debug=False, quiet=False):
     """
     if debug:
         # must slice stack ([1:]) to cut off contextlib module
-        enableDebugMode(log, stack=inspect.stack()[1:], quiet=quiet)
+        enableDebugMode(log, verbose=verbose, stack=inspect.stack()[1:], quiet=quiet)
 
     try:
         yield
@@ -116,6 +116,7 @@ def enableDebugMode(log, *, verbose=False, stack=None, quiet=False):
 
     Args:
         log: logging.Logger object.
+        verbose: True if vdebug logging level is to be enabled.
         stack (optional): stack object (see inspect module).
         quiet: True if debug messages should be sent to log file ONLY.
     """

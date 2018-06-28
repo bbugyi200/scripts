@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+    printf "usage: $(basename "$0") {URL}"
+    exit 1
+fi
+
+URL=$1; shift
+
+pockyt get -q "$URL" -f '{id}' | pockyt mod -d -i redirect

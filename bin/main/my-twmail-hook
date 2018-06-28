@@ -61,12 +61,17 @@ if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
         description = description.capitalize()
 
         # Send Notification
-        notification_msg = 'Adding "{}" to Inbox.'.format(description)
+        if '+inbox' in twargs:
+            notification_msg_fmt = 'Adding "{}" to Inbox.'
+        else:
+            notification_msg_fmt = 'Adding "{}".'
+
+        notification_msg = notification_msg_fmt.format(description)
         log.info(notification_msg)
         gutils.notify(notification_msg)
 
         log.debug('Description: %s', description)
-        subprocess.call(['task', 'add', '+inbox', *twargs, description])
+        subprocess.call(['task', 'add', *twargs, description])
 
         try:
             utc_email_datetime = get_utc_dt(r'%Y-%m-%dT%H:%M:%S\+00:00')

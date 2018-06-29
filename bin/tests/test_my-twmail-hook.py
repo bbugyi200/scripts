@@ -49,12 +49,10 @@ def test_maybe_correct_date_false(sp_mock):
     twmail.maybe_correct_date(twargs, date)
     assert not sp_mock.call.called
 
-
-def test_maybe_correct_date_fail(env_dict):
     twargs = ['+today']
-    date = env_dict['date']
-
-    assert 1 == twmail.maybe_correct_date(twargs, date)
+    date = _format_date(dt.datetime.now() - dt.timedelta(days=1))
+    twmail.maybe_correct_date(twargs, date)
+    assert not sp_mock.call.called
 
 
 def _set_body(twargs, description):
@@ -77,6 +75,11 @@ def add_tw_env_vars(env_dict):
         _add_tw_env_var(key, val)
 
 
+def _add_tw_env_var(var, val):
+    env_var = 'TWMAIL_' + var.upper()
+    os.environ[env_var] = val
+
+
 @pytest.fixture
 def env_dict():
     return {
@@ -90,8 +93,3 @@ def env_dict():
 
 def _format_date(date_dt):
     return date_dt.strftime('%Y-%m-%dT%H:%M:%S-04:00')
-
-
-def _add_tw_env_var(var, val):
-    env_var = 'TWMAIL_' + var.upper()
-    os.environ[env_var] = val

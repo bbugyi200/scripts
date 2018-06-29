@@ -35,6 +35,9 @@ def main():
     subject = teelog('subject')  # noqa: F841
     body = teelog('body')  # noqa: F841
 
+    if from_ != 'bryanbugyi34@gmail.com':
+        return 1
+
     twargs, description = parse_body(body)
     notify(twargs, description)
     add_task(twargs, description)
@@ -127,5 +130,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
             main()

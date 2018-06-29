@@ -57,8 +57,12 @@ if __name__ == "__main__":
             create_template('template.py', scriptname)
         elif args.action == Action.TEST:
             script_basename = os.path.basename(args.scriptname.strip('.py')).strip('test_')
-            scriptname = '{}/test_{}.py'.format(os.path.dirname(args.scriptname),
-                                                script_basename)
+            scriptname = 'test_{}.py'.format(script_basename)
+
+            relative_dir = os.path.dirname(args.scriptname)
+            if relative_dir:
+                scriptname = relative_dir + '/' + scriptname
+
             create_template('test_template.py', scriptname)
 
         if args.edit:

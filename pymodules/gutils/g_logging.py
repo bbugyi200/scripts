@@ -126,10 +126,9 @@ def enableDebugMode(log, *, verbose=False, stack=None, quiet=False):
     frame = stack[1].frame
     level = logging.VDEBUG if verbose else logging.DEBUG
 
-    if not quiet:
-        for handler in log.handlers:
-            if isinstance(handler, logging.StreamHandler):
-                handler.setLevel(level)
+    for handler in log.handlers:
+        if not isinstance(handler, logging.StreamHandler) or not quiet:
+            handler.setLevel(level)
 
     # return early if a FileHandler already exists
     for handler in log.handlers:

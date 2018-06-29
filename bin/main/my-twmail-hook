@@ -13,7 +13,7 @@
 
 import datetime as dt
 import os
-import subprocess
+import subprocess as sp
 
 import gutils
 
@@ -26,65 +26,107 @@ log = gutils.logging.getEasyLogger(__name__)
 START_OF_DAY = 6  # Hour that day starts
 
 
-def get_utc_dt(dt_fmt):
-    return dt.datetime.strptime(os.environ['TWMAIL_DATE'], dt_fmt).replace(tzinfo=dt.timezone.utc)
+def main():
+    # Log all TWMAIL environment variable values
+    date = teelog('date')  # noqa: F841
+    message_id = teelog('message_id')  # noqa: F841
+    from_ = teelog('from')  # noqa: F841
+    to = teelog('to')  # noqa: F841
+    subject = teelog('subject')  # noqa: F841
+    body = teelog('body')  # noqa: F841
+
+    twargs, description = parse_body(body)
+    notify(twargs, description)
+    add_task(twargs, description)
+    maybe_correct_date(twargs, date)
 
 
-if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
+def teelog(short_env_var):
+    """Logs TWMAIL environment variable and returns it so it can be assigned to a variable"""
+    env_var_val = os.environ['TWMAIL_{}'.format(short_env_var.upper())]
+    log.vdebug('%s: "%s"', short_env_var, env_var_val)
+    return env_var_val
+
+
+def notify(twargs, description):
+    """Send Notifications
+
+    Sends notification and writes log messages to document the final options list for the 'task'
+    command.
+    """
+    notification_msg_fmt = 'Adding "{}" to TW using the following fields: {}.'
+    notification_msg = notification_msg_fmt.format(description)
+    log.info(notification_msg)
+    gutils.notify(notification_msg)
+
+
+def add_task(twargs, description):
+    """Uses 'task' command to add task"""
+    cmd_list = ['task', 'add']
+    cmd_list.extend(twargs)
+    cmd_list.extend(description)
+    sp.call(cmd_list)
+
+
+def parse_body(body):
+    """Parses email body and returns the options for the 'task' command"""
+    body = os.environ['TWMAIL_BODY']
+    split_body = body.strip().split('--')
+    if len(split_body) == 2:
+        twargs, description = split_body
+    else:
+        twargs = '+inbox'
+        description = split_body[0]
+
+    BAD_CHAR_LIST = ['\\', "'", ' ', '\n']
+    BAD_CHARS = ''.join(BAD_CHAR_LIST)
+
+    # Format twargs
+    twargs = twargs.strip(BAD_CHARS)
+    twargs = twargs.replace('\\', '')
+    twargs = twargs.lower()
+    twargs = twargs.split()
+
+    # Format description
+    description = description.strip(BAD_CHARS)
+    description = description.replace('\\', '')
+    description = description.capitalize()
+    description = [description]
+
+    return twargs, description
+
+
+def maybe_correct_date(twargs, date):
+    """If +inbox item was added over 24 hours ago, remove the 1-day wait period"""
+    if '+inbox' not in twargs:
+        return
+
+    try:
+        utc_email_datetime = get_utc_dt(date, r'%Y-%m-%dT%H:%M:%S\+00:00')
+    except ValueError:
+        utc_email_datetime = get_utc_dt(date, r'%Y-%m-%dT%H:%M:%S-04:00')
+
+    email_datetime = utc_email_datetime.astimezone(tz=None)
+    email_date = email_datetime.date()
+
+    today_datetime = dt.datetime.now() - dt.timedelta(hours=START_OF_DAY)
+    today_date = today_datetime.date()
+
+    if email_date < today_date:
+        log.info('Task was not added to Inbox recently. Removing wait.')
+        uuid = sp.check_output('task +LATEST uuids', shell=True).decode('utf-8')
+        sp.call(['task', uuid, 'modify', 'due:due-1d', 'wait:due'])
+
+
+def get_utc_dt(date, dt_fmt):
+    """Returns a formatted date string"""
+    return dt.datetime.strptime(date, dt_fmt).replace(tzinfo=dt.timezone.utc)
+
+
+if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        # Log all TWMAIL environment variable values
-        log.vdebug('Date: %s', os.environ['TWMAIL_DATE'])
-        log.vdebug('Message_id: %s', os.environ['TWMAIL_MESSAGE_ID'])
-        log.vdebug('From: %s', os.environ['TWMAIL_FROM'])
-        log.vdebug('To: %s', os.environ['TWMAIL_TO'])
-        log.vdebug('Subject: %s', os.environ['TWMAIL_SUBJECT'])
-        log.vdebug('Body: %s', os.environ['TWMAIL_BODY'])
-
-        split_subject = os.environ['TWMAIL_SUBJECT'].split(r'—\ ')
-        if len(split_subject) == 2:
-            twargs, description = split_subject
-        else:
-            twargs = ''
-            description = split_subject[0]
-
-        # Format twargs
-        twargs = twargs.replace('\\', '')
-        twargs = twargs.lower()
-        twargs = twargs.split()
-
-        # Format description
-        description = description.strip()
-        description = description.replace('\\', '')
-        description = description.capitalize()
-
-        # Send Notification
-        if '+inbox' in twargs:
-            notification_msg_fmt = 'Adding "{}" to Inbox.'
-        else:
-            notification_msg_fmt = 'Adding "{}".'
-
-        notification_msg = notification_msg_fmt.format(description)
-        log.info(notification_msg)
-        gutils.notify(notification_msg)
-
-        log.debug('Description: %s', description)
-        subprocess.call(['task', 'add', *twargs, description])
-
-        try:
-            utc_email_datetime = get_utc_dt(r'%Y-%m-%dT%H:%M:%S\+00:00')
-        except ValueError:
-            utc_email_datetime = get_utc_dt(r'%Y-%m-%dT%H:%M:%S-04:00')
-
-        email_datetime = utc_email_datetime.astimezone(tz=None)
-        email_date = email_datetime.date()
-
-        today_datetime = dt.datetime.now() - dt.timedelta(hours=START_OF_DAY)
-        today_date = today_datetime.date()
-
-        if email_date < today_date:
-            log.info('Task was not added to Inbox recently. Removing wait.')
-            uuid = subprocess.check_output('task +LATEST uuids', shell=True).decode('utf-8')
-            subprocess.call(['task', uuid, 'modify', 'due:due-1d', 'wait:due'])
+        if os.environ['TWMAIL_FROM'] == 'bryanbugyi34@gmail.com':
+            main()

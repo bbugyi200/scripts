@@ -55,7 +55,7 @@ def notify(twargs, description):
     command.
     """
     notification_msg_fmt = 'Adding "{}" to TW using the following fields: {}.'
-    notification_msg = notification_msg_fmt.format(description)
+    notification_msg = notification_msg_fmt.format(description, ' '.join(twargs))
     log.info(notification_msg)
     gutils.notify(notification_msg)
 
@@ -64,7 +64,7 @@ def add_task(twargs, description):
     """Uses 'task' command to add task"""
     cmd_list = ['task', 'add']
     cmd_list.extend(twargs)
-    cmd_list.extend(description)
+    cmd_list.extend([description])
     sp.call(cmd_list)
 
 
@@ -90,8 +90,7 @@ def parse_body(body):
     # Format description
     description = description.strip(BAD_CHARS)
     description = description.replace('\\', '')
-    description = description.capitalize()
-    description = [description]
+    description = description[0].upper() + description[1:]
 
     return twargs, description
 
@@ -99,12 +98,12 @@ def parse_body(body):
 def maybe_correct_date(twargs, date):
     """If +inbox item was added over 24 hours ago, remove the 1-day wait period"""
     if '+inbox' not in twargs:
-        return
+        return 1
 
     try:
-        utc_email_datetime = get_utc_dt(date, r'%Y-%m-%dT%H:%M:%S\+00:00')
+        utc_email_datetime = _get_utc_dt(date, r'%Y-%m-%dT%H:%M:%S\+00:00')
     except ValueError:
-        utc_email_datetime = get_utc_dt(date, r'%Y-%m-%dT%H:%M:%S-04:00')
+        utc_email_datetime = _get_utc_dt(date, r'%Y-%m-%dT%H:%M:%S-04:00')
 
     email_datetime = utc_email_datetime.astimezone(tz=None)
     email_date = email_datetime.date()
@@ -118,7 +117,7 @@ def maybe_correct_date(twargs, date):
         sp.call(['task', uuid, 'modify', 'due:due-1d', 'wait:due'])
 
 
-def get_utc_dt(date, dt_fmt):
+def _get_utc_dt(date, dt_fmt):
     """Returns a formatted date string"""
     return dt.datetime.strptime(date, dt_fmt).replace(tzinfo=dt.timezone.utc)
 

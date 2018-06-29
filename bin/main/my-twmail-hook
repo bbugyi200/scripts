@@ -14,6 +14,7 @@
 import datetime as dt
 import os
 import subprocess as sp
+import sys
 
 import gutils
 
@@ -22,8 +23,6 @@ import gutils
 #######################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
-
-START_OF_DAY = 6  # Hour that day starts
 
 
 def main():
@@ -36,7 +35,7 @@ def main():
     body = teelog('body')  # noqa: F841
 
     if from_ != 'bryanbugyi34@gmail.com':
-        return 1
+        sys.exit(0)
 
     twargs, description = parse_body(body)
     notify(twargs, description)
@@ -51,29 +50,8 @@ def teelog(short_env_var):
     return env_var_val
 
 
-def notify(twargs, description):
-    """Send Notifications
-
-    Sends notification and writes log messages to document the final options list for the 'task'
-    command.
-    """
-    notification_msg_fmt = 'Adding "{}" to TW using the following fields: {}.'
-    notification_msg = notification_msg_fmt.format(description, ' '.join(twargs))
-    log.info(notification_msg)
-    gutils.notify(notification_msg)
-
-
-def add_task(twargs, description):
-    """Uses 'task' command to add task"""
-    cmd_list = ['task', 'add']
-    cmd_list.extend(twargs)
-    cmd_list.extend([description])
-    sp.call(cmd_list)
-
-
 def parse_body(body):
     """Parses email body and returns the options for the 'task' command"""
-    body = os.environ['TWMAIL_BODY']
     split_body = body.strip().split('--')
     if len(split_body) == 2:
         twargs, description = split_body
@@ -98,10 +76,32 @@ def parse_body(body):
     return twargs, description
 
 
+def notify(twargs, description):
+    """Send Notifications
+
+    Sends notification and writes log messages to document the final options list for the 'task'
+    command.
+    """
+    notification_msg_fmt = 'Adding "{}" to TW using the following fields: {}.'
+    notification_msg = notification_msg_fmt.format(description, ' '.join(twargs))
+    log.info(notification_msg)
+    gutils.notify(notification_msg)
+
+
+def add_task(twargs, description):
+    """Uses 'task' command to add task"""
+    cmd_list = ['task', 'add']
+    cmd_list.extend(twargs)
+    cmd_list.extend([description])
+    sp.call(cmd_list)
+
+
 def maybe_correct_date(twargs, date):
     """If +inbox item was added over 24 hours ago, remove the 1-day wait period"""
     if '+inbox' not in twargs:
         return 1
+
+    START_OF_DAY = 6
 
     try:
         utc_email_datetime = _get_utc_dt(date, r'%Y-%m-%dT%H:%M:%S\+00:00')
@@ -130,4 +130,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-            main()
+        main()

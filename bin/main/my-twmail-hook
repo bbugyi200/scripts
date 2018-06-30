@@ -82,10 +82,10 @@ def notify(twargs, description):
     Sends notification and writes log messages to document the final options list for the 'task'
     command.
     """
-    notification_msg_fmt = 'Adding "{}" to TW using the following fields: {}.'
-    notification_msg = notification_msg_fmt.format(description, ' '.join(twargs))
-    log.info(notification_msg)
-    gutils.notify(notification_msg)
+    msg_fmt = 'Adding "{}" to TW using the following fields: {}.'
+    msg = msg_fmt.format(description, ' '.join(twargs))
+    log.info(msg)
+    gutils.notify(msg)
 
 
 def add_task(twargs, description):
@@ -116,7 +116,10 @@ def maybe_correct_date(twargs, date):
 
     if email_date < today_date:
         log.info('Task was not added to Inbox recently. Removing wait.')
-        uuid = sp.check_output('task +LATEST uuids', shell=True).decode('utf-8')
+
+        out = sp.check_output('task +LATEST uuids', shell=True)
+        uuid = out.decode()
+
         sp.call(['task', uuid, 'modify', 'due:due-1d', 'wait:due'])
 
 

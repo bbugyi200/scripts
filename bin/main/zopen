@@ -16,6 +16,46 @@ log = gutils.logging.getEasyLogger(__name__)
 CACHE_FILE = '{}/recently-opened.txt'.format(gutils.xdg.getdir('data'))
 
 
+def main():
+    try:
+        cmd = 'wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- '\
+              '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"'
+        decoded = check_output(cmd)
+        open_docs = decoded.split('\n')
+        log.debug('Open Docs: {}'.format(' '.join(open_docs)))
+    except sp.CalledProcessError:
+        open_docs = None
+        log.debug('No documents are currently open in zathura.')
+
+    cmd = 'find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o '\
+          '-name "*.epub" -o -name "*.djvu" -o -name "*.ps"'
+    all_docs = check_output(cmd)
+
+    with open(CACHE_FILE, 'r') as f:
+        cached_docs = [x.strip() for x in f.readlines()]
+
+    ordered_docs = promote_cached_docs(all_docs.split('\n'), cached_docs)
+
+    if open_docs:
+        ordered_docs = purge_open_docs(ordered_docs, open_docs)
+
+    doc_options = '\n'.join(ordered_docs)
+
+    cmd_fmt = 'printf "{}" | rofi -p "Document" -m -4 -dmenu -i'
+    choice = check_output(cmd_fmt.format(doc_options))
+
+    add_to_cache(choice)
+
+    active_window_class = check_output('active_window_class')
+    if active_window_class == 'Zathura':
+        pid = int(check_output('active_window_pid'))
+        log.debug('Killing Zathura Instance: {}'.format(pid))
+        os.kill(pid, signal.SIGTERM)
+
+    log.debug('Opening {} in zathura...'.format(choice))
+    sp.Popen(['zathura', choice], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+
 def promote_cached_docs(docs, cached_docs):
     """ Docs in Cache File are Brought to the Top of the List of Options """
     D = docs[:]
@@ -32,7 +72,10 @@ def purge_open_docs(docs, open_docs):
     for odoc in open_docs:
         for doc in docs:
             if odoc in doc:
-                D.remove(doc)
+                try:
+                    D.remove(doc)
+                except ValueError:
+                    pass  # protects against multiple attempts to remove the same doc
     return D
 
 
@@ -70,38 +113,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
-        try:
-            cmd = 'wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- '\
-                  '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"'
-            decoded = check_output(cmd)
-            open_docs = decoded.split('\n')
-            log.debug('Open Docs: {}'.format(' '.join(open_docs)))
-        except sp.CalledProcessError:
-            open_docs = None
-            log.debug('No documents are currently open in zathura.')
-
-        cmd = 'find /home/bryan/Dropbox /home/bryan/Downloads -name "*.pdf" -o '\
-              '-name "*.epub" -o -name "*.djvu" -o -name "*.ps"'
-        all_docs = check_output(cmd)
-
-        cached_docs = check_output('cat {}'.format(CACHE_FILE))
-        ordered_docs = promote_cached_docs(all_docs.split('\n'), cached_docs.split('\n'))
-
-        if open_docs:
-            ordered_docs = purge_open_docs(ordered_docs, open_docs)
-
-        doc_options = '\n'.join(ordered_docs)
-
-        cmd_fmt = 'printf "{}" | rofi -p "Document" -m -4 -dmenu -i'
-        choice = check_output(cmd_fmt.format(doc_options))
-
-        add_to_cache(choice)
-
-        active_window_class = check_output('active_window_class')
-        if active_window_class == 'Zathura':
-            pid = int(check_output('active_window_pid'))
-            log.debug('Killing Zathura Instance: {}'.format(pid))
-            os.kill(pid, signal.SIGTERM)
-
-        log.debug('Opening {} in zathura...'.format(choice))
-        sp.Popen(['zathura', choice], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+        main()

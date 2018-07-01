@@ -55,14 +55,6 @@ def test_maybe_correct_date_false(sp_mock):
     assert not sp_mock.call.called
 
 
-def _set_body(twargs, description):
-    _add_tw_env_var('body', _get_body(twargs, description))
-
-
-def _get_body(twargs, description):
-    return '{} -- {}'.format(' '.join(twargs), description)
-
-
 @pytest.fixture
 def sp_mock():
     twmail.sp = mock.MagicMock()
@@ -75,11 +67,6 @@ def add_tw_env_vars(env_dict):
         _add_tw_env_var(key, val)
 
 
-def _add_tw_env_var(var, val):
-    env_var = 'TWMAIL_' + var.upper()
-    os.environ[env_var] = val
-
-
 @pytest.fixture
 def env_dict():
     return {
@@ -89,6 +76,19 @@ def env_dict():
         'to': 'bmbinbox34@gmail.com',
         'subject': 'TaskWarrior',
     }
+
+
+def _set_body(twargs, description):
+    _add_tw_env_var('body', _get_body(twargs, description))
+
+
+def _get_body(twargs, description):
+    return '{} -- {}'.format(' '.join(twargs), description)
+
+
+def _add_tw_env_var(var, val):
+    env_var = 'TWMAIL_' + var.upper()
+    os.environ[env_var] = val
 
 
 def _format_date(date_dt):

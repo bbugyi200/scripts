@@ -52,7 +52,7 @@ def teelog(short_env_var):
 
 def parse_body(body):
     """Parses email body and returns the options for the 'task' command"""
-    split_body = body.strip().split('--')
+    split_body = body.strip().split('--', maxsplit=1)
     if len(split_body) == 2:
         twargs, description = split_body
     else:

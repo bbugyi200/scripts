@@ -5,10 +5,6 @@ import subprocess as sp
 import re
 
 
-inactive_fmt = 'Study:  ({} / {})        Dev:  ({} / {})        Meta:  ({} / {})             [{}]'
-active_fmt = '{tag}          "{project}"          ({currtime} / {daytime} / {weektime})               [{totaltime}]'
-
-
 def _get_tag_time(tag, interval):
     assert interval == 'day' or interval == 'week', 'Interval must be in {day,week}'
     now = dt.datetime.now().astimezone(dt.timezone.utc)
@@ -34,11 +30,11 @@ def _get_tag_time(tag, interval):
     return match.strip()
 
 
-def _style_time(time_str: 'HH:MM:SS | H:MM:SS'):
+def _style_time(time_str):
     col = time_str.find(':')
 
     hours = int(time_str[:col])
-    minutes = int(time_str[col+1:col+3])
+    minutes = int(time_str[col + 1:col + 3])
 
     styled = hours
     styled += minutes / 60
@@ -70,7 +66,7 @@ def parse_status(status):
 
     all_tags = tags.split()
     if all_tags:
-        primary_tag = min(all_tags, key=lambda x: len(x))
+        primary_tag = max(all_tags, key=lambda x: len(x))
     else:
         primary_tag = ''
 
@@ -84,25 +80,39 @@ if __name__ == "__main__":
     study_week = styled_tag_time('Study', 'week')
     dev_week = styled_tag_time('Dev', 'week')
     meta_week = styled_tag_time('Meta', 'week')
-    totaltime = add_times(study_week, dev_week, meta_week)
 
     if child.returncode:
         study_day = styled_tag_time('Study', 'day')
         dev_day = styled_tag_time('Dev', 'day')
         meta_day = styled_tag_time('Meta', 'day')
+        totaltime = add_times(study_week, dev_week, meta_week)
+        fmt = 'Study:  ({} / {})        Dev:  ({} / {})        Meta:  ({} / {})             [{}]'
 
-        print(inactive_fmt.format(study_day, study_week,
-                                  dev_day, dev_week,
-                                  meta_day, meta_week,
-                                  totaltime))
+        print(fmt.format(study_day, study_week,
+                         dev_day, dev_week,
+                         meta_day, meta_week,
+                         totaltime))
     else:
         project, tag, currtime = parse_status(output)
         daytime = styled_tag_time(tag, 'day')
         weektime = styled_tag_time(tag, 'week')
 
-        print(active_fmt.format(project=project,
-                         tag=tag.upper(),
-                         currtime=currtime,
-                         daytime=daytime,
-                         weektime=weektime,
-                         totaltime=totaltime))
+        try:
+            period_index = tag.index('.')
+            parent_tag = tag[:period_index]
+            totaltime = styled_tag_time(parent_tag, 'week')
+        except ValueError:
+            parent_tag = ''
+
+        fmt = '{tag}          "{project}"          ({currtime} / {daytime} / {weektime})'
+        format_opts = {'project': project,
+                       'tag': tag.upper(),
+                       'currtime': currtime,
+                       'daytime': daytime,
+                       'weektime': weektime}
+
+        if parent_tag != '':
+            fmt = fmt + '                [{totaltime}]'
+            format_opts['totaltime'] = totaltime
+
+        print(fmt.format(**format_opts))

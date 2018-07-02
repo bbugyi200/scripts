@@ -15,7 +15,7 @@ import gutils.shared as shared
 
 
 def getEasyLogger(name):
-    """ Initializes Log Handlers
+    """Initializes Log Handlers
 
     Args:
         name: name of the logger to create and return.
@@ -60,7 +60,7 @@ def add_vdebug_level(logging):
 
 
 def getFormatter(*, frame=None, verbose=False):
-    """ Get log formatter.
+    """Get log formatter.
 
     Args:
         frame (optional): frame obect (see inspect module).
@@ -85,7 +85,7 @@ def getFormatter(*, frame=None, verbose=False):
 
 @contextlib.contextmanager
 def context(log, *, debug=False, verbose=False, quiet=False):
-    """ Exception handling context manager.
+    """Exception handling context manager.
 
     Logs any exceptions that are thrown. Allows the reuse of common exception handling logic.
 
@@ -109,7 +109,7 @@ def context(log, *, debug=False, verbose=False, quiet=False):
 
 
 def enableDebugMode(log, *, verbose=False, stack=None, quiet=False):
-    """ Enables debug mode.
+    """Enables debug mode.
 
     Adds a FileHandler. Sets the logging level of this handler and any existing StreamHandlers
     to DEBUG.
@@ -147,7 +147,7 @@ def enableDebugMode(log, *, verbose=False, stack=None, quiet=False):
 
 
 def _get_log_fmt(frame):
-    """ Get Logging Format String
+    """Get Logging Format String
 
     Returns a log formatting string, which can be used as the first argument to
     the logging.Formatter constructor.
@@ -165,7 +165,7 @@ def _get_log_fmt(frame):
 
 
 def _has_threading(frame):
-    """ Determines whether or not the given frame has the 'threading' module in scope
+    """Determines whether or not the given frame has the 'threading' module in scope
 
     Args:
         frame: frame object (see inspect module).

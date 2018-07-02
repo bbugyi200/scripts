@@ -40,7 +40,7 @@ if __name__ == "__main__":
     with gutils.logging.context(log, debug=args.debug):
         try:
             last_dt = get_last_dt()
-        except FileNotFoundError as e:
+        except FileNotFoundError:
             last_dt = dt.datetime.now() - dt.timedelta(days=MAX_DAYS)
             log.debug('Timestamp file not found. Setting last date to {}-{}-{}.'.format(last_dt.year, last_dt.month, last_dt.day))
 

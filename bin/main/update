@@ -1,7 +1,9 @@
 #!/bin/bash
 
-confirm "reflector --verbose --latest 5 --sort rate --save /home/bryan/Dropbox/etc/pacman.d/mirrorlist"
+confirm "generate_mirrors"
 confirm "sudo pacman -Syyu"
 confirm "rm -rf /tmp/builds; mkdir /tmp/builds; cd /tmp/builds && cower -vud && buildall"
 confirm "gem update"
-confirm "cd ~/.xmonad && stack install --system-ghc && xmonad --recompile"
+confirm "cd ~/.xmonad && stack install --system-ghc"
+confirm "xmonad --recompile"
+confirm "systemctl reboot -i"

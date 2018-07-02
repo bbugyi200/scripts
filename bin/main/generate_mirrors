@@ -1,0 +1,6 @@
+#!/bin/bash
+
+wget -q -O /tmp/mirrorlist https://www.archlinux.org/mirrorlist/?country=US&protocol=http&protocol=https&ip_version=4
+sleep 2
+sed -i 's/^#Server/Server/' /tmp/mirrorlist
+rankmirrors -n 25 /tmp/mirrorlist > /etc/pacman.d/mirrorlist

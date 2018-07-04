@@ -51,6 +51,26 @@ magnet_queue = queue.Queue()
 threads = []
 
 
+def main():
+    create_pidfile()
+
+    time.sleep(args.delay)
+
+    try:
+        log.info('Connecting to VPN and starting transmission daemon...')
+        sp.check_call(['PIA', 'start', 'nyc'], stdout=sp.DEVNULL)
+        sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
+    except sp.CalledProcessError:
+        raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
+    else:
+        magnet_queue.maxsize = args.maxsize
+        torrent(args.magnet)
+
+        wait()
+        magnet_queue.join()
+        notify('All torrents are complete.')
+
+
 def torrent(magnet):
     """ Creates new torrent thread worker. """
     t = threading.Thread(target=_torrent, args=(magnet,), daemon=True)
@@ -211,18 +231,18 @@ def exit_handler():
 
 
 if __name__ == "__main__":
-    delay_help = "delay starting the script for DELAY seconds"
-    timeout_help = "time (in hours) to attempt to complete download before timing out"
-    textme_help = "forward notifications via SMS messages (i.e. enable text notifications)"
-    maxsize_help = 'max number of torrents allowed to download at one time (additional torrents '\
-        'will be enqueued and start when a space opens up)'
-
     parser = gutils.ArgumentParser()
     parser.add_argument('magnet', help='The torrent magnet file.')
-    parser.add_argument('-D', type=int, dest='delay', default=0, help=delay_help)
-    parser.add_argument('-t', type=float, dest='timeout', default=8, help=timeout_help)
-    parser.add_argument('-T', '--textme', dest='textme', action='store_true', help=textme_help)
-    parser.add_argument('--maxsize', dest='maxsize', default=3, help=maxsize_help)
+    parser.add_argument('-D', type=int, dest='delay', default=0,
+                        help='delay starting the script for DELAY seconds')
+    parser.add_argument('-t', type=float, dest='timeout', default=8,
+                        help='time (in hours) to attempt to complete download before timing out')
+    parser.add_argument('-T', '--textme', dest='textme', action='store_true',
+                        help='forward notifications via SMS messages (i.e. enable text '
+                             'notifications)')
+    parser.add_argument('--maxsize', dest='maxsize', default=3,
+                        help='max number of torrents allowed to download at one time (additional '
+                             'torrents will be enqueued and start when a space opens up)')
     args = parser.parse_args()
 
     signal.signal(signal.SIGUSR1, usr1_handler)
@@ -230,20 +250,4 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, term_handler)
 
     with gutils.logging.context(log, debug=args.debug), runtime_context():
-        create_pidfile()
-
-        time.sleep(args.delay)
-
-        try:
-            log.info('Connecting to VPN and starting transmission daemon...')
-            sp.check_call(['PIA', 'start', 'nyc'], stdout=sp.DEVNULL)
-            sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
-        except sp.CalledProcessError:
-            raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
-        else:
-            magnet_queue.maxsize = args.maxsize
-            torrent(args.magnet)
-
-            wait()
-            magnet_queue.join()
-            notify('All torrents are complete.')
+        main()

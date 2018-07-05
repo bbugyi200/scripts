@@ -100,6 +100,7 @@ if __name__ == "__main__":
         try:
             period_index = tag.index('.')
             parent_tag = tag[:period_index]
+            pdaytime = styled_tag_time(parent_tag, 'day')  # parent daytime
             totaltime = styled_tag_time(parent_tag, 'week')
         except ValueError:
             parent_tag = ''
@@ -112,7 +113,8 @@ if __name__ == "__main__":
                        'weektime': weektime}
 
         if parent_tag != '':
-            fmt = fmt + '                [{totaltime}]'
+            fmt = fmt + '                [{pdaytime} / {totaltime}]'
+            format_opts['pdaytime'] = pdaytime
             format_opts['totaltime'] = totaltime
 
         print(fmt.format(**format_opts))

@@ -2,7 +2,6 @@
 
 """Displays root directory of tmux window (based on tmuxinator config)"""
 
-import getpass
 import subprocess as sp  # noqa: F401
 
 import yaml
@@ -18,8 +17,15 @@ log = gutils.logging.getEasyLogger(__name__)
 
 def main():
     all_windows = get_all_windows(args.session_name)
-    window_map = all_windows[args.window_name]
-    rootdir = get_rootdir(args.session_name, window_map)
+
+    try:
+        _window_dict = all_windows[args.window_index]
+        window_name = next(iter(_window_dict))
+        window_dict = _window_dict[window_name]
+    except IndexError:
+        window_dict = dict()
+
+    rootdir = get_rootdir(args.session_name, window_dict)
     print(rootdir, end='')
 
 
@@ -28,20 +34,14 @@ def get_all_windows(session_name):
     mux_yaml_path = '/home/bryan/.config/tmuxinator/{}.yml'.format(session_name)
     with open(mux_yaml_path) as f:
         raw_dict = yaml.safe_load(f)
-
-    D = dict()
-    for window_dict in raw_dict['windows']:
-        D.update(window_dict)
-
-    return D
+    return raw_dict['windows']
 
 
-def get_rootdir(session_name, window_map):
+def get_rootdir(session_name, window_dict):
     """Returns the final root directory path."""
-    if 'root' in window_map:
-        rootdir = window_map['root']
-        rootdir = rootdir.replace('~', '/home/{}'.format(getpass.getuser()))
-        return rootdir
+    if 'root' in window_dict:
+        rootdir = window_dict['root']
+        return rootdir.replace('~', '/home/bryan')
     else:
         ps = sp.check_output(['tmdir', '--get', session_name])
         return ps.decode().strip()
@@ -50,7 +50,7 @@ def get_rootdir(session_name, window_map):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('session_name', help='Name of tmux session.')
-    parser.add_argument('window_name', help='Name of the tmux window.')
+    parser.add_argument('window_index', type=int, help='Name of the tmux window.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):

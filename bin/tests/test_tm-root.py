@@ -14,14 +14,14 @@ import pytest  # noqa
 
 def test_get_all_windows():
     """Tests that window map (dictionary) is correct"""
-    assert 'home' in tmroot.get_all_windows("Terminal")
+    assert 'home' in tmroot.get_all_windows("Terminal")[0]
 
 
-@pytest.mark.parametrize('window_map,expected', [
+@pytest.mark.parametrize('window_dict,expected', [
     ({'root': '/home/pig/test/dir'}, '/home/pig/test/dir'),
     ({'root': '~/test/dir'}, '/home/bryan/test/dir'),
     ({'badkey': None}, '/home/bryan'),
 ])
-def test_get_rootdir(window_map, expected):
+def test_get_rootdir(window_dict, expected):
     """Tests that root directory is retrieved properly"""
-    assert expected == tmroot.get_rootdir("Terminal", window_map)
+    assert expected == tmroot.get_rootdir("Terminal", window_dict)

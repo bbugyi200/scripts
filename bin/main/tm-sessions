@@ -1,0 +1,42 @@
+#!/usr/bin/env python
+
+"""Displays formatted tmux sessions for tmux status-line"""
+
+import subprocess as sp  # noqa: F401
+
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main():
+    ps = sp.check_output(['tmux', 'ls'])
+    out = ps.decode().strip()
+
+    _sessions = out.split('\n')
+    log.debug('_sessions: %s', _sessions)
+
+    sessions = []
+    for S in _sessions:
+        T = S[:S.index(':')]
+        if 'attached' in S:
+            T = '[{}]'.format(T)
+        sessions.append(T)
+
+    print('  '.join(sessions), end='')
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('dummy', help='Allows the active session name to be passed in as a '
+                                      'command-line argument, but this script does not use this '
+                                      'argument in any way. This hack forces tmux to update the '
+                                      'status-line properly.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

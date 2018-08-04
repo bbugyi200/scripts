@@ -1,11 +1,13 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{amsthm}
+\usepackage{bm}
 \usepackage{enumitem}
 \usepackage{graphicx}
 \usepackage{mathrsfs}  % \mathscr{[Capital Letter]}
+\usepackage{mathtools}
 \usepackage{parskip}
-\usepackage{bm}
+\usepackage{xparse}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[theorem]
@@ -21,6 +23,16 @@
    {.5em}%
    {}
 
+\newtheoremstyle{claim}%
+   {7pt}%
+   {7pt}%
+   {}%
+   {}%
+   {\bfseries}%
+   {.}%
+   {.5em}%
+   {}
+
 \newtheoremstyle{remark}%
    {7pt}%
    {7pt}%
@@ -31,37 +43,62 @@
    {.5em}%
    {}
 
-\theoremstyle{remark}
-\newtheorem*{remark}{Remark}
-
 \theoremstyle{case}
 \newtheorem{case}{Case}
 
+\theoremstyle{claim}
+\newtheorem*{claim}{Claim}
+
+\theoremstyle{remark}
+\newtheorem*{remark}{Remark}
+
+\makeatletter
+\newcommand*{\declarecommand}{%
+    \@star@or@long\declare@command
+}
+\newcommand*{\declare@command}[1]{%
+    \provide@command{#1}{}%
+    % \let#1\@empty % would be more efficient, but without error checking
+    \RenewDocumentCommand{#1}%
+}
+\makeatother
+
 % Global Custom Commands
 \renewcommand{\a}{\alpha}
+\newcommand{\Bythrm}[1]{By Theorem #1 of the text}
 \renewcommand{\b}{\beta}
-\renewcommand{\d}{\delta}
-\renewcommand{\l}{\ell}
-\renewcommand{\cal}[1]{\mathcal{#1}}
-\newcommand{\vphi}{\varphi}
-\newcommand{\e}{\epsilon}
-\newcommand{\com}[1]{\text{\scriptsize(#1)}}
+\newcommand{\bythrm}[1]{by Theorem #1 of the text}
 \newcommand{\C}{\mathbb{C}}
 \newcommand{\cC}{\mathcal{C}}
-\newcommand{\R}{\mathbb{R}}
-\newcommand{\cR}{\mathcal{R}}
-\newcommand{\Q}{\mathbb{Q}}
-\newcommand{\cQ}{\mathcal{Q}}
-\newcommand{\N}{\mathbb{N}}
 \newcommand{\cN}{\mathcal{N}}
-\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\cR}{\mathcal{R}}
+\newcommand{\cQ}{\mathcal{Q}}
 \newcommand{\cZ}{\mathcal{Z}}
-\newcommand{\ra}{\rightarrow}
+\renewcommand{\cal}[1]{\mathcal{#1}}
+\newcommand{\com}[1]{\text{\scriptsize(#1)}}
+\renewcommand{\d}{\delta}
+\newcommand{\e}{\epsilon}
+\declarecommand{\es}{}{\ensuremath{\emptyset}}
+\newcommand{\h}[1]{\ensuremath{\hat{#1}}}
+\renewcommand{\l}{\ell}
+\declarecommand{\ker}{}{\ensuremath{\text{ker}}}
 \newcommand{\la}{\leftarrow}
+\newcommand{\N}{\mathbb{N}}
+\declarecommand{\nb}{}{The solution to this problem is hand-written and can be found on the attached notebook paper.}
+\declarecommand{\novs}{O{0.7cm}}{\vspace{-#1}}
+\newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\ra}{\rightarrow}
+\newcommand{\s}[1]{\ensuremath{\{#1\}}}
+\newcommand{\set}[1]{\ensuremath{\{#1\}}}
 \newcommand{\seq}[1]{\left\{#1\right\}_{n=1}^{\infty}}
 \newcommand{\struct}[1]{\langle #1 \rangle}
-\newcommand{\bythrm}[1]{by Theorem #1 of the text}
-\newcommand{\Bythrm}[1]{By Theorem #1 of the text}
+\newcommand{\st}[1]{\ensuremath{\langle #1 \rangle}}
 \newcommand{\sub}{\ensuremath{\subset}}
-\newcommand{\subeq}{\ensuremath{\subseteq}}
-\newcommand{\set}[1]{\ensuremath{\{#1\}}}
+\newcommand{\sube}{\ensuremath{\subseteq}}
+\renewcommand{\t}{\theta}
+\declarecommand{\tx}{m}{\ensuremath{\text{#1}}}
+\newcommand{\vphi}{\varphi}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\declarecommand{\=}{}{&=}

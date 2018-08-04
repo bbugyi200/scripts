@@ -16,7 +16,7 @@ log = gutils.logging.getEasyLogger(__name__)
 DAYPLAN_FILE = '/home/bryan/Dropbox/notes/dayplan.txt'
 TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.getdir('data'))
 DATE_FMT = '%A %Y-%m-%d'
-MAX_DAYS = 5
+MAX_DAYS = 3
 
 
 def get_last_dt():

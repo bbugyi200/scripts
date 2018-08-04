@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Wrapper for rofi that implements my version of a good input prompt. """
+"""Wrapper for rofi that implements my version of a good input prompt."""
 
 import argparse
 import subprocess as sp  # noqa: F401
@@ -23,6 +23,8 @@ if __name__ == "__main__":
     with gutils.logging.context(log, debug=args.debug):
         log.debug('Extra Rofi Options: {}'.format(args.opts))
 
+        cmd_list = ['rofi']
+
         opts = []
         opts.extend(['-m', '-4'])
         opts.extend(['-lines', '0'])
@@ -32,7 +34,6 @@ if __name__ == "__main__":
         opts.extend(['-dmenu'])
         opts.extend(args.opts)
 
-        cmd_list = ['rofi']
         cmd_list.extend(opts)
         log.debug('Prompt Command List: {}'.format(cmd_list))
 

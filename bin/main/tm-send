@@ -2,7 +2,7 @@
 
 socket_name="$(tm-socket)"
 
-eval set -- $(getopt -o "da:" -l "debug,action:" -- "$@")
+eval set -- "$(getopt -o "da:" -l "debug,action:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -70,22 +70,22 @@ if [[ -n "$socket_name" ]]; then
                     CMD="exit";;
             esac;;
         '' )
-            echo "usage: $(basename $0) --action=<action>"
+            echo "usage: $(basename "$0") --action=<action>"
             exit 1;;
         * )
             case $active_program in
                 *"vim"* )  # Precautionary Check (some zsh/bash scripts execute vim)
-                    logger "$(basename $0): Unable to perform '$action'. Vim has been detected!"
+                    logger "$(basename "$0"): Unable to perform '$action'. Vim has been detected!"
                     exit 1;;
                 *"zsh"* | *"bash"* )
                     CMD=$action;;
                 * )
-                    logger "$(basename $0): Unable to perform '$action'. Not in zsh or bash shell."
+                    logger "$(basename "$0"): Unable to perform '$action'. Not in zsh or bash shell."
                     exit 1;
             esac
     esac
 
-    tmux -L "$socket_name" send-keys $PRE "$CMD" $POST "Enter"
+    tmux -L "$socket_name" send-keys "$PRE" "$CMD" "$POST" "Enter"
 
 else
     exit 1

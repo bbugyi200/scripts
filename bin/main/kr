@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Sets Event with khal using Relative Time (x minutes from now)"""
+"""Sets Event with khal using RELATIVE Time (x minutes from now)"""
 
 import datetime as dt
 import subprocess as sp
@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('minutes', nargs='?', type=int, default=50,
                         help='Number of minutes, offset from now, the next break will be set for.')
-    parser.add_argument('-n', nargs='+', dest='event_name', default=('Study Break',),
+    parser.add_argument('-n', nargs='+', dest='event_name', default=('Study', 'Break',),
                         help='Name of the khal event that will be created.')
     args = parser.parse_args()
 

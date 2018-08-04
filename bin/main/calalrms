@@ -25,6 +25,60 @@ TOMORROW_MARKER = '@'
 today = dt.date.today()
 
 
+def main():
+    gutils.mkfifo(FIFO_PATH)
+    stop_alarm()
+    create_pidfile()
+
+    event_list = get_raw_event_list()
+    log.debug("Raw Event List: {}".format(event_list))
+
+    event_list = get_NL_split_event_list(event_list)
+    log.debug('Newline Split Event List: {}'.format(event_list))
+
+    event_list = list(filter_allday_events(event_list))
+    log.debug('Event List (without allday events): {}'.format(event_list))
+
+    event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
+    log.debug('Double Split Event List: {}'.format(event_list))
+
+    event_list = get_marked_event_list(event_list)
+    log.debug('Marked Event List: {}'.format(event_list))
+
+    events = get_unique_event_ordered_dict(event_list)
+    log.debug('Unique Event List: {}'.format(events))
+
+    for start, titles in events.items():
+        title = ' + '.join(titles)
+
+        cmd_list = ['alarm']
+        opts = []
+
+        if start[0] == TOMORROW_MARKER:
+            start = start[1:]
+
+            # check if day has changed
+            current_day = dt.date.today().day
+            if today.day == current_day:
+                opts.extend(['-T'])
+
+        opts.extend([start, title])
+        cmd_list.extend(opts)
+
+        with open(FIFO_PATH, 'w') as fifo:
+            log.debug('Writing "{}" to {}.'.format(title, FIFO_PATH))
+            fifo.write('"{}" at {}\n'.format(title, start))
+
+        try:
+            sp.check_call(cmd_list)
+        except sp.CalledProcessError:
+            raise RuntimeError('Current alarm was interupted.')
+        else:
+            time.sleep(0.5)
+
+    log.debug('No calendar events to set alarm for. Terminating...')
+
+
 def get_raw_event_list():
     """ Get raw output of khal command.
 
@@ -144,53 +198,5 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
 
-    with gutils.logging.context(log, debug=args.debug):
-        gutils.mkfifo(FIFO_PATH)
-        stop_alarm()
-        create_pidfile()
-
-        event_list = get_raw_event_list()
-        log.debug("Raw Event List: {}".format(event_list))
-
-        event_list = get_NL_split_event_list(event_list)
-        log.debug('Newline Split Event List: {}'.format(event_list))
-
-        event_list = list(filter_allday_events(event_list))
-        log.debug('Event List (without allday events): {}'.format(event_list))
-
-        event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
-        log.debug('Double Split Event List: {}'.format(event_list))
-
-        event_list = get_marked_event_list(event_list)
-        log.debug('Marked Event List: {}'.format(event_list))
-
-        events = get_unique_event_ordered_dict(event_list)
-        log.debug('Unique Event List: {}'.format(events))
-
-        for start, titles in events.items():
-            title = ' + '.join(titles)
-
-            cmd_list = ['alarm']
-            opts = []
-
-            if start[0] == TOMORROW_MARKER:
-                start = start[1:]
-
-                # check if day has changed
-                current_day = dt.date.today().day
-                if today.day == current_day:
-                    opts.extend(['-T'])
-
-            opts.extend([start, title])
-            cmd_list.extend(opts)
-
-            with open(FIFO_PATH, 'w') as fifo:
-                log.debug('Writing "{}" to {}.'.format(title, FIFO_PATH))
-                fifo.write('"{}" at {}\n'.format(title, start))
-
-            try:
-                sp.check_call(cmd_list)
-            except sp.CalledProcessError:
-                raise RuntimeError('Current alarm was interupted.')
-
-        log.debug('No calendar events to set alarm for. Terminating...')
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

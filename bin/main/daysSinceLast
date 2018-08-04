@@ -10,12 +10,17 @@ if sys.argv[1] == "--update":
     date_str = cmd_output.read().rstrip()
     last_updt = parse(date_str)
     delta = datetime.today() - last_updt
+    days = delta.days
 
 
 elif sys.argv[1] == "--cleanup":
-    date_str = open('/home/bryan/.local/share/cleanup/timestamp', 'r').read().rstrip()
-    last_clean = parse(date_str)
-    delta = datetime.today() - last_clean
+    try:
+        date_str = open('/home/bryan/.local/share/cleanup/timestamp', 'r').read().rstrip()
+        last_clean = parse(date_str)
+        delta = datetime.today() - last_clean
+        days = delta.days
+    except FileNotFoundError:
+        days = 99999
 
 
-print(delta.days)
+print(days)

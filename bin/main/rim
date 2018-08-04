@@ -26,7 +26,7 @@ if __name__ == "__main__":
         for line in open('/home/{}/.vim/viminfo'.format(user), 'rb'):
             try:
                 line = line.decode()
-            except UnicodeDecodeError as e:
+            except UnicodeDecodeError:
                 continue
 
             match = re.search('^> (.*/[^/]*{}[^/]*$)'.format(args.subfname), line)

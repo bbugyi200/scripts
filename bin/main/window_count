@@ -1,0 +1,4 @@
+#!/bin/bash
+
+WS="$(wmctrl -d | grep '\*' | tr -s " " | cut -d' ' -f1)"
+printf "%s\n" "$(wmctrl -lx | grep -c " $WS ")"

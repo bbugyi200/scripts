@@ -1,6 +1,5 @@
 #!/bin/bash
 
-UP_ARROW="<icon=net_up_03.xbm/>"
 GREEN="#0BF816"
 
 if pgrep openvpn &> /dev/null; then

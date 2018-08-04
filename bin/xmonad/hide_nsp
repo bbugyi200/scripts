@@ -19,7 +19,7 @@ if __name__ == "__main__":
     with gutils.logging.context(log, debug=args.debug):
         try:
             out = sp.check_output('active_window_name')
-        except sp.CalledProcessError as e:
+        except sp.CalledProcessError:
             log.debug('No window is currently focused.')
             sys.exit(0)
 

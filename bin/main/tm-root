@@ -50,8 +50,8 @@ def get_rootdir(session_name, window_dict):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('session_name', help='Name of tmux session.')
-    parser.add_argument('window_index', type=int, help='Name of the tmux window.')
+    parser.add_argument('window_index', type=int, help='Index of the tmux window.')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Archive Utility. Used to Archive and Compress Local Files and Directories. """
+"""Archive Utility. Used to Archive and Compress Local Files and Directories."""
 
 import argparse
 import enum
@@ -15,7 +15,8 @@ GLOB_ARCH_DIR = '/media/bryan/hercules/archive'
 TARGZ_FILE = '.archive.tar.gz'
 
 
-class Error(Exception): pass
+class ArchiveError(Exception):
+    """Custom Archive Exception"""
 
 
 class Action(enum.Enum):
@@ -29,11 +30,11 @@ class Action(enum.Enum):
 def archive(auto_compress=False):
     """ Archive Files/Directories """
     if not args.files:
-        raise Error("Must provide files/directories to archive!")
+        raise ArchiveError("Must provide files/directories to archive!")
 
     for f in args.files:
         if not os.path.exists(f):
-            raise Error("{} does not exist!".format(f))
+            raise ArchiveError("{} does not exist!".format(f))
 
     if not os.path.isdir(ARCH_DIR):
         auto_compress = True
@@ -55,7 +56,7 @@ def global_archive():
         msgfmt = "Neither a {} directory nor a {} file exist!\n\nEither create a local "\
                  "archive before using this option, or provide the file(s) you would "\
                  "like to archive as command line arguments."
-        raise Error(msgfmt.format(ARCH_DIR, TARGZ_FILE))
+        raise ArchiveError(msgfmt.format(ARCH_DIR, TARGZ_FILE))
 
     cwd = os.getcwd()
     global_replica = '{}/{}'.format(GLOB_ARCH_DIR, cwd[1:])
@@ -103,6 +104,6 @@ if __name__ == "__main__":
          Action.GLOBAL: global_archive,
          Action.COMPRESS: compress,
          Action.EXTRACT: extract}[args.action]()
-    except Error as e:
+    except ArchiveError as e:
         print('{}\n'.format(str(e)), file=sys.stderr)
         sys.exit(1)

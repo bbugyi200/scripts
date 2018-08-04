@@ -1,6 +1,6 @@
 #!/bin/bash
 
-eval set -- $(getopt -o 'd' -l 'debug,dmenu' -- "$@")
+eval set -- "$(getopt -o 'd' -l 'debug,dmenu' -- "$@")"
 
 action='read'
 while [[ -n "$1" ]]; do
@@ -23,12 +23,11 @@ case $action in
 	'dmenu' )
 		choice="$(echo | dmenu -p "$prompt")";;
 	'read' )
-        echo
 		read -n 1 -p "$prompt " choice;;
 esac
 
 if [[ "$choice" == "y" ]]; then
-	printf "\nrunning: \"$*\"\n\n"
+	printf "\n\n"
 	eval "$*"
     exit 0
 else

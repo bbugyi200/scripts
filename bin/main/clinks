@@ -12,20 +12,22 @@ else
 fi
 
 if [[ $(hostname) == "athena" ]]; then
-	stow --dir=/home/bryan/Dropbox/scripts/bin --target=/etc $FLAG cron.jobs
+	stow --dir=/home/bryan/Dropbox/scripts/bin --target=/etc "$FLAG" cron.jobs
 fi
 
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG main
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG xmonad
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG LocalAlias
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin $FLAG ProtectMyLaptop
-stow --dir=/home/bryan/Dropbox/scripts --target=/home/bryan/.local/lib/python3.6/site-packages $FLAG pymodules
+##### SCRIPTS
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" main
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmonad
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" ProtectMyLaptop
+stow --dir=/home/bryan/Dropbox/scripts --target=/home/bryan/.local/lib/python3.6/site-packages "$FLAG" pymodules
 
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan $FLAG home
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/root $FLAG home
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/etc $FLAG etc
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr $FLAG usr
+##### DOTFILES
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan "$FLAG" home
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/root "$FLAG" home
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/etc "$FLAG" etc
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr "$FLAG" usr
 
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src $FLAG src
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include $FLAG include
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib $FLAG lib
+##### C PROJECTS
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib

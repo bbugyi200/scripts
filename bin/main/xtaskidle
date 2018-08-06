@@ -83,10 +83,10 @@ if __name__ == "__main__":
     waittime_help = 'Time (in minutes) to wait for activity after stopping task'
 
     parser = gutils.ArgumentParser()
-    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=10, help=idle_help)
+    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=5, help=idle_help)
     parser.add_argument('-D', dest='delay', nargs='?', type=float, default=0.5, help=delay_help)
     parser.add_argument('-w', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)
-    parser.add_argument('-s', dest='multiplier', nargs='?', type=int, default=1,
+    parser.add_argument('-s', dest='multiplier', nargs='?', type=int, default=2,
                         help='Multiplier (int) used to determine when to trim TimeWarrior time.')
     args = parser.parse_args()
 
@@ -115,7 +115,8 @@ if __name__ == "__main__":
                 time.sleep(args.delay * 60)
                 continue
 
-            dt_timeout = dt.datetime.now() + dt.timedelta(minutes=(args.waittime - args.idletime))
+            dt_stop = dt.datetime.now()
+            dt_timeout = dt_stop + dt.timedelta(minutes=(args.waittime - args.idletime))
             already_shortened_timew = False
             while True:
                 time.sleep(1)
@@ -124,7 +125,12 @@ if __name__ == "__main__":
                 if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
                     log.info('Restarting last task...')
                     check_call('last_task')
-                    gutils.notify('The last active TaskWarrior task has been restarted.', urgency='low')
+
+                    delta = dt.datetime.now() - dt_stop
+                    msg_fmt = 'The last active TW task has been restarted.\n\nTask was stopped for {0:.1f} minutes.'
+                    message = msg_fmt.format((delta.seconds // 60) + ((delta.seconds % 60) / 60))
+                    gutils.notify(message, urgency='low')
+
                     break
                 elif dt_timeout <= dt.datetime.now():
                     log.debug('Time is now past: {}'.format(dt_timeout))

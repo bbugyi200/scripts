@@ -33,6 +33,28 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
+def main():
+    time.sleep(0.5)
+    first = True
+    for line in open(args.file, 'r'):
+        if line[0] == '#' or line[:2] == '//':
+            continue
+        if not first:
+            enter_delay_match = re.search(r'^<<([0-9\.]+)>>', line)
+            if enter_delay_match:
+                enter_delay = enter_delay_match.groups()[0]
+                line = line[enter_delay_match.end():]
+            else:
+                enter_delay = args.enter_delay
+
+            gutils.xkey('KP_Enter')
+            time.sleep(float(enter_delay))
+        else:
+            first = False
+
+        process_line(line)
+
+
 def process_line(line):
     """Processes a single line by parsing through the defined flags
 
@@ -76,23 +98,5 @@ if __name__ == "__main__":
             help='How many seconds to sleep after pressing Enter.')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
-        time.sleep(0.5)
-        first = True
-        for line in open(args.file, 'r'):
-            if line[0] == '#' or line[:2] == '//':
-                continue
-            if not first:
-                enter_delay_match = re.search(r'^<<([0-9\.]+)>>', line)
-                if enter_delay_match:
-                    enter_delay = enter_delay_match.groups()[0]
-                    line = line[enter_delay_match.end():]
-                else:
-                    enter_delay = args.enter_delay
-
-                gutils.xkey('KP_Enter')
-                time.sleep(float(enter_delay))
-            else:
-                first = False
-
-            process_line(line)
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

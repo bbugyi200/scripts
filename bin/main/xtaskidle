@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-""" Stops Current TaskWarrior Task if Machine Idles for Too Long
-and Restarts the Task when Activity Resumes """
+"""Stops Current TW Task if Machine Idles for Too Long and Restarts it when Activity Resumes"""
 
 import datetime as dt
 import os
@@ -24,6 +23,90 @@ PIDFILE = "{}/pid".format(gutils.xdg.getdir('runtime'))
 ARGSFILE = "{}/args".format(gutils.xdg.getdir('data'))
 MILLISECONDS_IN_MINUTE = 60000
 ACCEPTABLE_PROJECTS = ['Study', 'Dev']
+
+
+def term_handler(signum, frame):
+    """ SIGTERM Handler """
+    log.info('Terminated via {} signal.'.format(signal.Signals(signum).name))
+    sys.exit(0)
+
+
+def usr1_handler(signum, frame):
+    """ SIGUSR1 Handler """
+    log.debug('Received SIGUSR1 signal.')
+    load_args()
+
+
+def main():
+    signal.signal(signal.SIGUSR1, usr1_handler)
+    signal.signal(signal.SIGINT, term_handler)
+    signal.signal(signal.SIGTERM, term_handler)
+
+    dump_args()
+    create_pidfile()
+
+    log.info('Starting {}.'.format(NAME))
+
+    while True:
+        idletime = xprintidle()
+        if idletime >= args.idletime * MILLISECONDS_IN_MINUTE:
+            log.debug('System has been idle for {} milliseconds.'.format(idletime))
+
+            out = sp.check_output('timew | head -n 1', shell=True)
+            curr_tw_event = out.decode().strip()
+            if not any([' {} '.format(project) in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
+                raise RuntimeError('Either no task is started or current task\'s corresponding project is not in {}.'.format(ACCEPTABLE_PROJECTS))
+
+            message = 'Stopping current TW task.'
+            log.info(message)
+            check_call('task', 'start.any:', 'stop')
+        else:
+            time.sleep(args.delay * 60)
+            continue
+
+        dt_stop = dt.datetime.now()
+        dt_timeout = dt_stop + dt.timedelta(minutes=(args.waittime - args.idletime))
+        already_shortened_timew = False
+        while True:
+            time.sleep(1)
+            idletime = xprintidle()
+
+            if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
+                log.info('Restarting last task...')
+                check_call('last_task')
+
+                delta = dt.datetime.now() - dt_stop
+                msg_fmt = 'The last active TW task has been restarted.\n\nTask was stopped for {0:.1f} minutes.'
+                message = msg_fmt.format((delta.seconds // 60) + ((delta.seconds % 60) / 60))
+                gutils.notify(message, urgency='low')
+
+                break
+            elif dt_timeout <= dt.datetime.now():
+                log.debug('Time is now past: {}'.format(dt_timeout))
+                log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
+                sys.exit(0)
+            elif (idletime >= args.multiplier * args.idletime * MILLISECONDS_IN_MINUTE) and not already_shortened_timew:
+                msg = 'Shortening last timewarrior event by {} minutes.'.format(args.multiplier * args.idletime)
+                log.debug(msg)
+                check_call('timew', 'shorten', '@1', '{}mins'.format(args.multiplier * args.idletime))
+                gutils.notify(msg)
+                already_shortened_timew = True
+
+
+def load_args():
+    """ Load args Variable from Data File """
+    global args
+    log.debug('Reloading args from: {}'.format(ARGSFILE))
+    with open(ARGSFILE, 'rb') as f:
+        args = pickle.load(f)
+    log.debug('New args variable loaded: {}'.format(args))
+
+
+def dump_args():
+    """ Dump args Variable to Data File """
+    log.debug('Dumping args variable to: {}'.format(ARGSFILE))
+    with open(ARGSFILE, 'wb') as f:
+        pickle.dump(args, f)
 
 
 def create_pidfile():
@@ -49,34 +132,6 @@ def check_call(*args):
     sp.check_call(args, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
 
 
-def term_handler(signum, frame):
-    """ SIGTERM Handler """
-    log.info('Terminated via SIGTERM signal.')
-    sys.exit(0)
-
-
-def usr1_handler(signum, frame):
-    """ SIGUSR1 Handler """
-    log.debug('Received SIGUSR1 signal.')
-    load_args()
-
-
-def load_args():
-    """ Load args Variable from Data File """
-    global args
-    log.debug('Reloading args from: {}'.format(ARGSFILE))
-    with open(ARGSFILE, 'rb') as f:
-        args = pickle.load(f)
-    log.debug('New args variable loaded: {}'.format(args))
-
-
-def dump_args():
-    """ Dump args Variable to Data File """
-    log.debug('Dumping args variable to: {}'.format(ARGSFILE))
-    with open(ARGSFILE, 'wb') as f:
-        pickle.dump(args, f)
-
-
 if __name__ == "__main__":
     idle_help = 'Max amount of idletime (in minutes) to allow before stopping task'
     delay_help = 'Time (in minutes) to delay between calls to xprintidle'
@@ -90,55 +145,5 @@ if __name__ == "__main__":
                         help='Multiplier (int) used to determine when to trim TimeWarrior time.')
     args = parser.parse_args()
 
-    signal.signal(signal.SIGUSR1, usr1_handler)
-    signal.signal(signal.SIGTERM, term_handler)
-
-    with gutils.logging.context(log, debug=args.debug):
-        dump_args()
-        create_pidfile()
-
-        log.info('Starting {}.'.format(NAME))
-
-        while True:
-            idletime = xprintidle()
-            if idletime >= args.idletime * MILLISECONDS_IN_MINUTE:
-                log.debug('System has been idle for {} milliseconds.'.format(idletime))
-
-                out = sp.check_output('timew | head -n 1', shell=True)
-                curr_tw_event = out.decode().strip()
-                if not any([' {} '.format(project) in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
-                    raise RuntimeError('Either no task is started or current task\'s corresponding project is not in {}.'.format(ACCEPTABLE_PROJECTS))
-
-                log.info('Stopping current task...')
-                check_call('task', 'start.any:', 'stop')
-            else:
-                time.sleep(args.delay * 60)
-                continue
-
-            dt_stop = dt.datetime.now()
-            dt_timeout = dt_stop + dt.timedelta(minutes=(args.waittime - args.idletime))
-            already_shortened_timew = False
-            while True:
-                time.sleep(1)
-                idletime = xprintidle()
-
-                if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
-                    log.info('Restarting last task...')
-                    check_call('last_task')
-
-                    delta = dt.datetime.now() - dt_stop
-                    msg_fmt = 'The last active TW task has been restarted.\n\nTask was stopped for {0:.1f} minutes.'
-                    message = msg_fmt.format((delta.seconds // 60) + ((delta.seconds % 60) / 60))
-                    gutils.notify(message, urgency='low')
-
-                    break
-                elif dt_timeout <= dt.datetime.now():
-                    log.debug('Time is now past: {}'.format(dt_timeout))
-                    log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
-                    sys.exit(0)
-                elif (idletime >= args.multiplier * args.idletime * MILLISECONDS_IN_MINUTE) and not already_shortened_timew:
-                    msg = 'Shortening last timewarrior event by {} minutes.'.format(args.idletime)
-                    log.debug(msg)
-                    check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
-                    gutils.notify(msg)
-                    already_shortened_timew = True
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

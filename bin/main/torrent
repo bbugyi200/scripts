@@ -51,9 +51,37 @@ magnet_queue = queue.Queue()
 threads = []
 
 
-def main():
-    create_pidfile()
+def term_handler(signum, frame):
+    """ Remove All Magnet Files before Terminating """
+    log.debug('Terminated via {} signal.'.format(signal.Signals(signum).name))
+    for i in range(1, magnet_counter.count + 1):
+        remove_magnet(i)
+    sys.exit(2)
 
+
+def usr1_handler(signum, frame):
+    """ Adds New Magnet File to Queue """
+    log.debug('SIGUSR1 signal received.')
+    with open(MAGNET_FILE, 'rb') as f:
+        magnet = pickle.load(f)
+
+    wait()
+    torrent(magnet)
+
+
+@atexit.register
+def exit_handler():
+    """ Stop Transmission Daemon and Disconnect from VPN """
+    sp.Popen(['killall', '-9', 'transmission-daemon'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+    sp.Popen(['PIA', 'stop'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+
+def main():
+    signal.signal(signal.SIGTERM, term_handler)
+    signal.signal(signal.SIGINT, term_handler)
+    signal.signal(signal.SIGUSR1, usr1_handler)
+
+    create_pidfile()
     time.sleep(args.delay)
 
     try:
@@ -199,35 +227,10 @@ def magnet_pprint(magnet):
         return 'UNKNOWN TITLE'
 
 
-def usr1_handler(signum, frame):
-    """ Adds New Magnet File to Queue """
-    log.debug('SIGUSR1 signal received.')
-    with open(MAGNET_FILE, 'rb') as f:
-        magnet = pickle.load(f)
-
-    wait()
-    torrent(magnet)
-
-
 def wait():
     """ Blocks until first magnet is added to queue. """
     while magnet_queue.empty():
         time.sleep(0.5)
-
-
-def term_handler(signum, frame):
-    """ Remove All Magnet Files before Terminating """
-    log.debug('Terminating signal received. Cleaning up magnets...')
-    for i in range(1, magnet_counter.count + 1):
-        remove_magnet(i)
-    sys.exit(2)
-
-
-@atexit.register
-def exit_handler():
-    """ Stop Transmission Daemon and Disconnect from VPN """
-    sp.Popen(['killall', '-9', 'transmission-daemon'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
-    sp.Popen(['PIA', 'stop'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
 if __name__ == "__main__":
@@ -244,10 +247,6 @@ if __name__ == "__main__":
                         help='max number of torrents allowed to download at one time (additional '
                              'torrents will be enqueued and start when a space opens up)')
     args = parser.parse_args()
-
-    signal.signal(signal.SIGUSR1, usr1_handler)
-    signal.signal(signal.SIGTERM, term_handler)
-    signal.signal(signal.SIGINT, term_handler)
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose), runtime_context():
         main()

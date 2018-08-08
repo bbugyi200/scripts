@@ -32,10 +32,11 @@ def main():
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('dummy', help='Allows the active session name to be passed in as a '
-                                      'command-line argument, but this script does not use this '
-                                      'argument in any way. This hack forces tmux to update the '
-                                      'status-line properly.')
+    parser.add_argument('session_name', help='Dummy argument. Allows the active session name to '
+                                             'be passed in as a command-line argument, but this '
+                                             'script does not use this argument in any way. This '
+                                             'hack forces tmux to update the status-line '
+                                             'properly.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

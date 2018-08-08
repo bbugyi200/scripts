@@ -38,9 +38,9 @@ def usr1_handler(signum, frame):
 
 
 def main():
-    signal.signal(signal.SIGUSR1, usr1_handler)
     signal.signal(signal.SIGINT, term_handler)
     signal.signal(signal.SIGTERM, term_handler)
+    signal.signal(signal.SIGUSR1, usr1_handler)
 
     dump_args()
     create_pidfile()

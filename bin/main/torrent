@@ -86,7 +86,7 @@ def main():
 
     try:
         log.info('Connecting to VPN and starting transmission daemon...')
-        sp.check_call(['PIA', 'start', 'nyc'], stdout=sp.DEVNULL)
+        sp.check_call(['PIA', 'start', args.vpn], stdout=sp.DEVNULL)
         sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
     except sp.CalledProcessError:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
@@ -246,6 +246,7 @@ if __name__ == "__main__":
     parser.add_argument('--maxsize', dest='maxsize', default=3,
                         help='max number of torrents allowed to download at one time (additional '
                              'torrents will be enqueued and start when a space opens up)')
+    parser.add_argument('--vpn', dest='vpn', nargs='?', default='nyc', help='VPN to connect to.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose), runtime_context():

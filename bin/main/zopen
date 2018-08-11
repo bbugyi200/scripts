@@ -37,7 +37,7 @@ def main():
     ordered_docs = promote_cached_docs(all_docs.split('\n'), cached_docs)
 
     if open_docs:
-        ordered_docs = purge_open_docs(ordered_docs, open_docs)
+        ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
     doc_options = '\n'.join(ordered_docs)
 
@@ -66,18 +66,22 @@ def promote_cached_docs(docs, cached_docs):
     return D
 
 
-def purge_open_docs(docs, open_docs):
-    """Open Docs are Removed from the List of Options"""
+def demote_open_docs(docs, open_docs):
+    """Open Docs are Moved to the Bottom of the List of Options"""
     D = docs[:]
+    E = []
     for odoc in open_docs:
         for doc in docs:
             if odoc in doc:
                 try:
                     D.remove(doc)
+                    E.append(doc)
                 except ValueError:
                     # Protects against multiple attempts to remove the same doc which happens when
                     # the same doc is opened up in multiple different instances.
                     pass
+
+    D.extend(E)
     return D
 
 

@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+
+"""Type out command on screen and then run it."""
+
+import time
+import subprocess as sp  # noqa: F401
+import sys
+
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main():
+    cmd = args.expression
+
+    if args.execute:
+        print('\n>>> ', end='')
+    else:
+        cmd = cmd.replace('\\n', '\n')
+
+    delay_print(cmd)
+
+    if args.execute:
+        cmd = cmd.replace('\\n', '\n')
+        print()
+        sp.call(cmd, shell=True)
+        print()
+
+
+def delay_print(s):
+    for c in s:
+        sys.stdout.write(c)
+        sys.stdout.flush()
+        time.sleep(args.delay * 0.01)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('expression', help='Expression to type to STDOUT.')
+    parser.add_argument('-x', dest='execute', action='store_true', help='Execute expression as shell command.')
+    parser.add_argument('-D', dest='delay', type=int, default=5, help='Delay (in milliseconds) when typing to STDOUT.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

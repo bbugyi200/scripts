@@ -7,18 +7,23 @@ TIMESTAMP_FILE=$DATA_DIR/timestamp
 
 confirm "sudo pacman -Rns $(pacman -Qtdq | paste -sd " " -)"
 
-printf "\nls ~/Downloads\n\n"
-ls ~/Downloads
-confirm "rm -Rf ~/Downloads/*"
-
 confirm "sudo paccache -r"
 
+xtype -x "ls -a ~/.local/share/Trash/files"
+confirm "rm -rf ~/.local/share/Trash/files/*"
+
+xtype -x "ls -a ~/Downloads"
+confirm "rm -rf ~/Downloads/*"
+
+xtype -x "ls -a /var/tmp/*.log"
 confirm "rm /var/tmp/*.log"
 
 confirm "sort_qb_quickmarks"
 
-printf "\nList of Foreign Packages (pacman -Qm):\n"
-pacman -Qm
-printf "\nIt is up to you to manually remove the packages above that you are no longer using.\n\n"
+xtype -D 2 "\nChecking for Tmuxinator sessions that haven't been used in over 60 days. Which sessions would you like to delete?\n"
+find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60 -execdir confirm "safe-rm {}" ";"
+
+xtype -x -D 20 "pacman -Qm"
+xtype -D 2 "It is up to you to manually remove the packages above that you are no longer using.\n"
 
 date +"%m/%d/%y" > "$TIMESTAMP_FILE"

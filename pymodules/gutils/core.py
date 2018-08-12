@@ -2,7 +2,7 @@
 
 This module contains the core classes and functions of this package. The contents of this module
 are intended to be imported directly into the package's global namespace. All public functions /
-classes in this module MUST be added to __all__.
+classes in this module MUST be added to __all__ or they will NOT be made available.
 """
 
 import argparse
@@ -91,7 +91,7 @@ def ArgumentParser(*args, opt_args=[], description=None, formatter_class=None, *
     parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose output.')
     if 'quiet' in opt_args:
         parser.add_argument('-q', '--quiet', action='store_true',
-                            help='use with --debug to send debug messages to log file ONLY')
+                            help='Use with --debug to send debug messages to log file ONLY')
 
     return parser
 

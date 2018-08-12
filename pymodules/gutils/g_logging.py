@@ -92,6 +92,7 @@ def context(log, *, debug=False, verbose=False, quiet=False):
     Args:
         log: logging.Logger object.
         debug: True if debugging is enabled.
+        verbose: True if verbose output is enabled (enables VDEBUG level messages).
         quiet: True if debug messages should be sent to log file ONLY.
     """
     if debug:

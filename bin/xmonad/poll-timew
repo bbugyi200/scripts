@@ -52,8 +52,27 @@ def main():
         print(fmt.format(**format_opts))
 
 
+def styled_tag_time(t, i):
+    return _style_time(_get_tag_time(t, i))
+
+
+def _style_time(time_str):
+    col = time_str.find(':')
+
+    hours = int(time_str[:col])
+    minutes = int(time_str[col + 1:col + 3])
+
+    styled = hours
+    styled += minutes / 60
+    return '{0:.1f}h'.format(styled)
+
+
 def _get_tag_time(tag, interval):
-    assert interval == 'day' or interval == 'week', 'Interval must be in {day,week}'
+    try:
+        assert interval == 'day' or interval == 'week', 'Interval must be in {day,week}'
+    except AssertionError as e:
+        raise ValueError(str(e))
+
     now = dt.datetime.now().astimezone(dt.timezone.utc)
 
     if interval == 'week':
@@ -75,21 +94,6 @@ def _get_tag_time(tag, interval):
     match = re.findall(pttrn, output)[0]
 
     return match.strip()
-
-
-def _style_time(time_str):
-    col = time_str.find(':')
-
-    hours = int(time_str[:col])
-    minutes = int(time_str[col + 1:col + 3])
-
-    styled = hours
-    styled += minutes / 60
-    return '{0:.1f}h'.format(styled)
-
-
-def styled_tag_time(t, i):
-    return _style_time(_get_tag_time(t, i))
 
 
 def add_times(*tag_times):

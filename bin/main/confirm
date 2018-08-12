@@ -26,11 +26,10 @@ case $action in
 		read -n 1 -p "$prompt " choice;;
 esac
 
+echo
 if [[ "$choice" == "y" ]]; then
-	printf "\n\n"
 	eval "$*"
     exit 0
 else
-    echo
     exit 1
 fi

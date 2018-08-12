@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Script to Manage dayplan.txt """
+"""Script to Manage dayplan.txt"""
 
 import datetime as dt
 from dateutil.parser import parse
@@ -17,6 +17,34 @@ DAYPLAN_FILE = '/home/bryan/Dropbox/notes/dayplan.txt'
 TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.getdir('data'))
 DATE_FMT = '%A %Y-%m-%d'
 MAX_DAYS = 3
+
+
+def main():
+    try:
+        last_dt = get_last_dt()
+    except FileNotFoundError:
+        last_dt = dt.datetime.now() - dt.timedelta(days=MAX_DAYS)
+        log.debug('Timestamp file not found. Setting last date to {}-{}-{}.'.format(last_dt.year, last_dt.month, last_dt.day))
+
+    today_dt = dt.datetime.now()
+    delta = today_dt - last_dt
+    if delta.days > MAX_DAYS:
+        log.debug('Reducing delta.days to {}.'.format(MAX_DAYS))
+        last_dt = today_dt - dt.timedelta(days=MAX_DAYS)
+        delta = today_dt - last_dt
+
+    log.debug('delta.days = {}'.format(delta.days))
+
+    temp_dt = today_dt + dt.timedelta(days=MAX_DAYS) - dt.timedelta(days=delta.days)
+    with open(DAYPLAN_FILE, 'a+') as f:
+        for i in range(delta.days):
+            pretty_date = temp_dt.strftime(DATE_FMT)
+            f.write('\n{}\n'.format(pretty_date.upper()))
+            temp_dt = temp_dt + dt.timedelta(days=1)
+
+    record_dt(today_dt)
+
+    sp.call(['vim', DAYPLAN_FILE])
 
 
 def get_last_dt():
@@ -37,29 +65,5 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
-        try:
-            last_dt = get_last_dt()
-        except FileNotFoundError:
-            last_dt = dt.datetime.now() - dt.timedelta(days=MAX_DAYS)
-            log.debug('Timestamp file not found. Setting last date to {}-{}-{}.'.format(last_dt.year, last_dt.month, last_dt.day))
-
-        today_dt = dt.datetime.now()
-        delta = today_dt - last_dt
-        if delta.days > MAX_DAYS:
-            log.debug('Reducing delta.days to {}.'.format(MAX_DAYS))
-            last_dt = today_dt - dt.timedelta(days=MAX_DAYS)
-            delta = today_dt - last_dt
-
-        log.debug('delta.days = {}'.format(delta.days))
-
-        temp_dt = today_dt + dt.timedelta(days=MAX_DAYS) - dt.timedelta(days=delta.days)
-        with open(DAYPLAN_FILE, 'a+') as f:
-            for i in range(delta.days):
-                pretty_date = temp_dt.strftime(DATE_FMT)
-                f.write('\n{}\n'.format(pretty_date.upper()))
-                temp_dt = temp_dt + dt.timedelta(days=1)
-
-        record_dt(today_dt)
-
-        sp.call(['vim', DAYPLAN_FILE])
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

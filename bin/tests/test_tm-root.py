@@ -9,7 +9,7 @@ spec = importlib.util.spec_from_loader("tmroot", loader)
 tmroot = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tmroot)
 
-import pytest  # noqa
+import pytest
 
 
 def test_get_all_windows():

@@ -29,7 +29,7 @@ exit_handler() {
 
 
 # ---------- Command Line Arguments ----------
-eval set -- $(getopt -o "d,r,s,T" -l "debug,resume,stop,tomorrow" -- "$@")
+eval set -- "$(getopt -o "d,r,s,T" -l "debug,resume,stop,tomorrow" -- "$@")"
 
 while [[ -n "$1" ]]; do
 	case $1 in

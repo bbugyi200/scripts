@@ -24,19 +24,20 @@ def main():
     for S in _sessions:
         T = S[:S.index(':')]
         if 'attached' in S:
-            T = '[{}]'.format(T)
-        sessions.append(T)
+            sessions.append('[{}]'.format(T))
+        else:
+            sessions.append(T)
 
     print('  '.join(sessions), end='')
 
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('session_name', help='Dummy argument. Allows the active session name to '
-                                             'be passed in as a command-line argument, but this '
-                                             'script does not use this argument in any way. This '
-                                             'hack forces tmux to update the status-line '
-                                             'properly.')
+    parser.add_argument('session_name', nargs='?',
+                        help='Dummy argument. Allows the active session name to be passed in as a '
+                             'command-line argument, but this script does not use this argument '
+                             'in any way. Sending in the active session name as an argument '
+                             'forces tmux to update the status-line properly.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

@@ -1,8 +1,9 @@
 #!/bin/bash
 
-confirm "generate_mirrors && echo"
-confirm "sudo pacman -Syyu && echo"
-confirm "rm -rf /tmp/builds; mkdir /tmp/builds; cd /tmp/builds && cower -vud && buildall && echo"
-confirm "gem update && echo"
-confirm "cd ~/.xmonad && stack install && xmonad --recompile && echo"
+confirm "generate_mirrors"
+confirm "sudo pacman -Syyu"
+confirm "rm -rf /tmp/builds; mkdir /tmp/builds; cd /tmp/builds && cower -vud && buildall"
+confirm "gem update"
+confirm "npm update"
+confirm "cd ~/.xmonad && stack install && xmonad --recompile"
 confirm "systemctl reboot -i"

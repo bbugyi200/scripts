@@ -1,5 +1,7 @@
 #!/bin/python
 
+"""Stores and Retrieves Default Directories for tmuxinator Sessions"""
+
 import sys
 import os
 import pickle
@@ -10,24 +12,30 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
 #######################################################################################
 
-fpath = '{}/default-dirs.pickle'.format(gutils.xdg.getdir('data'))
-
-default_dirs = dict()
-if not os.path.isfile(fpath):
-    with open(fpath, 'wb+') as f:
-        pickle.dump(default_dirs, f)
-else:
-    with open(fpath, 'rb') as f:
-        default_dirs = pickle.load(f)
+log = gutils.logging.getEasyLogger(__name__)
 
 
-action = sys.argv[1]
-session_name = sys.argv[2]
+def main():
+    fpath = '{}/default-dirs.pickle'.format(gutils.xdg.getdir('data'))
+
+    default_dirs = dict()
+    if not os.path.isfile(fpath):
+        with open(fpath, 'wb+') as f:
+            pickle.dump(default_dirs, f)
+    else:
+        with open(fpath, 'rb') as f:
+            default_dirs = pickle.load(f)
+
+    action = sys.argv[1]
+    session_name = sys.argv[2]
+
+    if action == '--get':
+        print(default_dirs.get(session_name, '/home/bryan'), end='')
+    elif action == '--put':
+        default_dirs[session_name] = sys.argv[3]
+        with open(fpath, 'wb') as f:
+            pickle.dump(default_dirs, f)
 
 
-if action == '--get':
-    print(default_dirs.get(session_name, '/home/bryan'), end='')
-elif action == '--put':
-    default_dirs[session_name] = sys.argv[3]
-    with open(fpath, 'wb') as f:
-        pickle.dump(default_dirs, f)
+if __name__ == "__main__":
+    main()

@@ -27,8 +27,8 @@ def main():
     if cmd == '':
         sys.exit(1)
 
-    shell_cmd_list = shell_cmd(cmd)
-    sp.Popen(shell_cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
+    cmd_list = shell_cmd(cmd)
+    sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
 def shell_cmd(cmd):

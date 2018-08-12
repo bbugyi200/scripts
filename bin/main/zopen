@@ -80,7 +80,6 @@ def demote_open_docs(docs, open_docs):
                     # Protects against multiple attempts to remove the same doc which happens when
                     # the same doc is opened up in multiple different instances.
                     pass
-
     D.extend(E)
     return D
 

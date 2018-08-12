@@ -9,6 +9,9 @@
 \usepackage{parskip}
 \usepackage{xparse}
 
+% Use with \eqref{...} to show equation numbers only for equations that are referenced
+\mathtoolsset{showonlyrefs}
+
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}{Lemma}
@@ -99,6 +102,7 @@
 \renewcommand{\t}{\theta}
 \declarecommand{\tx}{m}{\ensuremath{\text{#1}}}
 \newcommand{\vphi}{\varphi}
+\declarecommand{\w}{}{\ensuremath{\omega}}
 \newcommand{\Q}{\mathbb{Q}}
 \newcommand{\Z}{\mathbb{Z}}
 \declarecommand{\=}{}{&=}

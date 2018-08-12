@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Initialize Python script using a template. """
+"""Initialize Python script using a template."""
 
 import enum
 import os
@@ -17,13 +17,31 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 class Action(enum.Enum):
-    """ Action Flags """
+    """Action Flags"""
     NORMAL = enum.auto()
     TEST = enum.auto()
 
 
+def main():
+    if args.action == Action.NORMAL:
+        scriptname = args.scriptname
+        create_template('template.py', scriptname)
+    elif args.action == Action.TEST:
+        script_basename = os.path.basename(args.scriptname.strip('.py')).strip('test_')
+        scriptname = 'test_{}.py'.format(script_basename)
+
+        relative_dir = os.path.dirname(args.scriptname)
+        if relative_dir:
+            scriptname = relative_dir + '/' + scriptname
+
+        create_template('test_template.py', scriptname)
+
+    if args.edit:
+        sp.call(['vim', scriptname])
+
+
 def create_template(tempname, scriptname):
-    """ Creates @scriptname file from the @tempname file.
+    """Creates @scriptname file from the @tempname file.
 
     Args:
         tempname (str): template filename.
@@ -51,19 +69,5 @@ if __name__ == "__main__":
     group.set_defaults(action=Action.NORMAL)
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
-        if args.action == Action.NORMAL:
-            scriptname = args.scriptname
-            create_template('template.py', scriptname)
-        elif args.action == Action.TEST:
-            script_basename = os.path.basename(args.scriptname.strip('.py')).strip('test_')
-            scriptname = 'test_{}.py'.format(script_basename)
-
-            relative_dir = os.path.dirname(args.scriptname)
-            if relative_dir:
-                scriptname = relative_dir + '/' + scriptname
-
-            create_template('test_template.py', scriptname)
-
-        if args.edit:
-            sp.call(['vim', scriptname])
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

@@ -27,6 +27,17 @@ class Action(enum.Enum):
     GLOBAL = enum.auto()
 
 
+def main():
+    try:
+        {Action.ARCHIVE: archive,
+         Action.GLOBAL: global_archive,
+         Action.COMPRESS: compress,
+         Action.EXTRACT: extract}[args.action]()
+    except ArchiveError as e:
+        print('{}\n'.format(str(e)), file=sys.stderr)
+        sys.exit(1)
+
+
 def archive(auto_compress=False):
     """ Archive Files/Directories """
     if not args.files:
@@ -99,11 +110,4 @@ if __name__ == "__main__":
     group.set_defaults(action=Action.ARCHIVE)
     args = parser.parse_args()
 
-    try:
-        {Action.ARCHIVE: archive,
-         Action.GLOBAL: global_archive,
-         Action.COMPRESS: compress,
-         Action.EXTRACT: extract}[args.action]()
-    except ArchiveError as e:
-        print('{}\n'.format(str(e)), file=sys.stderr)
-        sys.exit(1)
+    main()

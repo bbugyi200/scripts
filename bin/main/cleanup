@@ -1,13 +1,15 @@
 #!/bin/bash
 
-DATA_DIR=/home/$USER/.local/share/"$(basename "$0")"
-TIMESTAMP_FILE=$DATA_DIR/timestamp
+######################################################################
+#  Runs periodic maintenance tasks meant to cleanup the filesystem.  #
+######################################################################
 
-[[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
-
+########## Maintenance Tasks
 confirm "sudo pacman -Rns $(pacman -Qtdq | paste -sd " " -)"
 
 confirm "sudo paccache -r"
+
+confirm "sort_qb_quickmarks"
 
 xtype -x "ls -a ~/.local/share/Trash/files"
 confirm "rm -rf ~/.local/share/Trash/files/*"
@@ -18,12 +20,14 @@ confirm "rm -rf ~/Downloads/*"
 xtype -x "ls -a /var/tmp/*.log"
 confirm "rm /var/tmp/*.log"
 
-confirm "sort_qb_quickmarks"
-
 xtype -D 2 "\nChecking for Tmuxinator sessions that haven't been used in over 60 days. Which sessions would you like to delete?\n"
 find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60 -execdir confirm "safe-rm {}" ";"
 
 xtype -x -D 20 "pacman -Qm"
 xtype -D 2 "It is up to you to manually remove the packages above that you are no longer using.\n"
 
+########## Write timestamp to file
+DATA_DIR=/home/$USER/.local/share/"$(basename "$0")"
+TIMESTAMP_FILE=$DATA_DIR/timestamp
+[[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
 date +"%m/%d/%y" > "$TIMESTAMP_FILE"

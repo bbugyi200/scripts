@@ -15,16 +15,16 @@ xtype -x "ls -a ~/.local/share/Trash/files"
 confirm "rm -rf ~/.local/share/Trash/files/*"
 
 xtype -x "ls -a ~/Downloads"
-confirm "rm -rf ~/Downloads/*"
+confirm "safe-rm -rf ~/Downloads/*"
 
 xtype -x "ls -a /var/tmp/*.log"
-confirm "rm /var/tmp/*.log"
+confirm "safe-rm /var/tmp/*.log"
 
 xtype -D 2 "\nTmuxinator sessions that have not been used in over 60 days:\n"
 find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60 -execdir confirm "safe-rm {}" ";"
 
-xtype -D 4 "\nCleanup your package manager by manually uninstalling any foreign packages that you are no longer using.\n"
-xtype -x -D 15 "pacman -Qm"
+xtype -D 3 "\nCleanup your package manager by manually uninstalling any foreign packages that you are no longer using.\n"
+xtype -x -D 10 "pacman -Qm | less"
 
 ########## Write timestamp to file
 DATA_DIR=/home/$USER/.local/share/"$(basename "$0")"

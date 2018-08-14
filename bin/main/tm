@@ -1,5 +1,9 @@
 #!/bin/bash
 
+############################
+#  Wrapper for Tmuxinator  #
+############################
+
 MUX_CONFIG_DIR=~/.config/tmuxinator
 
 if [[ -z "$1" ]]; then

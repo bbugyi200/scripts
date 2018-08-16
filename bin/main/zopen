@@ -39,13 +39,11 @@ def main():
     if open_docs:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
-    doc_options = '\n'.join(ordered_docs)
-
     if args.refresh:
         choice = ordered_docs[-1]
     else:
         cmd_fmt = 'printf "{}" | rofi -p "Document" -m -4 -dmenu -i'
-        choice = check_output(cmd_fmt.format(doc_options))
+        choice = check_output(cmd_fmt.format('\n'.join(ordered_docs)))
 
     add_to_cache(choice)
 

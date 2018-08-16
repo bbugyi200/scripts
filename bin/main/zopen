@@ -41,16 +41,20 @@ def main():
 
     doc_options = '\n'.join(ordered_docs)
 
-    cmd_fmt = 'printf "{}" | rofi -p "Document" -m -4 -dmenu -i'
-    choice = check_output(cmd_fmt.format(doc_options))
+    if args.refresh:
+        choice = ordered_docs[-1]
+    else:
+        cmd_fmt = 'printf "{}" | rofi -p "Document" -m -4 -dmenu -i'
+        choice = check_output(cmd_fmt.format(doc_options))
 
     add_to_cache(choice)
 
-    active_window_class = check_output('active_window_class')
-    if active_window_class == 'Zathura':
-        pid = int(check_output('active_window_pid'))
-        log.debug('Killing Zathura Instance: {}'.format(pid))
-        os.kill(pid, signal.SIGTERM)
+    if args.overwrite or args.refresh:
+        active_window_class = check_output('active_window_class')
+        if active_window_class == 'Zathura':
+            pid = int(check_output('active_window_pid'))
+            log.debug('Killing Zathura Instance: {}'.format(pid))
+            os.kill(pid, signal.SIGTERM)
 
     log.debug('Opening {} in zathura...'.format(choice))
     sp.Popen(['zathura', choice], stdout=sp.DEVNULL, stderr=sp.STDOUT)
@@ -115,6 +119,10 @@ def check_output(cmd):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
+    parser.add_argument('-x', dest='overwrite', action='store_true',
+                        help='Close current Zathura instance before opening new one.')
+    parser.add_argument('-R', dest='refresh', action='store_true',
+                        help='Closes current Zathura instance and reopens same document.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+bugwarrior-pull &> /var/tmp/bugwarrior-pull.log

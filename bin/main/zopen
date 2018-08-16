@@ -55,6 +55,10 @@ def main():
             pid = int(check_output('active_window_pid'))
             log.debug('Killing Zathura Instance: {}'.format(pid))
             os.kill(pid, signal.SIGTERM)
+        else:
+            raise RuntimeError("The option has been selected to replace the current Zathura "
+                               "instance with the new selection, but no Zathura instance is "
+                               "currently active.")
 
     log.debug('Opening {} in zathura...'.format(choice))
     sp.Popen(['zathura', choice], stdout=sp.DEVNULL, stderr=sp.STDOUT)

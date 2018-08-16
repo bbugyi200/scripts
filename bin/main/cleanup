@@ -12,7 +12,7 @@ confirm "sudo paccache -r"
 confirm "sort_qb_quickmarks"
 
 xprint -x "ls -a ~/.local/share/Trash/files"
-confirm "rm -rf ~/.local/share/Trash/files/*"
+confirm "sudo rm -rf ~/.local/share/Trash/files/*"
 
 xprint -x "ls -a ~/Downloads"
 confirm "safe-rm -rf ~/Downloads/*"

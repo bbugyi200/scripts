@@ -1,25 +1,46 @@
 #!/bin/bash
 
-# ensure running as root
+#######################
+#  mkdirs for clinks  #
+#######################
+find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir /home/bryan/.local/share/{} &> /dev/null ";"
+
+# Directories inside /home/<user> that should be created before running clinks
+HOME_DIRS=(".gnupg" ".matlab")
+
+for D in ${HOME_DIRS[@]}; do
+    mkdir /home/bryan/"$D" &> /dev/null
+done
+
+############################
+#  ensure running as root  #
+############################
 if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
+##################################
+#  parse command-line arguments  #
+##################################
 if [[ -z "$1" ]]; then
     FLAG=-R
 else
     FLAG=$1
 fi
 
+##############################
+#  use 'stow' to make links  #
+##############################
 if [[ $(hostname) == "athena" ]]; then
 	stow --dir=/home/bryan/Dropbox/scripts/bin --target=/etc "$FLAG" cron.jobs
 fi
 
 ##### SCRIPTS
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" main
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" awk
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmonad
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" ProtectMyLaptop
-stow --dir=/home/bryan/Dropbox/scripts --target=/home/bryan/.local/lib/python3.6/site-packages "$FLAG" pymodules
+stow --dir=/home/bryan/Dropbox/scripts --target=/usr/local/python "$FLAG" pymodules
 
 ##### DOTFILES
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan "$FLAG" home

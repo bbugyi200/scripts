@@ -15,7 +15,7 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 DAYPLAN_FILE = '/home/bryan/Dropbox/notes/dayplan.txt'
 TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.getdir('data'))
-DATE_FMT = '%A %Y-%m-%d'
+DATE_FMT = '%Y-%m-%d'
 MAX_DAYS = 3
 
 
@@ -38,8 +38,12 @@ def main():
     temp_dt = today_dt + dt.timedelta(days=MAX_DAYS) - dt.timedelta(days=delta.days)
     with open(DAYPLAN_FILE, 'a+') as f:
         for i in range(delta.days):
-            pretty_date = temp_dt.strftime(DATE_FMT)
+            pretty_date = temp_dt.strftime('%A {}'.format(DATE_FMT))
             f.write('\n{}\n'.format(pretty_date.upper()))
+            f.write('===== HIGH (<Subject>) =====\n')
+            f.write('===== LOW (<Subject>) =====\n')
+            f.write('Review Anki Cards\n')
+            f.write('Review Notes\n')
             temp_dt = temp_dt + dt.timedelta(days=1)
 
     record_dt(today_dt)

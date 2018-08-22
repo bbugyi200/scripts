@@ -1,0 +1,14 @@
+#!/bin/bash
+
+####################################
+#  Find ebuild and open up in vim  #
+####################################
+
+if [[ -z "$1" ]]; then
+    echo "usage: veb <package>"
+    exit 1
+fi
+
+package="$1"; shift
+vim "$(find /usr/local/portage -type f -name "$package*ebuild")"
+find /usr/local/portage -type f -name "$package*ebuild" -execdir sudo repoman manifest ";"

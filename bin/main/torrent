@@ -116,7 +116,7 @@ def _torrent(magnet):
 
     magnet_id = magnet_counter.increment()
 
-    with gutils.logging.context(log), runtime_context():
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose), runtime_context():
         try:
             i = 0
             while True:

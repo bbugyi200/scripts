@@ -21,7 +21,7 @@ def _get_videos():
     try:
         out = sp.check_output(_rofi_cmd_fmt.format('Video File').split(), stdin=ps.stdout)
         return out.decode().strip()
-    except sp.CalledProcessError as e:
+    except sp.CalledProcessError:
         raise RuntimeError('No video file selected.')
 
 
@@ -31,5 +31,5 @@ def _get_subs():
     try:
         out = sp.check_output(_rofi_cmd_fmt.format('Subtitle File').split(), stdin=ps.stdout)
         return out.decode().strip()
-    except sp.CalledProcessError as e:
+    except sp.CalledProcessError:
         return None

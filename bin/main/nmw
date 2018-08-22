@@ -1,0 +1,19 @@
+#!/bin/bash
+
+###############################################################
+#  Notify Me When ... (a particular command is done running)  #
+###############################################################
+
+if [[ -n "$1" ]]; then
+    cmd="$1"; shift
+
+    while pgrep "$cmd" &> /dev/null; do
+        sleep 5
+    done
+
+    msg="The '$cmd' command has finished running."
+else
+    msg="The tracked command has finished running."
+fi
+
+notify-send "Notify Me When..." "$msg"

@@ -1,24 +1,5 @@
 #!/bin/bash
 
-#######################
-#  mkdirs for clinks  #
-#######################
-find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir /home/bryan/.local/share/{} &> /dev/null ";"
-
-# Directories inside /home/<user> that should be created before running clinks
-HOME_DIRS=(".gnupg" ".matlab")
-
-for D in ${HOME_DIRS[@]}; do
-    mkdir /home/bryan/"$D" &> /dev/null
-done
-
-############################
-#  ensure running as root  #
-############################
-if [ "$(id -u)" != "0" ]; then
-  exec sudo "$0" "$@"
-fi
-
 ##################################
 #  parse command-line arguments  #
 ##################################
@@ -26,6 +7,29 @@ if [[ -z "$1" ]]; then
     FLAG=-R
 else
     FLAG=$1
+fi
+
+#######################
+#  mkdirs for clinks  #
+#######################
+if [[ "$FLAG" != "-D" ]]; then
+    find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /home/bryan/.local/share/{} &> /dev/null ";"
+    find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /root/.local/share/{} &> /dev/null ";"
+
+    # Directories inside /home/<user> that should be created before running clinks
+    HOME_DIRS=(".gnupg" ".matlab" ".xmonad")
+
+    for D in ${HOME_DIRS[@]}; do
+        mkdir /home/bryan/"$D" &> /dev/null
+        mkdir /root/"$D" &> /dev/null
+    done
+fi
+
+############################
+#  ensure running as root  #
+############################
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
 fi
 
 ##############################

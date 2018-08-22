@@ -36,6 +36,8 @@ def main():
 
         create_template('test_template.py', scriptname)
 
+    sp.call(['chmod', '+x', scriptname])
+    sp.call(['clinks'])
     if args.edit:
         sp.call(['vim', scriptname])
 

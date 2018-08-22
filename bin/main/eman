@@ -1,0 +1,25 @@
+#!/bin/bash
+
+################################
+#  Build ebuild Manifest File  #
+################################
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
+COUNT="$(find /home/bryan/Downloads -name "$2*" | wc -l)"
+if [[ "$COUNT" -gt 1 ]]; then
+    echo "Multiple files match that package description."
+    exit 1
+fi
+
+PACKAGE="$(find /home/bryan/Downloads -name "$2*")"
+
+mkdir -p /usr/local/portage/"$1"/"$2"
+mv "$PACKAGE" /usr/local/portage/"$1"/"$2"/
+chown -R portage:portage /usr/local/portage
+pushd /usr/local/portage/"$1"/"$2" || exit 1
+repoman manifest
+popd

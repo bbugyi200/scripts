@@ -6,11 +6,6 @@ import logging
 import types
 import sys
 
-try:
-    from systemd.journal import JournalHandler
-except ModuleNotFoundError:
-    JournalHandler = None
-
 import gutils.shared as shared
 
 
@@ -34,14 +29,6 @@ def getEasyLogger(name):
     sh.setFormatter(formatter)
     sh.setLevel(logging.INFO)
     log.addHandler(sh)
-
-    if JournalHandler:
-        jh = JournalHandler()
-        jh.setFormatter(formatter)
-        jh.setLevel(logging.ERROR)
-        log.addHandler(jh)
-    else:
-        log.warning('The systemd module does not appear to be installed.')
 
     return log
 

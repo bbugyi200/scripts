@@ -29,7 +29,7 @@ def getdir(userdir, stack=None):
 
     getters = {'config': _getter_factory('XDG_CONFIG_HOME', '/home/{}/.config/{}'),
                'data': _getter_factory('XDG_DATA_HOME', '/home/{}/.local/share/{}'),
-               'runtime': _getter_factory('XDG_RUNTIME_DIR', '/run/user/1000/{}'),
+               'runtime': _getter_factory('XDG_RUNTIME_DIR', '/tmp/{}'),
                'cache': _getter_factory('XDG_CACHE_HOME', '/home/{}/.cache/{}')}
 
     if stack is None:

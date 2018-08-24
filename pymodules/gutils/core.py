@@ -80,12 +80,8 @@ def ArgumentParser(*args, opt_args=[], description=None, formatter_class=None, *
         except KeyError:
             pass
 
-    if formatter_class is None:
-        formatter_class = argparse.ArgumentDefaultsHelpFormatter
-
     parser = argparse.ArgumentParser(*args,
                                      description=description,
-                                     formatter_class=formatter_class,
                                      **kwargs)
     parser.add_argument('-d', '--debug', action='store_true', help='Enable debugging mode.')
     parser.add_argument('-v', '--verbose', action='store_true', help='Enable verbose output.')

@@ -2,6 +2,7 @@
 
 """epuse is similar to the euse tool but is meant to manage per-package USE flags"""
 
+import argparse
 import enum
 import os
 import shutil
@@ -26,28 +27,35 @@ class Action(enum.Enum):
 def main():
     file_path = pack_use_dir + '/' + args.package
 
+    log.debug('Args: %s', args)
+    if args.category is None:
+        out = sp.check_output(['ecat', args.package])
+        category = out.decode().strip()
+    else:
+        category = args.category
+
     action = {Action.add: add_flag,
               Action.delete: delete_flag}[args.action_flag]
 
     for uflag in args.use_flags:
-        action(file_path, uflag)
+        action(file_path, uflag, category)
 
 
-def add_flag(file_path, uflag):
+def add_flag(file_path, uflag, category):
     with open(file_path, 'a+') as f:
         f.seek(0)
         if uflag + '\n' in f.read():
             log.error('The %s USE flag is already set for %s/%s.',
-                      uflag, args.category, args.package)
+                      uflag, category, args.package)
             return
 
-        f.write('%s/%s %s\n' % (args.category, args.package, uflag))
+        f.write('%s/%s %s\n' % (category, args.package, uflag))
         log.info('The %s USE flag has been set for %s/%s.',
-                 uflag, args.category, args.package)
+                 uflag, category, args.package)
 
 
 
-def delete_flag(file_path, uflag):
+def delete_flag(file_path, uflag, category):
     try:
         with open(file_path, 'r+') as f:
             L = []
@@ -58,7 +66,7 @@ def delete_flag(file_path, uflag):
                     L.append(line)
             
             if len(L) == total_lines:
-                _use_flag_not_set_error(uflag)
+                _use_flag_not_set_error(uflag, category)
                 return
 
             _create_backup(file_path)
@@ -68,14 +76,14 @@ def delete_flag(file_path, uflag):
             f.truncate()
 
             log.info('The %s USE flag has been deleted for %s/%s.',
-                     uflag, args.category, args.package)
+                     uflag, category, args.package)
     except IOError:
-        _use_flag_not_set_error(uflag)
+        _use_flag_not_set_error(uflag, category)
 
 
-def _use_flag_not_set_error(uflag):
+def _use_flag_not_set_error(uflag, category):
     log.error('The %s USE flag is not currently set for %s/%s.',
-              uflag, args.category, args.package)
+              uflag, category, args.package)
 
 
 def _create_backup(file_path):
@@ -88,7 +96,7 @@ def _create_backup(file_path):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('category', help='The name of the package\'s category.')
+    parser.add_argument('category', nargs='?', help='The name of the package\'s category.')
     parser.add_argument('package', help='The name of the package.')
     parser.add_argument('use_flags', nargs='+', help='The USE flag(s).')
     action_group = parser.add_mutually_exclusive_group()

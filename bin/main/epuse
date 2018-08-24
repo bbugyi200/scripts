@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+
+"""epuse is similar to the euse tool but is meant to manage per-package USE flags"""
+
+import enum
+import os
+import shutil
+import subprocess as sp  # noqa: F401
+import sys
+
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+pack_use_dir = "/etc/portage/package.use"
+
+
+class Action(enum.Enum):
+    add = enum.auto()
+    delete = enum.auto()
+
+
+def main():
+    file_path = pack_use_dir + '/' + args.package
+    {Action.add: add_flag,
+     Action.delete: delete_flag}[args.action_flag](file_path)
+
+
+def add_flag(file_path):
+    with open(file_path, 'a+') as f:
+        f.seek(0)
+        if args.use_flag + '\n' in f.read():
+            log.error('The %s USE flag is already set for %s/%s.',
+                      args.use_flag, args.category, args.package)
+            sys.exit(1)
+
+        f.write('%s/%s %s\n' % (args.category, args.package, args.use_flag))
+        log.info('The %s USE flag has been set for %s/%s.',
+                 args.use_flag, args.category, args.package)
+
+
+
+def delete_flag(file_path):
+    try:
+        with open(file_path, 'r+') as f:
+            L = []
+            total_lines = 0
+            for line in open(file_path):
+                total_lines += 1
+                if not line.endswith(args.use_flag + '\n'):
+                    L.append(line)
+            
+            if len(L) == total_lines:
+                _use_flag_not_set_error()
+
+            _create_backup(file_path)
+
+            f.seek(0)
+            f.writelines(L)
+            f.truncate()
+
+            log.info('The %s USE flag has been deleted for %s/%s.',
+                     args.use_flag, args.category, args.package)
+    except IOError:
+        _use_flag_not_set_error()
+
+
+def _use_flag_not_set_error():
+    log.error('The %s USE flag is not currently set for %s/%s.',
+              args.use_flag, args.category, args.package)
+    sys.exit(1)
+
+
+def _create_backup(file_path):
+    backup_dir = '/tmp/{}'.format(os.path.basename(sys.argv[0]))
+    if not os.path.exists(backup_dir):
+        os.makedirs(backup_dir)
+
+    shutil.copy(file_path, '{}/{}.backup'.format(backup_dir, args.package))
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('category', help='The name of the package\'s category.')
+    parser.add_argument('package', help='The name of the package.')
+    parser.add_argument('use_flag', help='The USE flag.')
+    action_group = parser.add_mutually_exclusive_group()
+    action_group.add_argument('-E', dest='action_flag', action='store_const', const=Action.add,
+                        help='Add a USE flag to /etc/portage/package.use/<package>.')
+    action_group.add_argument('-D', dest='action_flag', action='store_const', const=Action.delete,
+                        help='Delete a USE flag from /etc/portage/package.use/<package>.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
+if [[ -z "$1" ]]; then
+    echo "usage: $(basename "$0") PACKAGE"
+    exit 2
+fi
+
+pushd "/usr/local/portage" || exit 1
+git add -A && git commit -m "Update $1 package" && git push
+layman -s bbugyi200
+popd || exit 1

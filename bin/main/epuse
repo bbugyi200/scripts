@@ -18,6 +18,7 @@ pack_use_fpath = "/etc/portage/package.use"
 
 
 class Action(enum.Enum):
+    """Action Flags"""
     enable = enum.auto()
     disable = enum.auto()
     prune = enum.auto()
@@ -28,8 +29,6 @@ class PackageNotFound(RuntimeError):
 
 
 def main():
-    log.debug('Args: %s', args)
-
     if args.category is None:
         out = sp.check_output(['ecat', args.package])
         category = out.decode().strip()
@@ -51,7 +50,7 @@ def main():
 
 def enable_flag(uflag, category):
     try:
-        current_uflags = get_uflags(category)
+        current_uflags = _get_uflags(category)
     except PackageNotFound:
         current_uflags = []
 
@@ -64,11 +63,11 @@ def enable_flag(uflag, category):
 
     if reverse_uflag in current_uflags:
         log.info("The {0}/{1} package already has the {2} USE flag set. "
-                 "Pruning {2} from package instead...".format(category, args.package, reverse_uflag))
+                 "Pruning {2} from package first...".format(category, args.package, reverse_uflag))
         prune_flag(reverse_uflag, category)
-        return
+        current_uflags.remove(reverse_uflag)
 
-    set_uflags(current_uflags + [uflag], category)
+    _set_uflags(current_uflags + [uflag], category)
 
     log.info('The %s USE flag has been enabled for %s/%s.',
              uflag, category, args.package)
@@ -76,7 +75,7 @@ def enable_flag(uflag, category):
 
 def prune_flag(uflag, category):
     try:
-        current_uflags = get_uflags(category)
+        current_uflags = _get_uflags(category)
     except PackageNotFound:
         _log_uflag_not_set(uflag, category)
 
@@ -99,10 +98,44 @@ def prune_flag(uflag, category):
     except ValueError:
         pass
 
-    set_uflags(new_uflags, category)
+    _set_uflags(new_uflags, category)
 
     log.info('The %s USE flag has been pruned from %s/%s.',
              uflag, category, args.package)
+
+
+def _get_uflags(category):
+    for line in open(pack_use_fpath, 'r'):
+        if '{}/{}'.format(category, args.package) in line:
+            return line.split()[1:]
+
+    raise PackageNotFound()
+
+
+def _set_uflags(uflags, category):
+    new_lines = []
+    package_lines = []
+    end_section = found = False
+    modified_line = '{}/{} {}\n'.format(category, args.package,
+                                        ' '.join(sorted(uflags, key=lambda x: x.lstrip('-'))))
+    for line in open(pack_use_fpath, 'r'):
+        if end_section or line[0] == '#':
+            new_lines.append(line)
+        elif line.strip() == '':
+            end_section = True
+            if not found and uflags:
+                package_lines.append(modified_line)
+            new_lines.extend(sorted(package_lines))
+            new_lines.append(line)
+        elif line.startswith('{}/{}'.format(category, args.package)): 
+            found = True
+            if uflags:
+                package_lines.append(modified_line)
+        else:
+            package_lines.append(line)
+
+    with open(pack_use_fpath, 'w') as f:
+        f.writelines(new_lines)
 
 
 def _get_reverse_uflag(uflag):
@@ -115,40 +148,6 @@ def _get_reverse_uflag(uflag):
 def _log_uflag_not_set(uflag, category):
     log.error('The %s USE flag is not currently set for %s/%s.',
               uflag, category, args.package)
-
-
-def get_uflags(category):
-    for line in open(pack_use_fpath, 'r'):
-        if '{}/{}'.format(category, args.package) in line:
-            return sorted(line.split()[1:])
-
-    raise PackageNotFound()
-
-
-def set_uflags(uflags, category):
-    new_lines = []
-    package_lines = []
-    end_section = found = False
-    for line in open(pack_use_fpath, 'r'):
-        if end_section or line[0] == '#':
-            new_lines.append(line)
-        elif line.strip() == '':
-            end_section = True
-
-            if not found and uflags:
-                package_lines.append('{}/{} {}\n'.format(category, args.package, ' '.join(sorted(uflags))))
-
-            new_lines.extend(sorted(package_lines))
-            new_lines.append(line)
-        elif line.startswith('{}/{}'.format(category, args.package)): 
-            found = True
-            if uflags:
-                package_lines.append('{}/{} {}\n'.format(category, args.package, ' '.join(sorted(uflags))))
-        else:
-            package_lines.append(line)
-
-    with open(pack_use_fpath, 'w') as f:
-        f.writelines(new_lines)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,12 @@
 #  Build ebuild Manifest File  #
 ################################
 
-overlay_dir=/home/bryan/Dropbox/portage
+overlay_dir=/usr/local/portage
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
 
 if [[ -z "$1" ]] || [[ -z "$2" ]]; then
     echo "usage: $(basename "$0") CATEGORY PACKAGE"
@@ -14,21 +19,16 @@ fi
 category="$1"; shift
 package="$1"; shift
 
-count="$(find /home/bryan/Downloads -name "$package*" | wc -l)"
+count="$(find /home/bryan/Downloads -name "$package*ebuild" | wc -l)"
 if [[ "$count" -gt 1 ]]; then
     echo "Multiple files match that package description."
     exit 1
 fi
 
-ebuild="$(find /home/bryan/Downloads -name "$package*")"
+ebuild="$(find /home/bryan/Downloads -name "$package*ebuild")"
 
 mkdir -p "$overlay_dir"/"$category"/"$package"
 mv "$ebuild" "$overlay_dir"/"$category"/"$package"/
-pushd "$overlay_dir"/"$category"/"$package" || exit 1
-repoman manifest
 
 echo 
-confirm "git commit -m 'Add: $package package'"
-confirm "git push"
-
-popd || exit 1
+confirm 'esync'

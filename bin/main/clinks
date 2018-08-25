@@ -13,16 +13,17 @@ fi
 #  mkdirs for clinks  #
 #######################
 if [[ "$FLAG" != "-D" ]]; then
-    find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /home/bryan/.local/share/{} &> /dev/null ";"
-    find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /root/.local/share/{} &> /dev/null ";"
+    find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /home/bryan/.local/share/{} ";" &> /dev/null
+    find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /root/.local/share/{} ";" &> /dev/null
 
     # Directories inside /home/<user> that should be created before running clinks
     HOME_DIRS=(".gnupg" ".matlab" ".xmonad")
 
-    for D in ${HOME_DIRS[@]}; do
+    for D in "${HOME_DIRS[@]}"; do
         mkdir /home/bryan/"$D" &> /dev/null
         mkdir /root/"$D" &> /dev/null
     done
+
 fi
 
 ############################
@@ -30,6 +31,13 @@ fi
 ############################
 if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
+fi
+
+ROOT_DUPLICATE_DIRS=(".ssh")
+if [[ "$FLAG" != "-D" ]]; then
+    for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
+        rm -rf /root/"$D"
+    done
 fi
 
 ##############################
@@ -56,3 +64,14 @@ stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr "$FLAG" usr
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib
+
+#####################
+#  Cleanup Actions  #
+#####################
+if [[ "$FLAG" != "-D" ]]; then
+    for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
+        rm -rf /root/"$D"
+        mkdir -p /root/"$D"
+        cp -rf /home/bryan/"$D"/* /root/"$D"
+    done
+fi

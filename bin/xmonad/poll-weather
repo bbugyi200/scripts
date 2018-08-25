@@ -30,7 +30,7 @@ def run_weather_report(zipcode):
         Raw output of weather-report command.
     """
     cmd_list = ['weather-report']
-    opts = [zipcode, '--no-cache']
+    opts = ['--setpath', '/usr/share/weather-util', zipcode, '--no-cache']
     cmd_list.extend(opts)
 
     for i in range(6):

@@ -27,7 +27,7 @@ def main():
         scriptname = args.scriptname
         create_template('template.py', scriptname)
     elif args.action == Action.TEST:
-        script_basename = os.path.basename(args.scriptname.strip('.py')).strip('test_')
+        script_basename = os.path.basename(args.scriptname.replace('.py', '')).replace('test_', '')
         scriptname = 'test_{}.py'.format(script_basename)
 
         relative_dir = os.path.dirname(args.scriptname)

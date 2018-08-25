@@ -4,17 +4,42 @@
 #  Find ebuild and open up in vim  #
 ####################################
 
-overlay_dir=/home/bryan/Dropbox/portage
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
+overlay_dir=/usr/local/portage
 
 if [[ -z "$1" ]]; then
     echo "usage: veb PACKAGE"
-    exit 1
+    exit 2
 fi
 
-package="$1"; shift
-vim "$(find "$overlay_dir" -type f -name "$package*ebuild")"
-find "$overlay_dir" -type f -name "$package*ebuild" -execdir repoman manifest ";"
+if [[ -z "$2" ]]; then
+    package="$1"; shift
+    vim "$(find "$overlay_dir" -type f -name "$package*ebuild")"
+    find "$overlay_dir" -type f -name "$package*ebuild" -execdir repoman manifest ";"
 
-echo
-confirm "git commit -m 'Mod: $package package'"
-confirm "git push"
+    echo
+    confirm "esync $package"
+else
+    category="$1"; shift
+    package="$1"; shift
+
+    if [[ -z "$1" ]]; then
+        echo "usage: veb CATEGORY PACKAGE VERSION"
+        exit 2
+    fi
+    
+    version="$1"; shift
+
+    package_dir="/usr/local/portage/$category/$package"
+    mkdir -p "$package_dir" &> /dev/null
+    pushd "$package_dir" || exit 1
+    vim "$package-$version.ebuild"
+
+    echo
+    confirm "repoman manifest"
+    confirm "esync $package"
+fi

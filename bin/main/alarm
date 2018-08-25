@@ -9,7 +9,12 @@ WHITE="#FFFFFF"
 GREY="#D9D9D9"
 
 
-RUNTIME_DIR=$XDG_RUNTIME_DIR/$(basename $0)
+if [[ -n "$XDG_RUNTIME_DIR" ]]; then
+    RUNTIME_DIR=$XDG_RUNTIME_DIR/$(basename $0)
+else
+    RUNTIME_DIR=/tmp/"$(basename "$0")"
+fi
+
 DATA_DIR=/home/$USER/.local/share/$(basename $0)
 PID_FILE=$RUNTIME_DIR/pid
 TIMESTAMP_FILE=$DATA_DIR/timestamp

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+###################################################################
+#  Attempts to Find Package's Corresponding Category  #
+###################################################################
+
+if [[ -z "$1" ]]; then
+    echo "usage: $(basename "$0") PACKAGE"
+    exit 2
+fi
+
+emerge --search "%/$1$" | grep "^\*" | awk '{print $2}' | awk -F'/' '{print $1}'

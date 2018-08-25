@@ -51,7 +51,7 @@ def main():
     for start, titles in events.items():
         title = ' + '.join(titles)
 
-        cmd_list = ['alarm']
+        cmd_list = ['alarm', '-d']
         opts = []
 
         if start[0] == TOMORROW_MARKER:
@@ -70,6 +70,7 @@ def main():
             fifo.write('"{}" at {}\n'.format(title, start))
 
         try:
+            log.debug('Command List: %s', cmd_list)
             sp.check_call(cmd_list)
         except sp.CalledProcessError:
             raise RuntimeError('Current alarm was interupted.')

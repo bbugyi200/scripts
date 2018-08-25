@@ -11,6 +11,7 @@ if [[ -z "$1" ]]; then
 fi
 
 pushd "/usr/local/portage" || exit 1
+repoman manifest
 git add -A && git commit -m "Update $1 package" && git push
 layman -s bbugyi200
 popd || exit 1

@@ -30,13 +30,13 @@ if [ "$action" == "start" ]; then
 
     case "$vpn" in 
         nyc)
-            CONF="US-New-York-City.conf";;
+            CONF="US New York City.conf";;
         east)
-            CONF="US-East.conf";;
+            CONF="US East.conf";;
         west)
-            CONF="US-West.conf";;
+            CONF="US West.conf";;
     esac
-    openvpn --mute-replay-warnings --config /etc/openvpn/client/$CONF &
+    openvpn --mute-replay-warnings --config "/etc/openvpn/pia/$CONF" &
 
     sleep 7
 
@@ -49,10 +49,7 @@ if [ "$action" == "start" ]; then
     iptables -A OUTPUT -o lo -j ACCEPT
     iptables -A OUTPUT -d 209.222.18.222/32 -j ACCEPT
     iptables -A OUTPUT -d 209.222.18.218/32 -j ACCEPT
-    # iptables -A INPUT -s 192.168.0.0/24 -j ACCEPT
-    # iptables -A OUTPUT -d 192.168.0.0/24 -j ACCEPT
-    # iptables -A OUTPUT -d ${myip}/32 -j ACCEPT
-    iptables -A OUTPUT -p udp -m udp --dport 1197 -j ACCEPT
+    iptables -A OUTPUT -p udp -m udp --dport 1198 -j ACCEPT
     iptables -A OUTPUT -o tun+ -j ACCEPT
     iptables -A OUTPUT -j REJECT --reject-with icmp-net-unreachable
 
@@ -70,10 +67,10 @@ elif [ "$action" == "stop" ]; then
     iptables -t nat -X
     iptables -t mangle -F
     iptables -t mangle -X
-    iptables -t raw -F
-    iptables -t raw -X
-    iptables -t security -F
-    iptables -t security -X
+    # iptables -t raw -F
+    # iptables -t raw -X
+    # iptables -t security -F
+    # iptables -t security -X
     iptables -P INPUT ACCEPT
     iptables -P FORWARD ACCEPT
     iptables -P OUTPUT ACCEPT

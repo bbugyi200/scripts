@@ -5,6 +5,7 @@
 import enum
 import shutil
 import subprocess as sp  # noqa: F401
+import sys
 
 import gutils
 
@@ -28,6 +29,7 @@ class PackageNotFound(RuntimeError):
 
 def main():
     log.debug('Args: %s', args)
+
     if args.category is None:
         out = sp.check_output(['ecat', args.package])
         category = out.decode().strip()
@@ -150,6 +152,10 @@ def set_uflags(uflags, category):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        sp.check_call(['vim', pack_use_fpath])
+        sys.exit(0)
+
     parser = gutils.ArgumentParser()
     parser.add_argument('category', nargs='?', help='The name of the package\'s category.')
     parser.add_argument('package', help='The name of the package.')

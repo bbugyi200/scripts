@@ -9,4 +9,16 @@ if [[ -z "$1" ]]; then
     exit 2
 fi
 
-emerge --search "%/$1$" | grep "^\*" | awk '{print $2}' | awk -F'/' '{print $1}'
+if [[ "$1" == "-x" ]]; then
+    shift
+    clipboard=true
+fi
+
+package="$1"; shift
+category="$(emerge --search "%/$package$" | grep "^\*" | awk '{print $2}' | awk -F'/' '{print $1}')"
+
+if [[ "$clipboard" = true ]]; then
+    printf "$category/$package" | xclip -sel clip
+else
+    printf "$category"
+fi

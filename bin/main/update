@@ -4,10 +4,19 @@
 #  Run Full System Update  #
 ############################
 
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
 confirm "generate_mirrors"
-confirm "sudo pacman -Syyu"
-confirm "rm -rf /tmp/builds; mkdir /tmp/builds; cd /tmp/builds && cower -vud && buildall"
-confirm "gem update"
-confirm "npm update"
-confirm "cd ~/.xmonad && stack install && xmonad --recompile"
-confirm "systemctl reboot -i"
+confirm "emerge --sync"
+confirm "emerge --ask --update --deep --newuse @world"
+confirm "sudo /sbin/reboot"
+
+########## Write timestamp to file
+DATA_DIR=/home/$USER/.local/share/"$(basename "$0")"
+[[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
+
+TIMESTAMP_FILE=$DATA_DIR/timestamp
+date +"%m/%d/%y" > "$TIMESTAMP_FILE"

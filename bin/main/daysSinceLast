@@ -6,11 +6,13 @@ from datetime import datetime
 
 
 if sys.argv[1] == "--update":
-    cmd_output = os.popen('grep -e ".*starting full.*" /var/log/pacman.log | tail -1 | cut -d "[" -f2 | cut -d "]" -f1')
-    date_str = cmd_output.read().rstrip()
-    last_updt = parse(date_str)
-    delta = datetime.today() - last_updt
-    days = delta.days
+    try:
+        date_str = open('/home/bryan/.local/share/update/timestamp', 'r').read().rstrip()
+        last_clean = parse(date_str)
+        delta = datetime.today() - last_clean
+        days = delta.days
+    except FileNotFoundError:
+        days = 99999
 
 
 elif sys.argv[1] == "--cleanup":

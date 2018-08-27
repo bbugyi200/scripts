@@ -1,0 +1,13 @@
+#!/bin/bash
+
+############################
+#  Run Full System Update  #
+############################
+
+confirm "generate_mirrors"
+confirm "sudo pacman -Syyu"
+confirm "rm -rf /tmp/builds; mkdir /tmp/builds; cd /tmp/builds && cower -vud && buildall"
+confirm "gem update"
+confirm "npm update"
+confirm "cd ~/.xmonad && stack install && xmonad --recompile"
+confirm "systemctl reboot -i"

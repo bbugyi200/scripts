@@ -33,6 +33,12 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
+##########################################
+#  ROOT_DUPLICATE_DIRS Pre-stow Actions  #
+##########################################
+# The directories listed in ROOT_DUPLICATE_DIRS will be removed from the /root folder before
+# running stow commands and then a recursive copy is made from /home/bryan/<DIR> to /root/<DIR>
+# after the stow commands have concluded.
 ROOT_DUPLICATE_DIRS=(".ssh")
 if [[ "$FLAG" != "-D" ]]; then
     for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
@@ -65,9 +71,9 @@ stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib
 
-#####################
-#  Cleanup Actions  #
-#####################
+###########################################
+#  ROOT_DUPLICATE_DIRS Post-stow Actions  #
+###########################################
 if [[ "$FLAG" != "-D" ]]; then
     for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
         rm -rf /root/"$D"

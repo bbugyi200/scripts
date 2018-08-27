@@ -3,4 +3,4 @@
 [ -d /tmp/poll-weather ] || mkdir /tmp/poll-weather
 [ -p /tmp/poll-weather/fifo ] || mkfifo /tmp/poll-weather/fifo
 
-poll-weather > /tmp/poll-weather/fifo
+/usr/local/bin/poll-weather > /tmp/poll-weather/fifo

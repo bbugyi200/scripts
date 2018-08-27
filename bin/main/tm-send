@@ -30,8 +30,8 @@ if [[ -n "$socket_name" ]]; then
 
     case "$action" in
         'clear' )
-            case $active_program in
-                *"MATLAB"* )
+            case ${active_program,,} in
+                *"matlab"* )
                     CMD="clc";;
                 *"ghc"* )
                     CMD=":! clear";;
@@ -39,7 +39,7 @@ if [[ -n "$socket_name" ]]; then
                     CMD="shell clear";;
                 *"sqlite3"* )
                     CMD=".shell clear";;
-                *"WeeChat"* )
+                *"weechat"* )
                     PRE="a C-u"
                     CMD="/buffer clear";;
                 *"vim"* )
@@ -48,7 +48,7 @@ if [[ -n "$socket_name" ]]; then
                     CMD="clear";;
             esac;;
         'quit' )
-            case $active_program in
+            case ${active_program,,} in
                 *"ghc"* )
                     CMD=":quit";;
                 *"gdb"* )
@@ -59,7 +59,7 @@ if [[ -n "$socket_name" ]]; then
                     CMD="q";;
                 *"python"* )
                     CMD="exit()";;
-                *"WeeChat"* )
+                *"weechat"* )
                     PRE="a C-u"
                     CMD="/quit";;
                 *"bc"* )

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+###################################################################
+#  Prints List of Explicitly Installed Packages (Gentoo ebuilds)  #
+###################################################################
+
+if [[ "$1" == "-D" ]]; then
+    shift
+    sort_opts="-n"
+else
+    sort_opts="-k4"
+fi
+
+if [[ "$1" == "-o" ]]; then
+    shift
+    pkgname_only=true
+fi
+
+
+function eix_cmd() {
+    eix --selected-file '-I*' --format '<installedversions:DATESORT>'
+}
+
+
+if [[ "$pkgname_only" = true ]]; then
+    eix_cmd | cut -f3
+else
+    eix_cmd | cut -f2-3 | sort "$sort_opts"
+fi

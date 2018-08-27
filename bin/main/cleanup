@@ -4,29 +4,30 @@
 #  Runs periodic maintenance tasks meant to cleanup the filesystem.  #
 ######################################################################
 
-########## Maintenance Tasks
-confirm "sudo pacman -Rns $(pacman -Qtdq | paste -sd " " -)"
-
-confirm "sudo paccache -r"
-
+# ---------- Main Logic ----------
 confirm "sort_qb_quickmarks"
 
-xprint -x "ls -a ~/.local/share/Trash/files"
-confirm "sudo rm -rf ~/.local/share/Trash/files/*"
+D="/home/bryan/.local/share/Trash/files"
+xprint -x "ls -a $D"
+confirm "rm -rf $D && mkdir $D"
 
-xprint -x "ls -a ~/Downloads"
-confirm "safe-rm -rf ~/Downloads/*"
+D="/root/.local/share/Trash/files"
+sudo -i xprint -x "ls -a $D"
+confirm "sudo rm -rf $D && sudo mkdir $D"
+
+D="/home/bryan/Downloads"
+xprint -x "ls -a $D"
+confirm "safe-rm -rf $D && mkdir $D"
 
 xprint -x "ls -a /var/tmp/*.log"
 confirm "safe-rm /var/tmp/*.log"
 
-xprint -D 2 "\nTmuxinator sessions that have not been used in over 60 days:\n"
-find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60 -execdir confirm "safe-rm {}" ";"
+if [[ -n "$(find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60)" ]]; then
+    xprint -D 2 "\nTmuxinator sessions that have not been used in over 60 days:\n"
+    find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60 -execdir confirm "safe-rm {}" ";"
+fi
 
-xprint -D 3 "\nCleanup your package manager by manually uninstalling any foreign packages that you are no longer using.\n"
-xprint -x -D 10 "pacman -Qm | less"
-
-########## Write timestamp to file
+# ---------- Write timestamp to file ----------
 DATA_DIR=/home/$USER/.local/share/"$(basename "$0")"
 [[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
 

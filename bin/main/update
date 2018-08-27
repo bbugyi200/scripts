@@ -1,21 +1,18 @@
 #!/bin/bash
 
-############################
-#  Run Full System Update  #
-############################
-
-# ensure running as root
-if [ "$(id -u)" != "0" ]; then
-  exec sudo "$0" "$@"
-fi
+######################################
+#  Runs System Maintenance Commands  #
+######################################
 
 confirm "generate_mirrors"
-confirm "emerge --sync"
-confirm "emerge --ask --update --deep --newuse @world"
+confirm "sudo emerge --sync"
+confirm "sudo emerge --ask --update --deep --newuse @world" && notify-send "$(basename "$0")" "Full system update is complete."
+confirm "sudo emerge --ask --depclean"
+confirm "sudo revdep-rebuild"
 confirm "sudo /sbin/reboot"
 
-########## Write timestamp to file
-DATA_DIR=/home/$USER/.local/share/"$(basename "$0")"
+# ---------- Write timestamp to file ----------
+DATA_DIR=/home/bryan/.local/share/"$(basename "$0")"
 [[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
 
 TIMESTAMP_FILE=$DATA_DIR/timestamp

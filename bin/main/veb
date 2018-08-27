@@ -36,7 +36,7 @@ else
 
     package_dir="/usr/local/portage/$category/$package"
     mkdir -p "$package_dir" &> /dev/null
-    pushd "$package_dir" || exit 1
-    vim "$package-$version.ebuild"
+    pushd "/usr/local/portage" || exit 1
+    vim "$package_dir/$package-$version.ebuild"
     popd || exit 1
 fi

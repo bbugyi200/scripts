@@ -12,17 +12,17 @@ fi
 overlay_dir=/usr/local/portage
 
 if [[ -z "$1" ]]; then
-    echo "usage: veb PACKAGE"
-    exit 2
+    pushd "/usr/local/portage" || exit 1
+    vim -c 'exe "normal \<C-p>"'
+    popd || exit 1
+    exit 0
 fi
 
 if [[ -z "$2" ]]; then
     package="$1"; shift
+    pushd "/usr/local/portage" || exit 1
     vim "$(find "$overlay_dir" -type f -name "$package*ebuild")"
-    find "$overlay_dir" -type f -name "$package*ebuild" -execdir repoman manifest ";"
-
-    echo
-    confirm "esync $package"
+    popd || exit 1
 else
     category="$1"; shift
     package="$1"; shift
@@ -38,8 +38,5 @@ else
     mkdir -p "$package_dir" &> /dev/null
     pushd "$package_dir" || exit 1
     vim "$package-$version.ebuild"
-
-    echo
-    confirm "repoman manifest"
-    confirm "esync $package"
+    popd || exit 1
 fi

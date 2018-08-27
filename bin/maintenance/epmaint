@@ -4,7 +4,7 @@
 #  Interface for System Maintenance Tasks  #
 ############################################
 
-eval set -- "$(getopt -o "d,u,c" -l "debug,update,cleanup" -- "$@")"
+eval set -- "$(getopt -o "d,u,c" -l "debug,update,cleanup,check" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -16,6 +16,9 @@ while [[ -n "$1" ]]; do
            ;;
        -c|--cleanup )
            cleanup
+           ;;
+       --check )
+           maintCheck
            ;;
        -- )
            shift

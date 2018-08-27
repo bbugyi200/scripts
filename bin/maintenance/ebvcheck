@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+
+"""Ebuild Version Check for Portage Overlay"""
+
+import os
+import subprocess as sp  # noqa: F401
+import re
+
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main():
+    all_files = get_all_files(args.overlay_dir)
+    all_ebuilds = [f for f in all_files if f.endswith('.ebuild')]
+
+    all_pkgs = []
+    for ebuild in all_ebuilds:
+        filename = os.path.basename(ebuild)
+        all_pkgs.append(re.sub('-([0-9])+\..*ebuild$', '', filename))
+
+    log.debug('All Packages: %s', all_pkgs)
+    log.debug('Number of packages: %s', len(all_pkgs))
+
+    msg_fmt = '{}:: {}'
+
+    for pkg in all_pkgs:
+        ps = sp.check_output(['euscan', pkg])
+        out = ps.decode().strip()
+        log.debug('Euscan Output: %s', out)
+
+        out_list = out.split('\n')
+
+        newversion_marker = 'Upstream Version: '
+        for line in out_list:
+            if newversion_marker in line:
+                fail_msg_fmt = msg_fmt.format(pkg, 'FAILED  (New Version: {})')
+                print(fail_msg_fmt.format(line.replace(newversion_marker, '')))
+                break
+        else:
+            print(msg_fmt.format(pkg, 'PASSED'))
+
+    
+
+
+def get_all_files(dir):
+    F = []
+    for root, dirs, files in os.walk(dir):
+        for name in files:
+            F.append(os.path.join(root, name))
+    return F
+    
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('-D', dest='overlay_dir', default='/usr/local/portage',
+                        help='Location (directory) of the portage overlay.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

@@ -77,7 +77,7 @@ if [[ -n "$socket_name" ]]; then
                 *"vim"* )  # Precautionary Check (some zsh/bash scripts execute vim)
                     logger "$(basename "$0"): Unable to perform '$action'. Vim has been detected!"
                     exit 1;;
-                *"zsh"* | *"bash"* )
+                *"zsh"* | *"bash"* | *"su "* )
                     CMD=$action;;
                 * )
                     logger "$(basename "$0"): Unable to perform '$action'. Not in zsh or bash shell."

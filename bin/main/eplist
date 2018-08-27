@@ -1,29 +1,43 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-###################################################################
-#  Prints List of Explicitly Installed Packages (Gentoo ebuilds)  #
-###################################################################
+"""Prints List of Explicitly Installed Packages (Gentoo ebuilds)"""
 
-if [[ "$1" == "-D" ]]; then
-    shift
-    sort_opts="-n"
-else
-    sort_opts="-k4"
-fi
+import subprocess as sp  # noqa: F401
 
-if [[ "$1" == "-o" ]]; then
-    shift
-    pkgname_only=true
-fi
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
 
 
-function eix_cmd() {
-    eix --selected-file '-I*' --format '<installedversions:DATESORT>'
-}
+def main():
+    cmd_fmt = "eix --selected-file -I* --format '<installedversions:DATESORT>' | {}"
+
+    if args.pkgname_only:
+        cmd = cmd_fmt.format('cut -f3')
+    else:
+        cmd_fmt = cmd_fmt.format('cut -f2-3 | sort {}')
+
+        if args.date_sort:
+            cmd = cmd_fmt.format('-n')
+        else:
+            cmd = cmd_fmt.format('-k4')
+
+    sp.check_call(cmd, shell=True)
 
 
-if [[ "$pkgname_only" = true ]]; then
-    eix_cmd | cut -f3
-else
-    eix_cmd | cut -f2-3 | sort "$sort_opts"
-fi
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    mx_group = parser.add_mutually_exclusive_group()
+    mx_group.add_argument('-D', dest='date_sort', action='store_true',
+                          help='Sort list of packages by install date. Otherwise, packages will '
+                               'be sorted alphabetically.')
+    mx_group.add_argument('-o', dest='pkgname_only', action='store_true',
+                          help="Print only the package's name (omit the install date).")
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

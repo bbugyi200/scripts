@@ -1,0 +1,6 @@
+#!/bin/bash
+
+[ -d /tmp/poll-timew ] || mkdir /tmp/poll-timew
+[ -p /tmp/poll-timew/fifo ] || mkfifo /tmp/poll-timew/fifo
+
+/usr/local/bin/poll-timew > /tmp/poll-timew/fifo

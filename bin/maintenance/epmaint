@@ -1,0 +1,25 @@
+#!/bin/bash
+
+############################################
+#  Interface for System Maintenance Tasks  #
+############################################
+
+eval set -- "$(getopt -o "d,u,c" -l "debug,update,cleanup" -- "$@")"
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x;;
+       -u|--update )
+           update
+           ;;
+       -c|--cleanup )
+           cleanup
+           ;;
+       -- )
+           shift
+           break;;
+    esac
+    shift
+done

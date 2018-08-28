@@ -2,18 +2,18 @@
 
 # dropbox backup
 DROPBOX=/media/bryan/hercules/backup/dropbox/weekly
+[ -d $DROPBOX ] || mkdir -p $DROPBOX
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
 date > $DROPBOX/backup.txt
 
 # etc backup
 ETC='/media/bryan/hercules/backup/etc/weekly'
-rsync -av --delete /etc $ETC
+[ -d $ETC ] || mkdir -p $ETC
+rsync -av --delete /etc/ $ETC
 date > $ETC/backup.txt
 
-# world file backup
-cp /var/lib/portage/world /media/bryan/hercules/backup/portage/weekly.txt
-
-# root backup
-rsync -av --delete /home/ /media/bryan/hercules/backup/root/home/
-rsync -av --delete /etc/ /media/bryan/hercules/backup/root/etc/
-rsync -av --delete /var/ /media/bryan/hercules/backup/root/var/
+# var backup
+VAR='/media/bryan/hercules/backup/var/weekly'
+[ -d $VAR ] || mkdir -p $VAR
+rsync -av --exclude swap --delete /var/ $VAR
+date > $VAR/backup.txt

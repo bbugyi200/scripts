@@ -2,19 +2,27 @@
 
 # dropbox backup
 DROPBOX=/media/bryan/hercules/backup/dropbox
-[[ -d $DROPBOX/2months ]] || mkdir -p $DROPBOX/2months
-[[ -d $DROPBOX/3months ]] || mkdir -p $DROPBOX/3months
+[ -d $DROPBOX/monthly ] || mkdir -p $DROPBOX/monthly
+[ -d $DROPBOX/2months ] || mkdir -p $DROPBOX/2months
+[ -d $DROPBOX/3months ] || mkdir -p $DROPBOX/3months
 rm -rf $DROPBOX/3months && mv $DROPBOX/2months $DROPBOX/3months && cp -r $DROPBOX/monthly $DROPBOX/2months
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX/monthly/
 date > $DROPBOX/monthly/backup.txt
 
 # etc backup
 ETC='/media/bryan/hercules/backup/etc'
-[[ -d $ETC/2months ]] || mkdir -p $ETC/2months
-[[ -d $ETC/3months ]] || mkdir -p $ETC/3months
+[ -d $ETC/monthly ] || mkdir -p $ETC/monthly
+[ -d $ETC/2months ] || mkdir -p $ETC/2months
+[ -d $ETC/3months ] || mkdir -p $ETC/3months
 rm -rf $ETC/3months && mv $ETC/2months $ETC/3months && cp -r $ETC/monthly $ETC/2months
-rsync -av --delete /etc $ETC/monthly/
+rsync -av --delete /etc/ $ETC/monthly/
 date > $ETC/monthly/backup.txt
 
-# world file backup
-cp /var/lib/portage/world /media/bryan/hercules/backup/portage/monthly.txt
+# var backup
+VAR='/media/bryan/hercules/backup/var'
+[ -d $VAR/monthly ] || mkdir -p $VAR/monthly
+[ -d $VAR/2months ] || mkdir -p $VAR/2months
+[ -d $VAR/3months ] || mkdir -p $VAR/3months
+rm -rf $VAR/3months && mv $VAR/2months $VAR/3months && cp -r $VAR/monthly $VAR/2months
+rsync -av --exclude swap --delete /var/ $VAR/monthly/
+date > $VAR/monthly/backup.txt

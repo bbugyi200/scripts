@@ -2,8 +2,19 @@
 
 # dropbox backup
 DROPBOX=/media/bryan/hercules/backup/dropbox
+[[ -d $DROPBOX/2months ]] || mkdir -p $DROPBOX/2months
+[[ -d $DROPBOX/3months ]] || mkdir -p $DROPBOX/3months
 rm -rf $DROPBOX/3months && mv $DROPBOX/2months $DROPBOX/3months && cp -r $DROPBOX/monthly $DROPBOX/2months
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX/monthly/
 date > $DROPBOX/monthly/backup.txt
 
-/usr/local/bin/eplist -o > /media/bryan/hercules/backup/portage/monthly.txt
+# etc backup
+ETC='/media/bryan/hercules/backup/etc'
+[[ -d $ETC/2months ]] || mkdir -p $ETC/2months
+[[ -d $ETC/3months ]] || mkdir -p $ETC/3months
+rm -rf $ETC/3months && mv $ETC/2months $ETC/3months && cp -r $ETC/monthly $ETC/2months
+rsync -av --delete /etc $ETC/monthly/
+date > $ETC/monthly/backup.txt
+
+# world file backup
+cp /var/lib/portage/world /media/bryan/hercules/backup/portage/monthly.txt

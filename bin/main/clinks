@@ -17,7 +17,7 @@ if [[ "$FLAG" != "-D" ]]; then
     find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /root/.local/share/{} ";" &> /dev/null
 
     # Directories inside /home/<user> that should be created before running clinks
-    HOME_DIRS=(".gnupg" ".matlab" ".xmonad")
+    HOME_DIRS=(".gnupg" ".matlab" ".xmonad" ".ssh")
 
     for D in "${HOME_DIRS[@]}"; do
         mkdir /home/bryan/"$D" &> /dev/null
@@ -64,7 +64,6 @@ stow --dir=/home/bryan/Dropbox/scripts --target=/usr/local/python "$FLAG" pymodu
 ##### DOTFILES
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan "$FLAG" home
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/root "$FLAG" home
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/etc "$FLAG" etc
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr "$FLAG" usr
 
 ##### C PROJECTS

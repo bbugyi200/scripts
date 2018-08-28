@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+"""Interface for System Maintenance Tasks"""
+
+import subprocess as sp  # noqa: F401
+
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main():
+    command_lists = []
+
+    if args.update:
+        command_lists.append(['update'])
+    if args.cleanup:
+        command_lists.append(['cleanup'])
+    if args.ebvcheck:
+        command_lists.append(['ebvcheck'])
+    if args.maint_check:
+        command_lists.append(['maintCheck'])
+
+    for cmd_list in command_lists:
+        sp.check_call(cmd_list)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('-u', dest='update', action='store_true',
+                        help='Update the machine.')
+    parser.add_argument('-c', dest='cleanup', action='store_true',
+                        help='Run cleanup tasks.')
+    parser.add_argument('-e', dest='ebvcheck', action='store_true',
+                        help='Check if local overlay ebuild versions are up to date.')
+    parser.add_argument('--check', dest='maint_check', action='store_true',
+                        help='Check if any maintenance is due.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

@@ -35,6 +35,8 @@ if [ "$action" == "start" ]; then
             CONF="US East.conf";;
         west)
             CONF="US West.conf";;
+        *)
+            CONF="$vpn.conf";;
     esac
     openvpn --mute-replay-warnings --config "/etc/openvpn/pia/$CONF" &
 

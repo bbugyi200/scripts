@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if [[ -z "$1" ]]; then
-    sudo vim /etc/portage/make.conf /home/bryan/Dropbox/dotfiles/home/extras/make.conf
-else
-    /usr/bin/euse "$@"
-fi

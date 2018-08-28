@@ -1,11 +1,17 @@
 #!/bin/bash
 
+# dropbox backup
 DROPBOX=/media/bryan/hercules/backup/dropbox/weekly
-
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
 date > $DROPBOX/backup.txt
 
-/usr/local/bin/eplist -o > /media/bryan/hercules/backup/portage/weekly.txt
+# etc backup
+ETC='/media/bryan/hercules/backup/etc/weekly'
+rsync -av --delete /etc $ETC
+date > $ETC/backup.txt
+
+# world file backup
+cp /var/lib/portage/world /media/bryan/hercules/backup/portage/weekly.txt
 
 # root backup
 rsync -av --delete /home/ /media/bryan/hercules/backup/root/home/

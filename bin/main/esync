@@ -12,6 +12,6 @@ fi
 
 pushd "/usr/local/portage" || exit 1
 repoman manifest
-git add -A && git commit -m "Update $1 package" && git push
+git add -A && git commit -m "Update $1 package(s)" && git push
 layman -s bbugyi200
 popd || exit 1

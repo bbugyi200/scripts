@@ -5,13 +5,9 @@ DROPBOX=/media/bryan/hercules/backup/dropbox/weekly
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
 date > $DROPBOX/backup.txt
 
-pacman -Qqe > /media/bryan/hercules/backup/pacman/weekly.txt
-tar -cjf /media/bryan/hercules/backup/pacman/pacman_database.tar.bz2 /var/lib/pacman/local
+/usr/local/bin/eplist -o > /media/bryan/hercules/backup/portage/weekly.txt
 
 # root backup
 rsync -av --delete /home/ /media/bryan/hercules/backup/root/home/
 rsync -av --delete /etc/ /media/bryan/hercules/backup/root/etc/
 rsync -av --delete /var/ /media/bryan/hercules/backup/root/var/
-
-# pacman package list backup
-pacman -Qqe > /media/bryan/hercules/backup/pacman/monthly.txt

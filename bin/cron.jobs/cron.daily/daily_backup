@@ -6,4 +6,4 @@ rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
 date > $DROPBOX/backup.txt
 
 # package list backup
-pacman -Qqe > /media/bryan/hercules/backup/pacman/daily.txt
+/usr/local/bin/eplist -o > /media/bryan/hercules/backup/portage/daily.txt

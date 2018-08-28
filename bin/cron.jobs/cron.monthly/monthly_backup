@@ -5,3 +5,5 @@ DROPBOX=/media/bryan/hercules/backup/dropbox
 rm -rf $DROPBOX/3months && mv $DROPBOX/2months $DROPBOX/3months && cp -r $DROPBOX/monthly $DROPBOX/2months
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX/monthly/
 date > $DROPBOX/monthly/backup.txt
+
+/usr/local/bin/eplist -o > /media/bryan/hercules/backup/portage/monthly.txt

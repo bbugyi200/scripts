@@ -17,13 +17,13 @@ def main():
     command_lists = []
 
     if args.update:
-        command_lists.append(['update'])
+        command_lists.append(['eupdate'])
     if args.cleanup:
-        command_lists.append(['cleanup'])
+        command_lists.append(['ecleanup'])
     if args.ebvcheck:
         command_lists.append(['ebvcheck'])
     if args.maint_check:
-        command_lists.append(['maintCheck'])
+        command_lists.append(['emaint_check'])
 
     for cmd_list in command_lists:
         sp.check_call(cmd_list)

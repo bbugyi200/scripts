@@ -21,7 +21,7 @@ if [[ "$FLAG" != "-D" ]]; then
 
     for D in "${HOME_DIRS[@]}"; do
         mkdir /home/bryan/"$D" &> /dev/null
-        mkdir /root/"$D" &> /dev/null
+        sudo mkdir /root/"$D" &> /dev/null
     done
 
 fi
@@ -59,17 +59,17 @@ stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" main
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" maintenance
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmonad
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" ProtectMyLaptop
+
+##### MODULES / LIBRARIES / HEADERS
 stow --dir=/home/bryan/Dropbox/scripts --target=/usr/local/python "$FLAG" pymodules
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
+stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib
 
 ##### DOTFILES
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan "$FLAG" home
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/root "$FLAG" home
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr "$FLAG" usr
-
-##### C PROJECTS
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib
 
 ###########################################
 #  ROOT_DUPLICATE_DIRS Post-stow Actions  #

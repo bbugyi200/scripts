@@ -1,0 +1,14 @@
+#!/bin/bash
+
+###################
+#  Start TW Task  #
+###################
+
+task start.not: stop
+
+if [[ -n "$1" ]]; then
+    # Hook will stop any started tasks (not needed here)
+    task start "$1"
+else
+    task
+fi

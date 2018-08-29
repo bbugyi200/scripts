@@ -1,0 +1,15 @@
+#!/bin/bash
+
+###################################################
+#  Wrapper for 'emerge' that Installs Package(s)  #
+###################################################
+
+sudo emerge --ask "$@" 
+EC="$?"
+
+if [[ "$EC" -eq 1 ]] && [[ -n "$(find /etc/portage -name "._cfg0000*")" ]]; then
+    sudo dispatch-conf && clear && sudo emerge --ask "$@"
+    exit "$?"
+fi
+
+exit "$EC"

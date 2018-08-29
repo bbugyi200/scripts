@@ -24,5 +24,5 @@ VAR='/media/bryan/hercules/backup/var'
 [ -d $VAR/2months ] || mkdir -p $VAR/2months
 [ -d $VAR/3months ] || mkdir -p $VAR/3months
 rm -rf $VAR/3months && mv $VAR/2months $VAR/3months && cp -r $VAR/monthly $VAR/2months
-rsync -av --exclude swap --delete /var/ $VAR/monthly/
+rsync -av --delete /var/ $VAR/monthly/
 date > $VAR/monthly/backup.txt

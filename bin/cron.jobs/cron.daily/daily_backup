@@ -15,5 +15,5 @@ date > $ETC/backup.txt
 # var backup
 VAR='/media/bryan/hercules/backup/var/daily'
 [ -d $VAR ] || mkdir -p $VAR
-rsync -av --exclude swap --delete /var/ $VAR
+rsync -av --delete /var/ $VAR
 date > $VAR/backup.txt

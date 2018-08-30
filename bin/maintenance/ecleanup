@@ -7,8 +7,8 @@
 # ---------- Main Logic ----------
 confirm "sort_qb_quickmarks"
 
-confirm "eclean --deep packages"
-confirm "eclean --deep distfiles"
+confirm "sudo eclean --deep packages"
+confirm "sudo eclean --deep distfiles"
 
 D="/home/bryan/.local/share/Trash/files"
 xprint -x "ls -a $D"

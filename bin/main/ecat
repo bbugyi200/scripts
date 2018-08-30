@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###################################################################
-#  Attempts to Find Package's Corresponding Category  #
+#  Attempts to Find Package's Corresponding Category              #
 ###################################################################
 
 if [[ -z "$1" ]]; then
@@ -15,7 +15,26 @@ if [[ "$1" == "-x" ]]; then
 fi
 
 package="$1"; shift
-category="$(emerge --search "%/$package$" | grep "^\*" | awk '{print $2}' | awk -F'/' '{print $1}')"
+category="$(eix --nocolor --only-names "$package" | awk -F'/' '{print $1}')"
+
+if [[ -z "$category" ]]; then
+    category="$(emerge --search "%/$package$" | grep "^\*" | awk '{print $2}' | awk -F'/' '{print $1}')"
+fi
+
+if [[ -z "$category" ]]; then
+    notify-send -u critical "$(basename "$0")" "The category could NOT be found."
+fi
+
+if [[ "$(echo "$category" | wc -l)" -gt 1 ]]; then
+    error_msg="Unable to Determine the packages category."
+    if [[ "$clipboard" = true ]]; then
+        notify-send -u critical "$(basename "$0")" "$error_msg"
+    else
+        printf "ERROR: %s" "$error_msg"
+    fi
+
+    exit 1
+fi
 
 if [[ "$clipboard" = true ]]; then
     printf "$category/$package" | xclip -sel clip

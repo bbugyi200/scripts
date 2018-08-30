@@ -16,14 +16,18 @@ if [[ "$FLAG" != "-D" ]]; then
     find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /home/bryan/.local/share/{} ";" &> /dev/null
     find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /root/.local/share/{} ";" &> /dev/null
 
-    # Directories inside /home/<user> that should be created before running clinks
-    HOME_DIRS=(".gnupg" ".matlab" ".xmonad" ".ssh")
-
+    # Directories inside /home/<user> that should be created before stowing configs
+    HOME_DIRS=(".config" ".gnupg" ".matlab" ".ssh" ".xmonad")
     for D in "${HOME_DIRS[@]}"; do
         mkdir /home/bryan/"$D" &> /dev/null
         sudo mkdir /root/"$D" &> /dev/null
     done
 
+    # Directories inside /usr/local that should be created before stowing configs
+    USR_DIRS=("python" "src" "include" "lib")
+    for D in "${USR_DIRS[@]}"; do
+        sudo mkdir /usr/local/"$D" &> /dev/null
+    done
 fi
 
 ############################
@@ -40,11 +44,9 @@ fi
 # running stow commands and then a recursive copy is made from /home/bryan/<DIR> to /root/<DIR>
 # after the stow commands have concluded.
 ROOT_DUPLICATE_DIRS=(".ssh")
-if [[ "$FLAG" != "-D" ]]; then
-    for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
-        rm -rf /root/"$D"
-    done
-fi
+for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
+    rm -rf /root/"$D"
+done
 
 ##############################
 #  use 'stow' to make links  #
@@ -74,7 +76,7 @@ stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr "$FLAG" usr
 ###########################################
 #  ROOT_DUPLICATE_DIRS Post-stow Actions  #
 ###########################################
-if [[ "$FLAG" != "-D" ]]; then
+if [[ "$FLAG" != "-D" ]] && [[ -d /home/bryan/"$D" ]]; then
     for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
         rm -rf /root/"$D"
         mkdir -p /root/"$D"

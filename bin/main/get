@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+
+"""Wrapper for 'emerge' that Installs Package(s)"""
+
+import argparse
+import subprocess as sp  # noqa: F401
+import sys
+
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main(args):
+    log.vdebug('Packages: %s', args.packages)
+    log.vdebug('World: %s', args.world)
+    emerge_cmd = get_emerge_cmd_list(args.packages, world=args.world)
+
+    log.debug('Emerge Command: %s', emerge_cmd)
+    rc = sp.call(emerge_cmd)
+
+    if rc == 1:
+        log.debug('Checking for meta diff config files.')
+        ps = sp.check_output('find /etc/portage -name "._cfg0000*"', shell=True)
+        out = ps.decode().strip()
+
+        if out != '':
+            log.debug('Merging config files.')
+            try:
+                rc = sp.check_call('sudo dispatch-conf && clear && {}'.format(' '.join(emerge_cmd)), shell=True)
+            except sp.CalledProcessError:
+                pass
+
+    if rc == 0 and not args.world:
+        add_to_shared_set(args.packages)
+
+    sys.exit(rc)
+
+
+def get_emerge_cmd_list(packages, *, world=False):
+    cmd_list = ['sudo', 'emerge', '--ask']
+
+    if world:
+        opts = []
+    else:
+        opts = ['--oneshot']
+
+    cmd_list.extend(opts)
+    cmd_list.extend(packages)
+    return cmd_list
+
+
+def add_to_shared_set(packages):
+    log.debug('Adding packages to @shared set.')
+    shared_set_fname = '/etc/portage/sets/shared'
+    with open(shared_set_fname, 'r') as f:
+        lines = f.readlines()
+
+    for package in packages:
+        out = sp.check_output(['ecat', package])
+        category = out.decode().strip()
+        full_package_name = '{}/{}'.format(category, package)
+
+        log.debug('Full Package Name: %s', full_package_name)
+        lines.append(full_package_name + '\n')
+
+    with open(shared_set_fname, 'w') as f:
+        f.writelines(sorted(set(lines)))
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('packages', nargs=argparse.REMAINDER, help='Package(s) to install.')
+    parser.add_argument('-w', '--world', action='store_true', help='Add package(s) to world set ONLY.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

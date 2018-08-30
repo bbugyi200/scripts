@@ -1,0 +1,36 @@
+#!/bin/bash
+
+####################################################
+#  Wrapper for `emerge` that Deletes a Package(s)  #
+####################################################
+
+eval set -- "$(getopt -o "d,D" -l "debug,depclean" -- "$@")"
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x;;
+       -D|--depclean )
+           depclean=true
+           ;;
+       -- )
+           shift
+           break;;
+    esac
+    shift
+done
+
+if [[ "$depclean" = true ]]; then
+    OPT="--depclean"
+else
+    OPT="--unmerge"
+fi
+
+if sudo emerge --ask "$OPT" "$@"; then
+    for P in "$@"; do
+        sed -i "/$(ecat "$P")\/$P/d" /etc/portage/sets/shared
+    done
+else
+    exit "$?"
+fi

@@ -44,7 +44,8 @@ while true; do
 		'Connecting...' | 'Starting...' | "Can't establish secure internet connection"*)
 			print_icon $RED;;
 		"Dropbox isn't running!")
-			printf "D\n" > $PANEL_FIFO;;
+			# printf "D\n" > $PANEL_FIFO
+            ;;
 		*)
 			print_icon $YELLOW;;
 	esac

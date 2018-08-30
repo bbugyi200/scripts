@@ -27,8 +27,8 @@ if __name__ == "__main__":
         breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
 
         cmd_list = ['khal', 'new', '-a', 'daily']
-        cmd_list.append(breaktime_dt.strftime('%Y-%m-%d %H:%M'))
+        cmd_list.append(breaktime_dt.strftime('%Y-%m-%dT%H:%M'))
         cmd_list.append(' '.join(args.event_name))
         sp.check_call(cmd_list)
 
-        sp.Popen(['calalrms'])
+        sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)

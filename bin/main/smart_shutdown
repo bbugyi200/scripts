@@ -1,4 +1,10 @@
 #!/bin/bash
 
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
 task start.any: stop &> /dev/null
-dbox_sync && notify-send $(basename $0) $(shutdown now)
+sync_portage_configs
+dbox_sync && poweroff

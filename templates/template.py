@@ -13,7 +13,7 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def main():
+def main(args):
     pass
 
 
@@ -22,4 +22,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+        main(args)

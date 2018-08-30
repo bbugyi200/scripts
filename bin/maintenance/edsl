@@ -2,29 +2,54 @@
 
 """Prints out Days Since Last [MAINTEANCE TASK]"""
 
-import sys
+import subprocess as sp
 from dateutil.parser import parse
 from datetime import datetime
 
+import gutils
 
-if sys.argv[1] == "--update":
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main():
+    if args.update:
+        days = get_days('-u')
+    elif args.cleanup:
+        days = get_days('-c')
+
+    print(days)
+
+
+def get_days(opt):
     try:
-        date_str = open('/home/bryan/.local/share/update/timestamp', 'r').read().rstrip()
+        timestamp_fname = '/home/bryan/.local/share/{}/timestamp'.format(_emanage(opt))
+        date_str = open(timestamp_fname, 'r').read().rstrip()
         last_clean = parse(date_str)
         delta = datetime.today() - last_clean
         days = delta.days
     except FileNotFoundError:
         days = 99999
 
-
-elif sys.argv[1] == "--cleanup":
-    try:
-        date_str = open('/home/bryan/.local/share/cleanup/timestamp', 'r').read().rstrip()
-        last_clean = parse(date_str)
-        delta = datetime.today() - last_clean
-        days = delta.days
-    except FileNotFoundError:
-        days = 99999
+    return days
 
 
-print(days)
+def _emanage(opt):
+    cmd_list = ['emanage', '--pretend']
+    cmd_list.append(opt)
+    out = sp.check_output(cmd_list)
+    return out.decode().strip()
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    ex_group = parser.add_mutually_exclusive_group()
+    ex_group.add_argument('--update', action='store_true', help='Days since last update.')
+    ex_group.add_argument('--cleanup', action='store_true', help='Days since last cleanup.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main()

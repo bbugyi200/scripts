@@ -6,7 +6,7 @@
 
 confirm "egenerate_mirrors"
 confirm "sudo emerge --sync"
-confirm "sudo emerge --ask --update --deep --newuse @world" && notify-send "$(basename "$0")" "Full system update is complete."
+confirm "sudo emerge --ask --update --deep --newuse --keep-going @world" && notify-send "$(basename "$0")" "Full system update is complete."
 confirm "sudo emerge --ask --depclean"
 confirm "sudo revdep-rebuild"
 

@@ -3,6 +3,7 @@
 """Interface for System Maintenance Tasks"""
 
 import subprocess as sp  # noqa: F401
+import sys
 
 import gutils
 
@@ -25,6 +26,11 @@ def main():
     if args.maint_check:
         command_lists.append(['emaint_check'])
 
+    if args.pretend:
+        for cmd_list in command_lists:
+            print(' '.join(cmd_list))
+        sys.exit(0)
+
     for cmd_list in command_lists:
         sp.check_call(cmd_list)
 
@@ -39,6 +45,8 @@ if __name__ == "__main__":
                         help='Check if local overlay ebuild versions are up to date.')
     parser.add_argument('--check', dest='maint_check', action='store_true',
                         help='Check if any maintenance is due.')
+    parser.add_argument('--pretend', dest='pretend', action='store_true',
+                        help='Prints the command list instead of executing it.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

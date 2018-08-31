@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 
-"""Ebuild Version Check for Portage Overlay (uses 'app-portage/euscan')"""
+"""Ebuild Version Check for Portage Overlay (uses 'app-portage/euscan').
+
+Used to verify that ebuilds in specified portage overlay are up to date.
+"""
 
 import os
 import subprocess as sp  # noqa: F401
@@ -17,7 +20,8 @@ log = gutils.logging.getEasyLogger(__name__)
 
 def main(args):
     all_files = get_all_files(args.overlay_dir)
-    all_ebuilds = [f for f in all_files if f.endswith('.ebuild')]
+    all_ebuild_paths = [f for f in all_files if f.endswith('.ebuild')]
+    all_ebuilds = [os.path.basename(ebuild_path) for ebuild_path in all_ebuild_paths]
 
     all_pkgs = set()
     for ebuild in all_ebuilds:
@@ -28,23 +32,27 @@ def main(args):
     log.debug('All Packages: %s', all_pkgs)
 
     msg_fmt = '{}:: {}'
+    for ebuild in sorted(all_ebuilds):
+        pkg = re.sub('-([0-9])+\..*ebuild$', '', ebuild)
 
-    for pkg in sorted(all_pkgs):
+        if '9999' in ebuild:
+            print(msg_fmt.format(pkg, gutils.colorize.blue('LIVE BUILD')))
+            continue
+
         ps = sp.check_output(['euscan', pkg])
         out = ps.decode().strip()
         log.debug('Euscan Output: %s', out)
 
         out_list = out.split('\n')
-
         fail_marker = 'Upstream Version: '
         pass_marker = "Didn't find any new version"
         for line in out_list:
             if fail_marker in line:
-                fail_msg_fmt = msg_fmt.format(pkg, '\033[91mFAILED  (New Version: {})\033[0m')
+                fail_msg_fmt = msg_fmt.format(pkg, gutils.colorize.red('FAILED  (New Version: {})'))
                 print(fail_msg_fmt.format(line.replace(fail_marker, '')))
                 break
             if pass_marker in line:
-                print(msg_fmt.format(pkg, '\033[92mPASSED\033[0m'))
+                print(msg_fmt.format(pkg, gutils.colorize.green('PASSED')))
                 break
         else:
             print(msg_fmt.format(pkg, 'UNKNOWN'))

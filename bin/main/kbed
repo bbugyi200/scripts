@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+
+"""Sets LOW, EOS, and BED times in khal based off of BED time only."""
+
+import datetime as dt
+import subprocess as sp  # noqa: F401
+
+from dateutil.parser import parse
+
+import gutils
+
+#######################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
+#######################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+
+
+def main(args):
+    bed_dt = parse(args.bedtime)
+    now_dt = dt.datetime.now()
+
+    if bed_dt < now_dt:
+        bed_dt = bed_dt + dt.timedelta(days=1)
+
+    log.debug('bed_dt: %s', bed_dt)
+
+    eos_dt = bed_dt - dt.timedelta(hours=3)
+    low_dt = bed_dt - dt.timedelta(hours=7)
+
+    for event_dt, event_name in [(low_dt, 'LOW'), (eos_dt, 'EOS'), (bed_dt, 'BED')]:
+        set_khal_event(event_dt, event_name)
+
+    sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+
+def set_khal_event(event_dt, event_name):
+    cmd_list = ['khal', 'new', '-a', 'daily']
+    cmd_list.append(event_dt.strftime('%Y-%m-%dT%H:%M'))
+    cmd_list.append(event_name)
+    sp.check_call(cmd_list)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('bedtime', help="Time to use for BED (HH:MM).")
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

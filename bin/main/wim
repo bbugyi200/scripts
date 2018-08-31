@@ -26,7 +26,12 @@ SCRIPT_PATH="$(find /home/bryan/Dropbox/scripts -type f -name "$CMD")"
 if [[ -n "$SCRIPT_PATH" ]]; then
     vim -c "silent! normal g;" "$SCRIPT_PATH"
 else
-    LOCATION="$(ag "^[A-z]*[ ]*${CMD}[ =(]" /home/bryan/Dropbox/dotfiles/home | awk -F: '{ print "+" $2 " " $1 }')"
+    LOCATION="$(ag "(^(alias|function)[ ]+|^)${CMD}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/dotfiles | awk -F: '{ print "+" $2 " " $1 }')"
+
+    if [[ -z "$LOCATION" ]]; then
+        printf "ERROR: unable to find '%s'." "$CMD"
+        exit 1
+    fi
 
     # LOCATION is now a string of the form "+<N> <path>"
     eval "vim $LOCATION"

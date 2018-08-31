@@ -76,6 +76,11 @@ def add_to_shared_set(packages):
         log.debug('Full Package Name: %s', full_package_name)
         lines.append(full_package_name + '\n')
 
+        # Remove the package name from the world file to ensure that packages are never listed in
+        # both @shared and the world file.
+        cmd_fmt = 'sed -i "/{}/d" /var/lib/portage/world'
+        sp.check_call(cmd_fmt.format(full_package_name.replace('/', r'\/')), shell=True)
+
     with open(shared_set_fname, 'w') as f:
         f.writelines(sorted(set(lines)))
 

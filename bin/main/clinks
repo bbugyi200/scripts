@@ -57,8 +57,8 @@ fi
 
 ##### SCRIPTS
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" awk
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" gentoo
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" main
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" maintenance
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmonad
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" ProtectMyLaptop
 

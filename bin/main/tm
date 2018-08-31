@@ -6,14 +6,22 @@
 
 MUX_CONFIG_DIR=~/.config/tmuxinator
 
-if [[ $1 == '--debug' || $1 == '-d' ]]; then
-    PS4='$LINENO: '
-    set -x
+eval set -- "$(getopt -o "d," -l "debug," -- "$@")"
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x;;
+       -- )
+           shift
+           break;;
+    esac
     shift
-fi
+done
 
 if [[ -z "$1" ]]; then
-    echo "usage: tm <SESSION_NAME>"
+    echo "usage: tm SESSION_NAME"
     exit 2
 fi
 

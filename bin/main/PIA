@@ -5,9 +5,6 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
-action="$1"
-vpn="$2"
-
 if [[ -z "$1" ]]; then
     if pgrep openvpn &> /dev/null; then
         action="stop"
@@ -15,6 +12,9 @@ if [[ -z "$1" ]]; then
         action="start"
         vpn="nyc"
     fi
+else
+    action="$1"
+    vpn="$2"
 fi
 
 if [ "$action" == "start" ]; then

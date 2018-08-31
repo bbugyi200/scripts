@@ -29,6 +29,3 @@ ebuild="$(find /home/bryan/Downloads -name "$package*ebuild")"
 
 mkdir -p "$overlay_dir"/"$category"/"$package"
 mv "$ebuild" "$overlay_dir"/"$category"/"$package"/
-
-echo 
-confirm 'esync'

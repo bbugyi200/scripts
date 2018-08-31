@@ -9,7 +9,7 @@ date > $DROPBOX/backup.txt
 # etc backup
 ETC='/media/bryan/hercules/backup/etc/daily'
 [ -d $ETC ] || mkdir -p $ETC
-rsync -av --delete /etc $ETC
+rsync -av --delete /etc/ $ETC
 date > $ETC/backup.txt
 
 # var backup

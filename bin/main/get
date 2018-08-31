@@ -25,13 +25,14 @@ def main(args):
 
     if rc == 1:
         log.debug('Checking for meta diff config files.')
-        ps = sp.check_output('find /etc/portage -name "._cfg0000*"', shell=True)
-        out = ps.decode().strip()
+        out = sp.check_output('find /etc/portage -name "._cfg0000*"', shell=True)
+        cfg_fnames = out.decode().strip()
 
-        if out != '':
+        if cfg_fnames != '':
             log.debug('Merging config files.')
             try:
-                rc = sp.check_call('sudo dispatch-conf && clear && {}'.format(' '.join(emerge_cmd)), shell=True)
+                cmd_fmt = 'sudo dispatch-conf && clear && {}'
+                rc = sp.check_call(cmd_fmt.format(' '.join(emerge_cmd).replace(' --ask', '')), shell=True)
             except sp.CalledProcessError:
                 pass
 
@@ -63,6 +64,13 @@ def add_to_shared_set(packages):
     for package in packages:
         out = sp.check_output(['ecat', package])
         category = out.decode().strip()
+
+        try:
+            assert len(category) > 0, "Package category cannot be blank."
+            assert len(package) > 0, "Package cannot be blank."
+        except AssertionError as e:
+            raise ValueError(str(e))
+
         full_package_name = '{}/{}'.format(category, package)
 
         log.debug('Full Package Name: %s', full_package_name)

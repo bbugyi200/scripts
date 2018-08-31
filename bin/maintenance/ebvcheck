@@ -15,7 +15,7 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def main():
+def main(args):
     all_files = get_all_files(args.overlay_dir)
     all_ebuilds = [f for f in all_files if f.endswith('.ebuild')]
 
@@ -52,9 +52,9 @@ def main():
     print('\nFinished. {} packages checked.'.format(len(all_pkgs)))
 
 
-def get_all_files(dir):
+def get_all_files(directory):
     F = []
-    for root, dirs, files in os.walk(dir):
+    for root, dirs, files in os.walk(directory):
         for name in files:
             F.append(os.path.join(root, name))
     return F
@@ -67,4 +67,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+        main(args)

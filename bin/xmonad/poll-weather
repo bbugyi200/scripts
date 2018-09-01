@@ -16,7 +16,7 @@ def main():
 
     loc = get_group('Current conditions at (.*)\n', raw_output)
     temp = get_temp(raw_output)
-    sky = get_group(r'Sky conditions: ([A-z\s]+)', raw_output)
+    sky = get_group(r'Sky conditions: ([A-z\s]+)$', raw_output)
     wind = get_wind(raw_output)
 
     report = format_report(loc, temp, sky, wind)

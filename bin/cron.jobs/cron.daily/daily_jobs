@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Checks if Maintenance id Due
-emanage --check
-
 # Updates 'locate' database
 updatedb
 

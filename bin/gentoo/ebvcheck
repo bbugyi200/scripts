@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-"""Ebuild Version Check for Portage Overlay (uses 'app-portage/euscan').
+"""Ebuild Version Check for Portage Overlay.
 
-Used to verify that ebuilds in specified portage overlay are up to date.
+Uses app-portage/euscan to verify that ebuilds in the specified portage overlay are up to date.
 """
 
 import os
@@ -19,6 +19,11 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main(args):
+    if args.nocolor:
+        for attr in dir(gutils.colorize):
+            if not attr.startswith('_'):
+                setattr(gutils.colorize, attr, lambda x: x)
+
     all_files = get_all_files(args.overlay_dir)
     all_ebuild_paths = [f for f in all_files if f.endswith('.ebuild')]
     all_ebuilds = [os.path.basename(ebuild_path) for ebuild_path in all_ebuild_paths]
@@ -28,7 +33,8 @@ def main(args):
         filename = os.path.basename(ebuild)
         all_pkgs.add(re.sub('-([0-9])+\..*ebuild$', '', filename))
 
-    print('Ebuild version check has started.\n')
+    msg_fmt = 'Ebuild Version Check will be run for the following overlay: {}\n'
+    print(msg_fmt.format(os.path.basename(args.overlay_dir)))
     log.debug('All Packages: %s', all_pkgs)
 
     msg_fmt = '{}:: {}'
@@ -56,7 +62,7 @@ def main(args):
                 print(msg_fmt.format(pkg, gutils.colorize.green('PASSED')))
                 break
         else:
-            print(msg_fmt.format(pkg, 'UNKNOWN'))
+            print(msg_fmt.format(pkg, gutils.colorize.yellow('UNKNOWN')))
 
     print('\nFinished. {} packages checked.'.format(len(all_pkgs)))
 
@@ -72,7 +78,8 @@ def get_all_files(directory):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('-D', dest='overlay_dir', default='/var/lib/layman/bbugyi200',
-                        help='Location (directory) of the portage overlay.')
+                        help='Location (directory path) of the portage overlay.')
+    parser.add_argument('--nocolor', action='store_true', help='Disable colored output.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

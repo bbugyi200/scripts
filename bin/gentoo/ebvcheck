@@ -26,22 +26,26 @@ def main(args):
 
     all_files = get_all_files(args.overlay_dir)
     all_ebuild_paths = [f for f in all_files if f.endswith('.ebuild')]
-    all_ebuilds = [os.path.basename(ebuild_path) for ebuild_path in all_ebuild_paths]
-
-    all_pkgs = set()
-    for ebuild in all_ebuilds:
-        filename = os.path.basename(ebuild)
-        all_pkgs.add(re.sub('-([0-9])+\..*ebuild$', '', filename))
+    all_ebuilds = {os.path.basename(ebuild_path) for ebuild_path in all_ebuild_paths}
 
     msg_fmt = 'Ebuild Version Check will be run for the following overlay: {}\n'
     print(msg_fmt.format(os.path.basename(args.overlay_dir)))
-    log.debug('All Packages: %s', all_pkgs)
 
     msg_fmt = '{}:: {}'
+    all_pkgs = set()
     for ebuild in sorted(all_ebuilds):
         pkg = re.sub('-([0-9])+\..*ebuild$', '', ebuild)
+        if pkg in all_pkgs:
+            continue
 
-        if '9999' in ebuild:
+        all_pkgs.add(pkg)
+
+        cmd_fmt = "eix --nocolor --format '<installedversions:NAMEVERSION>' {} | head -n 1"
+        ps = sp.check_output(cmd_fmt.format(pkg), shell=True)
+        out = ps.decode().strip()
+        version = out.split('-')[-1]
+        log.debug('version: %s', version)
+        if version == '9999':
             print(msg_fmt.format(pkg, gutils.colorize.blue('LIVE BUILD')))
             continue
 

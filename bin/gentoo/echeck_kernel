@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ "$(find /usr/src -type d -name "linux-*" | wc -l)" -gt 1 ]]; then
+    echo "MULTIPLE KERNEL SOURCES FOUND:"
+    find /usr/src -type d -name "linux-*" -exec printf "  * {}\n" ";"
+    printf "\nStart 'kernel' tmuxinator session to upgrade kernel (i.e. run \`tm kernel\`)."
+else
+    echo "Kernel is Up to Date."
+fi

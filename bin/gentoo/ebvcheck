@@ -49,7 +49,8 @@ def main(args):
         for line in out_list:
             if fail_marker in line:
                 fail_msg_fmt = msg_fmt.format(pkg, gutils.colorize.red('FAILED  (New Version: {})'))
-                print(fail_msg_fmt.format(line.replace(fail_marker, '')))
+                match = re.search('([\d\.]+)', line)
+                print(fail_msg_fmt.format(match.group()))
                 break
             if pass_marker in line:
                 print(msg_fmt.format(pkg, gutils.colorize.green('PASSED')))

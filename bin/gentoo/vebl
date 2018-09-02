@@ -1,0 +1,19 @@
+#!/bin/bash
+
+####################
+#  Vim Ebuild Log  #
+####################
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
+if [[ -z "$1" ]]; then
+    echo "usage: $(basename "$0") PACKAGE"
+    exit 2
+fi
+
+PACKAGE="$1"; shift
+
+vim "$(find /var/tmp/portage -type f -regex ".*/$PACKAGE.*/build\.log")"

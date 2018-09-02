@@ -15,7 +15,7 @@ if [[ "$1" == "-x" ]]; then
 fi
 
 package="$1"; shift
-category="$(eix --nocolor --only-names "$package" | awk -F'/' '{print $1}')"
+category="$(eix --nocolor --only-names "/$package$" | awk -F'/' '{print $1}')"
 
 if [[ -z "$category" ]]; then
     category="$(emerge --search "%/$package$" | grep "^\*" | awk '{print $2}' | awk -F'/' '{print $1}')"

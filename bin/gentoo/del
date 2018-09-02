@@ -22,12 +22,12 @@ while [[ -n "$1" ]]; do
 done
 
 if [[ "$depclean" = true ]]; then
-    OPT="--depclean"
+    OPTS=("--depclean" "--verbose")
 else
-    OPT="--unmerge"
+    OPTS=("--unmerge")
 fi
 
-if sudo emerge --ask "$OPT" "$@"; then
+if sudo emerge --ask "${OPTS[@]}" "$@"; then
     for P in "$@"; do
         sed -i "/$(ecat "$P")\/$P/d" /etc/portage/sets/shared
     done

@@ -11,6 +11,64 @@ if [[ -z "$1" ]]; then
     exit 1
 fi
 
+if [[ "$1" == "-d" ]] || [[ "$1" == "--debug" ]]; then
+    PS4='$LINENO: '
+    set -x
+    shift
+fi
+
 GLOBAL_MARK=${1^^}; shift
 
-vim -c "normal \`$GLOBAL_MARK" -c "bdelete 1" -c "silent! normal g;"
+case "$GLOBAL_MARK" in
+    'A' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/aliases.sh'
+        ;;
+    'B' )
+        MARKED_FILE='/home/bryan/.xmobarrc'
+        ;;
+    'E' )
+        MARKED_FILE='/etc/profile.d/private.sh'
+        ;;
+    'F' )
+        MARKED_FILE='/home/bryan/.config/flake8'
+        ;;
+    'G' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/gentoo.sh'
+        ;;
+    'H' )
+        MARKED_FILE='/home/bryan/Dropbox/scripts/templates/HW/template.tex'
+        ;;
+    'L' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/plugins.vim'
+        ;;
+    'M' )
+        MARKED_FILE='/home/bryan/.Xmodmap'
+        ;;
+    'P' )
+        MARKED_FILE='/home/bryan/.zprofile'
+        ;;
+    'Q' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.config/qutebrowser/config.py'
+        ;;
+    'T' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.tmux.conf'
+        ;;
+    'V' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.vim/vimrc'
+        ;;
+    'X' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.xmonad/xmonad.hs'
+        ;;
+    'Z' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.zshrc'
+        ;;
+esac
+
+if grep -q "^'$GLOBAL_MARK" /home/bryan/.vim/viminfo; then
+    vim -c "normal \`$GLOBAL_MARK" -c "bdelete 1" -c "silent! normal g;"
+elif [[ -n "$MARKED_FILE" ]]; then
+    vim -c 'silent! normal g;' -c "normal m$GLOBAL_MARK" "$MARKED_FILE"
+else
+    echo "ERROR: global mark not found."
+    exit 1
+fi

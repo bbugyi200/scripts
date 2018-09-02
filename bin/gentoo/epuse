@@ -108,6 +108,8 @@ def _get_uflags(category):
     for line in open(pack_use_fpath, 'r'):
         if '{}/{}'.format(category, args.package) in line:
             return line.split()[1:]
+        elif line.strip() == '':
+            break
 
     raise PackageNotFound()
 
@@ -127,7 +129,7 @@ def _set_uflags(uflags, category):
                 package_lines.append(modified_line)
             new_lines.extend(sorted(package_lines))
             new_lines.append(line)
-        elif line.startswith('{}/{}'.format(category, args.package)): 
+        elif line.startswith('{}/{}'.format(category, args.package)):
             found = True
             if uflags:
                 package_lines.append(modified_line)

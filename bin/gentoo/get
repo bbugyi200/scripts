@@ -18,6 +18,13 @@ log = gutils.logging.getEasyLogger(__name__)
 def main(args):
     log.vdebug('Packages: %s', args.packages)
     log.vdebug('World: %s', args.world)
+
+    if not args.install:
+        set_fpath = '/var/lib/portage/world' if args.world else '/etc/portage/sets/shared'
+        add_to_set(args.packages, set_fpath)
+        log.info('Package added to %s set.', '@world' if args.world else '@shared')
+        sys.exit(0)
+
     emerge_cmd = get_emerge_cmd_list(args.packages, world=args.world)
 
     log.debug('Emerge Command: %s', emerge_cmd)
@@ -37,7 +44,7 @@ def main(args):
                 pass
 
     if rc == 0 and not args.world:
-        add_to_shared_set(args.packages)
+        add_to_set(args.packages, '/etc/portage/sets/shared')
 
     sys.exit(rc)
 
@@ -55,23 +62,25 @@ def get_emerge_cmd_list(packages, *, world=False):
     return cmd_list
 
 
-def add_to_shared_set(packages):
+def add_to_set(packages, set_fpath):
     log.debug('Adding packages to @shared set.')
-    shared_set_fname = '/etc/portage/sets/shared'
-    with open(shared_set_fname, 'r') as f:
+    with open(set_fpath, 'r') as f:
         lines = f.readlines()
 
     for package in packages:
-        out = sp.check_output(['ecat', package])
-        category = out.decode().strip()
+        if '/' in package:
+            full_package_name = package
+        else:
+            out = sp.check_output(['ecat', package])
+            category = out.decode().strip()
 
-        try:
-            assert len(category) > 0, "Package category cannot be blank."
-            assert len(package) > 0, "Package cannot be blank."
-        except AssertionError as e:
-            raise ValueError(str(e))
+            try:
+                assert len(category) > 0, "Package category cannot be blank."
+                assert len(package) > 0, "Package cannot be blank."
+            except AssertionError as e:
+                raise ValueError(str(e))
 
-        full_package_name = '{}/{}'.format(category, package)
+            full_package_name = '{}/{}'.format(category, package)
 
         log.debug('Full Package Name: %s', full_package_name)
         lines.append(full_package_name + '\n')
@@ -81,7 +90,7 @@ def add_to_shared_set(packages):
         cmd_fmt = 'sed -i "/{}/d" /var/lib/portage/world'
         sp.check_call(cmd_fmt.format(full_package_name.replace('/', r'\/')), shell=True)
 
-    with open(shared_set_fname, 'w') as f:
+    with open(set_fpath, 'w') as f:
         f.writelines(sorted(set(lines)))
 
 
@@ -89,6 +98,9 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('packages', nargs=argparse.REMAINDER, help='Package(s) to install.')
     parser.add_argument('-w', '--world', action='store_true', help='Add package(s) to world set ONLY.')
+    parser.add_argument('-n', '--no-install', dest='install', action='store_false',
+                        help='Do not install package(s). Only add them to @shared or (if -w '
+                             'option is given) @world set.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

@@ -26,7 +26,11 @@ def main(args):
 
     all_files = get_all_files(args.overlay_dir)
     all_ebuild_paths = [f for f in all_files if f.endswith('.ebuild')]
-    all_ebuilds = {os.path.basename(ebuild_path) for ebuild_path in all_ebuild_paths}
+
+    # ebuilds in this list are of the form 'CATEGORY/PACKAGE-VERSION.ebuild'
+    all_ebuilds = ['/'.join([ebuild_path_list[-3], ebuild_path_list[-1]])
+                   for ebuild_path_list in [ebpath.split('/') for ebpath in all_ebuild_paths]]
+    log.debug('all_ebuilds: %s', all_ebuilds)
 
     msg_fmt = 'Ebuild Version Check will be run for the following overlay: {}\n'
     print(msg_fmt.format(os.path.basename(args.overlay_dir)))
@@ -46,10 +50,18 @@ def main(args):
         version = out.split('-')[-1]
         log.debug('version: %s', version)
         if version == '9999':
-            print(msg_fmt.format(pkg, gutils.colorize.blue('LIVE BUILD')))
+            if args.live == 'y':
+                print(msg_fmt.format(pkg, gutils.colorize.blue('LIVE BUILD')))
+            else:
+                all_pkgs.remove(pkg)
             continue
 
-        ps = sp.check_output(['euscan', pkg])
+        try:
+            ps = sp.check_output(['euscan', pkg])
+        except sp.CalledProcessError:
+            log.debug('Package: %s', pkg)
+            raise
+
         out = ps.decode().strip()
         log.debug('Euscan Output: %s', out)
 
@@ -84,6 +96,9 @@ if __name__ == "__main__":
     parser.add_argument('-D', dest='overlay_dir', default='/var/lib/layman/bbugyi200',
                         help='Location (directory path) of the portage overlay.')
     parser.add_argument('--nocolor', action='store_true', help='Disable colored output.')
+    parser.add_argument('--live-builds', dest='live', action='store', choices=('y', 'n'),
+                        default='n',
+                        help='Show live ebuilds (i.e. ebuilds with version 9999).')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

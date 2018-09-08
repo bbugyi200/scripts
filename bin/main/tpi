@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#############################
+#  Process Next Inbox Task  #
+#############################
+
+if [[ "$1" =~ ^[0-9]+$ ]]; then
+    task "$1" modify -inbox "${@:2}"
+else
+    task "$(tnext_inbox_id)" modify -inbox "$@"
+fi

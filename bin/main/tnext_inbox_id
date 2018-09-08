@@ -1,0 +1,7 @@
+#!/bin/bash
+
+####################################################
+#  Gets Next TaskWarrior Inbox (+inbox) Task's ID  #
+####################################################
+
+task _ids +inbox -DELETED -COMPLETED | sort | paste -sd ' ' | cut -d' ' -f1

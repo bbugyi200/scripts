@@ -1,11 +1,11 @@
 #!/bin/bash
 
-if [[ -z "$1" ]]; then
-    echo "usage: tghi <ID> [REPO] [-L <label> [-L <label> [...]]]"
-    exit 1
+if [[ -n "$1" ]]; then
+    ID=$1; shift
+else
+    ID="$(tnext_inbox_id)"
 fi
 
-ID=$1; shift
 if [[ -z "$1" ]] || [[ "$1" == "-"* ]]; then
     REPO=scripts
 else

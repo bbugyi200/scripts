@@ -1,5 +1,9 @@
 #!/bin/bash
 
+##############################################
+#  Confirm the Execution of a Shell Command  #
+##############################################
+
 eval set -- "$(getopt -o 'd' -l 'debug,dmenu' -- "$@")"
 
 action='read'

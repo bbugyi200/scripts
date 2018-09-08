@@ -7,7 +7,7 @@ import gutils
 
 params = [('config', '/home/bryan/.config/test_gutils'),
           ('data', '/home/bryan/.local/share/test_gutils'),
-          ('runtime', '/run/user/1000/test_gutils'),
+          ('runtime', '/tmp/test_gutils'),
           ('cache', '/home/bryan/.cache/test_gutils')]
 
 

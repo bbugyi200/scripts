@@ -4,10 +4,10 @@ TITLE="Maintenance Overdue!"
 
 DAYS=$(edsl --update)
 if [[ $DAYS -ge 7 ]]; then
-	notify-send -u critical -t 0 "$TITLE" "You should update this machine.\n\nIt has been $DAYS days since the 'update' command was last ran."
+	notify-send -u critical -t 0 "$TITLE" "You should update this machine.\n\nIt has been $DAYS days since 'emanage -u' was last ran."
 fi
 
 DAYS=$(edsl --cleanup)
 if [[ $DAYS -ge 30 ]]; then
-	notify-send -u critical -t 0 "$TITLE" "You should cleanup this machine.\n\nIt has been $DAYS days since the 'cleanup' command was last ran."
+	notify-send -u critical -t 0 "$TITLE" "You should cleanup this machine.\n\nIt has been $DAYS days since 'emanage -c' was last ran."
 fi

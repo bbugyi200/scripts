@@ -12,7 +12,7 @@ confirm "sudo eclean --deep distfiles"
 
 D="/home/bryan/.local/share/Trash/files"
 xprint -x "ls -a $D"
-confirm "rm -rf $D && mkdir $D"
+confirm "sudo rm -rf $D && mkdir $D"
 
 D="/root/.local/share/Trash/files"
 sudo -i xprint -x "ls -a $D"

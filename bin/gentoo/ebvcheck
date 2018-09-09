@@ -33,7 +33,8 @@ def main(args):
     log.debug('all_ebuilds: %s', all_ebuilds)
 
     msg_fmt = 'Ebuild Version Check will be run for the following overlay: {}\n'
-    print(msg_fmt.format(os.path.basename(args.overlay_dir)))
+    if args.verbose:
+        print(msg_fmt.format(os.path.basename(args.overlay_dir)))
 
     msg_fmt = '{}:: {}'
     all_pkgs = set()
@@ -80,7 +81,8 @@ def main(args):
         else:
             print(msg_fmt.format(pkg, gutils.colorize.yellow('UNKNOWN')))
 
-    print('\nFinished. {} packages checked.'.format(len(all_pkgs)))
+    if args.verbose:
+        print('\nFinished. {} packages checked.'.format(len(all_pkgs)))
 
 
 def get_all_files(directory):

@@ -26,7 +26,8 @@ def main(args):
         sys.exit(0)
 
     ask = not args.force
-    emerge_cmd = get_emerge_cmd_list(args.packages, ask=ask, world=args.world)
+    oneshot = not args.world
+    emerge_cmd = get_emerge_cmd_list(args.packages, ask=ask, oneshot=oneshot)
 
     log.debug('Emerge Command: %s', emerge_cmd)
     rc = sp.call(emerge_cmd)
@@ -40,7 +41,7 @@ def main(args):
             log.debug('Merging config files.')
             try:
                 cmd_fmt = 'sudo dispatch-conf && clear && {}'
-                emerge_cmd = get_emerge_cmd_list(args.packages, ask=False, world=args.world)
+                emerge_cmd = get_emerge_cmd_list(args.packages, ask=False, oneshot=oneshot)
                 rc = sp.check_call(cmd_fmt.format(emerge_cmd), shell=True)
             except sp.CalledProcessError:
                 pass
@@ -51,16 +52,15 @@ def main(args):
     sys.exit(rc)
 
 
-def get_emerge_cmd_list(packages, *, ask=True, world=False):
+def get_emerge_cmd_list(packages, *, ask=True, oneshot=True):
     cmd_list = ['sudo', 'emerge']
 
     if ask:
         cmd_list.append('--ask')
 
-    if world:
-        opts = []
-    else:
-        opts = ['--oneshot']
+    opts = []
+    if oneshot:
+        opts.append('--oneshot')
 
     cmd_list.extend(opts)
     cmd_list.extend(packages)

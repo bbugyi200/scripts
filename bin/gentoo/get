@@ -25,7 +25,8 @@ def main(args):
         log.info('Package added to %s set.', '@world' if args.world else '@shared')
         sys.exit(0)
 
-    emerge_cmd = get_emerge_cmd_list(args.packages, world=args.world)
+    ask = not args.force
+    emerge_cmd = get_emerge_cmd_list(args.packages, ask=ask, world=args.world)
 
     log.debug('Emerge Command: %s', emerge_cmd)
     rc = sp.call(emerge_cmd)
@@ -39,7 +40,8 @@ def main(args):
             log.debug('Merging config files.')
             try:
                 cmd_fmt = 'sudo dispatch-conf && clear && {}'
-                rc = sp.check_call(cmd_fmt.format(' '.join(emerge_cmd).replace(' --ask', '')), shell=True)
+                emerge_cmd = get_emerge_cmd_list(args.packages, ask=False, world=args.world)
+                rc = sp.check_call(cmd_fmt.format(emerge_cmd), shell=True)
             except sp.CalledProcessError:
                 pass
 
@@ -49,8 +51,11 @@ def main(args):
     sys.exit(rc)
 
 
-def get_emerge_cmd_list(packages, *, world=False):
-    cmd_list = ['sudo', 'emerge', '--ask']
+def get_emerge_cmd_list(packages, *, ask=True, world=False):
+    cmd_list = ['sudo', 'emerge']
+
+    if ask:
+        cmd_list.append('--ask')
 
     if world:
         opts = []
@@ -101,6 +106,8 @@ if __name__ == "__main__":
     parser.add_argument('-n', '--no-install', dest='install', action='store_false',
                         help='Do not install package(s). Only add them to @shared or (if -w '
                              'option is given) @world set.')
+    parser.add_argument('-f', '--force', action='store_true',
+                        help='Install package without using --ask option.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

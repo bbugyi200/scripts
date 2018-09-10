@@ -1,0 +1,7 @@
+#!/bin/bash
+
+########################
+#  Gets Git Repo Name  #
+########################
+
+basename "$(git rev-parse --show-toplevel)"

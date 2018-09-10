@@ -4,13 +4,21 @@
 #  Runs System Maintenance Commands  #
 ######################################
 
+# ---------- Functions ----------
+function notify() {
+    MSG="$1"; shift
+    notify-send "$(basename "$0")" "$MSG"
+}
+
+# ---------- Main Logic ----------
 confirm "egenerate_mirrors"
 confirm "emanage -e"
-confirm "sudo emerge --sync"
-confirm "sudo emerge --ask --update --deep --newuse --keep-going @world" && notify-send "$(basename "$0")" "Full system update is complete."
+confirm "sudo emerge --sync" && notify "Portage Sync is Complete."
+confirm "sudo emerge --ask --update --deep --newuse --keep-going @world" && notify "Portage Update is Complete."
 confirm "sudo emerge --ask --depclean"
 confirm "sudo revdep-rebuild"
 confirm "sudo smart-live-rebuild"
+confirm "elogv"
 confirm "echeck_kernel"
 
 # ---------- Write timestamp to file ----------

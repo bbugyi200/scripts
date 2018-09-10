@@ -48,6 +48,11 @@ def main(args):
         cmd_fmt = "eix --nocolor --format '<installedversions:NAMEVERSION>' {} | head -n 1"
         ps = sp.check_output(cmd_fmt.format(pkg), shell=True)
         out = ps.decode().strip()
+
+        if not re.match('[A-z\-\d]+/[A-z\-\d]+-[\d\.]+$', out):
+            print(msg_fmt.format(pkg, gutils.colorize.yellow('NOT INSTALLED')))
+            continue
+
         version = out.split('-')[-1]
         log.debug('version: %s', version)
         if version == '9999':

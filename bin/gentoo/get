@@ -92,8 +92,8 @@ def add_to_set(packages, set_fpath):
 
         # Remove the package name from the world file to ensure that packages are never listed in
         # both @shared and the world file.
-        cmd_fmt = 'sed -i "/{}/d" /var/lib/portage/world'
-        sp.check_call(cmd_fmt.format(full_package_name.replace('/', r'\/')), shell=True)
+        cmd_fmt = 'sed -i "\|{}|d" /var/lib/portage/world'
+        sp.check_call(cmd_fmt.format(full_package_name), shell=True)
 
     with open(set_fpath, 'w') as f:
         f.writelines(sorted(set(lines)))
@@ -102,12 +102,13 @@ def add_to_set(packages, set_fpath):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('packages', nargs=argparse.REMAINDER, help='Package(s) to install.')
-    parser.add_argument('-w', '--world', action='store_true', help='Add package(s) to world set ONLY.')
+    parser.add_argument('-w', '--world', action='store_true',
+                        help='Add package(s) to @world set ONLY.')
     parser.add_argument('-n', '--no-install', dest='install', action='store_false',
                         help='Do not install package(s). Only add them to @shared or (if -w '
                              'option is given) @world set.')
     parser.add_argument('-f', '--force', action='store_true',
-                        help='Install package without using --ask option.')
+                        help='Install package(s) without using the --ask option.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

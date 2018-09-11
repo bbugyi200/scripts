@@ -11,13 +11,14 @@ fi
 
 USAGE="usage: $(basename "$0") [-h] [-d] [-i PATCH | [-r REPO] PACKAGE]"
 REPO="gentoo"
+TMP_DIR=/tmp/"$(basename "$0")"
 
 read -r -d '' HELP << EOM
 $USAGE
 
 Steps to create an ebuild patch:
 
-1) Run \`Epatch PACKAGE\` (will cd to temp working directory).
+1) Run \`cd \$(epatch PACKAGE)\` (will cd to temp working directory).
 2) Make your code changes.
 3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
 EOM
@@ -61,17 +62,17 @@ fi
 if [[ "$install" = true ]]; then
     PATCH_NAME="$1"; shift
 
-    if ! [[ "$(pwd)" =~ /tmp/[^/]*/.* ]]; then
-        echo "ERROR: cannot run --install command outside of /tmp/CATEGORY/PACKAGE"
+    if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
+        echo "ERROR: cannot run --install command outside of $TMP_DIR/CATEGORY/PACKAGE"
         exit 1
     fi
 
-    PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $3, $4}')"
+    PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
 
     PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
     PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
 
-    mkdir -p "$PATCH_DIR"
+    mkdir -p "$PATCH_DIR" &> /dev/null
     git diff > "$PATCH_PATH"
     echo "Installed patch to $PATCH_PATH."
     exit 0
@@ -113,7 +114,7 @@ WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P}[^/]*")"
 
 CATEGORY="$(echo "${WORK_DIR#$PORTAGE_BUILD_DIR}" | awk -F'/' '{print $2}')"
 
-TMP_WORK_DIR=/tmp/"$CATEGORY"/"$P"
+TMP_WORK_DIR="$TMP_DIR"/"$CATEGORY"/"$P"
 mkdir -p "$TMP_WORK_DIR"
 cp -r "$WORK_DIR"/* "$TMP_WORK_DIR"
 
@@ -122,7 +123,7 @@ git init
 git add .
 git commit -m "Initial Commit"
 
-chown -R "$REGULAR_USER":"$REGULAR_USER" /tmp/"$CATEGORY"
+chown -R "$REGULAR_USER":"$REGULAR_USER" "$TMP_DIR"
 
 exec 1>&5
 printf "$TMP_WORK_DIR"

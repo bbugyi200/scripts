@@ -21,8 +21,6 @@ def main():
         command_lists.append(['eupdate'])
     if args.cleanup:
         command_lists.append(['ecleanup'])
-    if args.ebvcheck:
-        command_lists.append(['ebvcheck'])
     if args.maint_check:
         command_lists.append(['emaint_check'])
 
@@ -41,9 +39,7 @@ if __name__ == "__main__":
                         help='Update the machine.')
     parser.add_argument('-c', dest='cleanup', action='store_true',
                         help='Run cleanup tasks.')
-    parser.add_argument('-e', dest='ebvcheck', action='store_true',
-                        help='Check if local overlay ebuild versions are up to date.')
-    parser.add_argument('--check', dest='maint_check', action='store_true',
+    parser.add_argument('-m', dest='maint_check', action='store_true',
                         help='Check if any maintenance is due.')
     parser.add_argument('--pretend', dest='pretend', action='store_true',
                         help='Prints the command list instead of executing it.')

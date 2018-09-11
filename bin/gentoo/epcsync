@@ -5,6 +5,26 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
+eval set -- "$(getopt -o "d,q" -l "debug,quiet" -- "$@")"
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -q|--quiet )
+           exec > /dev/null
+           exec 2>&1
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
 cd /etc/portage || exit 1
 
 git pull

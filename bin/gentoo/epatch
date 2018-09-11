@@ -1,0 +1,121 @@
+#!/bin/bash
+
+##################################
+#  Create a Patch for a Package  #
+##################################
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" -u "$USER" "$@"
+fi
+
+USAGE="usage: $(basename "$0") [-i PATCH | PACKAGE]"
+
+read -r -d '' HELP << EOM
+Steps to create an ebuild patch:
+
+1) Run \`Epatch PACKAGE\` (will cd to temp working directory).
+2) Make your code changes.
+3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
+EOM
+
+eval set -- "$(getopt -o "d,h,i,u:" -l "debug,help,install,user:" -- "$@")"
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -h|--help )
+           echo "$HELP"
+           exit 0
+           ;;
+       -i|--install )
+           install=true
+           ;;
+       -u|--user )
+           shift
+           REGULAR_USER="$1"
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ -z "$1" ]]; then
+    echo "$USAGE"
+    exit 2
+fi
+
+if [[ "$install" = true ]]; then
+    PATCH_NAME="$1"; shift
+
+    if ! [[ "$(pwd)" =~ /tmp/[^/]*/.* ]]; then
+        echo "ERROR: cannot run --install command outside of /tmp/CATEGORY/PACKAGE"
+        exit 1
+    fi
+
+    PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $3, $4}')"
+
+    PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
+    PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
+
+    mkdir -p "$PATCH_DIR"
+    git diff > "$PATCH_PATH"
+    echo "Installed patch to $PATCH_PATH."
+    exit 0
+fi
+
+PN="$1"; shift
+
+GENTOO_REPO_PATH="$(portageq get_repo_path / gentoo)"
+EBUILD_CHOICES_RAW="$(find "$GENTOO_REPO_PATH" -type f -regex ".*/$PN/.*\.ebuild" | tr '\n' ' ')"
+IFS=' ' read -r -a EBUILD_CHOICES <<< "$EBUILD_CHOICES_RAW"
+
+if [[ "${#EBUILD_CHOICES[@]}" -eq 1 ]]; then
+    EBUILD="${EBUILD_CHOICES[0]}"
+else
+    PS3=$'\n'"Select an ebuild to patch: "
+    select EBUILD in "${EBUILD_CHOICES[@]}"; do
+        case "$EBUILD" in
+            * )
+                break
+                ;;
+        esac
+    done
+fi
+
+P="$(basename "${EBUILD%.ebuild}")"
+
+# Removes revision number from ${P}
+if [[ "$P" =~ .*-r[0-9]+ ]]; then
+    P="${P%-r*}"
+fi
+
+exec 5>&1 > /dev/null
+exec 2>&1
+
+ebuild "$EBUILD" clean unpack
+
+PORTAGE_BUILD_DIR=/var/tmp/portage
+WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P}[^/]*")"
+
+CATEGORY="$(echo "${WORK_DIR#$PORTAGE_BUILD_DIR}" | awk -F'/' '{print $2}')"
+
+TMP_WORK_DIR=/tmp/"$CATEGORY"/"$P"
+mkdir -p "$TMP_WORK_DIR"
+cp -r "$WORK_DIR"/* "$TMP_WORK_DIR"
+
+cd "$TMP_WORK_DIR" || exit 1
+git init
+git add .
+git commit -m "Initial Commit"
+
+chown -R "$REGULAR_USER":"$REGULAR_USER" /tmp/"$CATEGORY"
+
+exec 1>&5
+printf "$TMP_WORK_DIR"

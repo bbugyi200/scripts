@@ -66,16 +66,16 @@ if [[ "$install" = true ]]; then
     PATCH_NAME="$1"; shift
 
     if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
-        echo "ERROR: cannot run --install command outside of $TMP_DIR/CATEGORY/PACKAGE"
+        echo "ERROR: cannot use --install option outside of $TMP_DIR/CATEGORY/PACKAGE"
         exit 1
     fi
 
     PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
-
     PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
     PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
 
-    mkdir -p "$PATCH_DIR" &> /dev/null
+    [[ -d "$PATCH_DIR" ]] || mkdir -p "$PATCH_DIR"
+
     git diff > "$PATCH_PATH"
     echo "Installed patch to $PATCH_PATH."
     exit 0
@@ -107,24 +107,25 @@ if [[ "$P" =~ .*-r[0-9]+ ]]; then
     P="${P%-r*}"
 fi
 
-if [[ "$use_version_specifier" = true ]]; then
-    PACKAGE="$P"
-else
-    PACKAGE="$PN"
-fi
-
+# Disables STDOUT and STDERR
 exec 5>&1 > /dev/null
 exec 2>&1
 
 ebuild "$EBUILD" clean unpack
 
 PORTAGE_BUILD_DIR=/var/tmp/portage
-WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${PACKAGE}[^/]*")"
+WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P}[^/]*")"
 
 CATEGORY="$(echo "${WORK_DIR#$PORTAGE_BUILD_DIR}" | awk -F'/' '{print $2}')"
 
-TMP_WORK_DIR="$TMP_DIR"/"$CATEGORY"/"$PACKAGE"
-mkdir -p "$TMP_WORK_DIR"
+TMP_WORK_DIR="$TMP_DIR"/"$CATEGORY"
+if [[ "$use_version_specifier" = true ]]; then
+    TMP_WORK_DIR="$TMP_WORK_DIR"/"$P"
+else
+    TMP_WORK_DIR="$TMP_WORK_DIR"/"$PN"
+fi
+
+[[ -d "$TMP_WORK_DIR" ]] || mkdir -p "$TMP_WORK_DIR"
 cp -r "$WORK_DIR"/* "$TMP_WORK_DIR"
 
 cd "$TMP_WORK_DIR" || exit 1
@@ -134,5 +135,5 @@ git commit -m "Initial Commit"
 
 chown -R "$REGULAR_USER":"$REGULAR_USER" "$TMP_DIR"
 
-exec 1>&5
+exec 1>&5  # Restores STDOUT
 printf "$TMP_WORK_DIR"

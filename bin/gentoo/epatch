@@ -9,7 +9,7 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" -u "$USER" "$@"
 fi
 
-USAGE="usage: $(basename "$0") [-h] [-d] [-i PATCH | [-r REPO] PACKAGE]"
+USAGE="usage: $(basename "$0") [-h] [-d] [-i PATCH | [-V] [-r REPO] PACKAGE]"
 REPO="gentoo"
 TMP_DIR=/tmp/"$(basename "$0")"
 
@@ -23,7 +23,7 @@ Steps to create an ebuild patch:
 3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
 EOM
 
-eval set -- "$(getopt -o "d,h,i,r:,u:" -l "debug,help,install,repo:,user:" -- "$@")"
+eval set -- "$(getopt -o "d,h,i,r:,V,u:" -l "debug,help,install,repo:,use-version-specifier,user:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -45,6 +45,9 @@ while [[ -n "$1" ]]; do
        -u|--user )
            shift
            REGULAR_USER="$1"
+           ;;
+       -V|--use-version-specifier )
+           use_version_specifier=true
            ;;
        -- )
            shift
@@ -104,17 +107,23 @@ if [[ "$P" =~ .*-r[0-9]+ ]]; then
     P="${P%-r*}"
 fi
 
+if [[ "$use_version_specifier" = true ]]; then
+    PACKAGE="$P"
+else
+    PACKAGE="$PN"
+fi
+
 exec 5>&1 > /dev/null
 exec 2>&1
 
 ebuild "$EBUILD" clean unpack
 
 PORTAGE_BUILD_DIR=/var/tmp/portage
-WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P}[^/]*")"
+WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${PACKAGE}[^/]*")"
 
 CATEGORY="$(echo "${WORK_DIR#$PORTAGE_BUILD_DIR}" | awk -F'/' '{print $2}')"
 
-TMP_WORK_DIR="$TMP_DIR"/"$CATEGORY"/"$P"
+TMP_WORK_DIR="$TMP_DIR"/"$CATEGORY"/"$PACKAGE"
 mkdir -p "$TMP_WORK_DIR"
 cp -r "$WORK_DIR"/* "$TMP_WORK_DIR"
 

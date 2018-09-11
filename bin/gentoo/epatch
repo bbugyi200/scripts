@@ -1,17 +1,20 @@
 #!/bin/bash
 
-##################################
-#  Create a Patch for a Package  #
-##################################
+#########################################
+#  Create a Patch for a Gentoo Package  #
+#########################################
 
 # ensure running as root
 if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" -u "$USER" "$@"
 fi
 
-USAGE="usage: $(basename "$0") [-i PATCH | PACKAGE]"
+USAGE="usage: $(basename "$0") [-h] [-d] [-i PATCH | [-r REPO] PACKAGE]"
+REPO="gentoo"
 
 read -r -d '' HELP << EOM
+$USAGE
+
 Steps to create an ebuild patch:
 
 1) Run \`Epatch PACKAGE\` (will cd to temp working directory).
@@ -19,7 +22,7 @@ Steps to create an ebuild patch:
 3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
 EOM
 
-eval set -- "$(getopt -o "d,h,i,u:" -l "debug,help,install,user:" -- "$@")"
+eval set -- "$(getopt -o "d,h,i,r:,u:" -l "debug,help,install,repo:,user:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -33,6 +36,10 @@ while [[ -n "$1" ]]; do
            ;;
        -i|--install )
            install=true
+           ;;
+       -r|--repo )
+           shift
+           REPO="$1"
            ;;
        -u|--user )
            shift
@@ -72,7 +79,7 @@ fi
 
 PN="$1"; shift
 
-GENTOO_REPO_PATH="$(portageq get_repo_path / gentoo)"
+GENTOO_REPO_PATH="$(portageq get_repo_path / "$REPO")"
 EBUILD_CHOICES_RAW="$(find "$GENTOO_REPO_PATH" -type f -regex ".*/$PN/.*\.ebuild" | tr '\n' ' ')"
 IFS=' ' read -r -a EBUILD_CHOICES <<< "$EBUILD_CHOICES_RAW"
 

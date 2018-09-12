@@ -4,7 +4,7 @@
 #  Used to Scroll Zathura Up and Down in a Smoother Fashion  #
 ##############################################################
 
-eval set -- "$(getopt -o "d,D,U" -l "debug,down,up" -- "$@")"
+eval set -- "$(getopt -o "d,D,i,o,U" -l "debug,down,in,out,up" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -14,6 +14,12 @@ while [[ -n "$1" ]]; do
            ;;
        -D|--down )
            direction="down"
+           ;;
+       -i|--in )
+           zoom="in"
+           ;;
+       -o|--out )
+           zoom="out"
            ;;
        -U|--up )
            direction="up"
@@ -26,12 +32,29 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+TMP=/tmp/"$(basename "$0")"
+[ -d "$TMP" ] || mkdir "$TMP"
+
+PAGE_FIT_MARKER="$TMP"/page-fit
+if [[ -n "$zoom" ]]; then
+    case "$zoom" in
+        "in" )
+            touch "$PAGE_FIT_MARKER"
+            xtype "a"
+            ;;
+        "out" )
+            rm "$PAGE_FIT_MARKER"
+            xtype "Z"
+            ;;
+    esac
+
+    exit 0
+fi
+
 if [[ -z "$direction" ]]; then
     echo "usage: $(basename "$0") [-U | -D]"
     exit 2
 fi
-
-TMP=/tmp/"$(basename "$0")"
 
 case "$direction" in
     "up" )
@@ -46,13 +69,15 @@ case "$direction" in
         ;;
 esac
 
-if [[ -f "$TMP"/"$direction" ]]; then
-    KEYS="$next_page_keys"
+KEYS="$next_page_keys"
+if [[ -f "$PAGE_FIT_MARKER" ]]; then
+    [ -f "$TMP"/"$direction" ] && rm "$TMP"/"$direction"
+    [ -f "$TMP"/"$other_direction" ] && rm "$TMP"/"$other_direction"
+elif [[ -f "$TMP"/"$direction" ]]; then
     rm "$TMP"/"$direction"
     touch "$TMP"/"$other_direction"
 else
     KEYS="$scroll_key"
-    mkdir "$TMP"
     touch "$TMP"/"$direction"
     [ -f "$TMP"/"$other_direction" ] && rm "$TMP"/"$other_direction"
 fi

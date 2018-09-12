@@ -1,0 +1,43 @@
+#!/bin/bash
+
+################################
+#  Clipboard diff Using xclip  #
+################################
+
+eval set -- "$(getopt -o "d,f:" -l "debug,file:" -- "$@")"
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -f|--file )
+           shift
+           FILE_PATH="$1"
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+TMP_DIR=/tmp/xdiff
+A="$TMP_DIR"/A
+B="$TMP_DIR"/B
+C="$TMP_DIR"/C
+
+[ -d "$TMP_DIR" ] && rm -rf "$TMP_DIR"
+mkdir "$TMP_DIR"
+
+if [[ -n "$FILE_PATH" ]]; then
+    cp "$FILE_PATH" "$A"
+else
+    clipster -o -n 2 -0 | awk 'BEGIN {FS="\0"; RS="@@@DUMMY@@@"}; {print $2}' > "$A"
+fi
+
+clipster -o -n 1 > "$B"
+diff --color "$A" "$B" > "$C"
+vim "$C"

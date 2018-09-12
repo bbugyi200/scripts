@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#######################
+#  Wrapper for s2ram  #
+#######################
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
+epcsync -q
+s2ram
+
+# Restart wifi
+sleep 3
+rc-service net.wlo1 restart
+dhcpcd

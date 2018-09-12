@@ -4,7 +4,7 @@
 #  Used to Scroll Zathura Up and Down in a Smoother Fashion  #
 ##############################################################
 
-eval set -- "$(getopt -o "d,D,I,O,U" -l "debug,down,in,out,up" -- "$@")"
+eval set -- "$(getopt -o "d,D,I:,O:,U" -l "debug,down,in:,out:,up" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -16,9 +16,13 @@ while [[ -n "$1" ]]; do
            direction="down"
            ;;
        -I|--in )
+           shift
+           KEYS="$1"
            zoom="in"
            ;;
        -O|--out )
+           shift
+           KEYS="$1"
            zoom="out"
            ;;
        -U|--up )
@@ -43,16 +47,15 @@ fi
 PAGE_FIT_MARKER="$TMP"/page-fit
 if [[ -n "$zoom" ]]; then
     case "$zoom" in
-        "in" )
-            touch "$PAGE_FIT_MARKER"
-            xtype "a"
-            ;;
         "out" )
+            touch "$PAGE_FIT_MARKER"
+            ;;
+        "in" )
             rm "$PAGE_FIT_MARKER"
-            xtype "Z"
             ;;
     esac
 
+    xtype "$KEYS"
     exit 0
 fi
 

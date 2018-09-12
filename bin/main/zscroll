@@ -1,0 +1,60 @@
+#!/bin/bash
+
+##############################################################
+#  Used to Scroll Zathura Up and Down in a Smoother Fashion  #
+##############################################################
+
+eval set -- "$(getopt -o "d,D,U" -l "debug,down,up" -- "$@")"
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -D|--down )
+           direction="down"
+           ;;
+       -U|--up )
+           direction="up"
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ -z "$direction" ]]; then
+    echo "usage: $(basename "$0") [-U | -D]"
+    exit 2
+fi
+
+TMP=/tmp/"$(basename "$0")"
+
+case "$direction" in
+    "up" )
+        next_page_keys=KL
+        scroll_key=H
+        other_direction="down"
+        ;;
+    "down" )
+        next_page_keys=JH
+        scroll_key=L
+        other_direction="up"
+        ;;
+esac
+
+if [[ -f "$TMP"/"$direction" ]]; then
+    KEYS="$next_page_keys"
+    rm "$TMP"/"$direction"
+    touch "$TMP"/"$other_direction"
+else
+    KEYS="$scroll_key"
+    mkdir "$TMP"
+    touch "$TMP"/"$direction"
+    [ -f "$TMP"/"$other_direction" ] && rm "$TMP"/"$other_direction"
+fi
+
+xtype "$KEYS"

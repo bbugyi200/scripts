@@ -60,6 +60,8 @@ if [[ -n "$zoom" ]]; then
             ;;
         "in" )
             rm "$PAGE_FIT_MARKER"
+            [ -f "$TMP"/up ] && rm "$TMP"/up
+            [ -f "$TMP"/down ] && rm "$TMP"/down
             ;;
     esac
 

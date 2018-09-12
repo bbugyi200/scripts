@@ -41,7 +41,7 @@ def main(args):
             log.debug('Merging config files.')
             try:
                 cmd_fmt = 'sudo dispatch-conf && clear && {}'
-                emerge_cmd = get_emerge_cmd_list(args.packages, ask=False, oneshot=oneshot)
+                emerge_cmd = ' '.join(get_emerge_cmd_list(args.packages, ask=ask, oneshot=oneshot))
                 rc = sp.check_call(cmd_fmt.format(emerge_cmd), shell=True)
             except sp.CalledProcessError:
                 pass

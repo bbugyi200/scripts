@@ -14,6 +14,10 @@ while [[ -n "$1" ]]; do
            ;;
        -D|--down )
            direction="down"
+           other_direction="up"
+
+           KEYS=JH
+           scroll_key=L
            ;;
        -I|--in )
            shift
@@ -27,6 +31,10 @@ while [[ -n "$1" ]]; do
            ;;
        -U|--up )
            direction="up"
+           other_direction="down"
+
+           KEYS=KL
+           scroll_key=H
            ;;
        -- )
            shift
@@ -40,7 +48,7 @@ TMP=/tmp/"$(basename "$0")"
 [ -d "$TMP" ] || mkdir "$TMP"
 
 if [[ -z "$direction" ]] && [[ -z "$zoom" ]]; then
-    echo "usage: $(basename "$0") [-U | -D | -I | -O]"
+    echo "usage: $(basename "$0") [-U | -D | -I KEYS | -O KEYS]"
     exit 2
 fi
 
@@ -59,20 +67,6 @@ if [[ -n "$zoom" ]]; then
     exit 0
 fi
 
-case "$direction" in
-    "up" )
-        next_page_keys=KL
-        scroll_key=H
-        other_direction="down"
-        ;;
-    "down" )
-        next_page_keys=JH
-        scroll_key=L
-        other_direction="up"
-        ;;
-esac
-
-KEYS="$next_page_keys"
 if [[ -f "$PAGE_FIT_MARKER" ]]; then
     [ -f "$TMP"/"$direction" ] && rm "$TMP"/"$direction"
     [ -f "$TMP"/"$other_direction" ] && rm "$TMP"/"$other_direction"

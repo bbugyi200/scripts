@@ -1,4 +1,4 @@
 #!/bin/bash
 
 sleep 0.1
-xdotool type --clearmodifiers --delay 100 "$*"
+xdotool type --clearmodifiers --delay 1 "$*"

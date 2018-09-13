@@ -3,7 +3,18 @@
 #################################################
 #  Zathura Utility Script for better Navigation #
 #################################################
+# ---------- Functions ----------
+function switch_directions() {
+    touch "$1"
+    [ -f "$2" ] && rm "$2"
+}
 
+function kill_directions() {
+    [ -f "$1" ] && rm "$1"
+    [ -f "$2" ] && rm "$2"
+}
+
+# ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "b:,d,D,I:,O:,T:,U" -l "blist:,debug,down,in:,out:,toggle:,up" -- "$@")"
 
 while [[ -n "$1" ]]; do
@@ -53,6 +64,7 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+# ---------- Main ----------
 DOCUMENT_TITLE="$(ztitle)"
 
 if [[ -z "$DOCUMENT_TITLE" ]]; then
@@ -75,8 +87,13 @@ if [[ -z "$DIRECTION" ]] && [[ -z "$ZOOM" ]] && [[ -z "$BMARK" ]]; then
 fi
 
 PAGE_FIT_MARKER="$D"/page-fit
+LAST_DOT_MARKER="$D"/last_dot
+UP_MARKER="$D"/up
+DOWN_MARKER="$D"/down
+DIRECTION_MARKER="$D"/"$DIRECTION"
+OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
+
 if [[ -n "$BMARK" ]]; then
-    LAST_DOT_MARKER="$D"/last_dot
 
     if [[ "$BMARK" == "." ]]; then
         if ! [ -f "$LAST_DOT_MARKER" ]; then
@@ -94,29 +111,26 @@ if [[ -n "$BMARK" ]]; then
         KEYS=":$LAST_DOT_PAGE"
         send_enter=true
     else
-        KEYS="g$BMARK"
+        KEYS="g${BMARK}H"
     fi
 
     CURRENT_PAGE="$(zpage)"
     echo "$CURRENT_PAGE" > "$LAST_DOT_MARKER"
+    switch_directions "$UP_MARKER" "$DOWN_MARKER"
 elif [[ -n "$DIRECTION" ]]; then
     if [[ -f "$PAGE_FIT_MARKER" ]]; then
-        [ -f "$D"/"$DIRECTION" ] && rm "$D"/"$DIRECTION"
-        [ -f "$D"/"$OTHER_DIRECTION" ] && rm "$D"/"$OTHER_DIRECTION"
-    elif [[ -f "$D"/"$DIRECTION" ]]; then
-        rm "$D"/"$DIRECTION"
-        touch "$D"/"$OTHER_DIRECTION"
+        kill_directions "$DIRECTION_MARKER" "$OTHER_DIRECTION_MARKER"
+    elif [[ -f "$DIRECTION_MARKER" ]]; then
+        switch_directions "$OTHER_DIRECTION_MARKER" "$DIRECTION_MARKER"
     else
         KEYS="$SCROLL_KEY"
-        touch "$D"/"$DIRECTION"
-        [ -f "$D"/"$OTHER_DIRECTION" ] && rm "$D"/"$OTHER_DIRECTION"
+        switch_directions "$DIRECTION_MARKER" "$OTHER_DIRECTION_MARKER"
     fi
 elif [[ -n "$ZOOM" ]]; then
     case "$ZOOM" in
         "in" )
             rm "$PAGE_FIT_MARKER"
-            [ -f "$D"/up ] && rm "$D"/up
-            [ -f "$D"/down ] && rm "$D"/down
+            kill_directions "$UP_MARKER" "$DOWN_MARKER"
             ;;
         "out" )
             touch "$PAGE_FIT_MARKER"
@@ -136,4 +150,5 @@ xtype "$KEYS"
 
 if [[ "$send_enter" = true ]]; then
     xdotool key Return
+    xtype H
 fi

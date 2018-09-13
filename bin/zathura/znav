@@ -1,10 +1,10 @@
 #!/bin/bash
 
-##############################################################
-#  Used to Scroll Zathura Up and Down in a Smoother Fashion  #
-##############################################################
+#################################################
+#  Zathura Utility Script for better Navigation #
+#################################################
 
-eval set -- "$(getopt -o "b:,d,D,I:,O:,U" -l "blist:,debug,down,in:,out:,up" -- "$@")"
+eval set -- "$(getopt -o "b:,d,D,I:,O:,T:,U" -l "blist:,debug,down,in:,out:,toggle:,up" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -32,6 +32,11 @@ while [[ -n "$1" ]]; do
            shift
            KEYS="$1"
            ZOOM="out"
+           ;;
+       -T|--toggle )
+           shift
+           KEYS="$1"
+           ZOOM="toggle"
            ;;
        -U|--up )
            DIRECTION="up"
@@ -71,15 +76,15 @@ fi
 
 PAGE_FIT_MARKER="$D"/page-fit
 if [[ -n "$BMARK" ]]; then
-    FP_LAST_DOT="$D"/last_dot
+    LAST_DOT_MARKER="$D"/last_dot
 
     if [[ "$BMARK" == "." ]]; then
-        if ! [ -f "$FP_LAST_DOT" ]; then
+        if ! [ -f "$LAST_DOT_MARKER" ]; then
             echo "ERROR: Double-dot Page Not Set." | tee >(logger -t "$(basename "$0")")
             exit 1
         fi
 
-        LAST_DOT_PAGE="$(cat "$FP_LAST_DOT")"
+        LAST_DOT_PAGE="$(cat "$LAST_DOT_MARKER")"
 
         if ! [[ "$LAST_DOT_PAGE" =~ [0-9]+ ]]; then
             echo "ERROR: Double-dot Page Must be Numeric." | tee >(logger -t "$(basename "$0")")
@@ -93,7 +98,7 @@ if [[ -n "$BMARK" ]]; then
     fi
 
     CURRENT_PAGE="$(zpage)"
-    echo "$CURRENT_PAGE" > "$FP_LAST_DOT"
+    echo "$CURRENT_PAGE" > "$LAST_DOT_MARKER"
 elif [[ -n "$DIRECTION" ]]; then
     if [[ -f "$PAGE_FIT_MARKER" ]]; then
         [ -f "$D"/"$DIRECTION" ] && rm "$D"/"$DIRECTION"
@@ -108,13 +113,21 @@ elif [[ -n "$DIRECTION" ]]; then
     fi
 elif [[ -n "$ZOOM" ]]; then
     case "$ZOOM" in
-        "out" )
-            touch "$PAGE_FIT_MARKER"
-            ;;
         "in" )
             rm "$PAGE_FIT_MARKER"
             [ -f "$D"/up ] && rm "$D"/up
             [ -f "$D"/down ] && rm "$D"/down
+            ;;
+        "out" )
+            touch "$PAGE_FIT_MARKER"
+            ;;
+        "toggle" )
+            if [[ -f "$PAGE_FIT_MARKER" ]]; then
+                KEYS="$1"
+                rm "$PAGE_FIT_MARKER"
+            else
+                touch "$PAGE_FIT_MARKER"
+            fi
             ;;
     esac
 fi

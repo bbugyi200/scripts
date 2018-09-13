@@ -94,29 +94,18 @@ DIRECTION_MARKER="$D"/"$DIRECTION"
 OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
 
 if [[ -n "$BMARK" ]]; then
-
     if [[ "$BMARK" == "." ]]; then
-        if ! [ -f "$LAST_DOT_MARKER" ]; then
-            echo "ERROR: Double-dot Page Not Set." | tee >(logger -t "$(basename "$0")")
-            exit 1
+        if [ -f "$LAST_DOT_MARKER" ]; then
+            KEYS="mb'a"
+            rm "$LAST_DOT_MARKER"
+        else
+            KEYS="ma'b"
+            touch "$LAST_DOT_MARKER"
         fi
-
-        LAST_DOT_PAGE="$(cat "$LAST_DOT_MARKER")"
-
-        if ! [[ "$LAST_DOT_PAGE" =~ [0-9]+ ]]; then
-            echo "ERROR: Double-dot Page Must be Numeric." | tee >(logger -t "$(basename "$0")")
-            exit 1
-        fi
-
-        KEYS=":$LAST_DOT_PAGE"
-        send_enter=true
     else
-        KEYS="g${BMARK}H"
+        KEYS="mag${BMARK}H"
+        touch "$LAST_DOT_MARKER"
     fi
-
-    CURRENT_PAGE="$(zpage)"
-    echo "$CURRENT_PAGE" > "$LAST_DOT_MARKER"
-    switch_directions "$UP_MARKER" "$DOWN_MARKER"
 elif [[ -n "$DIRECTION" ]]; then
     if [[ -f "$PAGE_FIT_MARKER" ]]; then
         kill_directions "$DIRECTION_MARKER" "$OTHER_DIRECTION_MARKER"
@@ -147,8 +136,3 @@ elif [[ -n "$ZOOM" ]]; then
 fi
 
 xtype "$KEYS"
-
-if [[ "$send_enter" = true ]]; then
-    xdotool key Return
-    xtype H
-fi

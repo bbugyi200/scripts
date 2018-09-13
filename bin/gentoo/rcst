@@ -1,0 +1,11 @@
+#!/bin/bash
+
+###############################################################
+#  Wrapper for `rc-status` and `rc-service <service> status`  #
+###############################################################
+
+if [[ -n "$1" ]]; then
+    sudo rc-service "$1" status
+else
+    rc-status
+fi

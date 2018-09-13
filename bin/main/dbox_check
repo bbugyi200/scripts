@@ -1,0 +1,10 @@
+#!/bin/bash
+
+######################################################
+#  Checks if Dropbox is Running... Starts it if Not  #
+######################################################
+
+if ! pgrep dropbox &> /dev/null; then
+    sudo rc-service dropbox start
+    notify-send -u critical "$(basename "$0")" "Dropbox Crashed! Trying to restart..."
+fi

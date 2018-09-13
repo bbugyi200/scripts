@@ -13,8 +13,11 @@ fi
 #  mkdirs for clinks  #
 #######################
 if [[ "$FLAG" != "-D" ]]; then
-    find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /home/bryan/.local/share/{} ";" &> /dev/null
-    find /home/bryan/Dropbox/dotfiles/home/.local/share -maxdepth 1 -type d -execdir mkdir -p /root/.local/share/{} ";" &> /dev/null
+    DATA_DIRS=("applications" "okular" "qutebrowser")
+    for D in "${DATA_DIRS[@]}" ; do
+        mkdir -p /home/bryan/.local/share/"$D" &> /dev/null
+        sudo mkdir -p /root/.local/share/"$D" &> /dev/null
+    done
 
     # Directories inside /home/<user> that should be created before stowing configs
     HOME_DIRS=(".config" ".gnupg" ".matlab" ".ssh" ".xmonad")
@@ -60,8 +63,9 @@ stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" awk
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" gentoo
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" GTD
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" main
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmonad
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" ProtectMyLaptop
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmonad
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" zathura
 
 ##### MODULES / LIBRARIES / HEADERS
 stow --dir=/home/bryan/Dropbox/scripts --target=/usr/local/python "$FLAG" pymodules

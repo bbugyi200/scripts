@@ -1,8 +1,8 @@
 #!/bin/bash
 
-##############################################################
-#  Used to Scroll Zathura Up and Down in a Smoother Fashion  #
-##############################################################
+#################################################
+#  Zathura Utility Script for better Navigation #
+#################################################
 
 eval set -- "$(getopt -o "b:,d,D,I:,O:,U" -l "blist:,debug,down,in:,out:,up" -- "$@")"
 

@@ -1,4 +1,25 @@
 #!/bin/bash
 
+eval set -- "$(getopt -o "d,D:" -l "debug,delay:" -- "$@")"
+
+DELAY=100
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -D|--delay )
+           shift
+           DELAY="$1"
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
 sleep 0.1
-xdotool type --clearmodifiers --delay 1 "$*"
+xdotool type --clearmodifiers --delay "$DELAY" "$*"

@@ -88,6 +88,7 @@ if [[ -z "$DIRECTION" ]] && [[ -z "$ZOOM" ]] && [[ -z "$BMARK" ]]; then
 fi
 
 PAGE_FIT_MARKER="$D"/page-fit
+DUAL_PAGE_MARKER="$D"/dual-page
 LAST_DOT_MARKER="$D"/last_dot
 UP_MARKER="$D"/up
 DOWN_MARKER="$D"/down
@@ -119,9 +120,16 @@ elif [[ -n "$DIRECTION" ]]; then
 elif [[ -n "$ZOOM" ]]; then
     case "$ZOOM" in
         "in" )
-            rm "$PAGE_FIT_MARKER"
+            if [ -f "$DUAL_PAGE_MARKER" ]; then
+                rm "$DUAL_PAGE_MARKER"
+                rm "$PAGE_FIT_MARKER"
+            else
+                echo "Zathura is NOT currently using dual page view." | tee >(logger -t "$(basename "$0")")
+                exit 1
+            fi
             ;;
         "out" )
+            touch "$DUAL_PAGE_MARKER"
             touch "$PAGE_FIT_MARKER"
             ;;
         "toggle" )

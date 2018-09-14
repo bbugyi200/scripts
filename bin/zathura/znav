@@ -16,7 +16,7 @@ function kill_directions() {
 }
 
 # ---------- GLOBAL VARIABLES ----------
-USAGE="usage: $(basename "$0") [-b BOOKMARK | -D | -h | -I ZOOM_IN_KEYS | -O ZOOM_OUT_KEYS | -T ZOOM_IN_KEYS ZOOM_OUT_KEYS | -U]"
+USAGE="usage: $(basename "$0") -b BOOKMARK | -D DIRECTION | -h | -T ZOOM_IN_KEYS ZOOM_OUT_KEYS | -Z ZOOM KEYS"
 DOCUMENT_TITLE="$(ztitle)"
 
 if [[ -n "$XDG_DATA_HOME" ]]; then
@@ -30,12 +30,12 @@ D="$_xdg_data_home"/"$(basename "$0")"/documents/"$DOCUMENT_TITLE"
 
 PAGE_FIT_MARKER="$D"/page-fit
 DUAL_PAGE_MARKER="$D"/dual-page
-LAST_DOT_MARKER="$D"/last_dot
+LAST_BMARK_MARKER="$D"/last
 UP_MARKER="$D"/up
 DOWN_MARKER="$D"/down
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "b:,d,D,h,I:,O:,T:,U" -l "blist:,debug,down,help,in:,out:,toggle:,up" -- "$@")"
+eval set -- "$(getopt -o "b:,d,D:,h,Z:" -l "blist:,debug,direction:,help,zoom:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -47,38 +47,17 @@ while [[ -n "$1" ]]; do
            PS4='$LINENO: '
            set -x
            ;;
-       -D|--down )
-           DIRECTION="down"
-           OTHER_DIRECTION="up"
-
-           KEYS=JH
-           SCROLL_KEY=L
+       -D|--direction )
+           shift
+           DIRECTION="$1"
            ;;
        -h|--help )
            echo "$USAGE"
            exit 0
            ;;
-       -I|--in )
+       -Z|--zoom )
            shift
-           KEYS="$1"
-           ZOOM="in"
-           ;;
-       -O|--out )
-           shift
-           KEYS="$1"
-           ZOOM="out"
-           ;;
-       -T|--toggle )
-           shift
-           KEYS="$1"
-           ZOOM="toggle"
-           ;;
-       -U|--up )
-           DIRECTION="up"
-           OTHER_DIRECTION="down"
-
-           KEYS=KL
-           SCROLL_KEY=H
+           ZOOM="$1"
            ;;
        -- )
            shift
@@ -88,35 +67,47 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-DIRECTION_MARKER="$D"/"$DIRECTION"
-OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
-
 if [[ -z "$DIRECTION" ]] && [[ -z "$ZOOM" ]] && [[ -z "$BMARK" ]]; then
     echo "$USAGE"
     exit 2
 fi
 
 # ---------- Main ----------
-
-if [[ -z "$DOCUMENT_TITLE" ]]; then
-    echo "No Zathura Document is Focused" | tee >(logger -t "$(basename "$0")")
-    exit 1
-fi
-
 if [[ -n "$BMARK" ]]; then
-    if [[ "$BMARK" == "." ]]; then
-        if [ -f "$LAST_DOT_MARKER" ]; then
+    if [[ "$BMARK" == "LAST" ]]; then
+        if [ -f "$LAST_BMARK_MARKER" ]; then
             KEYS="mb'a"
-            rm "$LAST_DOT_MARKER"
+            rm "$LAST_BMARK_MARKER"
         else
             KEYS="ma'b"
-            touch "$LAST_DOT_MARKER"
+            touch "$LAST_BMARK_MARKER"
         fi
     else
         KEYS="mag${BMARK}H"
-        touch "$LAST_DOT_MARKER"
+        touch "$LAST_BMARK_MARKER"
     fi
 elif [[ -n "$DIRECTION" ]]; then
+    case "$DIRECTION" in
+        up )
+            OTHER_DIRECTION=down
+            KEYS=KL
+            SCROLL_KEY=H
+            ;;
+        down )
+            OTHER_DIRECTION=up
+            KEYS=JH
+            SCROLL_KEY=L
+            ;;
+        * )
+            echo "DIRECTION must be one of the following: [up, down]." | tee >(logger -t "$(basename "$0")")
+            exit 1
+            ;;
+    esac
+
+    DIRECTION_MARKER="$D"/"$DIRECTION"
+    OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
+
+
     if [[ -f "$PAGE_FIT_MARKER" ]]; then
         kill_directions "$DIRECTION_MARKER" "$OTHER_DIRECTION_MARKER"
     elif [[ -f "$DIRECTION_MARKER" ]]; then
@@ -126,10 +117,12 @@ elif [[ -n "$DIRECTION" ]]; then
         switch_directions "$DIRECTION_MARKER" "$OTHER_DIRECTION_MARKER"
     fi
 elif [[ -n "$ZOOM" ]]; then
+    KEYS="$1"; shift
+
     case "$ZOOM" in
         "in" )
             if [ -f "$DUAL_PAGE_MARKER" ]; then
-                rm "$DUAL_PAGE_MARKER"
+                [ -f "$DUAL_PAGE_MARKER" ] && rm "$DUAL_PAGE_MARKER"
                 rm "$PAGE_FIT_MARKER"
             else
                 echo "Zathura is NOT currently using dual page view." | tee >(logger -t "$(basename "$0")")
@@ -137,17 +130,28 @@ elif [[ -n "$ZOOM" ]]; then
             fi
             ;;
         "out" )
-            touch "$DUAL_PAGE_MARKER"
+            if [[ "$KEYS" = *"d"* ]]; then
+                touch "$DUAL_PAGE_MARKER"
+            fi
+
             touch "$PAGE_FIT_MARKER"
             ;;
         "toggle" )
+            if [[ -z "$1" ]]; then
+                echo "$USAGE"
+                exit 2
+            fi
+
             if [[ -f "$PAGE_FIT_MARKER" ]]; then
                 rm "$PAGE_FIT_MARKER"
             else
-                KEYS="$1"
+                KEYS="$1"; shift
                 touch "$PAGE_FIT_MARKER"
             fi
             ;;
+        * )
+            echo "ZOOM must be one of the following: [in, out, toggle]" | tee >(logger -t "$(basename "$0")")
+            exit 1
     esac
 
     if [[ "$KEYS" = *"H"* ]]; then
@@ -157,6 +161,11 @@ elif [[ -n "$ZOOM" ]]; then
     else
         kill_directions "$UP_MARKER" "$DOWN_MARKER"
     fi
+fi
+
+if [[ -z "$DOCUMENT_TITLE" ]]; then
+    echo "No Zathura Document is Focused" | tee >(logger -t "$(basename "$0")")
+    exit 1
 fi
 
 xtype "$KEYS"

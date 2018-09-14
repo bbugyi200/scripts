@@ -3,6 +3,7 @@
 #################################################
 #  Zathura Utility Script for better Navigation #
 #################################################
+
 # ---------- Functions ----------
 function switch_directions() {
     touch "$1"
@@ -119,7 +120,6 @@ elif [[ -n "$ZOOM" ]]; then
     case "$ZOOM" in
         "in" )
             rm "$PAGE_FIT_MARKER"
-            kill_directions "$UP_MARKER" "$DOWN_MARKER"
             ;;
         "out" )
             touch "$PAGE_FIT_MARKER"
@@ -133,6 +133,14 @@ elif [[ -n "$ZOOM" ]]; then
             fi
             ;;
     esac
+
+    if [[ "$KEYS" = *"H"* ]]; then
+        switch_directions "$UP_MARKER" "$DOWN_MARKER"
+    elif [[ "$KEYS" = *"L"* ]]; then
+        switch_directions "$DOWN_MARKER" "$UP_MARKER"
+    else
+        kill_directions "$UP_MARKER" "$DOWN_MARKER"
+    fi
 fi
 
 xtype "$KEYS"

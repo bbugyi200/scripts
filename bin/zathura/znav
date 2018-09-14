@@ -33,8 +33,6 @@ DUAL_PAGE_MARKER="$D"/dual-page
 LAST_DOT_MARKER="$D"/last_dot
 UP_MARKER="$D"/up
 DOWN_MARKER="$D"/down
-DIRECTION_MARKER="$D"/"$DIRECTION"
-OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "b:,d,D,h,I:,O:,T:,U" -l "blist:,debug,down,help,in:,out:,toggle:,up" -- "$@")"
@@ -90,12 +88,16 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+DIRECTION_MARKER="$D"/"$DIRECTION"
+OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
+
 if [[ -z "$DIRECTION" ]] && [[ -z "$ZOOM" ]] && [[ -z "$BMARK" ]]; then
     echo "$USAGE"
     exit 2
 fi
 
 # ---------- Main ----------
+
 if [[ -z "$DOCUMENT_TITLE" ]]; then
     echo "No Zathura Document is Focused" | tee >(logger -t "$(basename "$0")")
     exit 1

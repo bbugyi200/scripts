@@ -1,0 +1,1 @@
+{"vv": "vim __init__.py core.py ./*.py tests/*.py $@", "t": "pytest tests/* $@"}

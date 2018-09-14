@@ -50,7 +50,6 @@ def main():
     log.debug('Zath wmctrl List: {}'.format(zath_wmctrl_list))
 
     book_title = ' '.join(zath_wmctrl_list[4:-1])
-    log.debug('Book Title: "{}"'.format(book_title))
 
     ps = sp.Popen('find /home/bryan/Dropbox/books -name "{}"'.format(book_title),
             shell=True, stdout=sp.PIPE)
@@ -61,7 +60,7 @@ def main():
         sp.Popen(['zathura', full_book_path])
         time.sleep(0.3)
     else:
-        gutils.xtype('b.', delay=50)
+        gutils.xtype('b0', delay=50)
 
     if args.search_term is None:
         ps = sp.Popen(['prompt', 'Search Term'], stdout=sp.PIPE)

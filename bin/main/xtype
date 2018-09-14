@@ -2,7 +2,7 @@
 
 eval set -- "$(getopt -o "d,D:" -l "debug,delay:" -- "$@")"
 
-DELAY=100
+DELAY=1
 while [[ -n "$1" ]]; do
     case $1 in
        -d|--debug )

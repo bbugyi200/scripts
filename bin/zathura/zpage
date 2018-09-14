@@ -8,4 +8,4 @@ if [[ "$(active_window_name)" != "zathura" ]]; then
     exit 1
 fi
 
-xprop -id "$(xdotool getwindowfocus)" | grep ^WM_NAME | cut -d' ' -f3- | sed 's/.*\.pdf //g' | tr -d '"[]' | awk -F'/' '{print $1}'
+xprop -id "$(xdotool getwindowfocus)" | grep ^WM_NAME | cut -d' ' -f3- | sed 's/.*\.\(pdf\|epub\|djvu\) //g' | tr -d '"[]' | awk -F'/' '{print $1}'

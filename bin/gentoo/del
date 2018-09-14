@@ -3,7 +3,13 @@
 ####################################################
 #  Wrapper for `emerge` that Deletes a Package(s)  #
 ####################################################
+# ---------- Functions ----------
+function emsg() {
+    MSG="$1"; shift
+    echo ">>> $MSG"
+}
 
+# ---------- Command-line Arguments  ----------
 eval set -- "$(getopt -o "d,D" -l "debug,depclean" -- "$@")"
 
 while [[ -n "$1" ]]; do
@@ -21,6 +27,7 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+# ---------- Main ----------
 if [[ "$depclean" = true ]]; then
     OPTS=("--depclean" "--verbose")
 else
@@ -31,6 +38,9 @@ if sudo emerge --ask "${OPTS[@]}" "$@"; then
     for P in "$@"; do
         sed -i "\|$(ecat "$P")/$P|d" /etc/portage/sets/shared
     done
+
+    emsg "Calling updatedb to update its databases."
+    updatedb
 else
     exit "$?"
 fi

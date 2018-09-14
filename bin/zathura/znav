@@ -15,8 +15,13 @@ function kill_directions() {
     [ -f "$2" ] && rm "$2"
 }
 
+function die() {
+    echo "$1" | tee >(logger -t "$(basename "$0")")
+    exit "$2"
+}
+
 # ---------- GLOBAL VARIABLES ----------
-USAGE="usage: $(basename "$0") -b BOOKMARK | -D DIRECTION | -h | -T ZOOM_IN_KEYS ZOOM_OUT_KEYS | -Z ZOOM KEYS"
+USAGE="usage: $(basename "$0") {-b BOOKMARK | -D DIRECTION | -h | -Z {+ KEYS | - KEYS | T ZOOM_IN_KEYS ZOOM_OUT_KEYS}}"
 DOCUMENT_TITLE="$(ztitle)"
 
 if [[ -n "$XDG_DATA_HOME" ]]; then
@@ -57,7 +62,7 @@ while [[ -n "$1" ]]; do
            ;;
        -Z|--zoom )
            shift
-           ZOOM="$1"
+           ZOPTION="$1"
            ;;
        -- )
            shift
@@ -67,9 +72,8 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-if [[ -z "$DIRECTION" ]] && [[ -z "$ZOOM" ]] && [[ -z "$BMARK" ]]; then
-    echo "$USAGE"
-    exit 2
+if [[ -z "$DIRECTION" ]] && [[ -z "$ZOPTION" ]] && [[ -z "$BMARK" ]]; then
+    die "$USAGE" 2
 fi
 
 # ---------- Main ----------
@@ -99,8 +103,7 @@ elif [[ -n "$DIRECTION" ]]; then
             SCROLL_KEY=L
             ;;
         * )
-            echo "DIRECTION must be one of the following: [up, down]." | tee >(logger -t "$(basename "$0")")
-            exit 1
+            die "DIRECTION must be one of the following: [up, down]." 1
             ;;
     esac
 
@@ -116,30 +119,32 @@ elif [[ -n "$DIRECTION" ]]; then
         KEYS="$SCROLL_KEY"
         switch_directions "$DIRECTION_MARKER" "$OTHER_DIRECTION_MARKER"
     fi
-elif [[ -n "$ZOOM" ]]; then
+elif [[ -n "$ZOPTION" ]]; then
+    if [[ -z "$1" ]]; then
+        die "$USAGE" 2
+    fi
+
     KEYS="$1"; shift
 
-    case "$ZOOM" in
-        "in" )
+    case "$ZOPTION" in
+        + )
             if [ -f "$DUAL_PAGE_MARKER" ]; then
                 [ -f "$DUAL_PAGE_MARKER" ] && rm "$DUAL_PAGE_MARKER"
                 rm "$PAGE_FIT_MARKER"
             else
-                echo "Zathura is NOT currently using dual page view." | tee >(logger -t "$(basename "$0")")
-                exit 1
+                die "Zathura is NOT currently using dual page view." 1
             fi
             ;;
-        "out" )
+        - )
             if [[ "$KEYS" = *"d"* ]]; then
                 touch "$DUAL_PAGE_MARKER"
             fi
 
             touch "$PAGE_FIT_MARKER"
             ;;
-        "toggle" )
+        T )
             if [[ -z "$1" ]]; then
-                echo "$USAGE"
-                exit 2
+                die "$USAGE" 2
             fi
 
             if [[ -f "$PAGE_FIT_MARKER" ]]; then
@@ -150,8 +155,7 @@ elif [[ -n "$ZOOM" ]]; then
             fi
             ;;
         * )
-            echo "ZOOM must be one of the following: [in, out, toggle]" | tee >(logger -t "$(basename "$0")")
-            exit 1
+            die "ZOPTION must be one of the following: [+, -, T]" 1
     esac
 
     if [[ "$KEYS" = *"H"* ]]; then
@@ -164,8 +168,7 @@ elif [[ -n "$ZOOM" ]]; then
 fi
 
 if [[ -z "$DOCUMENT_TITLE" ]]; then
-    echo "No Zathura Document is Focused" | tee >(logger -t "$(basename "$0")")
-    exit 1
+    die "No Zathura Document is Focused" 1
 fi
 
 xtype "$KEYS"

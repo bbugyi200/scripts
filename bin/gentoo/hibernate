@@ -12,7 +12,8 @@ fi
 epcsync -q
 s2ram
 
-# Restart wifi
-sleep 3
+sleep 2
 rc-service net.wlo1 restart
-dhcpcd
+
+sleep 2
+rc-service dhcpcd restart

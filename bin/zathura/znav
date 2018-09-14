@@ -15,8 +15,29 @@ function kill_directions() {
     [ -f "$2" ] && rm "$2"
 }
 
+# ---------- GLOBAL VARIABLES ----------
+USAGE="usage: $(basename "$0") [-b BOOKMARK | -D | -h | -I ZOOM_IN_KEYS | -O ZOOM_OUT_KEYS | -T ZOOM_IN_KEYS ZOOM_OUT_KEYS | -U]"
+DOCUMENT_TITLE="$(ztitle)"
+
+if [[ -n "$XDG_DATA_HOME" ]]; then
+    _xdg_data_home="$XDG_DATA_HOME"
+else
+    _xdg_data_home="$HOME"/.local/share
+fi
+
+D="$_xdg_data_home"/"$(basename "$0")"/documents/"$DOCUMENT_TITLE"
+[ -d "$D" ] || mkdir -p "$D"
+
+PAGE_FIT_MARKER="$D"/page-fit
+DUAL_PAGE_MARKER="$D"/dual-page
+LAST_DOT_MARKER="$D"/last_dot
+UP_MARKER="$D"/up
+DOWN_MARKER="$D"/down
+DIRECTION_MARKER="$D"/"$DIRECTION"
+OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
+
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "b:,d,D,I:,O:,T:,U" -l "blist:,debug,down,in:,out:,toggle:,up" -- "$@")"
+eval set -- "$(getopt -o "b:,d,D,h,I:,O:,T:,U" -l "blist:,debug,down,help,in:,out:,toggle:,up" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -34,6 +55,10 @@ while [[ -n "$1" ]]; do
 
            KEYS=JH
            SCROLL_KEY=L
+           ;;
+       -h|--help )
+           echo "$USAGE"
+           exit 0
            ;;
        -I|--in )
            shift
@@ -65,35 +90,16 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-# ---------- Main ----------
-DOCUMENT_TITLE="$(ztitle)"
+if [[ -z "$DIRECTION" ]] && [[ -z "$ZOOM" ]] && [[ -z "$BMARK" ]]; then
+    echo "$USAGE"
+    exit 2
+fi
 
+# ---------- Main ----------
 if [[ -z "$DOCUMENT_TITLE" ]]; then
     echo "No Zathura Document is Focused" | tee >(logger -t "$(basename "$0")")
     exit 1
 fi
-
-if [[ -n "$XDG_DATA_HOME" ]]; then
-    _xdg_data_home="$XDG_DATA_HOME"
-else
-    _xdg_data_home="$HOME"/.local/share
-fi
-
-D="$_xdg_data_home"/"$(basename "$0")"/documents/"$DOCUMENT_TITLE"
-[ -d "$D" ] || mkdir -p "$D"
-
-if [[ -z "$DIRECTION" ]] && [[ -z "$ZOOM" ]] && [[ -z "$BMARK" ]]; then
-    echo "usage: $(basename "$0") [-U | -D | -I KEYS | -O KEYS]"
-    exit 2
-fi
-
-PAGE_FIT_MARKER="$D"/page-fit
-DUAL_PAGE_MARKER="$D"/dual-page
-LAST_DOT_MARKER="$D"/last_dot
-UP_MARKER="$D"/up
-DOWN_MARKER="$D"/down
-DIRECTION_MARKER="$D"/"$DIRECTION"
-OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
 
 if [[ -n "$BMARK" ]]; then
     if [[ "$BMARK" == "." ]]; then
@@ -134,9 +140,9 @@ elif [[ -n "$ZOOM" ]]; then
             ;;
         "toggle" )
             if [[ -f "$PAGE_FIT_MARKER" ]]; then
-                KEYS="$1"
                 rm "$PAGE_FIT_MARKER"
             else
+                KEYS="$1"
                 touch "$PAGE_FIT_MARKER"
             fi
             ;;

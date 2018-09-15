@@ -76,7 +76,7 @@ if [[ -z "$DIRECTION" ]] && [[ -z "$ZOPTION" ]] && [[ -z "$BMARK" ]]; then
 fi
 
 if [[ -z "$DOCUMENT_TITLE" ]] && [[ "$debug" != true ]]; then
-    die "No Zathura Document is Focused" 1
+    die "No Zathura Document is Focused"
 fi
 
 # ---------- Main ----------
@@ -116,7 +116,7 @@ elif [[ -n "$DIRECTION" ]]; then
             OTHER_SCROLL_KEY=L
             ;;
         * )
-            die "DIRECTION must be one of the following: [up, down]." 1
+            die "DIRECTION must be one of the following: [up, down]."
             ;;
     esac
 
@@ -146,7 +146,7 @@ elif [[ -n "$ZOPTION" ]]; then
                 if [ -f "$DUAL_PAGE_MARKER" ]; then
                     rm "$DUAL_PAGE_MARKER"
                 else
-                    die "Zathura is NOT currently using dual page view." 1
+                    die "Zathura is NOT currently using dual page view."
                 fi
             fi
 
@@ -172,7 +172,7 @@ elif [[ -n "$ZOPTION" ]]; then
             fi
             ;;
         * )
-            die "ZOPTION must be one of the following: [+, -, T]" 1
+            die "ZOPTION must be one of the following: [+, -, T]"
     esac
 
     if [[ "$KEYS" = *"H"* ]]; then

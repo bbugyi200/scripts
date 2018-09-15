@@ -1,12 +1,12 @@
 #!/bin/bash
 
-###########################################
-#  Converts Open Office Documents to PDF  #
-#                                         #
-# On laptop, sends documents to desktop   #
-# to be converted since laptop does not   #
-# have libreoffice compiled.              #
-###########################################
+#############################################
+#  Converts Open Office Documents to PDF    #
+#                                           #
+# On my laptop, sends documents to desktop  #
+# to be converted since my laptop does not  #
+# have libreoffice compiled.                #
+#############################################
 
 SCRIPT="$(basename "$0")"
 TMP=/tmp/"$SCRIPT"
@@ -32,11 +32,10 @@ if ! type unoconv &> /dev/null; then
 fi
 
 # ---------- DESKTOP ----------
+[ -d "$TMP" ] || mkdir "$TMP"
+
 find /home/bryan/Downloads /home/bryan/Dropbox "$TMP" \
     -type f \
     -regex ".*\.$EXTS" \
     -execdir unoconv -f pdf {} ";" \
     -execdir safe-rm {} ";"
-
-[ -d "$TMP" ] || mkdir "$TMP"
-find /home/bryan/Dropbox/tmp -type f -name "*.pdf" -execdir mv {} "$TMP" ";"

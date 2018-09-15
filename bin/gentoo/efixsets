@@ -4,13 +4,11 @@
 #  Removes packages from @world that already exist in @shared  #
 ################################################################
 
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
+
 # ---------- Functions ----------
 function purge_line() {
     confirm "sudo sed -i '\|$1|d' $2"
-}
-
-function emsg() {
-    echo ">>> $1"
 }
 
 # ---------- Global Variables ----------
@@ -22,7 +20,7 @@ DUPLICATES="$(comm -12 <(sudo cat "$SETS_FOLDER"/shared) <(sudo cat "$SETS_FOLDE
 if [[ -z "$DUPLICATES" ]]; then
     emsg "The @shared and @$HOSTNAME sets do not intersect."
 else
-    emsg "THE @shared and @$HOSTNAME SETS INTERSECT! ACTION(S) REQUIRED!:"
+    emsg "THE @shared AND @$HOSTNAME SETS INTERSECT! ACTION(S) REQUIRED!:"
 fi
 
 for PKG in ${DUPLICATES}; do

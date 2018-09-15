@@ -21,7 +21,7 @@ function die() {
 }
 
 # ---------- GLOBAL VARIABLES ----------
-USAGE="usage: $(basename "$0") {-b BOOKMARK | -D DIRECTION | -h | -Z {+ KEYS | - KEYS | T ZOOM_IN_KEYS ZOOM_OUT_KEYS}}"
+USAGE="usage: $(basename "$0") [-d] {-b BOOKMARK | -D DIRECTION | -h | -z {+ ZOOM_IN_KEYS | - ZOOM_OUT_KEYS | T ZOOM_IN_KEYS ZOOM_OUT_KEYS}}"
 DOCUMENT_TITLE="$(ztitle)"
 
 if [[ -n "$XDG_DATA_HOME" ]]; then
@@ -31,7 +31,6 @@ else
 fi
 
 D="$_xdg_data_home"/"$(basename "$0")"/documents/"$DOCUMENT_TITLE"
-[ -d "$D" ] || mkdir -p "$D"
 
 PAGE_FIT_MARKER="$D"/page-fit
 DUAL_PAGE_MARKER="$D"/dual-page
@@ -39,8 +38,10 @@ LAST_BMARK_MARKER="$D"/last
 UP_MARKER="$D"/up
 DOWN_MARKER="$D"/down
 
+DELAY=1
+
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "b:,d,D:,h,Z:" -l "blist:,debug,direction:,help,zoom:" -- "$@")"
+eval set -- "$(getopt -o "b:,d,D:,h,z:" -l "blist:,debug,direction:,help,zoom:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -49,6 +50,7 @@ while [[ -n "$1" ]]; do
             BMARK="$1"
             ;;
        -d|--debug )
+           debug=true
            PS4='$LINENO: '
            set -x
            ;;
@@ -60,7 +62,7 @@ while [[ -n "$1" ]]; do
            echo "$USAGE"
            exit 0
            ;;
-       -Z|--zoom )
+       -z|--zoom )
            shift
            ZOPTION="$1"
            ;;
@@ -76,7 +78,18 @@ if [[ -z "$DIRECTION" ]] && [[ -z "$ZOPTION" ]] && [[ -z "$BMARK" ]]; then
     die "$USAGE" 2
 fi
 
+if [[ -z "$DOCUMENT_TITLE" ]] && [[ "$debug" != true ]]; then
+    die "No Zathura Document is Focused" 1
+fi
+
 # ---------- Main ----------
+if ! [[ -d "$D" ]]; then
+    mkdir -p "$D"
+
+    # new document should be treated as if it is zoomed out
+    touch "$D" "$PAGE_FIT_MARKER"
+fi
+
 if [[ -n "$BMARK" ]]; then
     if [[ "$BMARK" == "LAST" ]]; then
         if [ -f "$LAST_BMARK_MARKER" ]; then
@@ -87,6 +100,7 @@ if [[ -n "$BMARK" ]]; then
             touch "$LAST_BMARK_MARKER"
         fi
     else
+        DELAY=10  # prevents :blist errors in zathura
         KEYS="mag${BMARK}H"
         touch "$LAST_BMARK_MARKER"
     fi
@@ -94,13 +108,15 @@ elif [[ -n "$DIRECTION" ]]; then
     case "$DIRECTION" in
         up )
             OTHER_DIRECTION=down
-            KEYS=KL
-            SCROLL_KEY=H
+            NEXT_PAGE_KEY=K
+            SCROLL_KEY=L
+            OTHER_SCROLL_KEY=H
             ;;
         down )
             OTHER_DIRECTION=up
-            KEYS=JH
-            SCROLL_KEY=L
+            NEXT_PAGE_KEY=J
+            SCROLL_KEY=H
+            OTHER_SCROLL_KEY=L
             ;;
         * )
             die "DIRECTION must be one of the following: [up, down]." 1
@@ -110,13 +126,14 @@ elif [[ -n "$DIRECTION" ]]; then
     DIRECTION_MARKER="$D"/"$DIRECTION"
     OTHER_DIRECTION_MARKER="$D"/"$OTHER_DIRECTION"
 
-
     if [[ -f "$PAGE_FIT_MARKER" ]]; then
+        KEYS="${NEXT_PAGE_KEY}"
         kill_directions "$DIRECTION_MARKER" "$OTHER_DIRECTION_MARKER"
     elif [[ -f "$DIRECTION_MARKER" ]]; then
+        KEYS="${NEXT_PAGE_KEY}${SCROLL_KEY}"
         switch_directions "$OTHER_DIRECTION_MARKER" "$DIRECTION_MARKER"
     else
-        KEYS="$SCROLL_KEY"
+        KEYS="${OTHER_SCROLL_KEY}"
         switch_directions "$DIRECTION_MARKER" "$OTHER_DIRECTION_MARKER"
     fi
 elif [[ -n "$ZOPTION" ]]; then
@@ -128,12 +145,15 @@ elif [[ -n "$ZOPTION" ]]; then
 
     case "$ZOPTION" in
         + )
-            if [ -f "$DUAL_PAGE_MARKER" ]; then
-                [ -f "$DUAL_PAGE_MARKER" ] && rm "$DUAL_PAGE_MARKER"
-                rm "$PAGE_FIT_MARKER"
-            else
-                die "Zathura is NOT currently using dual page view." 1
+            if [[ "$KEYS" = *"d"* ]]; then
+                if [ -f "$DUAL_PAGE_MARKER" ]; then
+                    rm "$DUAL_PAGE_MARKER"
+                else
+                    die "Zathura is NOT currently using dual page view." 1
+                fi
             fi
+
+            rm "$PAGE_FIT_MARKER"
             ;;
         - )
             if [[ "$KEYS" = *"d"* ]]; then
@@ -167,8 +187,4 @@ elif [[ -n "$ZOPTION" ]]; then
     fi
 fi
 
-if [[ -z "$DOCUMENT_TITLE" ]]; then
-    die "No Zathura Document is Focused" 1
-fi
-
-xtype "$KEYS"
+xtype -D "$DELAY" "$KEYS"

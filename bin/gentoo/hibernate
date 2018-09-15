@@ -12,8 +12,10 @@ fi
 epcsync -q
 s2ram
 
+# Restarts Wireless Network Card
 sleep 2
 rc-service net.wlo1 restart
 
+# Needs to wait for wireless card to start up before DHCP can obtain address
 sleep 2
 rc-service dhcpcd restart

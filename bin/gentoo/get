@@ -3,6 +3,7 @@
 """Wrapper for 'emerge' that Installs Package(s)"""
 
 import argparse
+import os
 import subprocess as sp  # noqa: F401
 import sys
 
@@ -16,17 +17,12 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main(args):
-    log.vdebug('Packages: %s', args.packages)
-    log.vdebug('World: %s', args.world)
-
     if not args.install:
-        set_fpath = '/var/lib/portage/world' if args.world else '/etc/portage/sets/shared'
-        add_to_set(args.packages, set_fpath)
+        add_to_set(args.packages, local=args.local)
         sys.exit(0)
 
     ask = not args.force
-    oneshot = args.oneshot or not args.world
-    emerge_cmd = get_emerge_cmd_list(args.packages, ask=ask, oneshot=oneshot)
+    emerge_cmd = get_emerge_cmd_list(args.packages, ask=ask)
 
     log.debug('Emerge Command: %s', emerge_cmd)
     rc = sp.call(emerge_cmd)
@@ -40,46 +36,44 @@ def main(args):
             log.debug('Merging config files.')
             try:
                 cmd_fmt = 'sudo dispatch-conf && clear && {}'
-                emerge_cmd = ' '.join(get_emerge_cmd_list(args.packages, ask=False, oneshot=oneshot))
-                rc = sp.check_call(cmd_fmt.format(emerge_cmd), shell=True)
+                emerge_cmd_string = ' '.join(emerge_cmd)
+                rc = sp.check_call(cmd_fmt.format(emerge_cmd_string), shell=True)
             except sp.CalledProcessError:
                 pass
 
     if rc == 0:
         emsg('Calling updatedb to update its databases.')
         sp.check_call(['updatedb'])
-        if not args.world and not args.oneshot:
-            add_to_set(args.packages, '/etc/portage/sets/shared')
-
-        for pkg in args.packages:
-            portage_set = 'world' if args.world else 'shared'
-            emsg('Adding {} to @{} set.'.format(pkg, portage_set))
+        if not args.oneshot:
+            add_to_set(args.packages, local=args.local)
 
     sys.exit(rc)
 
 
 def emsg(msg):
-    log.info(msg)
+    log.debug(msg)
     print('>>> {}'.format(msg))
 
 
-def get_emerge_cmd_list(packages, *, ask=True, oneshot=True):
+def get_emerge_cmd_list(packages, *, ask=True):
     cmd_list = ['sudo', 'emerge']
 
+    opts = ['--oneshot']
     if ask:
-        cmd_list.append('--ask')
-
-    opts = []
-    if oneshot:
-        opts.append('--oneshot')
+        opts.append('--ask')
 
     cmd_list.extend(opts)
     cmd_list.extend(packages)
     return cmd_list
 
 
-def add_to_set(packages, set_fpath):
-    log.debug('Adding packages to @shared set.')
+def add_to_set(packages, *, local=False):
+    hostname = os.uname().nodename
+
+    set_folder = '/etc/portage/sets'
+    set_fpath = '{}/{}'.format(set_folder, hostname if local else 'shared')
+    bad_set_fpath = '{}/{}'.format(set_folder, 'shared' if local else hostname)
+
     with open(set_fpath, 'r') as f:
         lines = f.readlines()
 
@@ -101,10 +95,13 @@ def add_to_set(packages, set_fpath):
         log.debug('Full Package Name: %s', full_package_name)
         lines.append(full_package_name + '\n')
 
+        portage_set = hostname if args.local else 'shared'
+        emsg('Adding {} to @{} set.'.format(package, portage_set))
+
         # Remove the package name from the world file to ensure that packages are never listed in
         # both @shared and the world file.
-        cmd_fmt = 'sed -i "\|{}|d" /var/lib/portage/world'
-        sp.check_call(cmd_fmt.format(full_package_name), shell=True)
+        cmd_fmt = 'sed -i "\|{}|d" {}'
+        sp.check_call(cmd_fmt.format(full_package_name, bad_set_fpath), shell=True)
 
     with open(set_fpath, 'w') as f:
         f.writelines(sorted(set(lines)))
@@ -114,14 +111,14 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('packages', nargs=argparse.REMAINDER, help='Package(s) to install.')
     parser.add_argument('-1', '--oneshot', action='store_true',
-                        help='Do NOT add package to @shared or @world.')
+                        help='Do NOT add package to @world.')
     parser.add_argument('-f', '--force', action='store_true',
                         help='Install package(s) without using the --ask option.')
     parser.add_argument('-n', '--no-install', dest='install', action='store_false',
-                        help='Do not install package(s). Only add them to @shared or (if -w '
-                             'option is given) @world set.')
-    parser.add_argument('-w', '--world', action='store_true',
-                        help='Add package(s) to @world set ONLY.')
+                        help='Do not install package(s). Only add them to @shared or (if -L '
+                             'option is given) @<hostname> set.')
+    parser.add_argument('-L', '--local-only', dest='local', action='store_true',
+                        help='Add package(s) to @<hostname> set ONLY.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

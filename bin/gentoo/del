@@ -37,6 +37,7 @@ fi
 if sudo emerge --ask "${OPTS[@]}" "$@"; then
     for P in "$@"; do
         sed -i "\|$(ecat "$P")/$P|d" /etc/portage/sets/shared
+        sed -i "\|$(ecat "$P")/$P|d" /etc/portage/sets/"$(hostname)"
     done
 
     emsg "Calling updatedb to update its databases."

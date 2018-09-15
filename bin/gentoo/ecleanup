@@ -5,6 +5,10 @@
 ######################################################################
 
 # ---------- Main Logic ----------
+TMP=/home/bryan/Dropbox/tmp
+[ -d "$TMP" ] && rm -rf "$TMP"
+mkdir "$TMP"
+
 confirm "sort_qb_quickmarks"
 confirm "epurge_world_dups"
 confirm "sudo eclean --deep packages"

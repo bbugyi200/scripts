@@ -1,0 +1,30 @@
+#!/bin/bash
+
+############################
+#  Initialize Bash Script  #
+############################
+
+if [[ -z "$1" ]]; then
+    echo "usage: $(basename "$0") SCRIPT_NAME"
+    exit 2
+fi
+
+BIN="/home/bryan/Dropbox/scripts/bin"
+if [[ "$(pwd)" != "$BIN/"* ]]; then
+    echo "ERROR: $(basename "$0") will not run unless inside a subdirectory of $BIN."
+    exit 1
+fi
+
+SCRIPT_NAME="$1"; shift
+
+read -r -d '' TEMPLATE << EOM
+#!/bin/bash
+
+
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
+EOM
+
+printf "$TEMPLATE" > "$SCRIPT_NAME"
+chmod +x "$SCRIPT_NAME"
+clinks 
+vim +2 "$SCRIPT_NAME"

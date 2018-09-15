@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MAKECONF=/home/bryan/Dropbox/dotfiles/home/extras/make.conf
+MAKECONF=/etc/portage/make.shared
 
 sed -i '/GENTOO_MIRRORS=".*"$/d' "$MAKECONF" 
 mirrorselect -s5 -b10 -D -c USA -o | sed '/^\s*$/d' >> "$MAKECONF"

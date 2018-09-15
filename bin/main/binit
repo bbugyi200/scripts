@@ -9,13 +9,14 @@ if [[ -z "$1" ]]; then
     exit 2
 fi
 
+SCRIPT_NAME="$1"; shift
+
 BIN="/home/bryan/Dropbox/scripts/bin"
 if [[ "$(pwd)" != "$BIN/"* ]]; then
-    echo "ERROR: $(basename "$0") will not run unless inside a subdirectory of $BIN."
-    exit 1
+    cd "$BIN"/main || exit 1
+    echo "Initializing $SCRIPT_NAME bash script into $BIN/main."
+    sleep 0.5
 fi
-
-SCRIPT_NAME="$1"; shift
 
 read -r -d '' TEMPLATE << EOM
 #!/bin/bash

@@ -4,11 +4,7 @@
 #  Runs System Maintenance Commands  #
 ######################################
 
-# ---------- Functions ----------
-function notify() {
-    MSG="$1"; shift
-    notify-send "$(basename "$0")" "$MSG"
-}
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
 
 # ---------- Main Logic ----------
 confirm "epcsync"

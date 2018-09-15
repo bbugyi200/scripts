@@ -3,11 +3,6 @@
 ###############################################
 
 function die() {
-    if [[ -z "$1" ]]; then
-        echo "usage: die MSG [EXIT_CODE]"
-        exit 2
-    fi
-
     MSG="$1"; shift
 
     if [[ -n "$1" ]]; then
@@ -21,11 +16,11 @@ function die() {
 }
 
 function emsg() {
-    if [[ -z "$1" ]]; then
-        echo "usage: emsg MSG"
-        exit 2
-    fi
-
     MSG="$1"; shift
     echo ">>> $MSG"
+}
+
+function notify() {
+    MSG="$1"; shift
+    notify-send "$(basename "$0")" "$MSG"
 }

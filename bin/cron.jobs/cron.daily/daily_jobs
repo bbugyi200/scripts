@@ -5,3 +5,7 @@ updatedb
 
 # Delete conflicted copies
 find /home/bryan/Dropbox -name "*'s conflicted copy*" -delete
+
+# Clear /home/bryan/Dropbox/tmp
+rm -rf /home/bryan/Dropbox/tmp
+mkdir /home/bryan/Dropbox/tmp

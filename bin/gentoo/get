@@ -95,7 +95,7 @@ def add_to_set(packages, *, local=False):
         log.debug('Full Package Name: %s', full_package_name)
         lines.append(full_package_name + '\n')
 
-        portage_set = hostname if args.local else 'shared'
+        portage_set = set_fpath.split('/')[-1]
         emsg('Adding {} to @{} set.'.format(package, portage_set))
 
         # Remove the package name from the world file to ensure that packages are never listed in

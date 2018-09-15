@@ -10,7 +10,7 @@ TMP=/home/bryan/Dropbox/tmp
 mkdir "$TMP"
 
 confirm "sort_qb_quickmarks"
-confirm "epurge_world_dups"
+confirm "efixsets"
 confirm "sudo eclean --deep packages"
 confirm "sudo eclean --deep distfiles"
 

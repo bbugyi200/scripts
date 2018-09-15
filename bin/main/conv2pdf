@@ -10,20 +10,29 @@
 
 SCRIPT="$(basename "$0")"
 TMP=/tmp/"$SCRIPT"
-EXTS="\(ppt\|odt\|doc\|docx\)"
+EXTS="\(ppt\|pptx\|odt\|doc\|docx\)"
 
 # ---------- LAPTOP ----------
 if ! type unoconv &> /dev/null; then
+    ssh-athena "mkdir $TMP &> /dev/null"
+
+    find /home/bryan/Downloads \
+        -type f \
+        -regex ".*\.$EXTS" \
+        -execdir scp -P "$ATHENAS_SSH_PORT" {} bryan@"$ATHENAS_DDNS_HOSTNAME":"$TMP" ";" &> /dev/null
+
     ssh-athena "$(command -v "$SCRIPT")"
 
-    scp -P "$ATHENAS_SSH_PORT" "bryan@$ATHENAS_DDNS_HOSTNAME:$TMP/*" /home/bryan/Downloads &> /dev/null
+    scp -P "$ATHENAS_SSH_PORT" "bryan@$ATHENAS_DDNS_HOSTNAME:$TMP/*.pdf" /home/bryan/Downloads &> /dev/null
 
     ssh-athena "rm -rf $TMP"
+    find /home/bryan/Downloads -type f -regex ".*\.$EXTS" -delete
+
     exit 0
 fi
 
 # ---------- DESKTOP ----------
-find /home/bryan/Downloads /home/bryan/Dropbox \
+find /home/bryan/Downloads /home/bryan/Dropbox "$TMP" \
     -type f \
     -regex ".*\.$EXTS" \
     -execdir unoconv -f pdf {} ";" \

@@ -4,6 +4,8 @@
 #  Zathura Utility Script for better Navigation #
 #################################################
 
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
+
 # ---------- Functions ----------
 function switch_directions() {
     touch "$1"
@@ -13,11 +15,6 @@ function switch_directions() {
 function kill_directions() {
     [ -f "$1" ] && rm "$1"
     [ -f "$2" ] && rm "$2"
-}
-
-function die() {
-    echo "$1" | tee >(logger -t "$(basename "$0")")
-    exit "$2"
 }
 
 # ---------- GLOBAL VARIABLES ----------

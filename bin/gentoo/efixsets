@@ -1,0 +1,46 @@
+#!/bin/bash
+
+################################################################
+#  Removes packages from @world that already exist in @shared  #
+################################################################
+
+# ---------- Functions ----------
+function purge_line() {
+    confirm "sudo sed -i '\|$1|d' $2"
+}
+
+function emsg() {
+    echo ">>> $1"
+}
+
+# ---------- Global Variables ----------
+HOSTNAME="$(hostname)"
+SETS_FOLDER=/etc/portage/sets
+DUPLICATES="$(comm -12 <(sudo cat "$SETS_FOLDER"/shared) <(sudo cat "$SETS_FOLDER"/"$HOSTNAME") 2> /dev/null)"
+
+# ---------- Main ----------
+if [[ -z "$DUPLICATES" ]]; then
+    emsg "The @shared and @$HOSTNAME sets do not intersect."
+else
+    emsg "THE @shared and @$HOSTNAME SETS INTERSECT! ACTION(S) REQUIRED!:"
+fi
+
+for PKG in ${DUPLICATES}; do
+    purge_line "$PKG" "$SETS_FOLDER"/"$HOSTNAME"
+done
+
+if [[ -n "$DUPLICATES" ]]; then
+    echo
+fi
+
+WORLD_FILE=/var/lib/portage/world
+WORLD_PACKAGES="$(cat $WORLD_FILE)"
+if [[ -z "$WORLD_PACKAGES" ]]; then
+    emsg "The world file is empty."
+else
+    emsg "THE WORLD FILE IS NOT EMPTY! ACTION(S) REQUIRED!:"
+fi
+
+for PKG in ${WORLD_PACKAGES}; do
+    purge_line "$PKG" "$WORLD_FILE"
+done

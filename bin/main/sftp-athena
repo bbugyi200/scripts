@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cd ~/Downloads
-sftp -P 34857 bryan@athena-arch.ddns.net:/media/bryan/hercules/media/Entertainment/Videos
+cd ~/Downloads || exit 1
+sftp -P 34857 bryan@athena-arch.ddns.net:/home/bryan/Downloads

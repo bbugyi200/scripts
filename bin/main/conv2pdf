@@ -1,9 +1,18 @@
 #!/bin/bash
 
+###########################################
+#  Converts Open Office Documents to PDF  #
+#                                         #
+# On laptop, sends documents to desktop   #
+# to be converted since laptop does not   #
+# have libreoffice compiled.              #
+###########################################
+
 SCRIPT="$(basename "$0")"
 TMP=/tmp/"$SCRIPT"
 EXTS="\(ppt\|odt\|doc\|docx\)"
 
+# ---------- LAPTOP ----------
 if ! type unoconv &> /dev/null; then
     ssh-athena "$(command -v "$SCRIPT")"
 
@@ -13,6 +22,7 @@ if ! type unoconv &> /dev/null; then
     exit 0
 fi
 
+# ---------- DESKTOP ----------
 find /home/bryan/Downloads /home/bryan/Dropbox \
     -type f \
     -regex ".*\.$EXTS" \

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+SCRIPT="$(basename "$0")"
+TMP=/tmp/"$SCRIPT"
+EXTS="\(ppt\|odt\|doc\|docx\)"
+
+if ! type unoconv &> /dev/null; then
+    ssh-athena "$(command -v "$SCRIPT")"
+
+    scp -P "$ATHENAS_SSH_PORT" "bryan@$ATHENAS_DDNS_HOSTNAME:$TMP/*" /home/bryan/Downloads &> /dev/null
+
+    ssh-athena "rm -rf $TMP"
+    exit 0
+fi
+
+find /home/bryan/Downloads /home/bryan/Dropbox \
+    -type f \
+    -regex ".*\.$EXTS" \
+    -execdir unoconv -f pdf {} ";" \
+    -execdir safe-rm {} ";"
+
+[ -d "$TMP" ] || mkdir "$TMP"
+find /home/bryan/Dropbox/tmp -type f -name "*.pdf" -execdir mv {} "$TMP" ";"

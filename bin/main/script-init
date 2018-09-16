@@ -49,13 +49,19 @@ SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
 
 # ---------- Main ----------
-if [[ "$(pwd)" != "$BIN/"* ]] && [[ -z "$BIN_SUBDIR" ]]; then
-    BIN_SUBDIR=main
+if [[ "$(pwd)" == "$BIN/"* ]] && [[ -z "$BIN_SUBDIR" ]]; then
+    FULL_BIN_PATH="$(pwd)"
+elif [[ -z "$BIN_SUBDIR" ]]; then
+    FULL_BIN_PATH="$BIN"/main
+else
+    FULL_BIN_PATH="$BIN"/"$BIN_SUBDIR"
 fi
 
-[ -d "$BIN"/"$BIN_SUBDIR" ] || die "The directory $BIN/$BIN_SUBDIR does NOT exist." 
-cd "$BIN"/"$BIN_SUBDIR" || exit 1
-emsg "Entering $BIN/$BIN_SUBDIR."
+if [[ "$(pwd)" != "$FULL_BIN_PATH" ]]; then
+    [ -d "$FULL_BIN_PATH" ] || die "The directory $FULL_BIN_PATH does NOT exist." 
+    cd "$FULL_BIN_PATH" || exit 1
+    emsg "Entering $FULL_BIN_PATH."
+fi
 
 case "$FILETYPE" in
     python )

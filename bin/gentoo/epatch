@@ -170,11 +170,13 @@ if [[ "$remove" = true ]]; then
 
     if [[ -f "$PATCH_PATH" ]]; then
         rm "$PATCH_PATH"
+        rmdir "$PATCH_DIR" &> /dev/null
         emsg "Removed $PATCH_PATH."
     fi
 
     if [[ -f "$PATCH_NOVERSION_PATH" ]]; then
         rm "$PATCH_NOVERSION_PATH"
+        rmdir "$PATCH_NOVERSION_DIR" &> /dev/null
         emsg "Removed $PATCH_NOVERSION_PATH."
     fi
 fi

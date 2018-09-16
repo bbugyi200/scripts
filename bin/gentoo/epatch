@@ -15,7 +15,7 @@ USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -I | [-V] -i PATCH | -l | -
 OVERLAY="gentoo"
 TMP_DIR=/tmp/"$(basename "$0")"
 
-eval set -- "$(getopt -o "a:,d,h,I,i:,l,o:,P,r:,V,u:" -l "apply:,debug,help,install-pkg,install:,list,overlay:,purge,remove:,use-version-specifier,user:" -- "$@")"
+eval set -- "$(getopt -o "a:,d,h,I,i:,l,o:,P,r:,V,u:" -l "apply:,debug,help,install-pkg,install-patch:,list,overlay:,purge,remove:,use-version-specifier,user:" -- "$@")"
 
 read -r -d '' HELP << EOM
 $USAGE
@@ -46,7 +46,7 @@ while [[ -n "$1" ]]; do
        -I|--install-pkg )
            install_pkg=true
            ;;
-       -i|--install )
+       -i|--install-patch )
            shift
            PATCH_NAME="$1"
            install=true
@@ -103,12 +103,23 @@ if [[ "$apply" = true || "$install_pkg" = true || "$install" = true || "$list" =
     PATCH_NOVERSION_PATH="$PATCH_NOVERSION_DIR"/"$PATCH_NAME".patch
 fi
 
+# >>> APPLY
 if [[ "$apply" = true ]]; then
-    [[ -f "$PATCH_PATH" ]] || die "The patch $PATCH_PATH does NOT exist."
-    git apply "$PATCH_PATH"
+    if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
+        die "The patch $PATCH_NAME.patch does NOT exist."
+    fi
+
+    if [[ -f "$PATCH_PATH" ]]; then
+        git apply "$PATCH_PATH"
+    elif [[ -f "$PATCH_NOVERSION_PATH" ]]; then
+        git apply "$PATCH_NOVERSION_PATH"
+    fi
+
     emsg "Applied $PATCH_NAME.patch to git repository."
+# >>> INSTALL PACKAGE
 elif [[ "$install_pkg" = true ]]; then
     get -f "$(pwd | awk -F'/' '{printf "%s", $5}')"
+# >>> INSTALL PATCH
 elif [[ "$install" = true ]]; then
     if [[ "$use_version_specifier" ]]; then
         PDIR="$PATCH_DIR"
@@ -118,18 +129,26 @@ elif [[ "$install" = true ]]; then
         PPATH="$PATCH_NOVERSION_PATH"
     fi
 
+    EXISTING_PATCH_PATH="$(find "$PATCH_PATH" "$PATCH_NOVERSION_PATH" -name "*$PATCH_NAME.patch" 2> /dev/null)"
+    if [[ -n "$EXISTING_PATCH_PATH" && "$PPATH" != "$EXISTING_PATCH_PATH" ]]; then
+        die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n$EXISTING_PATCH_PATH."
+    fi
+
     [[ -d "$PDIR" ]] || mkdir -p "$PDIR"
 
     git diff > "$PPATH"
     emsg "Installed patch to $PPATH."
+# >>> LIST
 elif [[ "$list" = true ]]; then
     find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null
+# >>> PURGE
 elif [[ "$purge" = true ]]; then
     git reset --hard HEAD &> /dev/null
     git clean -f &> /dev/null
     emsg "Purged all patches from git repository."
+# >>> REMOVE PATCH
 elif [[ "$remove" = true ]]; then
-    if ! [[ -f "$PATCH_PATH" ]] && ! [[ -f "$PATCH_NOVERSION_PATH" ]]; then
+    if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
         die "No patch by the name of $PATCH_NAME.patch currently exists."
     fi
 

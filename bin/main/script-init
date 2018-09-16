@@ -1,12 +1,12 @@
 #!/bin/bash
 
-############################
-#  Initialize Bash Script  #
-############################
+#############################################
+#  Initialize Script using Preset Template  #
+#############################################
 
 source /home/bryan/Dropbox/scripts/templates/gutils.sh
 
-eval set -- "$(getopt -o "d,D:,f:" -l "debug,bin-directory:,filetype" -- "$@")"
+eval set -- "$(getopt -o "d,D:,e:" -l "debug,bin-directory:,extension:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -18,9 +18,9 @@ while [[ -n "$1" ]]; do
            shift
            BIN_SUBDIR="$1"
            ;;
-       -f|--filetype )
+       -e|--extension )
            shift
-           FILETYPE="$1"
+           EXT="$1"
            ;;
        -- )
            shift
@@ -30,66 +30,52 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-if [[ -z "$1" ]] || [[ -z "$FILETYPE" ]]; then
-    die "usage: $(basename "$0") [-D BIN_SUBDIR] -f FILETYPE SCRIPT_NAME" 2
+if [[ -z "$1" ]] || [[ -z "$EXT" ]]; then
+    die "usage: $(basename "$0") [-D BIN_SUBDIR] -e EXTENSION SCRIPT_NAME" 2
 fi
 
 SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
 
 if [[ "$(pwd)" != "$BIN/"* ]] && [[ -z "$BIN_SUBDIR" ]]; then
-    cd "$BIN"/main || exit 1
-    echo "Initializing $SCRIPT_NAME bash script into $BIN/main."
-    sleep 0.5
+    BIN_SUBDIR=main
 fi
 
-if [[ -n "$BIN_SUBDIR" ]]; then
-    [ -d "$BIN"/"$BIN_SUBDIR" ] || die "The directory $BIN/$BIN_SUBDIR does NOT exist." 
-    cd "$BIN"/"$BIN_SUBDIR" || exit 1
-    echo "Initializing $SCRIPT_NAME bash script into $BIN/$BIN_SUBDIR."
-    sleep 0.5
-fi
+[ -d "$BIN"/"$BIN_SUBDIR" ] || die "The directory $BIN/$BIN_SUBDIR does NOT exist." 
+cd "$BIN"/"$BIN_SUBDIR" || exit 1
 
-case "$FILETYPE" in
-    python )
-        TEMPLATE="$(cat /home/bryan/Dropbox/scripts/templates/template.py)\n"
+case "$EXT" in
+    py )
         ;;
-    bash )
-        START_LINE=3
-        read -r -d '' TEMPLATE << EOM
-#!/bin/bash
-
-box
-
-source /home/bryan/Dropbox/scripts/templates/gutils.sh
-EOM
+    sh )
         ;;
     awk )
-        EXT="awk"
-        read -r -d '' TEMPLATE << EOM
-#!/bin/awk
-EOM
+        use_extension=true
         ;;
     * )
-        die "FILETYPE must be contained in: [python, bash, awk]"
+        die "EXTENSION must be contained in: [py, sh, awk]"
 esac
 
-if [[ -n "$EXT" ]]; then
-    EXT=".$EXT"
+if [[ "$use_extension" = true ]]; then
+    FULL_SCRIPT_NAME="${SCRIPT_NAME}.${EXT}"
+else
+    FULL_SCRIPT_NAME="${SCRIPT_NAME}"
 fi
 
+echo "Initializing $FULL_SCRIPT_NAME script into $BIN/$BIN_SUBDIR."
+sleep 0.5
+
 if [[ -z "$START_LINE" ]]; then
-    START_LINE=1
+    START_LINE=3
 elif [[ "$START_LINE" == "END" ]]; then
     START_LINE=
 fi
 
-FULL_SCRIPT_NAME="${SCRIPT_NAME}${EXT}"
-
 if ! [[ -f "$FULL_SCRIPT_NAME" ]]; then
+    TEMPLATE="$(cat /home/bryan/Dropbox/scripts/templates/template."$EXT")\n"
     printf "$TEMPLATE" > "$FULL_SCRIPT_NAME"
 fi
 
 chmod +x "$FULL_SCRIPT_NAME"
-clinks 
+clinks
 vim +"$START_LINE" "$FULL_SCRIPT_NAME"

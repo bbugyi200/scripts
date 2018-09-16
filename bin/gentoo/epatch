@@ -11,7 +11,7 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" -u "$USER" "$@"
 fi
 
-USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I | [-V] -i PATCH | -l | -r PATCH | [-o OVERLAY] PACKAGE]"
+USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i PATCH | -l | -r PATCH | [-o OVERLAY] PACKAGE]"
 OVERLAY="gentoo"
 TMP_DIR=/tmp/"$(basename "$0")"
 
@@ -52,7 +52,7 @@ while [[ -n "$1" ]]; do
        -i|--install-patch )
            shift
            PATCH_NAME="$1"
-           install=true
+           install_patch=true
            ;;
        -l|--list )
            list=true
@@ -81,8 +81,14 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-# ---------- Apply (-a) and Install (-i) Handlers ----------
-if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install" = true || "$list" = true || "$remove" = true ]] ; then
+# ---------- Quick Action Handlers ----------
+# if patch name is given with -I, install patch and package
+if [[ "$install_pkg" = true && -n "$1" ]]; then
+    PATCH_NAME="$1"; shift
+    install_patch=true
+fi
+
+if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install_patch" = true || "$list" = true || "$remove" = true ]] ; then
     quick_action=true
 
     if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
@@ -116,16 +122,17 @@ if [[ "$apply" = true ]]; then
     fi
 
     emsg "Applied $PATCH_NAME.patch to git repository."
+fi
+
 # >>> CLEAN
-elif [[ "$clean" = true ]]; then
+if [[ "$clean" = true ]]; then
     git reset --hard HEAD &> /dev/null
     git clean -f &> /dev/null
     emsg "Restored git repository to initial state."
-# >>> INSTALL PACKAGE
-elif [[ "$install_pkg" = true ]]; then
-    get -f "$(pwd | awk -F'/' '{printf "%s", $5}')"
+fi
+
 # >>> INSTALL PATCH
-elif [[ "$install" = true ]]; then
+if [[ "$install_patch" = true ]]; then
     if [[ "$use_version_specifier" ]]; then
         PDIR="$PATCH_DIR"
         PPATH="$PATCH_PATH"
@@ -143,11 +150,20 @@ elif [[ "$install" = true ]]; then
 
     git diff > "$PPATH"
     emsg "Installed patch to $PPATH."
+fi
+
+# >>> INSTALL PACKAGE
+if [[ "$install_pkg" = true ]]; then
+    get -f "${PATCH_NOVERSION_DIR##*/}"
+fi
+
 # >>> LIST
-elif [[ "$list" = true ]]; then
+if [[ "$list" = true ]]; then
     find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null
+fi
+
 # >>> REMOVE PATCH
-elif [[ "$remove" = true ]]; then
+if [[ "$remove" = true ]]; then
     if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
         die "No patch by the name of $PATCH_NAME.patch currently exists."
     fi

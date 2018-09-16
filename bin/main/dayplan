@@ -44,6 +44,7 @@ def main():
             f.write('===== LOW (<Subject>) =====\n')
             f.write('Review Anki Cards\n')
             f.write('Review Notes\n')
+            f.write('===== EOS =====')
             temp_dt = temp_dt + dt.timedelta(days=1)
 
     record_dt(today_dt)

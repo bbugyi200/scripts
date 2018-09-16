@@ -6,7 +6,8 @@
 
 source /home/bryan/Dropbox/scripts/templates/gutils.sh
 
-eval set -- "$(getopt -o "d,D:,e:" -l "debug,bin-directory:,extension:" -- "$@")"
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,D:,e,f:" -l "debug,bin-directory:,use-extension,filetype:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -18,9 +19,12 @@ while [[ -n "$1" ]]; do
            shift
            BIN_SUBDIR="$1"
            ;;
-       -e|--extension )
+       -e|--use-extension )
+           use_extension=true
+           ;;
+       -f|--filetype )
            shift
-           EXT="$1"
+           FILETYPE="$1"
            ;;
        -- )
            shift
@@ -30,27 +34,32 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-if [[ -z "$1" ]] || [[ -z "$EXT" ]]; then
-    die "usage: $(basename "$0") [-D BIN_SUBDIR] -e EXTENSION SCRIPT_NAME" 2
+if [[ -z "$1" ]] || [[ -z "$FILETYPE" ]]; then
+    die "usage: $(basename "$0") [-D BIN_SUBDIR] -f filetype SCRIPT_NAME" 2
 fi
 
+# ---------- Global Variables ----------
 SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
 
+# ---------- Main ----------
 if [[ "$(pwd)" != "$BIN/"* ]] && [[ -z "$BIN_SUBDIR" ]]; then
     BIN_SUBDIR=main
 fi
 
 [ -d "$BIN"/"$BIN_SUBDIR" ] || die "The directory $BIN/$BIN_SUBDIR does NOT exist." 
 cd "$BIN"/"$BIN_SUBDIR" || exit 1
+emsg "Entering $BIN/$BIN_SUBDIR."
 
-case "$EXT" in
-    py )
+case "$FILETYPE" in
+    python )
+        EXT="py"
         ;;
-    sh )
+    bash )
+        EXT="sh"
         ;;
     awk )
-        use_extension=true
+        EXT="awk"
         ;;
     * )
         die "EXTENSION must be contained in: [py, sh, awk]"
@@ -62,20 +71,14 @@ else
     FULL_SCRIPT_NAME="${SCRIPT_NAME}"
 fi
 
-echo "Initializing $FULL_SCRIPT_NAME script into $BIN/$BIN_SUBDIR."
-sleep 0.5
-
-if [[ -z "$START_LINE" ]]; then
-    START_LINE=3
-elif [[ "$START_LINE" == "END" ]]; then
-    START_LINE=
-fi
-
 if ! [[ -f "$FULL_SCRIPT_NAME" ]]; then
     TEMPLATE="$(cat /home/bryan/Dropbox/scripts/templates/template."$EXT")\n"
     printf "$TEMPLATE" > "$FULL_SCRIPT_NAME"
+    emsg "Initializing '$FULL_SCRIPT_NAME' script."
+else
+    emsg "The '$FULL_SCRIPT_NAME' script already exists."
 fi
 
 chmod +x "$FULL_SCRIPT_NAME"
 clinks
-vim +"$START_LINE" "$FULL_SCRIPT_NAME"
+vim +3 "$FULL_SCRIPT_NAME"

@@ -21,6 +21,6 @@ function emsg() {
 }
 
 function notify() {
-    MSG="$1"; shift
-    notify-send "$(basename "$0")" "$MSG"
+    MSG="${!#}"
+    notify-send "${@:0:!#}" "$(basename "$0")" "$MSG"
 }

@@ -92,8 +92,7 @@ if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install_p
     quick_action=true
 
     if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
-        echo "ERROR: cannot use -a, -I, -i, -l, -r, or -P options outside of $TMP_DIR/CATEGORY/PACKAGE"
-        exit 1
+        die "Cannot use -a, -I, -i, -l, -r, or -P options outside of $TMP_DIR/CATEGORY/PACKAGE"
     fi
 
     PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
@@ -197,8 +196,7 @@ OVERLAY_PATH="$(portageq get_repo_path / "$OVERLAY")"
 EBUILD_CHOICES_RAW="$(find "$OVERLAY_PATH" -type f -regex ".*/$PN/.*\.ebuild" | tr '\n' ' ')"
 
 if [[ -z "$EBUILD_CHOICES_RAW" ]]; then
-    echo "ERROR: unable to find the package $PN::$OVERLAY." | tee >(logger -t "$(basename "$0")")
-    exit 1
+    die "Unable to find the package $PN::$OVERLAY."
 fi
 
 IFS=' ' read -r -a EBUILD_CHOICES <<< "$EBUILD_CHOICES_RAW"

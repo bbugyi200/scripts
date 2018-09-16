@@ -1,0 +1,12 @@
+#!/bin/bash
+
+######################################
+#  Update and Push Current Git Repo  #
+######################################
+
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
+
+cd "$(gitdir)" || exit 1
+git add .
+git commit -m "Update $(grepo)"
+git push

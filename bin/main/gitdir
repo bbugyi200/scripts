@@ -1,0 +1,7 @@
+#!/bin/bash
+
+######################################################
+#  Returns Root Directory of Current Git Repository  #
+######################################################
+
+git rev-parse --show-toplevel

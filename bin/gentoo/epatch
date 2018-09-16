@@ -11,11 +11,11 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" -u "$USER" "$@"
 fi
 
-USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -I | [-V] -i PATCH | -l | -P | -r PATCH | [-o OVERLAY] PACKAGE]"
+USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I | [-V] -i PATCH | -l | -r PATCH | [-o OVERLAY] PACKAGE]"
 OVERLAY="gentoo"
 TMP_DIR=/tmp/"$(basename "$0")"
 
-eval set -- "$(getopt -o "a:,d,h,I,i:,l,o:,P,r:,V,u:" -l "apply:,debug,help,install-pkg,install-patch:,list,overlay:,purge,remove:,use-version-specifier,user:" -- "$@")"
+eval set -- "$(getopt -o "a:,c,d,h,I,i:,l,o:,r:,V,u:" -l "apply:,clean,debug,help,install-pkg,install-patch:,list,overlay:,remove:,use-version-specifier,user:" -- "$@")"
 
 read -r -d '' HELP << EOM
 $USAGE
@@ -33,6 +33,9 @@ while [[ -n "$1" ]]; do
            shift
            PATCH_NAME="$1"
            apply=true
+           ;;
+       -c|--clean )
+           clean=true
            ;;
        -d|--debug )
            debug=true
@@ -58,9 +61,6 @@ while [[ -n "$1" ]]; do
            shift
            OVERLAY="$1"
            ;;
-       -P|--purge )
-           purge=true
-           ;;
        -r|--remove )
            shift
            PATCH_NAME="$1"
@@ -82,7 +82,7 @@ while [[ -n "$1" ]]; do
 done
 
 # ---------- Apply (-a) and Install (-i) Handlers ----------
-if [[ "$apply" = true || "$install_pkg" = true || "$install" = true || "$list" = true || "$purge" = true || "$remove" = true ]] ; then
+if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install" = true || "$list" = true || "$remove" = true ]] ; then
     quick_action=true
 
     if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
@@ -116,6 +116,11 @@ if [[ "$apply" = true ]]; then
     fi
 
     emsg "Applied $PATCH_NAME.patch to git repository."
+# >>> CLEAN
+elif [[ "$clean" = true ]]; then
+    git reset --hard HEAD &> /dev/null
+    git clean -f &> /dev/null
+    emsg "Restored git repository to initial state."
 # >>> INSTALL PACKAGE
 elif [[ "$install_pkg" = true ]]; then
     get -f "$(pwd | awk -F'/' '{printf "%s", $5}')"
@@ -141,11 +146,6 @@ elif [[ "$install" = true ]]; then
 # >>> LIST
 elif [[ "$list" = true ]]; then
     find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null
-# >>> PURGE
-elif [[ "$purge" = true ]]; then
-    git reset --hard HEAD &> /dev/null
-    git clean -f &> /dev/null
-    emsg "Purged all patches from git repository."
 # >>> REMOVE PATCH
 elif [[ "$remove" = true ]]; then
     if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then

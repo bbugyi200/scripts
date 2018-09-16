@@ -11,7 +11,7 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" -u "$USER" "$@"
 fi
 
-USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -I | -i PATCH | -l | -P | -r PATCH | [-V] [-o OVERLAY] PACKAGE]"
+USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -I | [-V] -i PATCH | -l | -P | -r PATCH | [-o OVERLAY] PACKAGE]"
 OVERLAY="gentoo"
 TMP_DIR=/tmp/"$(basename "$0")"
 
@@ -86,13 +86,21 @@ if [[ "$apply" = true || "$install_pkg" = true || "$install" = true || "$list" =
     quick_action=true
 
     if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
-        echo "ERROR: cannot use -i, -a, or -P options outside of $TMP_DIR/CATEGORY/PACKAGE"
+        echo "ERROR: cannot use -a, -I, -i, -l, -r, or -P options outside of $TMP_DIR/CATEGORY/PACKAGE"
         exit 1
     fi
 
     PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
     PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
     PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
+
+    if [[ "$PATCH_DIR" =~ .*\/[A-Za-z\-]+\-[0-9]+ ]]; then
+        PATCH_NOVERSION_DIR="${PATCH_DIR%-*}"
+    else
+        PATCH_NOVERSION_DIR="$PATCH_DIR"
+    fi
+
+    PATCH_NOVERSION_PATH="$PATCH_NOVERSION_DIR"/"$PATCH_NAME".patch
 fi
 
 if [[ "$apply" = true ]]; then
@@ -102,20 +110,38 @@ if [[ "$apply" = true ]]; then
 elif [[ "$install_pkg" = true ]]; then
     get -f "$(pwd | awk -F'/' '{printf "%s", $5}')"
 elif [[ "$install" = true ]]; then
-    [[ -d "$PATCH_DIR" ]] || mkdir -p "$PATCH_DIR"
+    if [[ "$use_version_specifier" ]]; then
+        PDIR="$PATCH_DIR"
+        PPATH="$PATCH_PATH"
+    else
+        PDIR="$PATCH_NOVERSION_DIR"
+        PPATH="$PATCH_NOVERSION_PATH"
+    fi
 
-    git diff > "$PATCH_PATH"
-    emsg "Installed patch to $PATCH_PATH."
+    [[ -d "$PDIR" ]] || mkdir -p "$PDIR"
+
+    git diff > "$PPATH"
+    emsg "Installed patch to $PPATH."
 elif [[ "$list" = true ]]; then
-    find "$PATCH_DIR" -name "*.patch"
+    find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null
 elif [[ "$purge" = true ]]; then
     git reset --hard HEAD &> /dev/null
     git clean -f &> /dev/null
     emsg "Purged all patches from git repository."
 elif [[ "$remove" = true ]]; then
-    [[ -f "$PATCH_PATH" ]] || die "The $PATCH_PATH patch does NOT exist."
-    rm "$PATCH_PATH"
-    emsg "Removed $PATCH_PATH."
+    if ! [[ -f "$PATCH_PATH" ]] && ! [[ -f "$PATCH_NOVERSION_PATH" ]]; then
+        die "No patch by the name of $PATCH_NAME.patch currently exists."
+    fi
+
+    if [[ -f "$PATCH_PATH" ]]; then
+        rm "$PATCH_PATH"
+        emsg "Removed $PATCH_PATH."
+    fi
+
+    if [[ -f "$PATCH_NOVERSION_PATH" ]]; then
+        rm "$PATCH_NOVERSION_PATH"
+        emsg "Removed $PATCH_NOVERSION_PATH."
+    fi
 fi
 
 if [[ "$quick_action" = true ]]; then
@@ -174,11 +200,7 @@ WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P}[^/]*")"
 CATEGORY="$(echo "${WORK_DIR#$PORTAGE_BUILD_DIR}" | awk -F'/' '{print $2}')"
 
 TMP_WORK_DIR="$TMP_DIR"/"$CATEGORY"
-if [[ "$use_version_specifier" = true ]]; then
-    TMP_WORK_DIR="$TMP_WORK_DIR"/"$P"
-else
-    TMP_WORK_DIR="$TMP_WORK_DIR"/"$PN"
-fi
+TMP_WORK_DIR="$TMP_WORK_DIR"/"$P"
 
 [[ -d "$TMP_WORK_DIR" ]] || mkdir -p "$TMP_WORK_DIR"
 cp -r "$WORK_DIR"/* "$TMP_WORK_DIR"

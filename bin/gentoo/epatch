@@ -4,14 +4,18 @@
 #  Create a Patch for a Gentoo Package  #
 #########################################
 
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
+
 # ensure running as root
 if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" -u "$USER" "$@"
 fi
 
-USAGE="usage: $(basename "$0") [-h] [-d] [-i PATCH | [-V] [-r REPO] PACKAGE]"
-REPO="gentoo"
+USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -I | -i PATCH | -l | -P | -r PATCH | [-V] [-o OVERLAY] PACKAGE]"
+OVERLAY="gentoo"
 TMP_DIR=/tmp/"$(basename "$0")"
+
+eval set -- "$(getopt -o "a:,d,h,I,i:,l,o:,P,r:,V,u:" -l "apply:,debug,help,install-pkg,install:,list,overlay:,purge,remove:,use-version-specifier,user:" -- "$@")"
 
 read -r -d '' HELP << EOM
 $USAGE
@@ -23,11 +27,15 @@ Steps to create an ebuild patch:
 3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
 EOM
 
-eval set -- "$(getopt -o "d,h,i,r:,V,u:" -l "debug,help,install,repo:,use-version-specifier,user:" -- "$@")"
-
 while [[ -n "$1" ]]; do
     case $1 in
+       -a|--apply )
+           shift
+           PATCH_NAME="$1"
+           apply=true
+           ;;
        -d|--debug )
+           debug=true
            PS4='$LINENO: '
            set -x
            ;;
@@ -35,12 +43,28 @@ while [[ -n "$1" ]]; do
            echo "$HELP"
            exit 0
            ;;
+       -I|--install-pkg )
+           install_pkg=true
+           ;;
        -i|--install )
+           shift
+           PATCH_NAME="$1"
            install=true
            ;;
-       -r|--repo )
+       -l|--list )
+           list=true
+           ;;
+       -o|--overlay )
            shift
-           REPO="$1"
+           OVERLAY="$1"
+           ;;
+       -P|--purge )
+           purge=true
+           ;;
+       -r|--remove )
+           shift
+           PATCH_NAME="$1"
+           remove=true
            ;;
        -u|--user )
            shift
@@ -57,34 +81,63 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-if [[ -z "$1" ]]; then
-    echo "$USAGE"
-    exit 2
-fi
-
-if [[ "$install" = true ]]; then
-    PATCH_NAME="$1"; shift
+# ---------- Apply (-a) and Install (-i) Handlers ----------
+if [[ "$apply" = true || "$install_pkg" = true || "$install" = true || "$list" = true || "$purge" = true || "$remove" = true ]] ; then
+    quick_action=true
 
     if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
-        echo "ERROR: cannot use --install option outside of $TMP_DIR/CATEGORY/PACKAGE"
+        echo "ERROR: cannot use -i, -a, or -P options outside of $TMP_DIR/CATEGORY/PACKAGE"
         exit 1
     fi
 
     PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
     PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
     PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
+fi
 
+if [[ "$apply" = true ]]; then
+    [[ -f "$PATCH_PATH" ]] || die "The patch $PATCH_PATH does NOT exist."
+    git apply "$PATCH_PATH"
+    emsg "Applied $PATCH_NAME.patch to git repository."
+elif [[ "$install_pkg" = true ]]; then
+    get -f "$(pwd | awk -F'/' '{printf "%s", $5}')"
+elif [[ "$install" = true ]]; then
     [[ -d "$PATCH_DIR" ]] || mkdir -p "$PATCH_DIR"
 
     git diff > "$PATCH_PATH"
-    echo "Installed patch to $PATCH_PATH."
+    emsg "Installed patch to $PATCH_PATH."
+elif [[ "$list" = true ]]; then
+    find "$PATCH_DIR" -name "*.patch"
+elif [[ "$purge" = true ]]; then
+    git reset --hard HEAD &> /dev/null
+    git clean -f &> /dev/null
+    emsg "Purged all patches from git repository."
+elif [[ "$remove" = true ]]; then
+    [[ -f "$PATCH_PATH" ]] || die "The $PATCH_PATH patch does NOT exist."
+    rm "$PATCH_PATH"
+    emsg "Removed $PATCH_PATH."
+fi
+
+if [[ "$quick_action" = true ]]; then
     exit 0
+fi
+
+# ---------- Main ----------
+if [[ -z "$1" ]]; then
+    echo "$USAGE"
+    exit 2
 fi
 
 PN="$1"; shift
 
-GENTOO_REPO_PATH="$(portageq get_repo_path / "$REPO")"
-EBUILD_CHOICES_RAW="$(find "$GENTOO_REPO_PATH" -type f -regex ".*/$PN/.*\.ebuild" | tr '\n' ' ')"
+OVERLAY_PATH="$(portageq get_repo_path / "$OVERLAY")"
+EBUILD_CHOICES_RAW="$(find "$OVERLAY_PATH" -type f -regex ".*/$PN/.*\.ebuild" | tr '\n' ' ')"
+
+if [[ -z "$EBUILD_CHOICES_RAW" ]]; then
+    echo "ERROR: unable to find the package $PN::$OVERLAY." | tee >(logger -t "$(basename "$0")")
+    exit 1
+fi
+
 IFS=' ' read -r -a EBUILD_CHOICES <<< "$EBUILD_CHOICES_RAW"
 
 if [[ "${#EBUILD_CHOICES[@]}" -eq 1 ]]; then
@@ -108,8 +161,10 @@ if [[ "$P" =~ .*-r[0-9]+ ]]; then
 fi
 
 # Disables STDOUT and STDERR
-exec 5>&1 > /dev/null
-exec 2>&1
+if [[ "$debug" != true ]]; then
+    exec 5>&1 > /dev/null
+    exec 2>&1
+fi
 
 ebuild "$EBUILD" clean unpack
 
@@ -135,5 +190,7 @@ git commit -m "Initial Commit"
 
 chown -R "$REGULAR_USER":"$REGULAR_USER" "$TMP_DIR"
 
-exec 1>&5  # Restores STDOUT
+if [[ "$debug" != true ]]; then
+    exec 1>&5  # Restores STDOUT
+fi
 printf "$TMP_WORK_DIR"

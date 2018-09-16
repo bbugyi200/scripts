@@ -6,8 +6,14 @@
 
 source /home/bryan/Dropbox/scripts/templates/gutils.sh
 
+read -r -d '' TEMPLATE << EOM
+#!/bin/awk
+
+
+EOM
+
 cd /home/bryan/Dropbox/scripts/bin/awk || exit 1
-printf "#!/bin/awk -f\n\n" > "$1.awk"
+printf "$TEMPLATE" > "$1.awk"
 chmod +x "$1.awk"
 clinks
 vim + "$1.awk"

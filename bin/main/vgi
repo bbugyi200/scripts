@@ -1,0 +1,10 @@
+#!/bin/bash
+
+##################################
+#  Opens .gitignore File in vim  #
+##################################
+
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
+
+cd "$(gitdir)" || die "Not a git repository."
+vim .gitignore

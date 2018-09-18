@@ -5,6 +5,8 @@
 import re
 import subprocess as sp  # noqa: F401
 
+from dateutil.parser import parse
+
 import gutils
 
 #######################################################################################
@@ -17,12 +19,15 @@ log = gutils.logging.getEasyLogger(__name__)
 def main(args):
     fp_highlights = '/home/bryan/.weechat/highlights.txt'
     fp_tmp = '/tmp/weechat-highlights.txt'
-    clear_duplicates(fp_highlights, fp_tmp, username=args.username, buffer_=args.buffer)
+    format_results(fp_highlights, fp_tmp,
+                   username=args.username,
+                   buffer_=args.buffer,
+                   daterange=args.daterange)
 
     gutils.shell('vim + {}'.format(fp_tmp))
 
 
-def clear_duplicates(fp, nfp, *, username=None, buffer_=None):
+def format_results(fp, nfp, *, username=None, buffer_=None, daterange=None):
     stripped_lines = []
     full_lines = []
 
@@ -41,11 +46,19 @@ def clear_duplicates(fp, nfp, *, username=None, buffer_=None):
         if buffer_ is not None:
             conditions.append('{}'.format(buffer_) in L)
 
+        if daterange is not None:
+            start_dt = parse(daterange[0])
+            end_dt = parse(daterange[1])
+            D = parse(L[:L.index(']')][1:])
+
+            conditions.append(start_dt <= D)
+            conditions.append(D <= end_dt)
+
         if all(conditions):
             stripped_lines.append(S)
             NL = L
             NL = re.sub('\[[0-9:]+\] ', '', NL)
-            NL = re.sub('(\([#A-z]+\)) ([A-z\-0-9]+): (.*)', '\\1 <\\2>\n\t\\3\n', NL)
+            NL = re.sub('(\([#A-z0-9]+\)) ([A-z\-0-9]+): (.*)', '\\1 <\\2>\n\t\\3\n', NL)
             full_lines.append(NL)
 
     with open(nfp, 'w') as f:
@@ -59,6 +72,8 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('-u', dest='username', help='IRC Username.')
     parser.add_argument('-b', dest='buffer', help='IRC Buffer.')
+    parser.add_argument('-D', nargs=2, dest='daterange',
+                        help='Show only messages sent between this range of dates.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

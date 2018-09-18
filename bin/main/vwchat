@@ -17,14 +17,15 @@ log = gutils.logging.getEasyLogger(__name__)
 def main(args):
     fp_highlights = '/home/bryan/.weechat/highlights.txt'
     fp_tmp = '/tmp/weechat-highlights.txt'
-    clear_duplicates(fp_highlights, fp_tmp)
+    clear_duplicates(fp_highlights, fp_tmp, username=args.username, buffer_=args.buffer)
 
     gutils.shell('vim + {}'.format(fp_tmp))
 
 
-def clear_duplicates(fp, nfp):
+def clear_duplicates(fp, nfp, *, username=None, buffer_=None):
     stripped_lines = []
     full_lines = []
+
     for L in open(fp, 'r'):
         S = L[L.index('('):]
 
@@ -34,6 +35,12 @@ def clear_duplicates(fp, nfp):
             'disconnected from server' not in S,
         ]
 
+        if username is not None:
+            conditions.append('{}'.format(username) in L)
+
+        if buffer_ is not None:
+            conditions.append('{}'.format(buffer_) in L)
+
         if all(conditions):
             stripped_lines.append(S)
             NL = L
@@ -42,11 +49,16 @@ def clear_duplicates(fp, nfp):
             full_lines.append(NL)
 
     with open(nfp, 'w') as f:
+        f.write('# vim: filetype=weechat\n\n')
+
+    with open(nfp, 'a+') as f:
         f.writelines(full_lines)
 
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
+    parser.add_argument('-u', dest='username', help='IRC Username.')
+    parser.add_argument('-b', dest='buffer', help='IRC Buffer.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

@@ -27,32 +27,15 @@ def main(args):
     gutils.shell('vim + {}'.format(fp_tmp))
 
 
-def format_results(fp, nfp, *, username=None, buffer_=None, daterange=None):
+def format_results(fp, fp_tmp, **kwargs):
     stripped_lines = []
     full_lines = []
 
     for L in open(fp, 'r'):
+        conditions = get_conditions(L, **kwargs)
+
         S = L[L.index('('):]
-
-        conditions = [
-            S not in stripped_lines,
-            'has joined #' not in S,
-            'disconnected from server' not in S,
-        ]
-
-        if username is not None:
-            conditions.append('{}'.format(username) in L)
-
-        if buffer_ is not None:
-            conditions.append('{}'.format(buffer_) in L)
-
-        if daterange is not None:
-            start_dt = parse(daterange[0])
-            end_dt = parse(daterange[1])
-            D = parse(L[:L.index(']')][1:])
-
-            conditions.append(start_dt <= D)
-            conditions.append(D <= end_dt)
+        conditions.append(S not in stripped_lines)
 
         if all(conditions):
             stripped_lines.append(S)
@@ -61,11 +44,35 @@ def format_results(fp, nfp, *, username=None, buffer_=None, daterange=None):
             NL = re.sub('(\([#A-z0-9]+\)) ([A-z\-0-9]+): (.*)', '\\1 <\\2>\n\t\\3\n', NL)
             full_lines.append(NL)
 
-    with open(nfp, 'w') as f:
+    with open(fp_tmp, 'w') as f:
         f.write('# vim: filetype=weechat\n\n')
 
-    with open(nfp, 'a+') as f:
+    with open(fp_tmp, 'a+') as f:
         f.writelines(full_lines)
+
+
+def get_conditions(line, username=None, buffer_=None, daterange=None):
+    conditions = [
+        '(BNC) ' not in line,
+        'has joined #' not in line,
+        'disconnected from server' not in line,
+    ]
+
+    if username is not None:
+        conditions.append('{}:'.format(username) in line)
+
+    if buffer_ is not None:
+        conditions.append('(#{})'.format(buffer_) in line)
+
+    if daterange is not None:
+        start_dt = parse(daterange[0])
+        end_dt = parse(daterange[1])
+        D = parse(line[:line.index(']')][1:])
+
+        conditions.append(start_dt <= D)
+        conditions.append(D <= end_dt)
+
+    return conditions
 
 
 if __name__ == "__main__":
@@ -73,6 +80,7 @@ if __name__ == "__main__":
     parser.add_argument('-u', dest='username', help='IRC Username.')
     parser.add_argument('-b', dest='buffer', help='IRC Buffer.')
     parser.add_argument('-D', nargs=2, dest='daterange',
+                        metavar=('START', 'END'),
                         help='Show only messages sent between this range of dates.')
     args = parser.parse_args()
 

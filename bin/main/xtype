@@ -22,4 +22,4 @@ while [[ -n "$1" ]]; do
 done
 
 sleep 0.1
-xdotool type --clearmodifiers --delay "$DELAY" "$*"
+xdotool type --delay "$DELAY" "$*"

@@ -6,5 +6,7 @@
 
 source /home/bryan/Dropbox/scripts/templates/gutils.sh
 
-cd "$(gitdir)" || die "Not a git repository."
+GIT_ROOT="$(gitdir 2> /dev/null)"
+[ -d "$GIT_ROOT" ] || die "Not a git repository."
+cd "$GIT_ROOT" || exit 1
 vim .gitignore

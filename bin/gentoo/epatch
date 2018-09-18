@@ -11,7 +11,13 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" -u "$USER" "$@"
 fi
 
-USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i PATCH | -l | -r PATCH | [-o OVERLAY] PACKAGE]"
+# ---------- Functions ----------
+function error_no_exist() {
+    die "No patch by the name of $1.patch exists."
+}
+
+# ---------- Global Variables ----------
+USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i PATCH | -l [PATCH] | -r PATCH | [-o OVERLAY] PACKAGE]"
 OVERLAY="gentoo"
 TMP_DIR=/tmp/"$(basename "$0")"
 
@@ -84,7 +90,6 @@ done
 # ---------- Quick Action Handlers ----------
 # if patch name is given with -I, install patch and package
 if [[ "$install_pkg" = true && -n "$1" ]]; then
-    PATCH_NAME="$1"; shift
     install_patch=true
 fi
 
@@ -95,23 +100,27 @@ if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install_p
         die "Cannot use -a, -I, -i, -l, -r, or -P options outside of $TMP_DIR/CATEGORY/PACKAGE"
     fi
 
+    if [[ -n "$1" ]]; then
+        PATCH_NAME="$1"; shift
+    fi
+
     PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
     PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
     PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
-
+    
     if [[ "$PATCH_DIR" =~ .*\/[A-Za-z\-]+\-[0-9]+ ]]; then
         PATCH_NOVERSION_DIR="${PATCH_DIR%-*}"
     else
         PATCH_NOVERSION_DIR="$PATCH_DIR"
     fi
-
+    
     PATCH_NOVERSION_PATH="$PATCH_NOVERSION_DIR"/"$PATCH_NAME".patch
 fi
 
 # >>> APPLY
 if [[ "$apply" = true ]]; then
     if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
-        die "The patch $PATCH_NAME.patch does NOT exist."
+        error_no_exist "$PATCH_NAME"
     fi
 
     if [[ -f "$PATCH_PATH" ]]; then
@@ -119,6 +128,8 @@ if [[ "$apply" = true ]]; then
     elif [[ -f "$PATCH_NOVERSION_PATH" ]]; then
         git apply "$PATCH_NOVERSION_PATH"
     fi
+
+    chown -R "$REGULAR_USER":"$REGULAR_USER" "$TMP_DIR"/"$PATCH_SUBDIR"
 
     emsg "Applied $PATCH_NAME.patch to git repository."
 fi
@@ -142,12 +153,14 @@ if [[ "$install_patch" = true ]]; then
 
     EXISTING_PATCH_PATH="$(find "$PATCH_PATH" "$PATCH_NOVERSION_PATH" -name "*$PATCH_NAME.patch" 2> /dev/null)"
     if [[ -n "$EXISTING_PATCH_PATH" && "$PPATH" != "$EXISTING_PATCH_PATH" ]]; then
-        die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n$EXISTING_PATCH_PATH."
+        die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n$EXISTING_PATCH_PATH"
     fi
 
     [[ -d "$PDIR" ]] || mkdir -p "$PDIR"
 
-    git diff > "$PPATH"
+    git add -A
+    git diff --staged > "$PPATH"
+    git reset HEAD &> /dev/null
     emsg "Installed patch to $PPATH."
 fi
 
@@ -158,13 +171,25 @@ fi
 
 # >>> LIST
 if [[ "$list" = true ]]; then
-    find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null
+    if [[ -n "$PATCH_NAME" ]]; then
+        if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
+            error_no_exist "$PATCH_NAME"
+        fi
+
+        if [[ -f "$PATCH_PATH" ]]; then
+            pygmentize -g "$PATCH_PATH"
+        elif [[ -f "$PATCH_NOVERSION_PATH" ]]; then
+            pygmentize -g "$PATCH_NOVERSION_PATH"
+        fi
+    else
+        find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null
+    fi
 fi
 
 # >>> REMOVE PATCH
 if [[ "$remove" = true ]]; then
     if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
-        die "No patch by the name of $PATCH_NAME.patch currently exists."
+        error_no_exist "$PATCH_NAME"
     fi
 
     if [[ -f "$PATCH_PATH" ]]; then

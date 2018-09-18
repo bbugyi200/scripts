@@ -1,6 +1,6 @@
-###############################################
-#  Global Utility Functions for Bash Scripts  #
-###############################################
+################################################
+#  Global Utility Functions for Shell Scripts  #
+################################################
 
 function die() {
     MSG="$1"; shift
@@ -11,13 +11,13 @@ function die() {
         EC=1
     fi
 
-    echo "$MSG" | tee >(logger -t "$(basename "$0")")
+    >&2 printf "ERROR: $MSG\n" | tee >(logger -t "$(basename "$0")")
     exit "$EC"
 }
 
 function emsg() {
     MSG="$1"; shift
-    echo ">>> $MSG"
+    printf ">>> $MSG\n"
 }
 
 function notify() {

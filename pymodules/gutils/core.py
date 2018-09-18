@@ -14,7 +14,7 @@ import gutils.g_xdg as xdg
 import gutils.shared as shared
 
 __all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'mkfifo', 'ArgumentParser',
-           'notify', 'xtype', 'xkey']
+           'shell', 'notify', 'xtype', 'xkey']
 
 
 class GUtilsError(Exception):
@@ -117,6 +117,11 @@ def notify(*args, title=None, urgency=None):
     cmd_list.extend(args)
 
     sp.check_call(cmd_list)
+
+
+def shell(cmd_string):
+    """Run Shell Command"""
+    sp.check_call(cmd_string, shell=True)
 
 
 def xtype(keys, *, delay=None):

@@ -26,6 +26,9 @@ case "$GLOBAL_MARK" in
     'B' )
         MARKED_FILE='/home/bryan/.xmobarrc'
         ;;
+    'D' )
+        MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/GTD.sh'
+        ;;
     'E' )
         MARKED_FILE='/etc/profile.d/private.sh'
         ;;

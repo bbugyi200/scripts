@@ -12,7 +12,7 @@ fi
 overlay_dir="$(portageq get_repo_path / bbugyi200)"
 
 if [[ -z "$1" ]]; then
-    pushd "/usr/local/portage" || exit 1
+    pushd "$overlay_dir" || exit 1
     vim -c 'exe "normal \<C-p>"'
     popd || exit 1
     exit 0
@@ -20,7 +20,7 @@ fi
 
 if [[ -z "$2" ]]; then
     package="$1"; shift
-    pushd "/usr/local/portage" || exit 1
+    pushd "$overlay_dir" || exit 1
     vim "$(find "$overlay_dir" -type f -name "$package*ebuild")"
     popd || exit 1
 else
@@ -34,9 +34,9 @@ else
     
     version="$1"; shift
 
-    package_dir="/usr/local/portage/$category/$package"
+    package_dir="$overlay_dir/$category/$package"
     mkdir -p "$package_dir" &> /dev/null
-    pushd "/usr/local/portage" || exit 1
+    pushd "$overlay_dir" || exit 1
     vim "$package_dir/$package-$version.ebuild"
     popd || exit 1
 fi

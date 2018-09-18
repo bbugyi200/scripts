@@ -1,0 +1,14 @@
+#!/bin/bash
+
+############################################
+#  Prints GitHub Repository in SSH Format  #
+############################################
+
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
+
+if [[ -z "$1" ]]; then
+    die "usage: $(basename "$0") REPO" 
+fi
+
+REPO="$1"; shift
+printf "git@github.com:bbugyi200/$REPO.git"

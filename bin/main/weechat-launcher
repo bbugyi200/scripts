@@ -1,0 +1,25 @@
+#!/bin/bash
+
+####################################################
+#  Wrapper for WeeChat Scratchpad Startup Command  #
+####################################################
+
+HOSTNAME="$(hostname)"
+LOCAL_CMD="tmuxinator start WeeChat root=\$(tmdir --get WeeChat)"
+case "$HOSTNAME" in
+    athena )
+        CMD="$LOCAL_CMD"
+        ;;
+    aphrodite )
+        if ssh-athena 'exit' &> /dev/null; then
+            CMD="ssh-athena -t '/usr/local/bin/tm WeeChat'"
+        else
+            CMD="$LOCAL_CMD"
+        fi
+        ;;
+    * )
+        exit 1
+        ;;
+esac
+
+urxvt -name weechat -e zsh -c "$CMD"

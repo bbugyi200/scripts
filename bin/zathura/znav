@@ -18,8 +18,9 @@ function kill_directions() {
 }
 
 # ---------- GLOBAL VARIABLES ----------
-USAGE="usage: $(basename "$0") [-d] {-b BOOKMARK | -D DIRECTION | -h | -z {+ ZOOM_IN_KEYS | - ZOOM_OUT_KEYS | T ZOOM_IN_KEYS ZOOM_OUT_KEYS}}"
+USAGE="usage: $(basename "$0") [-d] [-h] [-b BOOKMARK | -D DIRECTION | -z {+ ZOOM_IN_KEYS | - ZOOM_OUT_KEYS | T ZOOM_IN_KEYS ZOOM_OUT_KEYS}]"
 DOCUMENT_TITLE="$(ztitle)"
+DELAY=1
 
 if [[ -n "$XDG_DATA_HOME" ]]; then
     _xdg_data_home="$XDG_DATA_HOME"
@@ -35,10 +36,8 @@ LAST_BMARK_MARKER="$D"/last
 UP_MARKER="$D"/up
 DOWN_MARKER="$D"/down
 
-DELAY=1
-
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "b:,d,D:,h,z:" -l "blist:,debug,direction:,help,zoom:" -- "$@")"
+eval set -- "$(getopt -o "b:,d,D:,h,q,z:" -l "blist:,debug,direction:,help,quiet,zoom:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -50,6 +49,9 @@ while [[ -n "$1" ]]; do
            debug=true
            PS4='$LINENO: '
            set -x
+
+           exec > >(tee /var/tmp/"$(basename "$0")".log)
+           exec 2>&1
            ;;
        -D|--direction )
            shift
@@ -58,6 +60,8 @@ while [[ -n "$1" ]]; do
        -h|--help )
            echo "$USAGE"
            exit 0
+           ;;
+       -q|--quiet )
            ;;
        -z|--zoom )
            shift

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""View Eternal Shell History Log"""
+"""Filter and View Eternal Shell History Log"""
 
 import datetime as dt
 import os
@@ -86,13 +86,13 @@ def process_logfile(fp, *, dt_end, regexp, username=None, wdir=None):
         ]
 
         if all(conditions):
-            matched_lines.append(prettify(hostname, user, date, wd, cmd))
+            matched_lines.append(build_line(hostname, user, date, wd, cmd))
 
     return matched_lines
 
 
-def prettify(hostname, user, date, wdir, cmd):
-    """Transform Log Lines to Their Final Format"""
+def build_line(hostname, user, date, wdir, cmd):
+    """Construct a Log Line using the Final (prettified) Format"""
     pretty_line_fmt = '[{}] ({}@{}) {}\n\t{}\n'
     pretty_line = pretty_line_fmt.format(date.strftime('%Y-%m-%d %H:%M:%S'),
                                          user,

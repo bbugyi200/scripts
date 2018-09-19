@@ -110,13 +110,34 @@ def get_daterange(daterange):
         tuple: (datetime, datetime)
     """
     if args.daterange is not None:
-        dt_start = parse(daterange[0])
-        dt_end = parse(daterange[1])
+        dt_start = parse_date(daterange[0])
+        dt_end = parse_date(daterange[1])
     else:
         dt_start = parse('20170101000000')
         dt_end = dt.datetime.now()
 
     return dt_start, dt_end
+
+
+def parse_date(date):
+    """Custom Date Parser."""
+    D = date.lower()
+    if D == 'today':
+        return delta_today(0)
+
+    if D == 'yesterday':
+        return delta_today(-1)
+
+    if D == 'now':
+        return dt.datetime.now()
+
+    return parse(D)
+
+
+def delta_today(N):
+    """Returns Datetime Relative to Today at 12AM"""
+    today = dt.date.today()
+    return dt.datetime.combine(today, dt.time.min) + dt.timedelta(days=N)
 
 
 if __name__ == "__main__":

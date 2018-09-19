@@ -21,6 +21,11 @@ log = gutils.logging.getEasyLogger(__name__)
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
+class ShellLogError(Exception):
+    """This Scripts Custom Exception Class"""
+    pass
+
+
 def main(args):
     fp_final = '/tmp/{0}/{0}.log'.format(scriptname)
     fp_final_dir = os.path.dirname(fp_final)
@@ -55,15 +60,15 @@ def build_custom_log(logdir, fp_final, *, daterange=None, username=None, wdir=No
     while tmp_date <= dt_end:
         fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, tmp_date.year, tmp_date.month)
 
-        if hostname.lower() == 'all':
-            fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
+        try:
+            if hostname.lower() == 'all':
+                fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
+        except ShellLogError as e:
+            log.debug(str(e))
+            continue
 
-        log_lines = process_logfile(fp_log,
-                                    dt_start=dt_start,
-                                    dt_end=dt_end,
-                                    regexp=regexp,
-                                    username=username,
-                                    wdir=wdir)
+        log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
+                                    username=username, wdir=wdir)
 
         with open(fp_final, 'a+') as f:
             f.writelines(log_lines)
@@ -79,15 +84,20 @@ def merge_hosts(logdir, year, month):
     """
     all_hostnames = [d for d in os.listdir(logdir)
                      if os.path.isdir('{}/{}'.format(logdir, d))]
-    all_log_files = ['{}/{}/{}/{:02}.log'.format(logdir, H, year, month)
-                     for H in all_hostnames]
-    fp_log = '/tmp/{}/{}/{}.log'.format(scriptname, year, month)
+    possible_log_files = ['{}/{}/{}/{:02}.log'.format(logdir, H, year, month)
+                          for H in all_hostnames]
+    all_log_files = list(filter(lambda x: os.path.exists(x), possible_log_files))
+
+    if all_log_files == []:
+        raise ShellLogError('No Log Files for {}-{} Exist.'.format(month, year))
+
+    fp_log = '/tmp/{}/{}/{:02}.log'.format(scriptname, year, month)
     fp_dir = os.path.dirname(fp_log)
 
     if not os.path.exists(fp_dir):
         os.makedirs(fp_dir)
 
-    cmd_fmt = 'cat {} 2> /dev/null | sort -t: -k 3n > {}'
+    cmd_fmt = 'cat {} | sort -t: -k 3n > {}'
     gutils.shell(cmd_fmt.format(' '.join(all_log_files), fp_log))
 
     # Protects against possible race condition
@@ -137,14 +147,9 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None):
 
 def build_log_entry(hostname, user, date, wdir, cmd):
     """Construct a Log Entry using the Final (prettified) Format"""
-    pretty_line_fmt = '[{}] ({}@{}) {}\n\t{}\n'
-    pretty_line = pretty_line_fmt.format(date.strftime('%Y-%m-%d %H:%M:%S'),
-                                         user,
-                                         hostname,
-                                         wdir,
-                                         cmd)
-
-    return pretty_line
+    fmt = '[{}] ({}@{}) {}\n\t{}\n'
+    entry = fmt.format(date.strftime('%Y-%m-%d %H:%M:%S'), user, hostname, wdir, cmd)
+    return entry
 
 
 def get_daterange(daterange):
@@ -167,6 +172,7 @@ def get_daterange(daterange):
 def parse_date(date):
     """Custom Date Parser."""
     D = date.lower()
+
     if D in ["bot", "eot"]:
         D = {"bot": "20170101000000",
              "eot": "now"}[D]

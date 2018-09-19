@@ -177,10 +177,14 @@ def delta_today(N):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('-D', '--daterange', nargs=2, metavar=('START', 'END'),
-                        help='Filter logs by using a daterange.')
+                        help='Filter logs by using a daterange. (Accepts all starndard date '
+                             'formats and also the special values "now", "today", and '
+                             '"yesterday".)')
     parser.add_argument('-G', '--grep', dest='regexp', metavar='REGEXP',
                         help='Filter logs by command string using a regular expression.')
-    parser.add_argument('-H', '--hostname', help="Filter logs by the machine's hostname.")
+    parser.add_argument('-H', '--hostname',
+                        help="Filter logs by the machine's hostname. (Accepts special ALL value "
+                             "which results in logs from all known hostnames being processed.)")
     parser.add_argument('-u', '--username', help='Filter logs by username.')
     parser.add_argument('-w', '--working-dir', dest='wdir', metavar='DIR',
                         help='Filter by what directory the user was in when the command was run.')

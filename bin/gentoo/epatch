@@ -21,8 +21,6 @@ USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i P
 OVERLAY="gentoo"
 TMP_DIR=/tmp/"$(basename "$0")"
 
-eval set -- "$(getopt -o "a:,c,d,h,I,i:,l,o:,r:,V,u:" -l "apply:,clean,debug,help,install-pkg,install-patch:,list,overlay:,remove:,use-version-specifier,user:" -- "$@")"
-
 read -r -d '' HELP << EOM
 $USAGE
 
@@ -32,6 +30,8 @@ Steps to create an ebuild patch:
 2) Make your code changes.
 3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
 EOM
+
+eval set -- "$(getopt -o "a:,c,d,h,I,i:,l,o:,r:,V,u:" -l "apply:,clean,debug,help,install-pkg,install-patch:,list,overlay:,remove:,use-version-specifier,user:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -108,7 +108,7 @@ if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install_p
     PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
     PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
     
-    if [[ "$PATCH_DIR" =~ .*\/[A-Za-z\-]+\-[0-9]+ ]]; then
+    if [[ "$PATCH_DIR" =~ .*/[A-Za-z-]+-[0-9]+ ]]; then
         PATCH_NOVERSION_DIR="${PATCH_DIR%-*}"
     else
         PATCH_NOVERSION_DIR="$PATCH_DIR"

@@ -7,9 +7,9 @@
 source /home/bryan/Dropbox/scripts/templates/gutils.sh
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,D:,f:,h,x" -l "debug,bin-directory:,filetype:,help,use-extension" -- "$@")"
+eval set -- "$(getopt -o "d,D:,f,F:,h,x" -l "debug,bin-directory:,filetype:,help,use-extension" -- "$@")"
 
-USAGE="usage: $(basename "$0") [-d] [-D BIN_SUBDIR] [-e] -f FILETYPE [-h] SCRIPT_NAME"
+USAGE="usage: $(basename "$0") [-d] [-D BIN_SUBDIR] [-f] [-x] -F FILETYPE [-h] SCRIPT_NAME"
 
 read -r -d '' HELP << EOM
 $USAGE
@@ -29,12 +29,15 @@ while [[ -n "$1" ]]; do
            shift
            BIN_SUBDIR="$1"
            ;;
-       -x|--use-extension )
-           use_extension=true
+       -f )
+           force=true
            ;;
-       -f|--filetype )
+       -F|--filetype )
            shift
            FILETYPE="$1"
+           ;;
+       -x|--use-extension )
+           use_extension=true
            ;;
        -- )
            shift
@@ -53,7 +56,7 @@ SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
 
 # ---------- Main ----------
-if [[ "$(pwd)" == "$BIN/"* ]] && [[ -z "$BIN_SUBDIR" ]]; then
+if [[ "$(pwd)" == "$BIN/"* && -z "$BIN_SUBDIR" ]] || [[ "$force" = true ]]; then
     FULL_BIN_PATH="$(pwd)"
 elif [[ -z "$BIN_SUBDIR" ]]; then
     FULL_BIN_PATH="$BIN"/main

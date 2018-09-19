@@ -56,6 +56,7 @@ def build_custom_log(logdir, fp_final, *, daterange=None, username=None, wdir=No
             fp_log = concat_logs(logdir, tmp_date.year, tmp_date.month)
 
         log_lines = process_logfile(fp_log,
+                                    dt_start=dt_start,
                                     dt_end=dt_end,
                                     regexp=regexp,
                                     username=username,
@@ -91,7 +92,7 @@ def concat_logs(logdir, year, month):
     return fp_log
 
 
-def process_logfile(fp, *, dt_end, regexp, username=None, wdir=None):
+def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None):
     """Process a single .log file.
 
     Returns:
@@ -116,6 +117,7 @@ def process_logfile(fp, *, dt_end, regexp, username=None, wdir=None):
             username is None or user == username,
             wdir is None or wd == wdir,
             date <= dt_end,
+            date >= dt_start,
             re.match(regexp, cmd) is not None,
         ]
 
@@ -147,8 +149,9 @@ def get_daterange(daterange):
         dt_start = parse_date(daterange[0])
         dt_end = parse_date(daterange[1])
     else:
-        dt_start = parse('20170101000000')
-        dt_end = dt.datetime.now()
+        now = dt.datetime.now()
+        dt_start = now.replace(year=(now.year - 1))
+        dt_end = now
 
     return dt_start, dt_end
 
@@ -156,6 +159,10 @@ def get_daterange(daterange):
 def parse_date(date):
     """Custom Date Parser."""
     D = date.lower()
+    if D in ["bot", "eot"]:
+        D = {"bot": "20170101000000",
+             "eot": "now"}[D]
+
     if D == 'today':
         return delta_today(0)
 
@@ -178,7 +185,7 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('-D', '--daterange', nargs=2, metavar=('START', 'END'),
                         help='Filter logs by using a daterange. (Accepts all starndard date '
-                             'formats and also the special values "now", "today", and '
+                             'formats and also the special values "BOT", "EOT", "now", "today", and '
                              '"yesterday".)')
     parser.add_argument('-G', '--grep', dest='regexp', metavar='REGEXP',
                         help='Filter logs by command string using a regular expression.')

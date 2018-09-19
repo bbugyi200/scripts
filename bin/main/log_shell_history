@@ -1,0 +1,18 @@
+#!/bin/bash
+
+###################################################
+#  Logging Script used for Eternal Shell History  #
+###################################################
+
+HOSTNAME="$(hostname)"
+LOGFILE="/home/bryan/Dropbox/var/logs/shell-history/$HOSTNAME/$(date +%Y/%m).log"
+LOGDIR="$(dirname "$LOGFILE")"
+[ -d "$LOGDIR" ] || mkdir -p "$LOGDIR"
+
+if [[ -z "$1" ]]; then
+    echo "usage $(basename "$0") COMMAND"
+    exit 2
+fi
+
+CMD="$1"; shift
+printf "%s:%s:%s:%s:%s\n" "$HOSTNAME" "$(whoami)" "$(date '+%Y%m%d%H%M%S')" "$(pwd)" "$CMD" >> "$LOGFILE";

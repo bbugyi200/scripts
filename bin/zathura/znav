@@ -46,7 +46,6 @@ while [[ -n "$1" ]]; do
             BMARK="$1"
             ;;
        -d|--debug )
-           debug=true
            PS4='$LINENO: '
            set -x
 
@@ -77,10 +76,6 @@ done
 
 if [[ -z "$DIRECTION" ]] && [[ -z "$ZOPTION" ]] && [[ -z "$BMARK" ]]; then
     die "$USAGE" 2
-fi
-
-if [[ -z "$DOCUMENT_TITLE" ]] && [[ "$debug" != true ]]; then
-    die "No Zathura Document is Focused"
 fi
 
 # ---------- Main ----------

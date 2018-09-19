@@ -79,7 +79,7 @@ def concat_logs(logdir, year, month):
     all_log_files = ['{}/{}/{}/{:02}.log'.format(logdir, H, year, month)
                      for H in all_hostnames]
     fp_log = '/tmp/{}/{}.{}.log'.format(scriptname, year, month)
-    cmd_fmt = 'cat {} | sort -t: -k 3n > {}'
+    cmd_fmt = 'cat {} 2> /dev/null | sort -t: -k 3n > {}'
     gutils.shell(cmd_fmt.format(' '.join(all_log_files), fp_log))
 
     # Protects against possible race condition

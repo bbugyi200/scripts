@@ -6,6 +6,7 @@ import datetime as dt
 import os
 import re
 import subprocess as sp  # noqa: F401
+import time
 
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
@@ -17,10 +18,15 @@ import gutils
 #######################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):
-    fp_final = '/tmp/{}.log'.format(os.path.basename(os.path.realpath(__file__)))
+    fp_final = '/tmp/{0}/{0}.log'.format(scriptname)
+    fp_final_dir = os.path.dirname(fp_final)
+    if not os.path.exists(fp_final_dir):
+        os.makedirs(fp_final_dir)
+
     logdir = '/home/bryan/Dropbox/var/logs/shell-history'
 
     build_custom_log(logdir, fp_final,
@@ -45,6 +51,10 @@ def build_custom_log(logdir, fp_final, *, daterange=None, username=None, wdir=No
     tmp_date = dt_start
     while tmp_date <= dt_end:
         fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, tmp_date.year, tmp_date.month)
+
+        if hostname.upper() == 'ALL':
+            fp_log = concat_logs(logdir, tmp_date.year, tmp_date.month)
+
         log_lines = process_logfile(fp_log,
                                     dt_end=dt_end,
                                     regexp=regexp,
@@ -55,6 +65,30 @@ def build_custom_log(logdir, fp_final, *, daterange=None, username=None, wdir=No
             f.writelines(log_lines)
 
         tmp_date = tmp_date + relativedelta(months=1)
+
+
+def concat_logs(logdir, year, month):
+    """Concatenates Logfiles from All Hostnames
+
+    Returns:
+        str: Filepath for new (temporary) log file that should be processed.
+    """
+    all_hostnames = [d for d in os.listdir(logdir)
+                     if os.path.isdir('{}/{}'.format(logdir, d))]
+    all_log_files = ['{}/{}/{}/{:02}.log'.format(logdir, H, year, month)
+                     for H in all_hostnames]
+    fp_log = '/tmp/{}/{}.{}.log'.format(scriptname, year, month)
+    cmd_fmt = 'cat {} | sort -t: -k 3n > {}'
+    gutils.shell(cmd_fmt.format(' '.join(all_log_files), fp_log))
+
+    # Protects against possible race condition
+    for i in range(1, 3):
+        if not os.path.exists(fp_log):
+            time.sleep(i)
+        else:
+            break
+
+    return fp_log
 
 
 def process_logfile(fp, *, dt_end, regexp, username=None, wdir=None):

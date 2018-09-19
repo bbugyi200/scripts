@@ -54,7 +54,7 @@ def build_custom_log(logdir, fp_final, *, daterange=None, username=None, wdir=No
     regexp = '.*' if regexp is None else regexp
 
     with open(fp_final, 'w') as f:
-        f.write('# vim: filetype=histlog\n\n')
+        f.write('# vim: filetype=shellhist\n\n')
 
     tmp_date = dt_start
     while tmp_date <= dt_end:
@@ -63,17 +63,16 @@ def build_custom_log(logdir, fp_final, *, daterange=None, username=None, wdir=No
         try:
             if hostname.lower() == 'all':
                 fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
+
+            log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
+                                        username=username, wdir=wdir)
+
+            with open(fp_final, 'a+') as f:
+                f.writelines(log_lines)
         except ShellLogError as e:
             log.debug(str(e))
-            continue
-
-        log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
-                                    username=username, wdir=wdir)
-
-        with open(fp_final, 'a+') as f:
-            f.writelines(log_lines)
-
-        tmp_date = tmp_date + relativedelta(months=1)
+        finally:
+            tmp_date = tmp_date + relativedelta(months=1)
 
 
 def merge_hosts(logdir, year, month):
@@ -121,10 +120,11 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None):
     if not os.path.exists(fp):
         return []
 
-    for line in open(fp, 'r'):
+    for i, line in enumerate(open(fp, 'r')):
         try:
             hostname, user, date_string, wd, cmd = line.split(':', maxsplit=4)
         except ValueError as e:
+            log.debug('i: %s', i)
             log.debug('line: %s', line.rstrip())
             log.debug("line.split(':'): %s", line.split(':'))
             raise e

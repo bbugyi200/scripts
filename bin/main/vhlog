@@ -54,6 +54,7 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
         f.write('# vim: filetype=shellhist\n\n')
 
     tmp_date = dt_start
+    entry_count = 0
     while tmp_date <= dt_end:
         fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, tmp_date.year, tmp_date.month)
 
@@ -67,6 +68,11 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
             f.writelines(log_lines)
 
         tmp_date = tmp_date + relativedelta(months=1)
+        entry_count += len(log_lines)
+
+    with open(fp_results, 'a+') as f:
+        fmt = '# Number of shell commands matched by {} query:  {}'
+        f.write(fmt.format(scriptname, entry_count))
 
 
 def merge_hosts(logdir, year, month):
@@ -84,7 +90,10 @@ def merge_hosts(logdir, year, month):
     fp_log = '/tmp/{}/{}/{:02}.log'.format(scriptname, year, month)
 
     if all_log_files == []:
-        # return path non-existant logfile
+        # return path for non-existant logfile
+        if os.path.exists(fp_log):
+            os.remove(fp_log)
+
         log.debug('No Log Files for {}-{} Exist.'.format(month, year))
         return fp_log
 

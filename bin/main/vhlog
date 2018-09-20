@@ -21,10 +21,6 @@ log = gutils.logging.getEasyLogger(__name__)
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
-class ShellLogError(Exception):
-    """This Scripts Custom Exception Class"""
-
-
 def main(args):
     fp_results = '/tmp/{0}/{0}.log'.format(scriptname)
     fp_results_dir = os.path.dirname(fp_results)
@@ -61,19 +57,16 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
     while tmp_date <= dt_end:
         fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, tmp_date.year, tmp_date.month)
 
-        try:
-            if hostname.lower() == 'all':
-                fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
+        if hostname.lower() == 'all':
+            fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
 
-            log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
-                                        username=username, wdir=wdir, unique=unique)
+        log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
+                                    username=username, wdir=wdir, unique=unique)
 
-            with open(fp_results, 'a+') as f:
-                f.writelines(log_lines)
-        except ShellLogError as e:
-            log.debug(str(e))
-        finally:
-            tmp_date = tmp_date + relativedelta(months=1)
+        with open(fp_results, 'a+') as f:
+            f.writelines(log_lines)
+
+        tmp_date = tmp_date + relativedelta(months=1)
 
 
 def merge_hosts(logdir, year, month):
@@ -88,12 +81,14 @@ def merge_hosts(logdir, year, month):
                           for H in all_hostnames]
     all_log_files = list(filter(lambda x: os.path.exists(x), possible_log_files))
 
-    if all_log_files == []:
-        raise ShellLogError('No Log Files for {}-{} Exist.'.format(month, year))
-
     fp_log = '/tmp/{}/{}/{:02}.log'.format(scriptname, year, month)
-    fp_dir = os.path.dirname(fp_log)
 
+    if all_log_files == []:
+        # return path non-existant logfile
+        log.debug('No Log Files for {}-{} Exist.'.format(month, year))
+        return fp_log
+
+    fp_dir = os.path.dirname(fp_log)
     if not os.path.exists(fp_dir):
         os.makedirs(fp_dir)
 
@@ -209,7 +204,7 @@ if __name__ == "__main__":
     parser.add_argument('-D', '--daterange', nargs=2, metavar=('START', 'END'),
                         help='Filter logs by using a daterange. Defaults to parsing all logs less '
                              'than a year old. (Accepts all starndard date  formats and also the '
-                             'special values "BOT", "EOT", "now", "today and  yesterday".)')
+                             'special values "BOT", "EOT", "now", "today" and  "yesterday".)')
     parser.add_argument('-G', '--grep', dest='regexp', metavar='REGEXP',
                         help='Filter logs by command string using a regular expression.')
     parser.add_argument('-H', '--hostname',

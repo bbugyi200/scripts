@@ -47,6 +47,10 @@ def main(args):
     sp.check_call(['vim', '+', fp_results])
 
 
+class LogsNotFound(Exception):
+    """Raised when no Log Files can be Found."""
+
+
 def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
                      wdir=None, hostname=None, regexp=None, unique=False):
     """Construct the Contents of the Final Log File that the User Views"""
@@ -55,24 +59,28 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
     regexp = '.*' if regexp is None else regexp
 
     with open(fp_results, 'w') as f:
-        f.write('# vim: filetype=shellhist\n\n')
+        f.write('# vim: filetype={}\n\n'.format(scriptname))
 
     tmp_date = dt_start
     entry_count = 0
     while tmp_date <= dt_end:
         fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, tmp_date.year, tmp_date.month)
 
-        if hostname.lower() == 'all':
-            fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
+        try:
+            if hostname.lower() == 'all':
+                fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
 
-        log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
-                                    username=username, wdir=wdir, unique=unique)
+            log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
+                                        username=username, wdir=wdir, unique=unique)
 
-        with open(fp_results, 'a+') as f:
-            f.writelines(log_lines)
+            with open(fp_results, 'a+') as f:
+                f.writelines(log_lines)
 
-        tmp_date = tmp_date + relativedelta(months=1)
-        entry_count += len(log_lines)
+            entry_count += len(log_lines)
+        except LogsNotFound as e:
+            log.debug('No Log Files for {}-{} Exist.'.format(tmp_date.month, tmp_date.year))
+        finally:
+            tmp_date = tmp_date + relativedelta(months=1)
 
     with open(fp_results, 'a+') as f:
         fmt = '# Number of shell commands matched by {} query:  {}'
@@ -81,6 +89,9 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
 
 def merge_hosts(logdir, year, month):
     """Concatenates Logfiles from All Hostnames.
+
+    Exceptions:
+        Raises LogsNotFound if no log files can be found for the given month and year.
 
     Returns:
         str: Filepath for new (temporary) log file that should be processed.
@@ -91,15 +102,10 @@ def merge_hosts(logdir, year, month):
                           for H in all_hostnames]
     all_log_files = list(filter(lambda x: os.path.exists(x), possible_log_files))
 
-    fp_log = '/tmp/{}/{}/{:02}.log'.format(scriptname, year, month)
-
     if all_log_files == []:
-        # return path for non-existant logfile
-        if os.path.exists(fp_log):
-            os.remove(fp_log)
+        raise LogsNotFound()
 
-        log.debug('No Log Files for {}-{} Exist.'.format(month, year))
-        return fp_log
+    fp_log = '/tmp/{}/{}/{:02}.log'.format(scriptname, year, month)
 
     fp_dir = os.path.dirname(fp_log)
     if not os.path.exists(fp_dir):
@@ -114,6 +120,8 @@ def merge_hosts(logdir, year, month):
             time.sleep(i)
         else:
             break
+    else:
+        raise RuntimeError('Something went wrong. The {} file does not exist.'.format(fp_log))
 
     return fp_log
 
@@ -121,13 +129,16 @@ def merge_hosts(logdir, year, month):
 def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, unique=False):
     """Process a single .log file.
 
+    Exceptions:
+        Raises LogsNotFound if the log file does not exist.
+
     Returns:
         List of lines to append to final logfile that user will view.
     """
     matched_lines = []
 
     if not os.path.exists(fp):
-        return []
+        raise LogsNotFound()
 
     if not hasattr(process_logfile, 'command_set'):
         # used to track unique commands
@@ -164,9 +175,8 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, u
 
 def build_log_entry(hostname, user, date, wdir, cmd):
     """Construct a Log Entry using the Final (prettified) Format"""
-    fmt = '[{}] ({}@{}) {}\n\t{}\n'
-    entry = fmt.format(date.strftime('%Y-%m-%d %H:%M:%S'), user, hostname, wdir, cmd)
-    return entry
+    entry_fmt = '[{}] ({}@{}) {}\n\t{}\n'
+    return entry_fmt.format(date.strftime('%Y-%m-%d %H:%M:%S'), user, hostname, wdir, cmd)
 
 
 def get_daterange(daterange):
@@ -255,7 +265,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.daterange is not None and len(args.daterange) not in (1, 2):
-        parser.error('The -D option requires either ONE or TWO arguments.')
+        error_fmt = 'The -D option requires either 1 or 2 arguments, but you have given {}.'
+        parser.error(error_fmt.format(len(args.daterange)))
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main(args)

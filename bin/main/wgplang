@@ -37,7 +37,7 @@ esac
 
 printf "$LANGUAGE"
 
-#########################  Language Choices (supported by bpaste.net  #########################
+#########################  Language Choices (supported by bpaste.net)  #########################
 # ABAP
 # ActionScript
 # ActionScript 3

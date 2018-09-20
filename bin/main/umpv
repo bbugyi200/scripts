@@ -98,6 +98,10 @@ if __name__ == "__main__":
             f = "\"" + f + "\""
             append = " append" if args.append else ""
             fifo.write("raw loadfile " + f + "{}\n".format(append))
+
+            # Fixes issue where mpv stays paused when new video is used to replace current one
+            # after the current one has already concluded.
+            fifo.write("set_property pause no\n")
     else:
         # Recreate pipe if it doesn't already exist.
         # Also makes sure it's safe, and no other user can create a bogus pipe

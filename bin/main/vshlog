@@ -3,7 +3,7 @@
 """Filter, Format, and View Shell History Log.
 
 This script is coupled with the 'log_shell_command' script which, in turn, is
-called upon by my zshrc configuration.
+called upon by my zshrc configuration file.
 """
 
 import datetime as dt
@@ -175,7 +175,10 @@ def get_daterange(daterange):
     Returns:
         tuple: (datetime, datetime)
     """
-    if args.daterange is not None:
+    if daterange is not None:
+        if len(daterange) == 1:
+            daterange = (daterange[0], None)
+
         dt_start = parse_date(daterange[0])
         dt_end = parse_date(daterange[1])
     else:
@@ -188,11 +191,25 @@ def get_daterange(daterange):
 
 def parse_date(date):
     """Custom Date Parser."""
-    D = date.lower()
+    D = None if date is None else date.lower()
 
-    if D in ["bot", "eot"]:
+    if D in ["bot", "eot", None]:
         D = {"bot": "20170101000000",
-             "eot": "now"}[D]
+             "eot": "now",
+             None: "now"}[D]
+
+    if re.match('^[0-9]+[dwmy]$', D):
+        N = int(D[:-1])
+        key = {
+            'd': 'days',
+            'w': 'weeks',
+            'm': 'months',
+            'y': 'years',
+        }[D[-1]]
+
+        kwargs = {key: N}
+        now = dt.datetime.now()
+        return now - relativedelta(**kwargs)
 
     if D == 'today':
         return delta_today(0)
@@ -214,23 +231,31 @@ def delta_today(N):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('-D', '--daterange', nargs=2, metavar=('START', 'END'),
-                        help='Filter logs by using a daterange. Defaults to parsing all logs less '
-                             'than a year old. (Accepts all starndard date  formats and also the '
-                             'special values "BOT", "EOT", "now", "today" and  "yesterday".)')
+    parser.add_argument('-D', '--daterange', nargs='*', metavar=('START', 'END'),
+                        help='Filter logs by using a daterange. Defaults to parsing all logs '
+                             'less  than a year old. If only one argument is given, the end range '
+                             'is  automatically set to "EOT" (now). Accepts all standard date '
+                             'formats  and also the special values: "BOT", "EOT", "now", "today", '
+                             'and "yesterday". Furthermore, this option accepts values of the form: '
+                             '"Nd", "Nw", "Nm" or  "Ny". These are interpreted as datetimes '
+                             'corresponding to N days/weeks/months/years ago.')
     parser.add_argument('-G', '--grep', dest='regexp', metavar='REGEXP',
                         help='Filter logs by command string using a regular expression.')
     parser.add_argument('-H', '--hostname',
-                        help="Filter logs by the machine's hostname. Defaults to hostname of "
-                             "current machine. (Accepts special ALL value which results in logs "
-                             "from all known hostnames being processed.)")
-    parser.add_argument('-u', '--username', help='Filter logs by username.')
-    parser.add_argument('--unique', action='store_true',
-                        help='Filter out logs with duplicate commands.')
+                        help='Filter logs by the machine\'s hostname. Defaults to hostname of '
+                             'current machine. Accepts special "ALL" value which results in logs '
+                             'from all known hostnames being processed.')
+    parser.add_argument('-u', '--unique', action='store_true',
+                        help='Filter out duplicate entries where two entries are considered '
+                             'equivalent if their command strings are the same.')
+    parser.add_argument('-U', '--username', help='Filter logs by username.')
     parser.add_argument('-w', '--working-dir', dest='wdir', metavar='DIR',
                         help='Filter logs by what directory the user was in when the command was '
                              'run.')
     args = parser.parse_args()
+
+    if args.daterange is not None and len(args.daterange) not in (1, 2):
+        parser.error('The -D option requires either ONE or TWO arguments.')
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main(args)

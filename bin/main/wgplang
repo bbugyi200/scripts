@@ -1,0 +1,324 @@
+#!/bin/bash
+
+###########################################################################
+#  Converts Vim syntax Types to Acceptable Language Option for wgetpaste  #
+###########################################################################
+
+if [[ -z "$1" ]]; then
+    echo "usage $(basename "$0") SYNTAX"
+    exit 2
+fi
+
+SYNTAX="$1"; shift
+
+case "$SYNTAX" in
+    cpp )
+        LANGUAGE="C++"
+        ;;
+    vim )
+        LANGUAGE="VimL"
+        ;;
+    sh|zsh )
+        LANGUAGE="Bash"
+        ;;
+    conf)
+        LANGUAGE="Lighttpd configuration file"
+        ;;
+    dosini|cfg )
+        LANGUAGE="INI"
+        ;;
+    txt )
+        LANGUAGE="Text"
+        ;;
+    * )
+        LANGUAGE="$SYNTAX"
+        ;;
+esac
+
+printf "$LANGUAGE"
+
+#########################  Language Choices (supported by bpaste.net  #########################
+# ABAP
+# ActionScript
+# ActionScript 3
+# Ada
+# ANTLR
+# ANTLR With ActionScript Target
+# ANTLR With CPP Target
+# ANTLR With C# Target
+# ANTLR With Java Target
+# ANTLR With ObjectiveC Target
+# ANTLR With Perl Target
+# ANTLR With Python Target
+# ANTLR With Ruby Target
+# ApacheConf
+# AppleScript
+# AspectJ
+# aspx-cs
+# aspx-vb
+# Asymptote
+# autohotkey
+# AutoIt
+# Awk
+# Base Makefile
+# Bash
+# Bash Session
+# Batchfile
+# BBCode
+# Befunge
+# BlitzMax
+# Boo
+# Brainfuck
+# Bro
+# BUGS
+# C
+# C#
+# C++
+# ca65
+# CBM BASIC V2
+# Ceylon
+# CFEngine3
+# cfstatement
+# Cheetah
+# Clojure
+# CMake
+# c-objdump
+# COBOL
+# COBOLFree
+# CoffeeScript
+# Coldfusion HTML
+# Common Lisp
+# Coq
+# cpp-objdump
+# Croc
+# CSS
+# CSS+Django/Jinja
+# CSS+Genshi Text
+# CSS+Lasso
+# CSS+Mako
+# CSS+Myghty
+# CSS+PHP
+# CSS+Ruby
+# CSS+Smarty
+# CUDA
+# Cython
+# D
+# Darcs Patch
+# Dart
+# Debian Control file
+# Debian Sourcelist
+# Delphi
+# dg
+# Diff
+# Django/Jinja
+# d-objdump
+# DTD
+# Duel
+# Dylan
+# DylanLID
+# Dylan session
+# eC
+# ECL
+# Elixir
+# Elixir iex session
+# Embedded Ragel
+# ERB
+# Erlang
+# Erlang erl session
+# Evoque
+# Factor
+# Fancy
+# Fantom
+# Felix
+# Fortran
+# FoxPro
+# FSharp
+# GAS
+# Genshi
+# Genshi Text
+# Gettext Catalog
+# Gherkin
+# GLSL
+# Gnuplot
+# Go
+# GoodData-CL
+# Gosu
+# Gosu Template
+# Groff
+# Groovy
+# Haml
+# Haskell
+# haXe
+# HTML
+# HTML+Cheetah
+# HTML+Django/Jinja
+# HTML+Evoque
+# HTML+Genshi
+# HTML+Lasso
+# HTML+Mako
+# HTML+Myghty
+# HTML+PHP
+# HTML+Smarty
+# HTML+Velocity
+# HTTP
+# Hxml
+# Hybris
+# IDL
+# INI
+# Io
+# Ioke
+# IRC logs
+# Jade
+# JAGS
+# Java
+# JavaScript
+# JavaScript+Cheetah
+# JavaScript+Django/Jinja
+# JavaScript+Genshi Text
+# JavaScript+Lasso
+# JavaScript+Mako
+# JavaScript+Myghty
+# JavaScript+PHP
+# JavaScript+Ruby
+# JavaScript+Smarty
+# Java Server Page
+# JSON
+# Julia
+# Julia console
+# Kconfig
+# Koka
+# Kotlin
+# Lasso
+# Lighttpd configuration file
+# Literate Haskell
+# LiveScript
+# LLVM
+# Logos
+# Logtalk
+# Lua
+# Makefile
+# Mako
+# MAQL
+# Mason
+# Matlab
+# Matlab session
+# MiniD
+# Modelica
+# Modula-2
+# MoinMoin/Trac Wiki markup
+# Monkey
+# MOOCode
+# MoonScript
+# Mscgen
+# MuPAD
+# MXML
+# Myghty
+# MySQL
+# NASM
+# Nemerle
+# NewLisp
+# Newspeak
+# Nginx configuration file
+# Nimrod
+# NSIS
+# NumPy
+# objdump
+# Objective-C
+# Objective-C++
+# Objective-J
+# OCaml
+# Octave
+# Ooc
+# Opa
+# OpenEdge ABL
+# Perl
+# PHP
+# PL/pgSQL
+# PostgreSQL console (psql)
+# PostgreSQL SQL dialect
+# PostScript
+# POVRay
+# PowerShell
+# Prolog
+# Properties
+# Protocol Buffer
+# Puppet
+# PyPy Log
+# Python
+# Python 3
+# Python 3.0 Traceback
+# Python console session
+# Python Traceback
+# QML
+# Racket
+# Ragel
+# Ragel in C Host
+# Ragel in CPP Host
+# Ragel in D Host
+# Ragel in Java Host
+# Ragel in Objective C Host
+# Ragel in Ruby Host
+# Raw token data
+# RConsole
+# Rd
+# REBOL
+# Redcode
+# reg
+# reStructuredText
+# RHTML
+# RobotFramework
+# RPMSpec
+# Ruby
+# Ruby irb session
+# Rust
+# S
+# Sass
+# Scala
+# Scalate Server Page
+# Scaml
+# Scheme
+# Scilab
+# SCSS
+# Shell Session
+# Smali
+# Smalltalk
+# Smarty
+# Snobol
+# SourcePawn
+# SQL
+# sqlite3con
+# SquidConf
+# Stan
+# Standard ML
+# systemverilog
+# Tcl
+# Tcsh
+# Tea
+# TeX
+# Text
+# Text only
+# Treetop
+# TypeScript
+# UrbiScript
+# Vala
+# VB.net
+# Velocity
+# verilog
+# VGL
+# vhdl
+# VimL
+# XML
+# XML+Cheetah
+# XML+Django/Jinja
+# XML+Evoque
+# XML+Lasso
+# XML+Mako
+# XML+Myghty
+# XML+PHP
+# XML+Ruby
+# XML+Smarty
+# XML+Velocity
+# XQuery
+# XSLT
+# Xtend
+# YAML

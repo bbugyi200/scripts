@@ -2,6 +2,9 @@
 
 ###################################################
 #  Logging Script used for Eternal Shell History  #
+#                                                 #
+#  Is hooked into ZSH shell using special         #
+#  'preexec' function.                            #
 ###################################################
 
 HOSTNAME="$(hostname)"

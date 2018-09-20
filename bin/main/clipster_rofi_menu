@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.parse_args()
 
 if __name__ == "__main__":
-    out = sp.check_output(r"clipster -o -n 10000 -0 | rofi -dmenu -sep '\x00'", shell=True)
+    out = sp.check_output(r"clipster -o -n 500 -0 | rofi -dmenu -sep '\x00'", shell=True)
     new_clip = out.decode('utf-8')[:-1]
 
     ps = sp.Popen(['xclip', '-sel', 'clipboard'], stdin=sp.PIPE)

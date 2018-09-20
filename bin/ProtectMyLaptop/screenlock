@@ -1,12 +1,11 @@
 #!/bin/bash
 
-
 if [[ -f ~/.config/PML.conf ]]; then
     CONFIG_PATH=~/.config/PML.conf
 elif [[ -f ~/.PML.conf ]]; then
     CONFIG_PATH=~/.PML.conf
 else
-    echo "No PML.conf file exists!" | tee >(logger -t "$(basename $0)")
+    echo "No PML.conf file exists!" | tee >(logger -t "$(basename "$0")")
     exit 1
 fi
 
@@ -31,7 +30,7 @@ textme_at_startup="$(awk -v opt=textme_at_startup -v section=Twilio "$awkScript"
 
 
 if [[ "$motion_enabled" -ne 0 ]]; then
-    cd "$motion_root_dir"
+    cd "$motion_root_dir" || exit 1
     (sleep -- "$motion_delay" && motion) &
     PID=$!
 fi

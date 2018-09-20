@@ -97,7 +97,7 @@ if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install_p
     quick_action=true
 
     if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
-        die "Cannot use -a, -I, -i, -l, -r, or -P options outside of $TMP_DIR/CATEGORY/PACKAGE"
+        die "Cannot use this option outside of $TMP_DIR/CATEGORY/PACKAGE"
     fi
 
     if [[ -n "$1" ]]; then

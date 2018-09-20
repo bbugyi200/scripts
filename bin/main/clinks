@@ -20,7 +20,7 @@ if [[ "$FLAG" != "-D" ]]; then
     done
 
     # Directories inside /home/<user> that should be created before stowing configs
-    HOME_DIRS=(".config" ".gnupg" ".matlab" ".ssh" ".xmonad")
+    HOME_DIRS=(".config" ".gnupg" ".matlab" ".ssh" ".weechat" ".xmonad")
     for D in "${HOME_DIRS[@]}"; do
         mkdir /home/bryan/"$D" &> /dev/null
         sudo mkdir /root/"$D" &> /dev/null
@@ -76,7 +76,7 @@ stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib
 ##### DOTFILES
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan "$FLAG" home
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/root "$FLAG" home
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr "$FLAG" usr
+stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr --no-folding "$FLAG" usr
 
 ###########################################
 #  ROOT_DUPLICATE_DIRS Post-stow Actions  #

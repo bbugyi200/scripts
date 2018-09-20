@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-"""Filter and View Eternal Shell History Log"""
+"""Filter, Format, and View Shell History Log.
+
+This script is coupled with the 'log_shell_command' script which, in turn, is
+called upon by my zshrc configuration.
+"""
 
 import datetime as dt
 import os

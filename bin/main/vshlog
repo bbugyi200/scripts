@@ -55,6 +55,10 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
                      wdir=None, hostname=None, regexp=None, unique=False):
     """Construct the Contents of the Final Log File that the User Views"""
     dt_start, dt_end = get_daterange(args.daterange)
+
+    log.vdebug('dt_start: %s', dt_start)
+    log.vdebug('dt_end: %s', dt_end)
+
     hostname = os.uname().nodename if hostname is None else hostname
     regexp = '.*' if regexp is None else regexp
 
@@ -63,7 +67,7 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
 
     tmp_date = dt_start
     entry_count = 0
-    while tmp_date <= dt_end:
+    while date_ym_value(tmp_date) <= date_ym_value(dt_end):
         fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, tmp_date.year, tmp_date.month)
 
         try:
@@ -85,6 +89,14 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
     with open(fp_results, 'a+') as f:
         fmt = '# Number of shell commands matched by {} query:  {}'
         f.write(fmt.format(scriptname, entry_count))
+
+
+def date_ym_value(date):
+    """
+    Returns value that can be used to compare datetime objects while only considering the date's
+    month and year.
+    """
+    return (100 * date.year) + date.month
 
 
 def merge_hosts(logdir, year, month):
@@ -218,8 +230,7 @@ def parse_date(date):
         }[D[-1]]
 
         kwargs = {key: N}
-        now = dt.datetime.now()
-        return now - relativedelta(**kwargs)
+        return dt.datetime.now() - relativedelta(**kwargs)
 
     if D == 'today':
         return delta_today(0)
@@ -257,7 +268,7 @@ if __name__ == "__main__":
                              'from all known hostnames being processed.')
     parser.add_argument('-u', '--unique', action='store_true',
                         help='Filter out duplicate entries where two entries are considered '
-                             'equivalent if their command strings are the same.')
+                             'to be duplicates if their command strings are the same.')
     parser.add_argument('-U', '--username', help='Filter logs by username.')
     parser.add_argument('-w', '--working-dir', dest='wdir', metavar='DIR',
                         help='Filter logs by what directory the user was in when the command was '

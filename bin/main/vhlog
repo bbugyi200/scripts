@@ -23,37 +23,38 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 class ShellLogError(Exception):
     """This Scripts Custom Exception Class"""
-    pass
 
 
 def main(args):
-    fp_final = '/tmp/{0}/{0}.log'.format(scriptname)
-    fp_final_dir = os.path.dirname(fp_final)
-    if not os.path.exists(fp_final_dir):
-        os.makedirs(fp_final_dir)
+    fp_results = '/tmp/{0}/{0}.log'.format(scriptname)
+    fp_results_dir = os.path.dirname(fp_results)
+    if not os.path.exists(fp_results_dir):
+        os.makedirs(fp_results_dir)
 
     logdir = '/home/bryan/Dropbox/var/logs/shell-history'
 
     if not os.path.exists(logdir):
         raise RuntimeError('The directory {} does not exist.'.format(logdir))
 
-    build_custom_log(logdir, fp_final,
+    build_custom_log(logdir, fp_results,
                      daterange=args.daterange,
                      username=args.username,
                      wdir=args.wdir,
                      hostname=args.hostname,
-                     regexp=args.regexp)
+                     regexp=args.regexp,
+                     unique=args.unique)
 
-    sp.check_call(['vim', '+', fp_final])
+    sp.check_call(['vim', '+', fp_results])
 
 
-def build_custom_log(logdir, fp_final, *, daterange=None, username=None, wdir=None, hostname=None, regexp=None):
+def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
+                     wdir=None, hostname=None, regexp=None, unique=False):
     """Construct the Contents of the Final Log File that the User Views"""
     dt_start, dt_end = get_daterange(args.daterange)
     hostname = os.uname().nodename if hostname is None else hostname
     regexp = '.*' if regexp is None else regexp
 
-    with open(fp_final, 'w') as f:
+    with open(fp_results, 'w') as f:
         f.write('# vim: filetype=shellhist\n\n')
 
     tmp_date = dt_start
@@ -65,9 +66,9 @@ def build_custom_log(logdir, fp_final, *, daterange=None, username=None, wdir=No
                 fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
 
             log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
-                                        username=username, wdir=wdir)
+                                        username=username, wdir=wdir, unique=unique)
 
-            with open(fp_final, 'a+') as f:
+            with open(fp_results, 'a+') as f:
                 f.writelines(log_lines)
         except ShellLogError as e:
             log.debug(str(e))
@@ -109,7 +110,7 @@ def merge_hosts(logdir, year, month):
     return fp_log
 
 
-def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None):
+def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, unique=False):
     """Process a single .log file.
 
     Returns:
@@ -119,6 +120,10 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None):
 
     if not os.path.exists(fp):
         return []
+
+    if not hasattr(process_logfile, 'command_set'):
+        # used to track unique commands
+        process_logfile.command_set = set()
 
     for i, line in enumerate(open(fp, 'r')):
         try:
@@ -138,6 +143,10 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None):
             date >= dt_start,
             re.match(regexp, cmd) is not None,
         ]
+
+        if unique:
+            conditions.append(cmd.strip() not in process_logfile.command_set)
+            process_logfile.command_set.add(cmd.strip())
 
         if all(conditions):
             matched_lines.append(build_log_entry(hostname, user, date, wd, cmd))
@@ -208,6 +217,8 @@ if __name__ == "__main__":
                              "current machine. (Accepts special ALL value which results in logs "
                              "from all known hostnames being processed.)")
     parser.add_argument('-u', '--username', help='Filter logs by username.')
+    parser.add_argument('--unique', action='store_true',
+                        help='Filter out logs with duplicate commands.')
     parser.add_argument('-w', '--working-dir', dest='wdir', metavar='DIR',
                         help='Filter logs by what directory the user was in when the command was '
                              'run.')

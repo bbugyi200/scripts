@@ -95,16 +95,19 @@ fi
 
 if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install_patch" = true || "$list" = true || "$remove" = true ]] ; then
     quick_action=true
-
-    if ! [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
-        die "Cannot use this option outside of $TMP_DIR/CATEGORY/PACKAGE"
-    fi
-
+        
     if [[ -n "$1" ]]; then
         PATCH_NAME="$1"; shift
     fi
 
-    PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
+    if [[ -f "$(pwd)"/epatch.info ]]; then
+        PATCH_SUBDIR="$(cat epatch.info)"
+    elif [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
+        PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
+    else
+        die "Cannot use this option outside of $TMP_DIR/CATEGORY/PACKAGE"
+    fi
+
     PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
     PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
     
@@ -182,7 +185,7 @@ if [[ "$list" = true ]]; then
             pygmentize -g "$PATCH_NOVERSION_PATH"
         fi
     else
-        find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null
+        find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null | sort -u
     fi
 fi
 

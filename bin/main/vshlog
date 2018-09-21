@@ -172,7 +172,7 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, u
             wdir is None or wd == wdir,
             date <= dt_end,
             date >= dt_start,
-            re.match(regexp, cmd) is not None,
+            re.search(regexp, cmd) is not None,
         ]
 
         if unique:

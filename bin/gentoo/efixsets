@@ -1,8 +1,8 @@
 #!/bin/bash
 
-################################################################
-#  Removes packages from @world that already exist in @shared  #
-################################################################
+#############################################
+#  Enforce Unofficial Portage Set Policies  #
+#############################################
 
 source /home/bryan/Dropbox/scripts/templates/gutils.sh
 

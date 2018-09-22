@@ -33,7 +33,7 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-source /home/bryan/Dropbox/scripts/modules/bash/esecret.sh
+source /home/bryan/Dropbox/scripts/modules/bash/secret.sh
 
 # ---------- Functions ----------
 function warn_user() {

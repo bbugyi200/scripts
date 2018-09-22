@@ -16,6 +16,7 @@ import gutils
 #######################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main():
@@ -51,9 +52,10 @@ def main():
         sys.exit(0)
 
     # Just used to force myself to use emanage. :)
-    # Requires that the esecret.sh file be sourced into every script that could be called here.
-    secret = get_secret()
-    cmd_list.append(secret)
+    # Requires that the secret.sh file be sourced into every script that could be called here.
+    secret_fp = '/tmp/{}.secret'.format(scriptname)
+    secret = get_secret(secret_fp)
+    cmd_list.extend([secret_fp, secret])
 
     sp.check_call(cmd_list)
 
@@ -72,10 +74,10 @@ def write_timestamp(fp, cmd):
         f.write(now.strftime('%m/%d/%Y'))
 
 
-def get_secret():
+def get_secret(fp):
     secret = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
     log.vdebug('secret: %s', secret)
-    with open('/tmp/emanage.secret', 'w') as f:
+    with open(fp, 'w') as f:
         f.write(secret)
     return secret
 

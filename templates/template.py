@@ -2,7 +2,9 @@
 
 """TEMPLATE"""
 
+import os  # noqa: F401
 import subprocess as sp  # noqa: F401
+import sys  # noqa: F401
 
 import gutils
 
@@ -11,6 +13,7 @@ import gutils
 #######################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+printf 'GTD calculator scratchpad weechat'

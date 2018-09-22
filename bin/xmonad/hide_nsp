@@ -9,7 +9,23 @@ import gutils
 
 log = gutils.logging.getEasyLogger(__name__)
 
-NSPs = ['GTD', 'calculator', 'scratchpad', 'weechat']
+
+def main(args):
+    out = sp.check_output(['get_nsps'])
+    NSPs = out.decode().strip()
+    try:
+        out = sp.check_output('active_window_name')
+    except sp.CalledProcessError:
+        log.debug('No window is currently focused.')
+        sys.exit(0)
+
+    wname = out.decode().strip()
+    if wname in NSPs:
+        log.debug('Hiding {}.'.format(wname))
+        sp.check_call(['wmctrl', '-t', '0', '-r', ':ACTIVE:'])
+        sys.exit(0)
+
+    log.debug('No scratchpad found.')
 
 
 if __name__ == "__main__":
@@ -17,16 +33,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug):
-        try:
-            out = sp.check_output('active_window_name')
-        except sp.CalledProcessError:
-            log.debug('No window is currently focused.')
-            sys.exit(0)
-
-        wname = out.decode().strip()
-        if wname in NSPs:
-            log.debug('Hiding {}.'.format(wname))
-            sp.check_call(['wmctrl', '-t', '0', '-r', ':ACTIVE:'])
-            sys.exit(0)
-
-        log.debug('No scratchpad found.')
+        main(args)

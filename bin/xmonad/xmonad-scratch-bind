@@ -1,0 +1,83 @@
+#!/bin/bash
+
+##############################################################################################
+#  Runs one of two different xmonad key bindings depending on whether or not the currently   #
+#  focused window is a Scratchpad or not.                                                    #
+##############################################################################################
+
+source /home/bryan/Dropbox/scripts/templates/gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,q" -l "debug,help,quiet" -- "$@")"
+
+USAGE="usage: $(basename "$0") [-d] [-h] [-q] CHAR"
+
+read -r -d '' HELP << EOM
+$USAGE
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "$HELP"
+           exit 0
+           ;;
+       -q|--quiet )
+           quiet=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+LOG_FILE=/var/tmp/"$(basename "$0")".log
+if [[ "$debug" = true ]] && [[ "$quiet" = true ]]; then
+    exec > "$LOG_FILE"
+elif [[ "$debug" = true ]]; then
+    exec > >(tee "$LOG_FILE")
+elif [[ "$quiet" = true ]]; then
+    exec > /dev/null
+fi
+
+if [[ "$debug" = true ]] || [[ "$quiet" = true ]]; then
+    exec 2>&1
+fi
+
+if [[ "$debug" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+if [[ -z "$1" ]]; then
+    die "$USAGE" 2
+fi
+
+# ---------- Main ----------
+# >>> PROCESS MANAGEMENT
+pid_file=/tmp/"$(basename "$0")".pid
+
+old_pid="$(cat "${pid_file}")"
+if kill -0 "${old_pid}" &> /dev/null; then
+    sudo kill "${old_pid}"
+fi
+
+echo "$$" > "${pid_file}"
+
+# >>> LOGIC
+char="$1"; shift
+wname="$(active_window_name)"
+meta_keys="super"
+
+if [[ "$(get_nsps)" == *"${wname}"* ]]; then
+    meta_keys="${meta_keys}+shift"
+fi
+
+sleep 0.1
+xdotool key --clearmodifiers ctrl+alt+"${meta_keys}"+"${char}"
+sleep 1 && xdotool keyup Meta_L Meta_R Alt_L Alt_R Super_L Super_R

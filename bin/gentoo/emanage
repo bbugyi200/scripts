@@ -2,6 +2,8 @@
 
 """Interface for System Maintenance Tasks"""
 
+import datetime as dt
+import os
 import subprocess as sp  # noqa: F401
 import sys
 
@@ -15,33 +17,63 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main():
-    command_lists = []
-
     if args.update:
-        command_lists.append(['eupdate'])
-    if args.cleanup:
-        command_lists.append(['ecleanup'])
-    if args.maint_check:
-        command_lists.append(['emaint_check'])
+        cmd = 'eupdate'
+    elif args.cleanup:
+        cmd = 'ecleanup'
+    elif args.maint_check:
+        cmd = 'emaint_check'
+
+    data_dir = gutils.xdg.getdir('data')
+    local_hostname = os.uname().nodename
+    local_tsfile = '{}/{}/{}.timestamp'.format(data_dir, local_hostname, cmd)
 
     if args.pretend:
-        for cmd_list in command_lists:
-            print(' '.join(cmd_list))
+        print(cmd)
+        sys.exit(0)
+    elif args.dsl:
+        if args.dsl == 'local':
+            out = sp.check_output(['edsl', local_tsfile])
+            print(out.decode().strip())
+        elif args.dsl == 'remote':
+            remote_hostnames = [H for H in os.listdir(data_dir) if H != local_hostname]
+            remote_ts_files = ['{}/{}/{}.timestamp'.format(data_dir, H, cmd)
+                               for H in remote_hostnames]
+
+            for H, fp in zip(remote_hostnames, remote_ts_files):
+                out = sp.check_output(['edsl', fp])
+                print('{}:{}'.format(H, out.decode().strip()))
+
         sys.exit(0)
 
-    for cmd_list in command_lists:
-        sp.check_call(cmd_list)
+    sp.check_call([cmd])
+    write_timestamp(local_tsfile, cmd)
+
+
+def write_timestamp(fp, cmd):
+    """Writes Timestamp to a File"""
+    with open(fp, 'w') as f:
+        now = dt.datetime.now()
+        f.write(now.strftime('%m/%d/%Y'))
 
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('-u', dest='update', action='store_true',
-                        help='Update the machine.')
-    parser.add_argument('-c', dest='cleanup', action='store_true',
-                        help='Run cleanup tasks.')
-    parser.add_argument('-m', dest='maint_check', action='store_true',
-                        help='Check if any maintenance is due.')
-    parser.add_argument('--pretend', dest='pretend', action='store_true',
+    ex_group = parser.add_mutually_exclusive_group()
+    ex_group.add_argument('-u', '--update', dest='update', action='store_true',
+                         help='Update the machine.')
+    ex_group.add_argument('-c', '--cleanup', dest='cleanup', action='store_true',
+                         help='Run cleanup tasks.')
+    ex_group.add_argument('-m', '--maint-check', dest='maint_check', action='store_true',
+                         help='Check if any maintenance is due.')
+
+    ex_group2 = parser.add_mutually_exclusive_group()
+    ex_group2.add_argument('-D', '--days-since-last', dest='dsl', choices=['local', 'remote'],
+                        help='Prints the number of days its been since the timestamp was written. '
+                             'This option takes an argument indicating what machine(s) to check. '
+                             '"local" indicates the local machine and "remote" indicates all '
+                             'remote machines.')
+    ex_group2.add_argument('-P', '--pretend', dest='pretend', action='store_true',
                         help='Prints the command list instead of executing it.')
     args = parser.parse_args()
 

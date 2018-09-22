@@ -33,10 +33,3 @@ if [[ -n "$(find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +6
     xprint -D 2 "\nTmuxinator sessions that have not been used in over 60 days:\n"
     find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60 -execdir confirm "safe-rm {}" ";"
 fi
-
-# ---------- Write timestamp to file ----------
-DATA_DIR=/home/$USER/.local/share/"$(basename "$0")"
-[[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
-
-TIMESTAMP_FILE=$DATA_DIR/timestamp
-date +"%m/%d/%y" > "$TIMESTAMP_FILE"

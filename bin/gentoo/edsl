@@ -2,7 +2,6 @@
 
 """Prints out Days Since Last [MAINTEANCE TASK]"""
 
-import subprocess as sp
 from dateutil.parser import parse
 from datetime import datetime
 
@@ -16,17 +15,8 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main():
-    if args.update:
-        days = get_days('-u')
-    elif args.cleanup:
-        days = get_days('-c')
-
-    print(days)
-
-
-def get_days(opt):
     try:
-        timestamp_fname = '/home/bryan/.local/share/{}/timestamp'.format(_emanage(opt))
+        timestamp_fname = args.tsfile
         date_str = open(timestamp_fname, 'r').read().rstrip()
         last_clean = parse(date_str)
         delta = datetime.today() - last_clean
@@ -34,21 +24,12 @@ def get_days(opt):
     except FileNotFoundError:
         days = 99999
 
-    return days
-
-
-def _emanage(opt):
-    cmd_list = ['emanage', '--pretend']
-    cmd_list.append(opt)
-    out = sp.check_output(cmd_list)
-    return out.decode().strip()
+    print(days)
 
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    ex_group = parser.add_mutually_exclusive_group()
-    ex_group.add_argument('--update', action='store_true', help='Days since last update.')
-    ex_group.add_argument('--cleanup', action='store_true', help='Days since last cleanup.')
+    parser.add_argument('tsfile', help='Timestamp file.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

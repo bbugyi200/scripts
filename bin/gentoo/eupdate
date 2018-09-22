@@ -18,10 +18,3 @@ confirm "ebvcheck"
 confirm "elogv"
 confirm "clear && sudo dispatch-conf"
 confirm "echeck_kernel"
-
-# ---------- Write timestamp to file ----------
-DATA_DIR=/home/bryan/.local/share/"$(basename "$0")"
-[[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
-
-TIMESTAMP_FILE=$DATA_DIR/timestamp
-date +"%m/%d/%y" > "$TIMESTAMP_FILE"

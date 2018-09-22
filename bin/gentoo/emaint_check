@@ -1,17 +1,78 @@
 #!/bin/bash
 
-TITLE="Maintenance Overdue!"
+###################################################################################################
+#  Checks if Any Maintenance is Due                                                               #
+#                                                                                                 #
+# Checks both the local machine and remote machines. Remote machines can go twice as long without #
+# maintenance before this script complains.                                                       # 
+###################################################################################################
 
+eval set -- "$(getopt -o "d,h" -l "debug,help" -- "$@")"
+
+USAGE="usage: $(basename "$0") [-d] [-h]"
+
+read -r -d '' HELP << EOM
+$USAGE
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -h|--help )
+           echo "$HELP"
+           exit 0
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+# ---------- Functions ----------
 function warn_user() {
-    notify-send -u critical -t 0 "$TITLE" "You should $1 this machine.\n\nIt has been $DAYS days since the $(emanage --pretend "$2") command was last run."
+    action="$1"; shift
+    hostname="$1"; shift
+    days="$1"; shift
+
+    notify-send -u critical -t 0 "Maintenance Overdue!" "You should ${action} ${hostname}.\n\n \
+        It has been ${days} days since the $(emanage --pretend --"${action}") command was last run."
 }
 
-DAYS=$(edsl --update)
-if [[ $DAYS -ge 7 ]]; then
-    warn_user "update" "-u"
-fi
+function get_max_days() {
+    action="$1"; shift
+    case "${action}" in
+        "update" )
+            max=7
+            ;;
+        "cleanup" )
+            max=15
+            ;;
+    esac
 
-DAYS=$(edsl --cleanup)
-if [[ $DAYS -ge 30 ]]; then
-    warn_user "cleanup" "-c"
-fi
+    printf "${max}"
+}
+
+# ---------- Main ----------
+for action in "update" "cleanup"; do
+    # >>> LOCAL
+    days=$(emanage --days-since-last local --"${action}")
+    if [[ ${days} -ge "$(get_max_days "${action}")" ]]; then
+        warn_user "${action}" "this machine" "${days}"
+    fi
+
+    # >>> REMOTE(S)
+    for line in $(emanage --days-since-last remote --"${action}"); do
+        hostname="${line%:*}"
+        days="${line#*:}"
+
+        max_days="$(get_max_days "${action}")"
+        if [[ "${days}" -ge "$((2*max_days))" ]]; then
+            warn_user "${action}" "@${hostname}" "${days}"
+        fi
+    done
+done

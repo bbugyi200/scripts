@@ -4,6 +4,8 @@
 #  Runs periodic maintenance tasks meant to cleanup the filesystem.  #
 ######################################################################
 
+source /home/bryan/Dropbox/scripts/modules/bash/esecret.sh
+
 # ---------- Main Logic ----------
 TMP=/home/bryan/Dropbox/tmp
 [ -d "$TMP" ] && rm -rf "$TMP"

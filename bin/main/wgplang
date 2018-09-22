@@ -18,7 +18,7 @@ case "$SYNTAX" in
     vim )
         LANGUAGE="VimL"
         ;;
-    sh|zsh )
+    sh|zsh|ebuild )
         LANGUAGE="Bash"
         ;;
     conf)

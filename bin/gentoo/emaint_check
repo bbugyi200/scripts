@@ -33,6 +33,8 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+source /home/bryan/Dropbox/scripts/modules/bash/esecret.sh
+
 # ---------- Functions ----------
 function warn_user() {
     action="$1"; shift
@@ -40,7 +42,7 @@ function warn_user() {
     days="$1"; shift
 
     notify-send -u critical -t 0 "Maintenance Overdue!" "You should ${action} ${hostname}.\n\n \
-        It has been ${days} days since the $(emanage --pretend --"${action}") command was last run."
+        It has been ${days} days since the 'emanage --${action}' command was last run."
 }
 
 function get_max_days() {
@@ -64,15 +66,15 @@ for action in "update" "cleanup"; do
     if [[ ${days} -ge "$(get_max_days "${action}")" ]]; then
         warn_user "${action}" "this machine" "${days}"
     fi
+done
 
-    # >>> REMOTE(S)
-    for line in $(emanage --days-since-last remote --"${action}"); do
-        hostname="${line%:*}"
-        days="${line#*:}"
+# >>> REMOTE(S)
+for line in $(emanage --days-since-last remote --update); do
+    hostname="${line%:*}"
+    days="${line#*:}"
 
-        max_days="$(get_max_days "${action}")"
-        if [[ "${days}" -ge "$((2*max_days))" ]]; then
-            warn_user "${action}" "@${hostname}" "${days}"
-        fi
-    done
+    max_days="$(get_max_days update)"
+    if [[ "${days}" -ge "$((2*max_days))" ]]; then
+        warn_user "update" "@${hostname}" "${days}"
+    fi
 done

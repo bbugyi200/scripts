@@ -4,7 +4,7 @@
 #  Initialize Script using Predefined Template  #
 #################################################
 
-source /home/bryan/Dropbox/scripts/templates/gutils.sh
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,D:,f,F:,h,x" -l "debug,bin-directory:,filetype:,help,use-extension" -- "$@")"

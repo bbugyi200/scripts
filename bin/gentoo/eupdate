@@ -4,7 +4,8 @@
 #  Runs System Maintenance Commands  #
 ######################################
 
-source /home/bryan/Dropbox/scripts/templates/gutils.sh
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+source /home/bryan/Dropbox/scripts/modules/bash/esecret.sh
 
 # ---------- Main Logic ----------
 confirm "epcsync"

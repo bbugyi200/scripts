@@ -3,7 +3,7 @@
 ####################################################
 #  Wrapper for `emerge` that Deletes a Package(s)  #
 ####################################################
-source /home/bryan/Dropbox/scripts/templates/gutils.sh
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ---------- Command-line Arguments  ----------
 eval set -- "$(getopt -o "d,D" -l "debug,depclean" -- "$@")"

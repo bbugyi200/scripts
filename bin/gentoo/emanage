@@ -4,6 +4,8 @@
 
 import datetime as dt
 import os
+import random
+import string
 import subprocess as sp  # noqa: F401
 import sys
 
@@ -17,6 +19,7 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main():
+    cmd_list = []
     if args.update:
         cmd = 'eupdate'
     elif args.cleanup:
@@ -24,6 +27,7 @@ def main():
     elif args.maint_check:
         cmd = 'emaint_check'
 
+    cmd_list.append(cmd)
     data_dir = gutils.xdg.getdir('data')
     local_hostname = os.uname().nodename
     local_tsfile = '{}/{}/{}.timestamp'.format(data_dir, local_hostname, cmd)
@@ -46,15 +50,34 @@ def main():
 
         sys.exit(0)
 
-    sp.check_call([cmd])
-    write_timestamp(local_tsfile, cmd)
+    # Just used to force myself to use emanage. :)
+    # Requires that the esecret.sh file be sourced into every script that could be called here.
+    secret = get_secret()
+    cmd_list.append(secret)
+
+    sp.check_call(cmd_list)
+
+    if cmd != 'emaint_check':
+        write_timestamp(local_tsfile, cmd)
 
 
 def write_timestamp(fp, cmd):
     """Writes Timestamp to a File"""
+    dp = os.path.dirname(fp)
+    if not os.path.exists(dp):
+        os.makedirs(dp)
+
     with open(fp, 'w') as f:
         now = dt.datetime.now()
         f.write(now.strftime('%m/%d/%Y'))
+
+
+def get_secret():
+    secret = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    log.vdebug('secret: %s', secret)
+    with open('/tmp/emanage.secret', 'w') as f:
+        f.write(secret)
+    return secret
 
 
 if __name__ == "__main__":

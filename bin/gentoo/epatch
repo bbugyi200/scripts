@@ -4,7 +4,7 @@
 #  Create a Patch for a Gentoo Package  #
 #########################################
 
-source /home/bryan/Dropbox/scripts/templates/gutils.sh
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ensure running as root
 if [ "$(id -u)" != "0" ]; then
@@ -12,14 +12,22 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # ---------- Functions ----------
-function error_no_exist() {
-    die "No patch by the name of $1.patch exists."
+function check_patch_exists() {
+    if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
+        error_no_exist "$PATCH_NAME"
+    fi
+}
+
+function change_owner() {
+    chown -R "$REGULAR_USER":"$REGULAR_USER" "$W"
 }
 
 # ---------- Global Variables ----------
 USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i PATCH | -l [PATCH] | -r PATCH | [-o OVERLAY] PACKAGE]"
+
+W=/tmp/"$(basename "$0")"
 OVERLAY="gentoo"
-TMP_DIR=/tmp/"$(basename "$0")"
+EPATCH_FILE="epatch.info"
 
 read -r -d '' HELP << EOM
 $USAGE
@@ -31,6 +39,7 @@ Steps to create an ebuild patch:
 3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
 EOM
 
+# ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "a:,c,d,h,I,i:,l,o:,r:,V,u:" -l "apply:,clean,debug,help,install-pkg,install-patch:,list,overlay:,remove:,use-version-specifier,user:" -- "$@")"
 
 while [[ -n "$1" ]]; do
@@ -93,19 +102,21 @@ if [[ "$install_pkg" = true && -n "$1" ]]; then
     install_patch=true
 fi
 
-if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install_patch" = true || "$list" = true || "$remove" = true ]] ; then
+if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || \
+    "$install_patch" = true || "$list" = true || "$remove" = true ]] ; then
     quick_action=true
         
     if [[ -n "$1" ]]; then
         PATCH_NAME="$1"; shift
     fi
 
-    if [[ -f "$(pwd)"/epatch.info ]]; then
-        PATCH_SUBDIR="$(cat epatch.info)"
-    elif [[ "$(pwd)" =~ "$TMP_DIR"/[^/]*/.* ]]; then
+    if [[ -f "$(pwd)"/"$EPATCH_FILE" ]]; then
+        PATCH_SUBDIR="$(head -n 1 "$EPATCH_FILE" )"
+        W="$(pwd)"
+    elif [[ "$(pwd)" =~ "$W"/[^/]*/.* ]]; then
         PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
     else
-        die "Cannot use this option outside of $TMP_DIR/CATEGORY/PACKAGE"
+        die "Cannot use this option outside of $W/CATEGORY/PACKAGE"
     fi
 
     PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
@@ -120,21 +131,20 @@ if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || "$install_p
     PATCH_NOVERSION_PATH="$PATCH_NOVERSION_DIR"/"$PATCH_NAME".patch
 fi
 
+
 # >>> APPLY
 if [[ "$apply" = true ]]; then
-    if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
-        error_no_exist "$PATCH_NAME"
-    fi
+    check_patch_exists
 
     if [[ -f "$PATCH_PATH" ]]; then
         git apply "$PATCH_PATH"
+        EC="$?"
     elif [[ -f "$PATCH_NOVERSION_PATH" ]]; then
         git apply "$PATCH_NOVERSION_PATH"
+        EC="$?"
     fi
 
-    chown -R "$REGULAR_USER":"$REGULAR_USER" "$TMP_DIR"/"$PATCH_SUBDIR"
-
-    emsg "Applied $PATCH_NAME.patch to git repository."
+    [[ "$EC" -eq 0 ]] && emsg "Applied $PATCH_NAME.patch to git repository."
 fi
 
 # >>> CLEAN
@@ -154,15 +164,19 @@ if [[ "$install_patch" = true ]]; then
         PPATH="$PATCH_NOVERSION_PATH"
     fi
 
-    EXISTING_PATCH_PATH="$(find "$PATCH_PATH" "$PATCH_NOVERSION_PATH" -name "*$PATCH_NAME.patch" 2> /dev/null)"
+    EXISTING_PATCH_PATH="$(find "$PATCH_PATH" "$PATCH_NOVERSION_PATH" -name "*$PATCH_NAME.patch" 2> /dev/null | sort -u)"
     if [[ -n "$EXISTING_PATCH_PATH" && "$PPATH" != "$EXISTING_PATCH_PATH" ]]; then
         die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n$EXISTING_PATCH_PATH"
     fi
 
     [[ -d "$PDIR" ]] || mkdir -p "$PDIR"
 
+    if [[ -f "$(pwd)"/"$EPATCH_FILE" ]]; then
+        BRANCH="$(tail -n 1 "$EPATCH_FILE")"
+    fi
+
     git add -A
-    git diff --staged > "$PPATH"
+    git diff --staged "$BRANCH" > "$PPATH"
     git reset HEAD &> /dev/null
     emsg "Installed patch to $PPATH."
 fi
@@ -175,9 +189,7 @@ fi
 # >>> LIST
 if [[ "$list" = true ]]; then
     if [[ -n "$PATCH_NAME" ]]; then
-        if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
-            error_no_exist "$PATCH_NAME"
-        fi
+        check_patch_exists
 
         if [[ -f "$PATCH_PATH" ]]; then
             pygmentize -g "$PATCH_PATH"
@@ -191,24 +203,23 @@ fi
 
 # >>> REMOVE PATCH
 if [[ "$remove" = true ]]; then
-    if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
-        error_no_exist "$PATCH_NAME"
-    fi
+    check_patch_exists
 
     if [[ -f "$PATCH_PATH" ]]; then
-        rm "$PATCH_PATH"
+        safe-rm "$PATCH_PATH"
         rmdir "$PATCH_DIR" &> /dev/null
         emsg "Removed $PATCH_PATH."
     fi
 
     if [[ -f "$PATCH_NOVERSION_PATH" ]]; then
-        rm "$PATCH_NOVERSION_PATH"
+        safe-rm "$PATCH_NOVERSION_PATH"
         rmdir "$PATCH_NOVERSION_DIR" &> /dev/null
         emsg "Removed $PATCH_NOVERSION_PATH."
     fi
 fi
 
 if [[ "$quick_action" = true ]]; then
+    change_owner
     exit 0
 fi
 
@@ -262,7 +273,7 @@ WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P}[^/]*")"
 
 CATEGORY="$(echo "${WORK_DIR#$PORTAGE_BUILD_DIR}" | awk -F'/' '{print $2}')"
 
-TMP_WORK_DIR="$TMP_DIR"/"$CATEGORY"
+TMP_WORK_DIR="$W"/"$CATEGORY"
 TMP_WORK_DIR="$TMP_WORK_DIR"/"$P"
 
 [[ -d "$TMP_WORK_DIR" ]] || mkdir -p "$TMP_WORK_DIR"
@@ -273,7 +284,7 @@ git init
 git add .
 git commit -m "Initial Commit"
 
-chown -R "$REGULAR_USER":"$REGULAR_USER" "$TMP_DIR"
+change_owner
 
 if [[ "$debug" != true ]]; then
     exec 1>&5  # Restores STDOUT

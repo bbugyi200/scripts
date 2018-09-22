@@ -68,7 +68,7 @@ stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmona
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" zathura
 
 ##### MODULES / LIBRARIES / HEADERS
-stow --dir=/home/bryan/Dropbox/scripts --target=/usr/local/python "$FLAG" pymodules
+stow --dir=/home/bryan/Dropbox/scripts/modules --target=/usr/local/python "$FLAG" python
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib

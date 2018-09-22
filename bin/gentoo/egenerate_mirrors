@@ -2,5 +2,10 @@
 
 MAKECONF=/etc/portage/make.shared
 
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
 sed -i '/GENTOO_MIRRORS=".*"$/d' "$MAKECONF" 
 mirrorselect -s5 -b10 -D -c USA -o | sed '/^\s*$/d' >> "$MAKECONF"

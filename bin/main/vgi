@@ -4,7 +4,7 @@
 #  Opens .gitignore File in vim  #
 ##################################
 
-source /home/bryan/Dropbox/scripts/templates/gutils.sh
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 GIT_ROOT="$(gitdir 2> /dev/null)"
 [ -d "$GIT_ROOT" ] || die "Not a git repository."

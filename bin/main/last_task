@@ -5,9 +5,9 @@ import sys
 
 import gutils
 
-#######################################################################################
-#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
-#######################################################################################
+############################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
+############################################################################################
 
 try:
     last_task_uuid = open('/home/bryan/.task/.last_task', 'r').read()

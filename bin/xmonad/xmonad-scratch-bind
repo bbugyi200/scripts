@@ -5,6 +5,7 @@
 #  focused window is a Scratchpad or not.                                                    #
 ##############################################################################################
 
+# ---------- Modules ----------
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ---------- Command-line Arguments ----------
@@ -59,22 +60,7 @@ if [[ -z "$1" ]]; then
 fi
 
 char="$1"; shift
-if [[ -n "$1" ]]; then
-    delay="$1"
-else
-    delay=0.5
-fi
-
-# ---------- Process Management ----------
-pid_file=/tmp/"$(basename "$0")".pid
-
-old_pid="$(cat "${pid_file}")"
-if kill -0 "${old_pid}" &> /dev/null; then
-    sudo kill "${old_pid}"
-fi
-
-echo "$$" > "${pid_file}"
-
+delay="$1"; shift
 
 # ---------- Main ----------
 wname="$(active_window_name)"
@@ -84,6 +70,6 @@ if [[ "$(get_nsps)" == *"${wname}"* ]]; then
     meta_keys="${meta_keys}+shift"
 fi
 
-sleep 0.1
+sleep "${delay}"
 xdotool key --clearmodifiers ctrl+alt+"${meta_keys}"+"${char}"
-sleep "${delay}" && xdotool keyup Meta_L Meta_R Alt_L Alt_R Super_L Super_R Control_L Control_R Caps_Lock
+xdotool keyup Meta_L Meta_R Alt_L Alt_R Super_L Super_R Control_L Control_R Caps_Lock

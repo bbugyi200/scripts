@@ -7,13 +7,18 @@
 # maintenance before this script complains.                                                       # 
 ###################################################################################################
 
-eval set -- "$(getopt -o "d,h" -l "debug,help" -- "$@")"
-
-USAGE="usage: $(basename "$0") [-d] [-h]"
+# ---------- Global Variables ----------
+max_update_days=7
+max_cleanup_days=15
+scriptname="$(basename "$0")"
+USAGE="usage: ${scriptname} [-d] [-h]"
 
 read -r -d '' HELP << EOM
 $USAGE
 EOM
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h" -l "debug,help" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -49,10 +54,10 @@ function get_max_days() {
     action="$1"; shift
     case "${action}" in
         "update" )
-            max=7
+            max="${max_update_days}"
             ;;
         "cleanup" )
-            max=15
+            max="${max_cleanup_days}"
             ;;
     esac
 
@@ -63,7 +68,8 @@ function get_max_days() {
 for action in "update" "cleanup"; do
     # >>> LOCAL
     days=$(emanage --days-since-last local --"${action}")
-    if [[ ${days} -ge "$(get_max_days "${action}")" ]]; then
+    max_days="$(get_max_days "${action}")"
+    if [[ ${days} -ge "${max_days}" ]]; then
         warn_user "${action}" "this machine" "${days}"
     fi
 done

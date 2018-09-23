@@ -8,9 +8,9 @@ import subprocess as sp
 
 import gutils
 
-#######################################################################################
-#  gutils library: https://github.com/bbugyi200/scripts/tree/master/pymodules/gutils  #
-#######################################################################################
+############################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
+############################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
 DAYPLAN_FILE = '/home/bryan/Dropbox/notes/dayplan.txt'

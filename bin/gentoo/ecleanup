@@ -4,6 +4,8 @@
 #  Runs periodic maintenance tasks meant to cleanup the filesystem.  #
 ######################################################################
 
+# shellcheck disable=SC2034
+secret_wrapper="emanage"
 source /home/bryan/Dropbox/scripts/modules/bash/secret.sh
 
 # ---------- Main Logic ----------

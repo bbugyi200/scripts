@@ -8,13 +8,15 @@ classes in this module MUST be added to __all__ or they will NOT be made availab
 import argparse
 import inspect
 import os
+import random
+import string
 import subprocess as sp
 
 import gutils.g_xdg as xdg
 import gutils.shared as shared
 
-__all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'mkfifo', 'ArgumentParser',
-           'shell', 'notify', 'xtype', 'xkey']
+__all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'emsg', 'mkfifo',
+           'ArgumentParser', 'shell', 'notify', 'xtype', 'xkey', 'secret']
 
 
 class GUtilsError(Exception):
@@ -119,9 +121,14 @@ def notify(*args, title=None, urgency=None):
     sp.check_call(cmd_list)
 
 
-def shell(cmd_string):
-    """Run Shell Command"""
-    sp.check_call(cmd_string, shell=True)
+def emsg(msg):
+    """Gentoo User Message"""
+    print('>>> {}'.format(msg))
+
+
+def shell(*cmds):
+    """Run Shell Command(s)"""
+    sp.check_call('; '.join(cmds), shell=True)
 
 
 def xtype(keys, *, delay=None):
@@ -142,3 +149,12 @@ def xtype(keys, *, delay=None):
 def xkey(key):
     """Wrapper for `xdotool key`"""
     sp.check_call(['xdotool', 'key', key])
+
+
+def secret():
+    """Get Secret String for Use with secret.sh Script"""
+    secret = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    fp = '/tmp/{}.secret'.format(shared.scriptname(inspect.stack()))
+    with open(fp, 'w') as f:
+        f.write(secret)
+    return secret

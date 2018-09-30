@@ -5,6 +5,9 @@
 ######################################
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# shellcheck disable=SC2034
+secret_wrapper="emanage"
 source /home/bryan/Dropbox/scripts/modules/bash/secret.sh
 
 # ---------- Main Logic ----------
@@ -15,6 +18,7 @@ confirm "sudo emerge --ask --update --deep --newuse --keep-going @world" && noti
 confirm "sudo emerge --ask --depclean"
 confirm "sudo revdep-rebuild"
 confirm "sudo smart-live-rebuild"
+confirm "sudo npm update -g"
 confirm "ebvcheck"
 confirm "elogv"
 confirm "clear && sudo dispatch-conf"

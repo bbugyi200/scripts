@@ -4,8 +4,6 @@
 
 import datetime as dt
 import os
-import random
-import string
 import subprocess as sp  # noqa: F401
 import sys
 
@@ -53,11 +51,15 @@ def main():
 
     # Just used to force myself to use emanage. :)
     # Requires that the secret.sh file be sourced into every script that could be called here.
-    secret_fp = '/tmp/{}.secret'.format(scriptname)
-    secret = get_secret(secret_fp)
-    cmd_list.extend([secret_fp, secret])
+    secret = gutils.secret()
+    cmd_list.extend([secret])
 
-    sp.check_call(cmd_list)
+    try:
+        sp.check_call(cmd_list)
+    except KeyboardInterrupt as e:
+        print()
+        gutils.emsg('SIGINT signal detected. Terminating...')
+        sys.exit(130)
 
     if cmd != 'emaint_check':
         write_timestamp(local_tsfile, cmd)
@@ -74,14 +76,6 @@ def write_timestamp(fp, cmd):
         f.write(now.strftime('%m/%d/%Y'))
 
 
-def get_secret(fp):
-    secret = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-    log.vdebug('secret: %s', secret)
-    with open(fp, 'w') as f:
-        f.write(secret)
-    return secret
-
-
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     ex_group = parser.add_mutually_exclusive_group()
@@ -91,7 +85,6 @@ if __name__ == "__main__":
                          help='Run cleanup tasks.')
     ex_group.add_argument('-m', '--maint-check', dest='maint_check', action='store_true',
                          help='Check if any maintenance is due.')
-
     ex_group2 = parser.add_mutually_exclusive_group()
     ex_group2.add_argument('-D', '--days-since-last', dest='dsl', choices=['local', 'remote'],
                         help='Prints the number of days its been since the timestamp was written. '

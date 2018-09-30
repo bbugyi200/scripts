@@ -3,11 +3,14 @@
 \usepackage{amsthm}
 \usepackage{bm}
 \usepackage{enumitem}
+\usepackage{float}
 \usepackage{graphicx}
 \usepackage{mathrsfs}  % \mathscr{[Capital Letter]}
 \usepackage{mathtools}
 \usepackage{parskip}
 \usepackage{xparse}
+
+\graphicspath{ {./img/} }
 
 % Use with \eqref{...} to show equation numbers only for equations that are referenced
 \mathtoolsset{showonlyrefs}
@@ -90,6 +93,7 @@
 \declarecommand{\nb}{}{The solution to this problem is hand-written and can be found on the attached notebook paper.}
 \declarecommand{\novs}{O{0.7cm}}{\vspace{-#1}}
 \newcommand\numberthis{\addtocounter{equation}{1}\tag{\theequation}}
+\declarecommand{\o}{}{\ensuremath{\omega}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\ra}{\rightarrow}
 \newcommand{\s}[1]{\ensuremath{\{#1\}}}

@@ -9,7 +9,7 @@ source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,D:,f,F:,h,x" -l "debug,bin-directory:,filetype:,help,use-extension" -- "$@")"
 
-USAGE="usage: $(basename "$0") [-d] [-D BIN_SUBDIR] [-f] [-x] -F FILETYPE [-h] SCRIPT_NAME"
+USAGE="usage: $(basename "$0") [-d] [-h] [-D BIN_SUBDIR] [-f] [-x] -F FILETYPE SCRIPT_NAME"
 
 read -r -d '' HELP << EOM
 $USAGE

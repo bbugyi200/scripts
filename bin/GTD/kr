@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('minutes', nargs='?', type=int, default=50,
                         help='Number of minutes, offset from now, the next break will be set for.')
-    parser.add_argument('event_name', nargs='*', default=('Study', 'Break',),
+    parser.add_argument('-n', dest='event_name', nargs='*', default=('Study', 'Break',),
                         help='Name of the khal event that will be created.')
     args = parser.parse_args()
 

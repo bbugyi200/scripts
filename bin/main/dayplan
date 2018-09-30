@@ -18,6 +18,15 @@ TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.getdir('data'))
 DATE_FMT = '%Y-%m-%d'
 MAX_DAYS = 3
 
+TEMPLATE = """===== HIGH (<Subject>) =====
+===== LOW =====
+Review Anki Cards
+Review Notes
+===== EOS =====
+Chat / Answer Questions on IRC
+
+"""
+
 
 def main():
     try:
@@ -40,11 +49,7 @@ def main():
         for i in range(delta.days):
             pretty_date = temp_dt.strftime('%A {}'.format(DATE_FMT))
             f.write('\n{}\n'.format(pretty_date.upper()))
-            f.write('===== HIGH (<Subject>) =====\n')
-            f.write('===== LOW (<Subject>) =====\n')
-            f.write('Review Anki Cards\n')
-            f.write('Review Notes\n')
-            f.write('===== EOS =====\n')
+            f.write(TEMPLATE)
             temp_dt = temp_dt + dt.timedelta(days=1)
 
     record_dt(today_dt)

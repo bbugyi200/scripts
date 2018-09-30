@@ -1,8 +1,8 @@
 #!/bin/bash
 
-#########################################
-#  Create a Patch for a Gentoo Package  #
-#########################################
+###################################################################################################
+#  Create / Manage User Patches on Gentoo                                                         #
+###################################################################################################
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
@@ -24,7 +24,6 @@ function change_owner() {
 
 # ---------- Global Variables ----------
 USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i PATCH | -l [PATCH] | -r PATCH | [-o OVERLAY] PACKAGE]"
-
 W=/tmp/"$(basename "$0")"
 OVERLAY="gentoo"
 EPATCH_FILE="epatch.info"
@@ -173,6 +172,8 @@ if [[ "$install_patch" = true ]]; then
 
     if [[ -f "$(pwd)"/"$EPATCH_FILE" ]]; then
         BRANCH="$(tail -n 1 "$EPATCH_FILE")"
+    else
+        BRANCH="HEAD"
     fi
 
     git add -A

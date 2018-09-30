@@ -11,43 +11,34 @@ def main():
 
     study_week = styled_tag_time('Study', 'week')
     dev_week = styled_tag_time('Dev', 'week')
-    meta_week = styled_tag_time('Meta', 'week')
+    totaltime = add_times(study_week, dev_week)
 
     if child.returncode:
         study_day = styled_tag_time('Study', 'day')
         dev_day = styled_tag_time('Dev', 'day')
-        meta_day = styled_tag_time('Meta', 'day')
-        totaltime = add_times(study_week, dev_week, meta_week)
-        fmt = 'Study:  ({} / {})        Dev:  ({} / {})        Meta:  ({} / {})             [{}]'
+        fmt = 'Study:  ({} / {})        Dev:  ({} / {})        [{}]'
 
-        print(fmt.format(study_day, study_week,
-                         dev_day, dev_week,
-                         meta_day, meta_week,
-                         totaltime))
+        print(fmt.format(study_day, study_week, dev_day, dev_week, totaltime))
     else:
         project, tag, currtime = parse_status(output)
-        daytime = styled_tag_time(tag, 'day')
-        weektime = styled_tag_time(tag, 'week')
-
         try:
             period_index = tag.index('.')
             parent_tag = tag[:period_index]
             pdaytime = styled_tag_time(parent_tag, 'day')  # parent daytime
-            totaltime = styled_tag_time(parent_tag, 'week')
+            ptotaltime = styled_tag_time(parent_tag, 'week')
         except ValueError:
             parent_tag = ''
 
-        fmt = '{tag}          "{project}"          ({currtime} / {daytime} / {weektime})'
+        fmt = '{tag}          "{project}"'
         format_opts = {'project': project,
-                       'tag': tag.upper(),
+                       'tag': tag,
                        'currtime': currtime,
-                       'daytime': daytime,
-                       'weektime': weektime}
+                       'totaltime': totaltime}
 
         if parent_tag != '':
-            fmt = fmt + '                [{pdaytime} / {totaltime}]'
+            fmt = fmt + '                ({currtime} / {pdaytime} / {ptotaltime})        [{totaltime}]'
             format_opts['pdaytime'] = pdaytime
-            format_opts['totaltime'] = totaltime
+            format_opts['ptotaltime'] = ptotaltime
 
         print(fmt.format(**format_opts))
 
@@ -73,17 +64,15 @@ def _get_tag_time(tag, interval):
     except AssertionError as e:
         raise ValueError(str(e))
 
-    now = dt.datetime.now().astimezone(dt.timezone.utc)
+    today = dt.date.today()
 
     if interval == 'week':
-        date = now - dt.timedelta(days=7)
+        # Last Monday
+        date = today - dt.timedelta(days=today.weekday())
     elif interval == 'day':
-        if now.hour < 10:
-            date = now - dt.timedelta(days=1)
-        else:
-            date = now
+        date = today
 
-    start = '{0}-{1:02d}-{2:02d}T10:00:00Z'.format(date.year, date.month, date.day)
+    start = '{0}-{1:02d}-{2:02d}T00:00:00'.format(date.year, date.month, date.day)
     child = sp.Popen(['timew', 'summary', 'from', start, 'to', 'tomorrow', tag], stdout=sp.PIPE)
     output = child.communicate()[0].decode()
 

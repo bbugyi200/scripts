@@ -17,24 +17,7 @@ function kill_directions() {
     [ -f "$2" ] && rm "$2"
 }
 
-# ---------- GLOBAL VARIABLES ----------
 USAGE="usage: $(basename "$0") [-d] [-h] [-b BOOKMARK | -D DIRECTION | -z {+ ZOOM_IN_KEYS | - ZOOM_OUT_KEYS | T ZOOM_IN_KEYS ZOOM_OUT_KEYS}]"
-DOCUMENT_TITLE="$(ztitle)"
-DELAY=1
-
-if [[ -n "$XDG_DATA_HOME" ]]; then
-    _xdg_data_home="$XDG_DATA_HOME"
-else
-    _xdg_data_home="$HOME"/.local/share
-fi
-
-D="$_xdg_data_home"/"$(basename "$0")"/documents/"$DOCUMENT_TITLE"
-
-PAGE_FIT_MARKER="$D"/page-fit
-DUAL_PAGE_MARKER="$D"/dual-page
-LAST_BMARK_MARKER="$D"/last
-UP_MARKER="$D"/up
-DOWN_MARKER="$D"/down
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "b:,d,D:,h,q,z:" -l "blist:,debug,direction:,help,quiet,zoom:" -- "$@")"
@@ -46,6 +29,7 @@ while [[ -n "$1" ]]; do
             BMARK="$1"
             ;;
        -d|--debug )
+           debug=true
            PS4='$LINENO: '
            set -x
 
@@ -77,6 +61,32 @@ done
 if [[ -z "$DIRECTION" ]] && [[ -z "$ZOPTION" ]] && [[ -z "$BMARK" ]]; then
     die "$USAGE" 2
 fi
+# ---------- GLOBAL VARIABLES ----------
+DELAY=1
+DOCUMENT_PATH="$(ztitle --path)"
+DOCUMENT_TITLE="$(ztitle)"
+HASH="$(pyhash "$DOCUMENT_PATH")"
+
+if [[ -n "$XDG_DATA_HOME" ]]; then
+    _xdg_data_home="$XDG_DATA_HOME"
+else
+    _xdg_data_home="$HOME"/.local/share
+fi
+
+DATA_DOCS_PATH="$_xdg_data_home"/"$(basename "$0")"/documents
+
+if [[ "$debug" = true ]]; then
+    D="$DATA_DOCS_PATH"/"$DOCUMENT_TITLE"-"$HASH"
+else
+    D="$DATA_DOCS_PATH"/"$HASH"
+fi
+
+PAGE_FIT_MARKER="$D"/page-fit
+DUAL_PAGE_MARKER="$D"/dual-page
+LAST_BMARK_MARKER="$D"/last
+UP_MARKER="$D"/up
+DOWN_MARKER="$D"/down
+
 
 # ---------- Main ----------
 if ! [[ -d "$D" ]]; then

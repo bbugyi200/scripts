@@ -7,7 +7,7 @@
 # Otherwise, exit with nonzero status.      #
 #############################################
 
-pid="$(xprop -id `xdpyinfo | grep -Eo 'window 0x[^,]+' | cut -d" " -f2` | grep PID | awk -F ' = ' '{ print $2 }')"
+pid="$(active_window_pid)"
 full_name="$(wmctrl -lxp | grep $pid | awk -F ' ' '{ print $4 }')"
 
 if [[ "$full_name" = *"URxvt" ]]; then

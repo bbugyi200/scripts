@@ -10,7 +10,7 @@ if [[ -z "$1" ]]; then
     exit 2
 fi
 
-cd "$(portageq get_repo_path / bbugyi200)" || exit 1
+cd /home/bryan/projects/portage-overlay || exit 1
 repoman manifest
 git add -A && git commit -m "Update $* package(s)" && git push
 layman -s bbugyi200

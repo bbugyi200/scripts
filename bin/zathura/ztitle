@@ -4,8 +4,44 @@
 #  Get Document Title of Focused Zathura Instance  #
 ####################################################
 
+eval set -- "$(getopt -o "d,h,p" -l "debug,help,path" -- "$@")"
+
+scriptname="$(basename "$0")"
+usage="usage: ${scriptname} [-d] [-h]"
+
+read -r -d '' help << EOM
+${usage}
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -p|--path )
+           show_full_path=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
 if [[ "$(active_window_name)" != "zathura" ]]; then
     exit 1
 fi
 
-xprop -id "$(xdotool getwindowfocus)" | grep ^WM_NAME | cut -d' ' -f3- | tr -d '"' | sed 's/\.\(pdf\|epub\|djvu\).*//g'
+full_book_path="$(xprop -id "$(xdotool getwindowfocus)" | grep ^WM_NAME | cut -d' ' -f3- | tr -d '"' | sed 's/\[[0-9\/]*\]//g')"
+
+if [[ "${show_full_path}" = true ]]; then
+    echo "${full_book_path}"
+else
+    basename "${full_book_path}" | sed 's/\.\(pdf\|epub\|djvu\).*//g'
+fi

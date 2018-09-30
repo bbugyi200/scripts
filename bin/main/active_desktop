@@ -1,0 +1,8 @@
+#!/bin/bash
+
+######################################################
+#  Prints the Name of the Currently Focused Desktop  #
+######################################################
+
+# ---------- Main ----------
+printf "%s" "$(wmctrl -d | grep "\*" | awk '{print $NF}')"

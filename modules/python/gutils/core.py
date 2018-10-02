@@ -6,6 +6,7 @@ classes in this module MUST be added to __all__ or they will NOT be made availab
 """
 
 import argparse
+import atexit
 import inspect
 import os
 import random
@@ -15,53 +16,19 @@ import subprocess as sp
 import gutils.g_xdg as xdg
 import gutils.shared as shared
 
-__all__ = ['GUtilsError', 'StillAliveException', 'create_pidfile', 'emsg', 'mkfifo',
-           'ArgumentParser', 'shell', 'notify', 'xtype', 'xkey', 'secret']
-
-
-class GUtilsError(Exception):
-    """ Base-class for all exceptions raised by this package. """
-
-
-class StillAliveException(GUtilsError):
-    """ Raised when Old Instance of Script is Still Running """
-    def __init__(self, pid):
-        self.pid = pid
-
-
-def create_pidfile():
-    """ Writes PID to file, which is created if necessary.
-
-    Raises:
-        StillAliveException: if old instance of script is still alive.
-    """
-    PIDFILE = "{}/pid".format(xdg.getdir('runtime', stack=inspect.stack()))
-    if os.path.isfile(PIDFILE):
-        old_pid = int(open(PIDFILE, 'r').read())
-        try:
-            os.kill(old_pid, 0)
-        except OSError:
-            pass
-        except ValueError:
-            if old_pid != '':
-                raise
-        else:
-            raise StillAliveException(old_pid)
-
-    pid = os.getpid()
-    open(PIDFILE, 'w').write(str(pid))
-
-
-def mkfifo(FIFO_PATH):
-    """ Creates named pipe if it does not already exist.
-
-    Args:
-        FIFO_PATH (str): the full file path where the named pipe will be created.
-    """
-    try:
-        os.mkfifo(FIFO_PATH)
-    except OSError:
-        pass
+__all__ = [
+    'ArgumentParser',
+    'GUtilsError',
+    'StillAliveException',
+    'create_pidfile',
+    'emsg',
+    'mkfifo',
+    'notify',
+    'secret',
+    'shell',
+    'xkey',
+    'xtype',
+]
 
 
 def ArgumentParser(*args, opt_args=[], description=None, **kwargs):
@@ -93,6 +60,50 @@ def ArgumentParser(*args, opt_args=[], description=None, **kwargs):
     return parser
 
 
+def create_pidfile():
+    """ Writes PID to file, which is created if necessary.
+
+    Raises:
+        StillAliveException: if old instance of script is still alive.
+    """
+    PIDFILE = "{}/pid".format(xdg.getdir('runtime', stack=inspect.stack()))
+    if os.path.isfile(PIDFILE):
+        old_pid = int(open(PIDFILE, 'r').read())
+        try:
+            os.kill(old_pid, 0)
+        except OSError:
+            pass
+        except ValueError:
+            if old_pid != '':
+                raise
+        else:
+            raise StillAliveException(old_pid)
+
+    pid = os.getpid()
+    open(PIDFILE, 'w').write(str(pid))
+
+
+def emsg(msg):
+    """Gentoo User Message"""
+    print('>>> {}'.format(msg))
+
+
+class GUtilsError(Exception):
+    """ Base-class for all exceptions raised by this package. """
+
+
+def mkfifo(FIFO_PATH):
+    """ Creates named pipe if it does not already exist.
+
+    Args:
+        FIFO_PATH (str): the full file path where the named pipe will be created.
+    """
+    try:
+        os.mkfifo(FIFO_PATH)
+    except OSError:
+        pass
+
+
 def notify(*args, title=None, urgency=None):
     """ Sends desktop notification with calling script's name as the notification title.
 
@@ -121,14 +132,38 @@ def notify(*args, title=None, urgency=None):
     sp.check_call(cmd_list)
 
 
-def emsg(msg):
-    """Gentoo User Message"""
-    print('>>> {}'.format(msg))
+def secret():
+    """Get Secret String for Use with secret.sh Script"""
+    secret = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
+    fp = '/tmp/{}.secret'.format(shared.scriptname(inspect.stack()))
+
+    @atexit.register
+    def remove_secret_file():
+        """Exit Handler that Removes Secret File"""
+        try:
+            os.remove(fp)
+        except OSError:
+            pass
+
+    with open(fp, 'w') as f:
+        f.write(secret)
+    return secret
 
 
 def shell(*cmds):
     """Run Shell Command(s)"""
     sp.check_call('; '.join(cmds), shell=True)
+
+
+class StillAliveException(GUtilsError):
+    """ Raised when Old Instance of Script is Still Running """
+    def __init__(self, pid):
+        self.pid = pid
+
+
+def xkey(key):
+    """Wrapper for `xdotool key`"""
+    sp.check_call(['xdotool', 'key', key])
 
 
 def xtype(keys, *, delay=None):
@@ -144,17 +179,3 @@ def xtype(keys, *, delay=None):
     keys = keys.strip('\n')
 
     sp.check_call(['xdotool', 'type', '--delay', str(delay), keys])
-
-
-def xkey(key):
-    """Wrapper for `xdotool key`"""
-    sp.check_call(['xdotool', 'key', key])
-
-
-def secret():
-    """Get Secret String for Use with secret.sh Script"""
-    secret = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(16))
-    fp = '/tmp/{}.secret'.format(shared.scriptname(inspect.stack()))
-    with open(fp, 'w') as f:
-        f.write(secret)
-    return secret

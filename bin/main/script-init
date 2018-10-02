@@ -7,9 +7,10 @@
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,D:,f,F:,h,x" -l "debug,bin-directory:,filetype:,help,use-extension" -- "$@")"
+eval set -- "$(getopt -o "d,D:,f,F:,h,N,x" -l "debug,bin-directory:,filetype:,help,not-executable,use-extension" -- "$@")"
 
-USAGE="usage: $(basename "$0") [-d] [-h] [-D BIN_SUBDIR] [-f] [-x] -F FILETYPE SCRIPT_NAME"
+USAGE="usage: $(basename "$0") [-d] [-h] [-D BIN_SUBDIR] [-f] [-N] [-x] -F FILETYPE SCRIPT_NAME"
+executable=true
 
 read -r -d '' HELP << EOM
 $USAGE
@@ -35,6 +36,9 @@ while [[ -n "$1" ]]; do
        -F|--filetype )
            shift
            FILETYPE="$1"
+           ;;
+       -N|--not-executable )
+           executable=false
            ;;
        -x|--use-extension )
            use_extension=true
@@ -71,14 +75,17 @@ if [[ "$(pwd)" != "$FULL_BIN_PATH" ]]; then
 fi
 
 case "$FILETYPE" in
-    python )
-        EXT="py"
+    awk )
+        EXT="awk"
         ;;
     bash )
         EXT="sh"
         ;;
-    awk )
-        EXT="awk"
+    latex )
+        EXT="tex"
+        ;;
+    python )
+        EXT="py"
         ;;
     * )
         die "FILETYPE must be contained in: [python, bash, awk]"
@@ -91,15 +98,16 @@ else
 fi
 
 if ! [[ -f "$FULL_SCRIPT_NAME" ]]; then
-    TEMPLATE="$(cat /home/bryan/Dropbox/scripts/templates/template."$EXT")\n"
-    printf "$TEMPLATE" > "$FULL_SCRIPT_NAME"
+    cp /home/bryan/Dropbox/scripts/templates/template."${EXT}" "${FULL_SCRIPT_NAME}"
     emsg "Initializing the '$FULL_SCRIPT_NAME' script."
 else
     emsg "The '$FULL_SCRIPT_NAME' script already exists."
 fi
 
-chmod +x "$FULL_SCRIPT_NAME"
-clinks
+if [[ "${executable}" = true ]]; then
+    chmod +x "$FULL_SCRIPT_NAME"
+    clinks
+fi
 
 emsg "Editing the '$FULL_SCRIPT_NAME' script in vim."
 vim +3 "$FULL_SCRIPT_NAME"

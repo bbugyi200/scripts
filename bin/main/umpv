@@ -102,7 +102,6 @@ if __name__ == "__main__":
             # Fixes issue where mpv stays paused when new video is used to replace current one
             # after the current one has already concluded.
             fifo.write("set_property pause no\n")
-            subprocess.check_call(['wmctrl', '-a', 'mpv'])
     else:
         # Recreate pipe if it doesn't already exist.
         # Also makes sure it's safe, and no other user can create a bogus pipe

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-printf "$(task projects | tproject.awk | uniq | rofi -dmenu -i)"
+printf "$(task rc.context:none projects | tproject.awk | uniq | rofi -dmenu -i)"

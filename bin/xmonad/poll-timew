@@ -21,13 +21,15 @@ def main():
         print(fmt.format(study_day, study_week, dev_day, dev_week, totaltime))
     else:
         project, tag, currtime = parse_status(output)
+
         try:
-            period_index = tag.index('.')
-            parent_tag = tag[:period_index]
-            pdaytime = styled_tag_time(parent_tag, 'day')  # parent daytime
-            ptotaltime = styled_tag_time(parent_tag, 'week')
+            index = tag.index('.')
         except ValueError:
-            parent_tag = ''
+            index = len(tag)
+
+        parent_tag = tag[:index]
+        pdaytime = styled_tag_time(parent_tag, 'day')  # parent daytime
+        ptotaltime = styled_tag_time(parent_tag, 'week')
 
         fmt = '{tag}          "{project}"'
         format_opts = {'project': project,

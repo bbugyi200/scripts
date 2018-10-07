@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Interface for System Maintenance Tasks"""
+"""Interface for Gentoo System Maintenance Tasks"""
 
 import datetime as dt
 import os
@@ -87,10 +87,10 @@ if __name__ == "__main__":
                          help='Check if any maintenance is due.')
     ex_group2 = parser.add_mutually_exclusive_group()
     ex_group2.add_argument('-D', '--days-since-last', dest='dsl', choices=['local', 'remote'],
-                        help='Prints the number of days its been since the timestamp was written. '
-                             'This option takes an argument indicating what machine(s) to check. '
-                             '"local" indicates the local machine and "remote" indicates all '
-                             'remote machines.')
+                        help='Prints the number of days its been since the specified maintenance '
+                             'task was last performed. This option takes an argument indicating '
+                             'what machine(s) to check. "local" indicates the local machine and '
+                             '"remote" indicates all remote machines.')
     ex_group2.add_argument('-P', '--pretend', dest='pretend', action='store_true',
                         help='Prints the command list instead of executing it.')
     args = parser.parse_args()

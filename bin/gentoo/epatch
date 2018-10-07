@@ -14,7 +14,7 @@ fi
 # ---------- Functions ----------
 function check_patch_exists() {
     if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
-        error_no_exist "$PATCH_NAME"
+        die "$PATCH_NAME.patch does not exist."
     fi
 }
 
@@ -270,7 +270,7 @@ fi
 ebuild "$EBUILD" clean unpack
 
 PORTAGE_BUILD_DIR=/var/tmp/portage
-WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P}[^/]*")"
+WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P%_*}[^/]*")"
 
 CATEGORY="$(echo "${WORK_DIR#$PORTAGE_BUILD_DIR}" | awk -F'/' '{print $2}')"
 

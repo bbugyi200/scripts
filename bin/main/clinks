@@ -64,6 +64,7 @@ stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" gento
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" GTD
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" main
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" ProtectMyLaptop
+stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" tmux
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmonad
 stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" zathura
 

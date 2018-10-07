@@ -1,12 +1,12 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/Arch Linux) (preloaded format=pdflatex 2018.6.18)  27 JUL 2018 22:41
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2018.9.11)  2 OCT 2018 23:24
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
 **shared.tex
 (./shared.tex
-LaTeX2e <2018-04-01> patch level 2
-Babel <3.18> and hyphenation patterns for 84 language(s) loaded.
+LaTeX2e <2017/01/01> patch level 3
+Babel <3.10> and hyphenation patterns for 3 language(s) loaded.
 
 ./shared.tex:1: LaTeX Error: \usepackage before \documentclass.
 
@@ -74,7 +74,7 @@ Type  H <return>  for immediate help.
  ...                                              
                                                   
 l.6 \usepackage{
-                graphicx}
+                float}
 \usepackage may only appear in the document preamble, i.e.,
 between \documentclass and \begin{document}.
 
@@ -86,7 +86,7 @@ Type  H <return>  for immediate help.
  ...                                              
                                                   
 l.7 \usepackage{
-                mathrsfs}  % \mathscr{[Capital Letter]}
+                graphicx}
 \usepackage may only appear in the document preamble, i.e.,
 between \documentclass and \begin{document}.
 
@@ -97,8 +97,8 @@ See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.8 \usepackage{
-                mathtools}
+l.8 \usepackage[procnames]{
+                           listings}
 \usepackage may only appear in the document preamble, i.e.,
 between \documentclass and \begin{document}.
 
@@ -110,7 +110,7 @@ Type  H <return>  for immediate help.
  ...                                              
                                                   
 l.9 \usepackage{
-                parskip}
+                mathrsfs}  % \mathscr{[Capital Letter]}
 \usepackage may only appear in the document preamble, i.e.,
 between \documentclass and \begin{document}.
 
@@ -122,28 +122,122 @@ Type  H <return>  for immediate help.
  ...                                              
                                                   
 l.10 \usepackage{
-                 xparse}
+                 mathtools}
 \usepackage may only appear in the document preamble, i.e.,
 between \documentclass and \begin{document}.
 
-\c@theorem=\count80
 
-./shared.tex:12: LaTeX Error: No counter 'section' defined.
+./shared.tex:11: LaTeX Error: \usepackage before \documentclass.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.12 \newtheorem{theorem}{Theorem}[section]
+l.11 \usepackage{
+                 parskip}
+\usepackage may only appear in the document preamble, i.e.,
+between \documentclass and \begin{document}.
+
+
+./shared.tex:12: LaTeX Error: \usepackage before \documentclass.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.12 \usepackage{
+                 xparse}
+\usepackage may only appear in the document preamble, i.e.,
+between \documentclass and \begin{document}.
+
+./shared.tex:14: Undefined control sequence.
+l.14 \graphicspath
+                  { {./img/} }
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+./shared.tex:14: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.14 \graphicspath{ {.
+                      /img/} }
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+Missing character: There is no . in font nullfont!
+Missing character: There is no / in font nullfont!
+Missing character: There is no i in font nullfont!
+Missing character: There is no m in font nullfont!
+Missing character: There is no g in font nullfont!
+Missing character: There is no / in font nullfont!
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 14--15
+[]
+ []
+
+./shared.tex:17: Undefined control sequence.
+l.17 \mathtoolsset
+                  {showonlyrefs}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+./shared.tex:17: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.17 \mathtoolsset{s
+                    howonlyrefs}
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+Missing character: There is no s in font nullfont!
+Missing character: There is no h in font nullfont!
+Missing character: There is no o in font nullfont!
+Missing character: There is no w in font nullfont!
+Missing character: There is no o in font nullfont!
+Missing character: There is no n in font nullfont!
+Missing character: There is no l in font nullfont!
+Missing character: There is no y in font nullfont!
+Missing character: There is no r in font nullfont!
+Missing character: There is no e in font nullfont!
+Missing character: There is no f in font nullfont!
+Missing character: There is no s in font nullfont!
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 17--18
+[] 
+ []
+
+\c@theorem=\count79
+
+./shared.tex:19: LaTeX Error: No counter 'section' defined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.19 \newtheorem{theorem}{Theorem}[section]
                                            
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
 or  <return>  to continue without it.
 
-\c@corollary=\count81
-\c@lemma=\count82
-./shared.tex:16: Undefined control sequence.
-l.16 \newtheoremstyle
+\c@corollary=\count80
+\c@lemma=\count81
+./shared.tex:23: Undefined control sequence.
+l.23 \newtheoremstyle
                      {case}%
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -152,13 +246,13 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-./shared.tex:16: LaTeX Error: Missing \begin{document}.
+./shared.tex:23: LaTeX Error: Missing \begin{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.16 \newtheoremstyle{c
+l.23 \newtheoremstyle{c
                        ase}%
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -179,12 +273,12 @@ Missing character: There is no 5 in font nullfont!
 Missing character: There is no e in font nullfont!
 Missing character: There is no m in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 16--25
+Overfull \hbox (20.0pt too wide) in paragraph at lines 23--32
 [] 
  []
 
-./shared.tex:26: Undefined control sequence.
-l.26 \newtheoremstyle
+./shared.tex:33: Undefined control sequence.
+l.33 \newtheoremstyle
                      {claim}%
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -193,13 +287,13 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-./shared.tex:26: LaTeX Error: Missing \begin{document}.
+./shared.tex:33: LaTeX Error: Missing \begin{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.26 \newtheoremstyle{c
+l.33 \newtheoremstyle{c
                        laim}%
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -221,12 +315,12 @@ Missing character: There is no 5 in font nullfont!
 Missing character: There is no e in font nullfont!
 Missing character: There is no m in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 26--35
+Overfull \hbox (20.0pt too wide) in paragraph at lines 33--42
 [] 
  []
 
-./shared.tex:36: Undefined control sequence.
-l.36 \newtheoremstyle
+./shared.tex:43: Undefined control sequence.
+l.43 \newtheoremstyle
                      {remark}%
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -235,13 +329,13 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-./shared.tex:36: LaTeX Error: Missing \begin{document}.
+./shared.tex:43: LaTeX Error: Missing \begin{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.36 \newtheoremstyle{r
+l.43 \newtheoremstyle{r
                        emark}%
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -264,12 +358,12 @@ Missing character: There is no 5 in font nullfont!
 Missing character: There is no e in font nullfont!
 Missing character: There is no m in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 36--45
+Overfull \hbox (20.0pt too wide) in paragraph at lines 43--52
 [] 
  []
 
-./shared.tex:46: Undefined control sequence.
-l.46 \theoremstyle
+./shared.tex:53: Undefined control sequence.
+l.53 \theoremstyle
                   {case}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -278,13 +372,13 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-./shared.tex:46: LaTeX Error: Missing \begin{document}.
+./shared.tex:53: LaTeX Error: Missing \begin{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.46 \theoremstyle{c
+l.53 \theoremstyle{c
                     ase}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -293,14 +387,14 @@ Missing character: There is no c in font nullfont!
 Missing character: There is no a in font nullfont!
 Missing character: There is no s in font nullfont!
 Missing character: There is no e in font nullfont!
-\c@case=\count83
+\c@case=\count82
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 46--48
+Overfull \hbox (20.0pt too wide) in paragraph at lines 53--55
 [] 
  []
 
-./shared.tex:49: Undefined control sequence.
-l.49 \theoremstyle
+./shared.tex:56: Undefined control sequence.
+l.56 \theoremstyle
                   {claim}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -309,13 +403,13 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-./shared.tex:49: LaTeX Error: Missing \begin{document}.
+./shared.tex:56: LaTeX Error: Missing \begin{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.49 \theoremstyle{c
+l.56 \theoremstyle{c
                     laim}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -326,14 +420,14 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no m in font nullfont!
 
-./shared.tex:50: LaTeX Error: Command \* already defined.
+./shared.tex:57: LaTeX Error: Command \* already defined.
                Or name \end... illegal, see p.192 of the manual.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.50 \newtheorem*{claim}{
+l.57 \newtheorem*{claim}{
                          Claim}
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
@@ -345,12 +439,12 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no m in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 49--51
+Overfull \hbox (20.0pt too wide) in paragraph at lines 56--58
 []
  []
 
-./shared.tex:52: Undefined control sequence.
-l.52 \theoremstyle
+./shared.tex:59: Undefined control sequence.
+l.59 \theoremstyle
                   {remark}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -359,13 +453,13 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-./shared.tex:52: LaTeX Error: Missing \begin{document}.
+./shared.tex:59: LaTeX Error: Missing \begin{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.52 \theoremstyle{r
+l.59 \theoremstyle{r
                     emark}
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -377,14 +471,14 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no r in font nullfont!
 Missing character: There is no k in font nullfont!
 
-./shared.tex:53: LaTeX Error: Command \* already defined.
+./shared.tex:60: LaTeX Error: Command \* already defined.
                Or name \end... illegal, see p.192 of the manual.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.53 \newtheorem*{remark}{
+l.60 \newtheorem*{remark}{
                           Remark}
 Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
@@ -397,26 +491,26 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no r in font nullfont!
 Missing character: There is no k in font nullfont!
 
-Overfull \hbox (20.0pt too wide) in paragraph at lines 52--54
+Overfull \hbox (20.0pt too wide) in paragraph at lines 59--61
 []
  []
 
 
-./shared.tex:77: LaTeX Error: \cal undefined.
+./shared.tex:84: LaTeX Error: \cal undefined.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.77 \renewcommand{\cal}
+l.84 \renewcommand{\cal}
                         [1]{\mathcal{#1}}
 Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
 
-./shared.tex:81: Undefined control sequence.
+./shared.tex:88: Undefined control sequence.
 \declare@command ...d {#1}{}\RenewDocumentCommand 
                                                   {#1}
-l.81 \declarecommand{\es}
+l.88 \declarecommand{\es}
                          {}{\ensuremath{\emptyset}}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -425,55 +519,66 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-./shared.tex:81: LaTeX Error: Missing \begin{document}.
+./shared.tex:88: LaTeX Error: Missing \begin{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.81 \declarecommand{\es}{}{\ensuremath{\emptyset}
+l.88 \declarecommand{\es}{}{\ensuremath{\emptyset}
                                                   }
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
 
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 81.
+(Font)              <7> on input line 88.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 81.
-./shared.tex:84: Undefined control sequence.
+(Font)              <5> on input line 88.
+./shared.tex:90: Undefined control sequence.
 \declare@command ...d {#1}{}\RenewDocumentCommand 
                                                   {#1}
-l.84 \declarecommand{\ker}
-                          {}{\ensuremath{\text{ker}}}
+l.90 \declarecommand{\iff}
+                          {}{if and only if}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-./shared.tex:84: Missing $ inserted.
+./shared.tex:90: Missing $ inserted.
 <inserted text> 
                 $
-l.84 \declarecommand{\ker}
-                          {}{\ensuremath{\text{ker}}}
+l.90 \declarecommand{\iff}
+                          {}{if and only if}
 I've inserted a begin-math/end-math symbol since I think
 you left one out. Proceed, with fingers crossed.
 
-./shared.tex:84: Extra }, or forgotten $.
+./shared.tex:90: Extra }, or forgotten $.
 \declare@command ...1}{}\RenewDocumentCommand {#1}
                                                   
-l.84 \declarecommand{\ker}
-                          {}{\ensuremath{\text{ker}}}
+l.90 \declarecommand{\iff}
+                          {}{if and only if}
 I've deleted a group-closing symbol because it seems to be
 spurious, as in `$x}$'. But perhaps the } is legitimate and
 you forgot something else, as in `\hbox{$x}'. In such cases
 the way to recover is to insert both the forgotten and the
 deleted material, e.g., by typing `I$}'.
 
-./shared.tex:84: Undefined control sequence.
+./shared.tex:92: Undefined control sequence.
+\declare@command ...d {#1}{}\RenewDocumentCommand 
+                                                  {#1}
+l.92 \declarecommand{\ker}
+                          {}{\ensuremath{\text{ker}}}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./shared.tex:92: Undefined control sequence.
 <argument> \text 
                  {ker}
-l.84 ...arecommand{\ker}{}{\ensuremath{\text{ker}}
+l.92 ...arecommand{\ker}{}{\ensuremath{\text{ker}}
                                                   }
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -481,53 +586,142 @@ misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-./shared.tex:87: Undefined control sequence.
+./shared.tex:95: Undefined control sequence.
 \declare@command ...d {#1}{}\RenewDocumentCommand 
                                                   {#1}
-l.87 \declarecommand{\novs}
-                           {}{\vspace{-0.7cm}}
+l.95 \declarecommand{\nb}
+                         {}{The solution to this problem is hand-written and...
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-./shared.tex:99: Undefined control sequence.
+./shared.tex:96: Undefined control sequence.
 \declare@command ...d {#1}{}\RenewDocumentCommand 
                                                   {#1}
-l.99 \declarecommand{\tx}
-                         {m}{\ensuremath{\text{#1}}}
+l.96 \declarecommand{\novs}
+                           {O{0.7cm}}{\vspace{-#1}}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-./shared.tex:99: Undefined control sequence.
-<argument> \text 
-                 {##1}
-l.99 ...larecommand{\tx}{m}{\ensuremath{\text{#1}}
+./shared.tex:96: Missing number, treated as zero.
+<to be read again> 
+                   ##
+l.96 \declarecommand{\novs}{O{0.7cm}}{\vspace{-#1}
                                                   }
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
+A number should have been here; I inserted `0'.
+(If you can't figure out why I needed to see a number,
+look up `weird error' in the index to The TeXbook.)
 
-./shared.tex:99: You can't use `macro parameter character #' in math mode.
-<argument> \text {##
-                    1}
-l.99 ...larecommand{\tx}{m}{\ensuremath{\text{#1}}
+./shared.tex:96: Illegal unit of measure (pt inserted).
+<to be read again> 
+                   ##
+l.96 \declarecommand{\novs}{O{0.7cm}}{\vspace{-#1}
+                                                  }
+Dimensions can be in units of em, ex, in, pt, pc,
+cm, mm, dd, cc, nd, nc, bp, or sp; but yours is a new one!
+I'll assume that you meant to say pt, for printer's points.
+To recover gracefully from this error, it's best to
+delete the erroneous units; e.g., type `2' to delete
+two letters. (See Chapter 27 of The TeXbook.)
+
+./shared.tex:96: You can't use `macro parameter character #' in internal vertic
+al mode.
+<recently read> ##
+                  
+l.96 \declarecommand{\novs}{O{0.7cm}}{\vspace{-#1}
                                                   }
 Sorry, but I'm not programmed to handle this case;
 I'll just pretend that you didn't ask for it.
 If you're in the wrong mode, you might be able to
 return to the right one by typing `I}' or `I$' or `I\par'.
 
-./shared.tex:103: Undefined control sequence.
+
+./shared.tex:96: LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.96 \declarecommand{\novs}{O{0.7cm}}{\vspace{-#1}
+                                                  }
+You're in trouble here.  Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+Missing character: There is no 1 in font nullfont!
+
+Overfull \hbox (20.0pt too wide) in paragraph at lines 96--96
+[] 
+ []
+
+./shared.tex:98: Undefined control sequence.
 \declare@command ...d {#1}{}\RenewDocumentCommand 
                                                   {#1}
-l.103 \declarecommand{\=}
+l.98 \declarecommand{\o}
+                        {}{\ensuremath{\omega}}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+
+LaTeX Warning: Command \o invalid in math mode on input line 98.
+
+
+LaTeX Warning: Command \o invalid in math mode on input line 98.
+
+./shared.tex:109: Undefined control sequence.
+\declare@command ...d {#1}{}\RenewDocumentCommand 
+                                                  {#1}
+l.109 \declarecommand{\tx}
+                          {m}{\ensuremath{\text{#1}}}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./shared.tex:109: Undefined control sequence.
+<argument> \text 
+                 {##1}
+l.109 ...arecommand{\tx}{m}{\ensuremath{\text{#1}}
+                                                  }
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./shared.tex:109: You can't use `macro parameter character #' in math mode.
+<argument> \text {##
+                    1}
+l.109 ...arecommand{\tx}{m}{\ensuremath{\text{#1}}
+                                                  }
+Sorry, but I'm not programmed to handle this case;
+I'll just pretend that you didn't ask for it.
+If you're in the wrong mode, you might be able to
+return to the right one by typing `I}' or `I$' or `I\par'.
+
+./shared.tex:111: Undefined control sequence.
+\declare@command ...d {#1}{}\RenewDocumentCommand 
+                                                  {#1}
+l.111 \declarecommand{\w}
+                         {}{\ensuremath{\omega}}
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+./shared.tex:114: Undefined control sequence.
+\declare@command ...d {#1}{}\RenewDocumentCommand 
+                                                  {#1}
+l.114 \declarecommand{\=}
                          {}{&=}
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -536,12 +730,12 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 
-LaTeX Warning: Command \= invalid in math mode on input line 103.
+LaTeX Warning: Command \= invalid in math mode on input line 114.
 
-./shared.tex:103: Argument of \UseTextAccent has an extra }.
+./shared.tex:114: Argument of \UseTextAccent has an extra }.
 <inserted text> 
                 \par 
-l.103 \declarecommand{\=}
+l.114 \declarecommand{\=}
                          {}{&=}
 I've run across a `}' that doesn't seem to match anything.
 For example, `\def\a#1{...}' and `\a}' would produce
@@ -551,27 +745,27 @@ argument that might be the root of the problem. But if
 your `}' was spurious, just type `2' and it will go away.
 
 Runaway argument?
-./shared.tex:103: Paragraph ended before \UseTextAccent was complete.
+./shared.tex:114: Paragraph ended before \UseTextAccent was complete.
 <to be read again> 
                    \par 
-l.103 \declarecommand{\=}
+l.114 \declarecommand{\=}
                          {}{&=}
 I suspect you've forgotten a `}', causing me to apply this
 control sequence to too much text. How can we recover?
 My plan is to forget the whole thing and hope for the best.
 
-./shared.tex:103: Missing $ inserted.
+./shared.tex:114: Missing $ inserted.
 <inserted text> 
                 $
-l.103 \declarecommand{\=}
+l.114 \declarecommand{\=}
                          {}{&=}
 I've inserted a begin-math/end-math symbol since I think
 you left one out. Proceed, with fingers crossed.
 
-./shared.tex:103: Missing } inserted.
+./shared.tex:114: Missing } inserted.
 <inserted text> 
                 }
-l.103 \declarecommand{\=}
+l.114 \declarecommand{\=}
                          {}{&=}
 I've inserted something that you may have forgotten.
 (See the <inserted text> above.)
@@ -580,17 +774,23 @@ really didn't forget anything, try typing `2' now; then
 my insertion and my current dilemma will both disappear.
 
 
-Overfull \hbox (25.00002pt too wide) in paragraph at lines 81--103
+Overfull \hbox (25.00002pt too wide) in paragraph at lines 88--114
 []$\OMS/cmsy/m/n/10 ;$
  []
 
 
-Overfull \hbox (43.77438pt too wide) in paragraph at lines 81--103
-[] [][][][][][]\OML/cmm/m/it/10 m\OT1/cmr/m/n/10 1[]$ 
+Overfull \hbox (18.3334pt too wide) in paragraph at lines 88--114
+\OMS/cmsy/m/n/10 ([])
  []
 
-./shared.tex:103: Misplaced alignment tab character &.
-l.103 \declarecommand{\=}{}{&
+
+Overfull \hbox (537.44557pt too wide) in paragraph at lines 88--114
+[][][][][][][][][][][]\OT1/cmr/m/n/10 ^^\[]\OML/cmm/m/it/10 ![]m\OT1/cmr/m/n/10
+ 1[][]\OML/cmm/m/it/10 ![]$ 
+ []
+
+./shared.tex:114: Misplaced alignment tab character &.
+l.114 \declarecommand{\=}{}{&
                              =}
 I can't figure out why you would want to use a tab mark
 here. If you just want an ampersand, the remedy is
@@ -600,13 +800,13 @@ you're probably due for more error messages, and you
 might try typing `S' now just to see what is salvageable.
 
 
-./shared.tex:103: LaTeX Error: Missing \begin{document}.
+./shared.tex:114: LaTeX Error: Missing \begin{document}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.103 \declarecommand{\=}{}{&=
+l.114 \declarecommand{\=}{}{&=
                               }
 You're in trouble here.  Try typing  <return>  to proceed.
 If that doesn't work, type  X <return>  to quit.
@@ -620,11 +820,11 @@ Missing character: There is no = in font nullfont!
 
  
 Here is how much of TeX's memory you used:
- 67 strings out of 492649
- 570 string characters out of 6135778
- 56681 words of memory out of 5000000
- 4048 multiletter control sequences out of 15000+600000
+ 70 strings out of 494939
+ 571 string characters out of 6181378
+ 46585 words of memory out of 5000000
+ 3468 multiletter control sequences out of 15000+600000
  4294 words of font info for 16 fonts, out of 8000000 for 9000
- 1141 hyphenation exceptions out of 8191
- 19i,3n,14p,92b,56s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 14 hyphenation exceptions out of 8191
+ 19i,4n,13p,133b,65s stack positions out of 5000i,500n,10000p,200000b,80000s
 !  ==> Fatal error occurred, no output PDF file produced!

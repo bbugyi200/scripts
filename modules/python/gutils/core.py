@@ -147,6 +147,7 @@ def secret():
 
     with open(fp, 'w') as f:
         f.write(secret)
+
     return secret
 
 

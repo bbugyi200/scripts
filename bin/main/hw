@@ -38,7 +38,7 @@ if [[ ! -d $HW$N ]]; then
     mkdir "$HW$N"
 fi
 if [[ ! -f $HW$N/$HW$N.tex ]]; then
-    cp -i "$(find ~/Dropbox -name "template.tex")" "$HW$N/$HW$N".tex
+    cp -i "$(find ~/Dropbox -name "hw_template.tex")" "$HW$N/$HW$N".tex
     sed -i "s/HW#/$HW \\\\#$N/g" "$HW$N/$HW$N".tex
     sed -i "s/@@@@@ @@@:@@/$DEPARTMENT $COURSE:$SECTION/g" "$HW$N/$HW$N".tex
 fi

@@ -4,8 +4,43 @@
 #  Qutebrowser Rofi Prompt                                                                        #
 ###################################################################################################
 
+eval set -- "$(getopt -o "d,h,n" -l "debug,help,next-screen" -- "$@")"
+
+scriptname="$(basename "$0")"
+usage="usage: ${scriptname} [-d] [-h]"
+
+read -r -d '' help << EOM
+${usage}
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -n|--next-screen )
+           next_screen=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
 query="$(prompt 'qutebrowser')"
 if [[ -n "${query}" ]]; then
     qutebrowser ":open -t ${query}"
+    
+    if [[ "${next_screen}" = true ]]; then
+        xdotool key super+backslash
+    fi
+
     wmctrl -a qutebrowser
 fi

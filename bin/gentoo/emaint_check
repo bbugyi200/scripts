@@ -9,7 +9,6 @@
 
 # ---------- Global Variables ----------
 max_update_days=7
-max_cleanup_days=15
 scriptname="$(basename "$0")"
 USAGE="usage: ${scriptname} [-d] [-h]"
 
@@ -59,7 +58,7 @@ function get_max_days() {
             max="${max_update_days}"
             ;;
         "cleanup" )
-            max="${max_cleanup_days}"
+            max="$((2*max_update_days))"
             ;;
     esac
 
@@ -67,8 +66,8 @@ function get_max_days() {
 }
 
 # ---------- Main ----------
+# >>> LOCAL
 for action in "update" "cleanup"; do
-    # >>> LOCAL
     days=$(emanage --days-since-last local --"${action}")
     max_days="$(get_max_days "${action}")"
     if [[ ${days} -ge "${max_days}" ]]; then

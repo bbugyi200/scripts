@@ -21,9 +21,8 @@ MAX_DAYS = 3
 TEMPLATE = """===== HIGH (<Subject>) =====
 ===== LOW =====
 Review Anki Cards
-Review Notes
 ===== EOS =====
-Chat / Answer Questions on IRC
+Read EOS Book
 
 """
 

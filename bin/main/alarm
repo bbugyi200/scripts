@@ -1,35 +1,37 @@
 #!/bin/bash
 
+###################################################################################################
+#  Countdown Script                                                                               #
+#                                                                                                 #
+# Takes a absolute time relative to today (or tomorrow if -T is used) and starts an alarm         #
+# which counts down to the given time.                                                            #
+###################################################################################################
+
 # My Colors
-GREEN="#0BF816"
-YELLOW="#EBEE27"
-RED="#FB0611"
-BLUE="#3C4BF7"
-WHITE="#FFFFFF"
 GREY="#D9D9D9"
 
 
 if [[ -n "$XDG_RUNTIME_DIR" ]]; then
-    RUNTIME_DIR=$XDG_RUNTIME_DIR/$(basename $0)
+    RUNTIME_DIR="$XDG_RUNTIME_DIR"/"$(basename "$0")"
 else
     RUNTIME_DIR=/tmp/"$(basename "$0")"
 fi
 
-DATA_DIR=/home/$USER/.local/share/$(basename $0)
+DATA_DIR=/home/$USER/.local/share/$(basename "$0")
 PID_FILE=$RUNTIME_DIR/pid
 TIMESTAMP_FILE=$DATA_DIR/timestamp
 FIFO=$RUNTIME_DIR/fifo
 
-[[ -d $RUNTIME_DIR ]] || mkdir $RUNTIME_DIR
-[[ -d $DATA_DIR ]] || mkdir $DATA_DIR
+[[ -d $RUNTIME_DIR ]] || mkdir "$RUNTIME_DIR"
+[[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
 
 time_left() {
-	echo $(($stop_time - $(date --date="now" +%s)))
+	echo $(("$stop_time" - $(date --date="now" +%s)))
 }
 
 exit_handler() {
     printf "\n" > "$FIFO"
-    rm $TIMESTAMP_FILE
+    rm "$TIMESTAMP_FILE"
 }
 
 
@@ -63,22 +65,22 @@ if [[ "$stop" = true ]]; then
     exec 1> /dev/null
 fi
 
-[[ -p $FIFO ]] || mkfifo $FIFO
+[[ -p $FIFO ]] || mkfifo "$FIFO"
 
 
 # ---------- Another Alarm is Already Running ----------
 if [[ -f $PID_FILE ]]; then
-    if kill -0 "$(cat $PID_FILE)" &> /dev/null; then
+    if kill -0 "$(cat "$PID_FILE")" &> /dev/null; then
         if [[ "$resume" = true ]]; then
-            echo "No need to restart! An alarm is already running!" | tee >(logger -t "$(basename $0)")
+            echo "No need to restart! An alarm is already running!" | tee >(logger -t "$(basename "$0")")
             exit 2
         fi
 
-        echo "An alarm is already running! Stopping existing alarm!" | tee >(logger -t "$(basename $0)")
+        echo "An alarm is already running! Stopping existing alarm!" | tee >(logger -t "$(basename "$0")")
 
-        cat $PID_FILE | xargs kill
+        kill "$(cat "$PID_FILE")"
 
-        rm $TIMESTAMP_FILE
+        rm "$TIMESTAMP_FILE"
         if pgrep dunst; then
             sleep 0.5
             xdotool key ctrl+space  # Shortcut to close dunst notification
@@ -92,14 +94,14 @@ if [[ "$stop" = true ]]; then
     exit 1
 fi
 
-echo $$ > $PID_FILE
+echo $$ > "$PID_FILE"
 trap ':' SIGPIPE
 trap 'exit_handler; exit 1' SIGINT
 
 
 # ---------- Set Alarm Time ----------
 if [[ -f $TIMESTAMP_FILE ]]; then
-    stop_time=$(cat $TIMESTAMP_FILE)
+    stop_time=$(cat "$TIMESTAMP_FILE")
 else
     if [[ -z "$1" ]]; then
         alrm_time="$(echo | dmenu -p "Alarm:")"
@@ -123,7 +125,7 @@ else
         stop_time=$(date --date="$alrm_time minutes" +%s)
     fi
 
-    echo $stop_time > $TIMESTAMP_FILE
+    echo "$stop_time" > "$TIMESTAMP_FILE"
 fi
 
 # ---------- Set Notification Message ----------

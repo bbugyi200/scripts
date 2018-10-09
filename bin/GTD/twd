@@ -1,6 +1,8 @@
 #!/bin/bash
 
-
+############################
+#  `timew delete` wrapper  #
+############################
 
 # ---------- Modules ----------
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
@@ -10,3 +12,9 @@ source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 scriptname="$(basename "$0")"
 
 # ---------- Main ----------
+task start.any: stop &> /dev/null
+
+N="${1:-1}"
+timew delete @"${N}"
+
+xmonad-poll-timew

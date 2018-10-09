@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
-"""TEMPLATE"""
+"""Create a New Khal Event"""
 
 import datetime as dt  # noqa: F401
 import os  # noqa: F401
 import subprocess as sp  # noqa: F401
 import sys  # noqa: F401
+
+from dateutil.parser import parse
 
 import gutils
 
@@ -18,11 +20,23 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):
-    pass
+    start_dt = parse(args.start_time)
+    now = dt.datetime.now()
+
+    if start_dt < now:
+        start_dt = start_dt.replace(day=start_dt.day + 1)
+
+    cmd_list = ['khal', 'new', '-a', 'daily', start_dt.strftime('%Y-%m-%dT%H:%M'),
+                ' '.join(args.event_name)]
+
+    sp.check_call(cmd_list)
+    sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
+    parser.add_argument('start_time', help='Start-time of event.')
+    parser.add_argument('event_name', nargs='*', help='Event name.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

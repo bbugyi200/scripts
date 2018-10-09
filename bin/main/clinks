@@ -70,7 +70,6 @@ stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" zathu
 
 ##### MODULES / LIBRARIES / HEADERS
 stow --dir=/home/bryan/Dropbox/scripts/modules --target=/usr/local/python "$FLAG" python
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib
 

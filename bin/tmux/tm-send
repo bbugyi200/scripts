@@ -37,7 +37,7 @@ if [[ -n "$socket_name" ]]; then
                     CMD=":! clear";;
                 *"gdb"* )
                     CMD="shell clear";;
-                *"sqlite3"* )
+                *"sqlite3"*|*"rlwrap"* )
                     CMD=".shell clear";;
                 *"weechat"* )
                     PRE="a C-u"
@@ -53,7 +53,7 @@ if [[ -n "$socket_name" ]]; then
                     CMD=":quit";;
                 *"gdb"* )
                     CMD="quit";;
-                *"sqlite3"* )
+                *"sqlite3"*|*"rlwrap"* )
                     CMD=".quit";;
                 *"git"* )
                     CMD="q";;

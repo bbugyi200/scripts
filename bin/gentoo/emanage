@@ -17,7 +17,7 @@ log = gutils.logging.getEasyLogger(__name__)
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
-def main():
+def main(args):
     cmd_list = []
     if args.update:
         cmd = 'eupdate'
@@ -96,4 +96,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+        main(args)

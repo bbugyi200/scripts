@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
-"""TEMPLATE"""
+"""Set VBREAK Khal Event"""
 
-import datetime as dt  # noqa: F401
+import datetime as dt
 import os  # noqa: F401
 import subprocess as sp  # noqa: F401
 import sys  # noqa: F401
+
+from dateutil.parser import parse
 
 import gutils
 
@@ -18,11 +20,21 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):
-    pass
+    event_dt = parse(args.date)
+    now = dt.datetime.now()
+
+    if event_dt < now:
+        event_dt = event_dt.replace(year=event_dt.year + 1)
+
+    log.vdebug('event_dt: %s', event_dt)
+
+    cmd_list = ['khal', 'new', '-a', 'health', event_dt.strftime('%Y-%m-%d'), 'VBREAK']
+    sp.check_call(cmd_list)
 
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
+    parser.add_argument('date', help='Date to set event for (%m-%d).')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

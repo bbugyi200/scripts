@@ -106,7 +106,7 @@ if __name__ == "__main__":
     parser.add_argument('--nocolor', action='store_true', help='Disable colored output.')
     parser.add_argument('--live-builds', dest='live', action='store', choices=('y', 'n'),
                         default='n',
-                        help='Show live ebuilds (i.e. ebuilds with version 9999).')
+                        help='Show live ebuilds (ebuilds with version 9999).')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

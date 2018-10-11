@@ -15,6 +15,7 @@ scriptname="$(basename "$0")"
 task start.any: stop &> /dev/null
 
 N="${1:-1}"
-timew delete @"${N}"
+notify -u low "$(timew delete @"${N}")"
 
 xmonad-poll-timew
+task_refresh

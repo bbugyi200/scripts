@@ -21,6 +21,5 @@ function emsg() {
 }
 
 function notify() {
-    MSG="$1"
-    notify-send "$(basename "$0")" "$MSG"
+    notify-send "$(basename "$0")" "$@"
 }

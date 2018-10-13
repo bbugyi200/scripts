@@ -9,6 +9,9 @@
 # 4) Profile Python script with `kernprof` (save profiling statistics to a file).                 #
 # 5) Cleanup all temp files.                                                                      #
 # 6) Open profiling stats file in vim.                                                            #
+#                                                                                                 #
+# Once the profiling stats file is open, you may use the ']' and '[' keys to navigate to the      #
+# next and previous functions, respectively.                                                      #
 ###################################################################################################
 
 # ---------- Modules ----------
@@ -45,4 +48,4 @@ kernprof -v -l "${tmp_script}" "${@:2}" > "${pstats_file}"
 
 rm "${pyscript_filename}".lprof
  
-vim "${pstats_file}"
+vim +1 -c 'nnoremap <nowait> ] /@profile<CR>' -c 'nnoremap <nowait> [ ?@profile<CR>' "${pstats_file}"

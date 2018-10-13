@@ -1,0 +1,41 @@
+#!/bin/bash
+
+###################################################################################################
+#  Wrapper for Python line_profile (https://github.com/rkern/line_profiler)                       #
+###################################################################################################
+
+# ---------- Modules ----------
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# ---------- Global Variables ----------
+# shellcheck disable=SC2034
+scriptname="$(basename "$0")"
+usage="usage: $(basename "$0") PYTHON_SCRIPT [OPTIONS]"
+xdg_runtime=/tmp/"${scriptname}"
+
+[ -d "${xdg_runtime}" ] || mkdir "${xdg_runtime}"
+
+# ---------- Main ----------
+if [[ -z "$1" ]]; then
+    die "${usage}" 2
+fi
+
+pyscript="$1"
+if ! [[ -f "${pyscript}" ]]; then
+    old_pyscript="${pyscript}"
+    pyscript="$(command -v "${pyscript}")"
+    [[ -f "${pyscript}" ]] || die "Unable to find the Python script ${old_pyscript}."
+fi
+
+pyscript_filename="$(basename "${pyscript}")"
+pstats_file="${xdg_runtime}"/"${pyscript_filename}".stats
+tmp_script="${xdg_runtime}"/"${pyscript_filename}"
+
+cp -f "${pyscript}" "${tmp_script}"
+sed -E -i '/^def .+\(/i@profile' "${tmp_script}"
+
+kernprof -v -l "${tmp_script}" "${@:2}" > "${pstats_file}"
+
+rm "${pyscript_filename}".lprof
+ 
+vim "${pstats_file}"

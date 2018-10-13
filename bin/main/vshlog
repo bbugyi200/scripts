@@ -44,7 +44,8 @@ def main(args):
                      regexp=args.regexp,
                      unique=args.unique)
 
-    sp.check_call(['vim', '+', fp_results])
+    if args.view_report == 'y':
+        sp.check_call(['vim', '+', fp_results])
 
 
 class LogsNotFound(Exception):
@@ -74,8 +75,10 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
             if hostname.lower() == 'all':
                 fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
 
+            skip_date_check = tmp_date.month != dt_start.month and tmp_date.month != dt_end.month
             log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
-                                        username=username, wdir=wdir, unique=unique)
+                                        username=username, wdir=wdir, unique=unique,
+                                        skip_date_check=skip_date_check)
 
             with open(fp_results, 'a+') as f:
                 f.writelines(log_lines)
@@ -138,8 +141,16 @@ def merge_hosts(logdir, year, month):
     return fp_log
 
 
-def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, unique=False):
-    """Process a single .log file.
+def process_logfile(fp, *, dt_start, dt_end, regexp,
+                    username=None, wdir=None, unique=False,
+                    skip_date_check=False):
+    """Process a single shell command log file.
+
+    Each log file contains the shell command history for a specific month (e.g. 2018/10.log).
+
+    NOTE: Parsing the date of each entry using `strptime` has proven to be a major performance
+          bottleneck. As a solution, @skip_date_check is set whenever parsing a log file in which
+          every entry is gaurenteed to fall in the correct date range.
 
     Exceptions:
         Raises LogsNotFound if the log file does not exist.
@@ -156,6 +167,8 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, u
         # used to track unique commands
         process_logfile.command_set = set()
 
+    strptime = lambda date: dt.datetime.strptime(date, '%Y%m%d%H%M%S')
+
     for i, line in enumerate(open(fp, 'r')):
         try:
             hostname, user, date_string, wd, cmd = line.split(':', maxsplit=4)
@@ -165,22 +178,24 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, u
             log.debug("line.split(':'): %s", line.split(':'))
             raise e
 
-        date = parse(date_string)
+        date = None if skip_date_check else strptime(date_string)
+        stripped_cmd = cmd.strip()
 
         conditions = [
             username is None or user == username,
             wdir is None or wd == wdir,
-            date <= dt_end,
-            date >= dt_start,
+            skip_date_check or date <= dt_end,
+            skip_date_check or date >= dt_start,
             re.search(regexp, cmd) is not None,
+            not unique or stripped_cmd not in process_logfile.command_set,
         ]
 
-        if unique:
-            conditions.append(cmd.strip() not in process_logfile.command_set)
-            process_logfile.command_set.add(cmd.strip())
-
         if all(conditions):
+            date = date if not skip_date_check else strptime(date_string)
             matched_lines.append(build_log_entry(hostname, user, date, wd, cmd))
+
+        if unique:
+            process_logfile.command_set.add(stripped_cmd)
 
     return matched_lines
 
@@ -266,6 +281,8 @@ if __name__ == "__main__":
                         help='Filter logs by the machine\'s hostname. Defaults to hostname of '
                              'current machine. Accepts special "ALL" value which results in logs '
                              'from all known hostnames being processed.')
+    parser.add_argument('--view-report', choices=('y', 'n'), default='y',
+                        help='View final report of matched shell commands. Default: \'y\'.')
     parser.add_argument('-u', '--unique', action='store_true',
                         help='Filter out duplicate entries where two entries are considered '
                              'to be duplicates if their command strings are the same.')

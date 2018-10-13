@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-"""Filter, Format, and View Shell History Log.
+"""Filter, format, and view ZSH shell command history.
 
-This script is coupled with the 'log_shell_command' script which, in turn, is
-called upon by my zshrc configuration file.
+This script is coupled with the 'log_shell_command' script which, in turn, should be integrated
+into your zshrc configuration file.
 """
 
 import datetime as dt
@@ -66,16 +66,18 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
     with open(fp_results, 'w') as f:
         f.write('# vim: filetype={}\n\n'.format(scriptname))
 
-    tmp_date = dt_start
+    dt_tmp = dt_start
     entry_count = 0
-    while date_ym_value(tmp_date) <= date_ym_value(dt_end):
-        fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, tmp_date.year, tmp_date.month)
+    while date_ym_value(dt_tmp) <= date_ym_value(dt_end):
+        fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, dt_tmp.year, dt_tmp.month)
 
         try:
             if hostname.lower() == 'all':
-                fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
+                fp_log = merge_hosts(logdir, dt_tmp.year, dt_tmp.month)
 
-            skip_date_check = tmp_date.month != dt_start.month and tmp_date.month != dt_end.month
+            skip_date_check = ((dt_tmp.month != dt_start.month or dt_tmp.year != dt_start.year) and
+                               (dt_tmp.month != dt_end.month or dt_tmp.year != dt_end.year))
+
             log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
                                         username=username, wdir=wdir, unique=unique,
                                         skip_date_check=skip_date_check)
@@ -85,9 +87,9 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
 
             entry_count += len(log_lines)
         except LogsNotFound as e:
-            log.debug('No Log Files for {}-{} Exist.'.format(tmp_date.month, tmp_date.year))
+            log.debug('No Log Files for {}-{} Exist.'.format(dt_tmp.month, dt_tmp.year))
         finally:
-            tmp_date = tmp_date + relativedelta(months=1)
+            dt_tmp = dt_tmp + relativedelta(months=1)
 
     with open(fp_results, 'a+') as f:
         fmt = '# Number of shell commands matched by {} query:  {}'
@@ -178,7 +180,11 @@ def process_logfile(fp, *, dt_start, dt_end, regexp,
             log.debug("line.split(':'): %s", line.split(':'))
             raise e
 
-        date = None if skip_date_check else strptime(date_string)
+        if skip_date_check:
+            date = None
+        else:
+            date = strptime(date_string)
+
         stripped_cmd = cmd.strip()
 
         conditions = [
@@ -282,7 +288,7 @@ if __name__ == "__main__":
                              'current machine. Accepts special "ALL" value which results in logs '
                              'from all known hostnames being processed.')
     parser.add_argument('--view-report', choices=('y', 'n'), default='y',
-                        help='View final report of matched shell commands. Default: \'y\'.')
+                        help='View final report of matched shell commands. Defaults to \'y\'.')
     parser.add_argument('-u', '--unique', action='store_true',
                         help='Filter out duplicate entries where two entries are considered '
                              'to be duplicates if their command strings are the same.')

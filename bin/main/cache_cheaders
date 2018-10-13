@@ -1,0 +1,35 @@
+#!/bin/bash
+
+###################################################################################################
+#  Cache C/C++ Headers in a Dictionary File                                                       #
+#                                                                                                 #
+# Vim uses this file to provide completion for headers.                                           #
+###################################################################################################
+
+# ---------- Modules ----------
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# ---------- Global Variables ----------
+# shellcheck disable=SC2034
+scriptname="$(basename "$0")"
+
+# ---------- Main ----------
+
+cheaders_file=/home/bryan/Dropbox/var/cheaders.txt
+
+std_idir="$(gcc -v 2>&1 | grep -o -- "--with-gxx-include-dir=[^ ]*" | awk -F'=' '{print $2}')"
+include_dirs=( "${std_idir}" )
+
+for idir in $("$(gcc -print-prog-name=cc1)" -v < /dev/null 2>&1 | grep " /" | sed 's/^ //g' | tr '\n' ' ') ; do
+    include_dirs+=( "${idir}" )
+done
+
+truncate "${cheaders_file}"
+
+for idir in "${include_dirs[@]}"; do
+    find "${idir}" -type f -name "*.h" -o -name "*.hpp" -o -path "${std_idir}*" >> "${cheaders_file}"
+    find "${idir}" -type d -exec sh -c 'printf "%s/\n" "$0"' {} \; >> "${cheaders_file}"
+    sed -i "s#${idir}/##" "${cheaders_file}"
+done
+
+sort -u -o "${cheaders_file}" "${cheaders_file}"

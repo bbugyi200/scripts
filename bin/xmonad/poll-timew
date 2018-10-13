@@ -46,7 +46,8 @@ def main():
 
 
 def styled_tag_time(t, i):
-    return _style_time(_get_tag_time(t, i))
+    tag_time = _get_tag_time(t, i)
+    return _style_time(tag_time)
 
 
 def _style_time(time_str):

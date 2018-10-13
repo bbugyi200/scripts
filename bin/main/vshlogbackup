@@ -1,0 +1,287 @@
+#!/usr/bin/env python
+
+"""Filter, Format, and View Shell History Log.
+
+This script is coupled with the 'log_shell_command' script which, in turn, is
+called upon by my zshrc configuration file.
+"""
+
+import datetime as dt
+import os
+import re
+import subprocess as sp  # noqa: F401
+import time
+
+from dateutil.relativedelta import relativedelta
+from dateutil.parser import parse
+
+import gutils
+
+############################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
+############################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
+
+
+def main(args):
+    fp_results = '/tmp/{0}/{0}.log'.format(scriptname)
+    fp_results_dir = os.path.dirname(fp_results)
+    if not os.path.exists(fp_results_dir):
+        os.makedirs(fp_results_dir)
+
+    logdir = '/home/bryan/Dropbox/var/logs/shell-history'
+
+    if not os.path.exists(logdir):
+        raise RuntimeError('The directory {} does not exist.'.format(logdir))
+
+    build_custom_log(logdir, fp_results,
+                     daterange=args.daterange,
+                     username=args.username,
+                     wdir=args.wdir,
+                     hostname=args.hostname,
+                     regexp=args.regexp,
+                     unique=args.unique)
+
+    if args.view_report == 'y':
+        sp.check_call(['vim', '+', fp_results])
+
+
+class LogsNotFound(Exception):
+    """Raised when no Log Files can be Found."""
+
+
+def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
+                     wdir=None, hostname=None, regexp=None, unique=False):
+    """Construct the Contents of the Final Log File that the User Views"""
+    dt_start, dt_end = get_daterange(args.daterange)
+
+    log.vdebug('dt_start: %s', dt_start)
+    log.vdebug('dt_end: %s', dt_end)
+
+    hostname = os.uname().nodename if hostname is None else hostname
+    regexp = '.*' if regexp is None else regexp
+
+    with open(fp_results, 'w') as f:
+        f.write('# vim: filetype={}\n\n'.format(scriptname))
+
+    tmp_date = dt_start
+    entry_count = 0
+    while date_ym_value(tmp_date) <= date_ym_value(dt_end):
+        fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, tmp_date.year, tmp_date.month)
+
+        try:
+            if hostname.lower() == 'all':
+                fp_log = merge_hosts(logdir, tmp_date.year, tmp_date.month)
+
+            log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
+                                        username=username, wdir=wdir, unique=unique)
+
+            with open(fp_results, 'a+') as f:
+                f.writelines(log_lines)
+
+            entry_count += len(log_lines)
+        except LogsNotFound as e:
+            log.debug('No Log Files for {}-{} Exist.'.format(tmp_date.month, tmp_date.year))
+        finally:
+            tmp_date = tmp_date + relativedelta(months=1)
+
+    with open(fp_results, 'a+') as f:
+        fmt = '# Number of shell commands matched by {} query:  {}'
+        f.write(fmt.format(scriptname, entry_count))
+
+
+def date_ym_value(date):
+    """
+    Returns value that can be used to compare datetime objects while only considering the date's
+    month and year.
+    """
+    return (100 * date.year) + date.month
+
+
+def merge_hosts(logdir, year, month):
+    """Concatenates Logfiles from All Hostnames.
+
+    Exceptions:
+        Raises LogsNotFound if no log files can be found for the given month and year.
+
+    Returns:
+        str: Filepath for new (temporary) log file that should be processed.
+    """
+    all_hostnames = [d for d in os.listdir(logdir)
+                     if os.path.isdir('{}/{}'.format(logdir, d))]
+    possible_log_files = ['{}/{}/{}/{:02}.log'.format(logdir, H, year, month)
+                          for H in all_hostnames]
+    all_log_files = list(filter(lambda x: os.path.exists(x), possible_log_files))
+
+    if all_log_files == []:
+        raise LogsNotFound()
+
+    fp_log = '/tmp/{}/{}/{:02}.log'.format(scriptname, year, month)
+
+    fp_dir = os.path.dirname(fp_log)
+    if not os.path.exists(fp_dir):
+        os.makedirs(fp_dir)
+
+    cmd_fmt = 'cat {} | sort -t: -k 3n > {}'
+    gutils.shell(cmd_fmt.format(' '.join(all_log_files), fp_log))
+
+    # Protects against possible race condition
+    for i in [0.5, 1, 2]:
+        if not os.path.exists(fp_log):
+            time.sleep(i)
+        else:
+            break
+    else:
+        raise RuntimeError('Something went wrong. The {} file does not exist.'.format(fp_log))
+
+    return fp_log
+
+
+def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, unique=False):
+    """Process a single .log file.
+
+    Exceptions:
+        Raises LogsNotFound if the log file does not exist.
+
+    Returns:
+        List of lines to append to final logfile that user will view.
+    """
+    matched_lines = []
+
+    if not os.path.exists(fp):
+        raise LogsNotFound()
+
+    if not hasattr(process_logfile, 'command_set'):
+        # used to track unique commands
+        process_logfile.command_set = set()
+
+    for i, line in enumerate(open(fp, 'r')):
+        try:
+            hostname, user, date_string, wd, cmd = line.split(':', maxsplit=4)
+        except ValueError as e:
+            log.debug('i: %s', i)
+            log.debug('line: %s', line.rstrip())
+            log.debug("line.split(':'): %s", line.split(':'))
+            raise e
+
+        date = parse(date_string)
+        stripped_cmd = cmd.strip()
+
+        conditions = [
+            username is None or user == username,
+            wdir is None or wd == wdir,
+            date <= dt_end,
+            date >= dt_start,
+            re.search(regexp, cmd) is not None,
+            not unique or stripped_cmd not in process_logfile.command_set,
+        ]
+
+        if all(conditions):
+            matched_lines.append(build_log_entry(hostname, user, date, wd, cmd))
+
+        if unique:
+            process_logfile.command_set.add(stripped_cmd)
+
+    return matched_lines
+
+
+def build_log_entry(hostname, user, date, wdir, cmd):
+    """Construct a Log Entry using the Final (prettified) Format"""
+    entry_fmt = '[{}] ({}@{}) {}\n\t{}\n'
+    return entry_fmt.format(date.strftime('%Y-%m-%d %H:%M:%S'), user, hostname, wdir, cmd)
+
+
+def get_daterange(daterange):
+    """Get Daterange of Logs to View.
+
+    Returns:
+        tuple: (datetime, datetime)
+    """
+    if daterange is not None:
+        if len(daterange) == 1:
+            daterange = (daterange[0], None)
+
+        dt_start = parse_date(daterange[0])
+        dt_end = parse_date(daterange[1])
+    else:
+        now = dt.datetime.now()
+        dt_start = now.replace(year=(now.year - 1))
+        dt_end = now
+
+    return dt_start, dt_end
+
+
+def parse_date(date):
+    """Custom Date Parser."""
+    D = None if date is None else date.lower()
+
+    if D in ["bot", "eot", None]:
+        D = {"bot": "20170101000000",
+             "eot": "now",
+             None: "now"}[D]
+
+    if re.match('^[0-9]+[dwmy]$', D):
+        N = int(D[:-1])
+        key = {
+            'd': 'days',
+            'w': 'weeks',
+            'm': 'months',
+            'y': 'years',
+        }[D[-1]]
+
+        kwargs = {key: N}
+        return dt.datetime.now() - relativedelta(**kwargs)
+
+    if D == 'today':
+        return delta_today(0)
+
+    if D == 'yesterday':
+        return delta_today(-1)
+
+    if D == 'now':
+        return dt.datetime.now()
+
+    return parse(D)
+
+
+def delta_today(N):
+    """Returns Datetime Relative to Today at 12AM"""
+    today = dt.date.today()
+    return dt.datetime.combine(today, dt.time.min) + dt.timedelta(days=N)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('-D', '--daterange', nargs='*', metavar=('START', 'END'),
+                        help='Filter logs by using a daterange. Defaults to parsing all logs '
+                             'less  than a year old. If only one argument is given, the end range '
+                             'is  automatically set to "EOT" (now). Accepts all standard date '
+                             'formats  and also the special values: "BOT", "EOT", "now", "today", '
+                             'and "yesterday". Furthermore, this option accepts values of the form: '
+                             '"Nd", "Nw", "Nm" or  "Ny". These are interpreted as datetimes '
+                             'corresponding to N days/weeks/months/years ago.')
+    parser.add_argument('-G', '--grep', dest='regexp', metavar='REGEXP',
+                        help='Filter logs by command string using a regular expression.')
+    parser.add_argument('-H', '--hostname',
+                        help='Filter logs by the machine\'s hostname. Defaults to hostname of '
+                             'current machine. Accepts special "ALL" value which results in logs '
+                             'from all known hostnames being processed.')
+    parser.add_argument('--view-report', choices=('y', 'n'), default='y',
+                        help='View final report of matched shell commands. Default: \'y\'.')
+    parser.add_argument('-u', '--unique', action='store_true',
+                        help='Filter out duplicate entries where two entries are considered '
+                             'to be duplicates if their command strings are the same.')
+    parser.add_argument('-U', '--username', help='Filter logs by username.')
+    parser.add_argument('-w', '--working-dir', dest='wdir', metavar='DIR',
+                        help='Filter logs by what directory the user was in when the command was '
+                             'run.')
+    args = parser.parse_args()
+
+    if args.daterange is not None and len(args.daterange) not in (1, 2):
+        error_fmt = 'The -D option requires either 1 or 2 arguments, but you have given {}.'
+        parser.error(error_fmt.format(len(args.daterange)))
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

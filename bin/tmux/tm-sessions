@@ -33,7 +33,7 @@ def main():
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('session_name', nargs='?',
+    parser.add_argument('dummy', nargs='?',
                         help='Dummy argument. Allows the active session name to be passed in as a '
                              'command-line argument, but this script does not use this argument '
                              'in any way. Sending in the active session name as an argument '

@@ -21,7 +21,7 @@ case $1 in
     '-'* )
         CMD=${1#-}; shift
         if [[ 'edit' == "$CMD"* ]] && [[ -z "$1" ]]; then
-            tmuxinator edit "$(tmux display-message -p "#S")"
+            tmuxinator edit "$(tm-session_name)"
         else
             tmuxinator "$CMD" "$@"
         fi;;

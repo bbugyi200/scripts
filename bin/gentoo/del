@@ -31,9 +31,15 @@ else
 fi
 
 if sudo emerge --ask "${OPTS[@]}" "$@"; then
-    for P in "$@"; do
-        sed -i "\|$(ecat "$P")/$P|d" /etc/portage/sets/shared
-        sed -i "\|$(ecat "$P")/$P|d" /etc/portage/sets/"$(hostname)"
+    all_sets=( "shared" "$(hostname)" )
+    for pkg in "$@"; do
+        for set in "${all_sets[@]}"; do
+            filename=/etc/portage/sets/"${set}"
+            if grep "${pkg}" "${filename}" &> /dev/null; then
+                emsg "Purging ${pkg} from @${set}."
+                sed -i "\|$(ecat "$pkg")/$pkg|d" "${filename}"
+            fi
+        done
     done
 
     emsg "Calling updatedb to update its databases."

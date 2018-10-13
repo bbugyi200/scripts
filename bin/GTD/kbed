@@ -20,7 +20,8 @@ def main(args):
     bed_dt = parse(args.bedtime)
     now_dt = dt.datetime.now()
 
-    if bed_dt < now_dt:
+    tomorrow = args.tomorrow or bed_dt < now_dt
+    if tomorrow:
         bed_dt = bed_dt + dt.timedelta(days=1)
 
     log.debug('bed_dt: %s', bed_dt)
@@ -44,6 +45,8 @@ def set_khal_event(event_dt, event_name):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('bedtime', help="Time to use for BED (HH:MM).")
+    parser.add_argument('-T', '--tomorrow', action='store_true',
+                        help="Force BED event to be scheduled for tomorrow.")
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

@@ -23,3 +23,8 @@ function emsg() {
 function notify() {
     notify-send "$(basename "$0")" "$@"
 }
+
+function truncate() {
+    rm "${1}" &> /dev/null
+    touch "${1}"
+}

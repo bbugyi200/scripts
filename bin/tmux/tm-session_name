@@ -1,0 +1,18 @@
+#!/bin/bash
+
+################################
+#  Displays Tmux Session Name  #
+################################
+
+# ---------- Modules ----------
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# ---------- Global Variables ----------
+# shellcheck disable=SC2034
+scriptname="$(basename "$0")"
+
+# ---------- Main ----------
+socket_name="$(tm-socket)"
+
+# shellcheck disable=SC2016
+tmux -L "${socket_name}" display-message -p "#S" | sed 's/`/\\`/g'

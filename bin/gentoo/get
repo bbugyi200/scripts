@@ -92,7 +92,7 @@ def add_to_set(packages, *, local=False):
         lines.append(full_package_name + '\n')
 
         portage_set = set_fpath.split('/')[-1]
-        gutils.emsg('Adding {} to @{} set.'.format(package, portage_set))
+        gutils.emsg('Adding {} to @{}.'.format(package, portage_set))
 
         # Remove the package name from the world file to ensure that packages are never listed in
         # both @shared and the world file.

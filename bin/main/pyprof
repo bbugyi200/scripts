@@ -2,6 +2,13 @@
 
 ###################################################################################################
 #  Wrapper for Python line_profile (https://github.com/rkern/line_profiler)                       #
+#                                                                                                 #
+# 1) If the Python script does not exist in current directory, search the filesystem for it.      #
+# 2) Make copy of Python script (use this copy for the remaining steps).                          #
+# 3) Preface every function in Python script with @profile decorator.                             #
+# 4) Profile Python script with `kernprof` (save profiling statistics to a file).                 #
+# 5) Cleanup all temp files.                                                                      #
+# 6) Open profiling stats file in vim.                                                            #
 ###################################################################################################
 
 # ---------- Modules ----------

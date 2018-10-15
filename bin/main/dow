@@ -1,0 +1,72 @@
+#!/bin/bash
+
+###################################################################################################
+#  Moves configuration file(s) into my Dropbox dotfiles where they will be stowed across multiple #
+#  machines.                                                                                      #
+###################################################################################################
+
+# ---------- Modules ----------
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# ---------- Global Variables ----------
+# shellcheck disable=SC2034
+scriptname="$(basename "$0")"
+# shellcheck disable=SC2034
+usage="usage: ${scriptname} DOTFILE [DOTFILE [DOTFILE] [...]]" 
+
+dropbox_dots_home=/home/bryan/Dropbox/dotfiles/home
+parent="${PWD#/home/bryan/}"
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,u" -l "debug,help,undo" -- "$@")"
+
+read -r -d '' help << EOM
+${usage}
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           PS4='$LINENO: '
+           set -x
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -u|--undo )
+           undo=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+# ---------- Main ----------
+
+if [[ -z "$1" ]]; then
+    die "${usage}" 2
+fi
+
+if [[ "${undo}" = true ]]; then
+    action_word="Undowing"
+    src="${dropbox_dots_home}"/"${parent}"
+    dest="${PWD}"
+else
+    src="${PWD}"
+    dest="${dropbox_dots_home}"/"${parent}"
+    action_word="Dowing"
+fi
+
+for dotfile in "$@"; do
+    [ -h "${dotfile}" ] && rm "${dotfile}"
+
+    mv "${src}"/"${dotfile}" "${dest}"/"${dotfile}"
+    emsg "${action_word} ${dotfile}."
+done
+
+emsg "Running clinks."
+clinks

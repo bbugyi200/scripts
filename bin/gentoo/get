@@ -89,15 +89,21 @@ def add_to_set(packages, *, local=False):
             full_package_name = '{}/{}'.format(category, package)
 
         log.debug('Full Package Name: %s', full_package_name)
-        lines.append(full_package_name + '\n')
-
         portage_set = set_fpath.split('/')[-1]
-        gutils.emsg('Adding {} to @{}.'.format(package, portage_set))
 
-        # Remove the package name from the world file to ensure that packages are never listed in
-        # both @shared and the world file.
-        cmd_fmt = 'sed -i "\|{}|d" {}'
-        sp.check_call(cmd_fmt.format(full_package_name, bad_set_fpath), shell=True)
+        for entry in open(set_fpath, 'r'):
+            if full_package_name in entry:
+                msg_fmt = "The following package entry already exists in the @%s set:\n\t%s"
+                log.debug(msg_fmt, portage_set, entry.strip())
+                break
+        else:
+            gutils.emsg('Adding {} to @{}.'.format(package, portage_set))
+            lines.append(full_package_name + '\n')
+
+            # Remove the package name from the world file to ensure that packages are never listed in
+            # both @shared and the world file.
+            cmd_fmt = 'sed -i "\|{}|d" {}'
+            sp.check_call(cmd_fmt.format(full_package_name, bad_set_fpath), shell=True)
 
     with open(set_fpath, 'w') as f:
         f.writelines(sorted(set(lines)))

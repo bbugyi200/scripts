@@ -11,7 +11,12 @@ function die() {
         EC=1
     fi
 
-    >&2 printf "ERROR: $MSG\n" | tee >(logger -t "$(basename "$0")")
+    banner="[ERROR]"
+    if [[ "${MSG}" == "usage:"* ]]; then
+        banner="${banner}  "
+    fi
+
+    >&2 printf "${banner} $MSG\n" | tee >(logger -t "$(basename "$0")")
     exit "$EC"
 }
 

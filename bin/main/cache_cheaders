@@ -28,7 +28,7 @@ truncate "${cheaders_file}"
 
 for idir in "${include_dirs[@]}"; do
     find "${idir}" -type f -name "*.h" -o -name "*.hpp" -o -path "${std_idir}*" >> "${cheaders_file}"
-    find "${idir}" -type d -exec sh -c 'printf "%s/\n" "$0"' {} \; >> "${cheaders_file}"
+    find "${idir}" -type d -exec sh -c 'printf "%s\n" "$0"' {} \; >> "${cheaders_file}"
     sed -i "s#${idir}/##" "${cheaders_file}"
 done
 

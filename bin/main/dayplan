@@ -16,9 +16,9 @@ log = gutils.logging.getEasyLogger(__name__)
 DAYPLAN_FILE = '/home/bryan/Dropbox/notes/dayplan.txt'
 TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.getdir('data'))
 DATE_FMT = '%Y-%m-%d'
-MAX_DAYS = 3
+MAX_DAYS = 1
 
-TEMPLATE = """===== HIGH (<Subject>) =====
+TEMPLATE = """===== HIGH =====
 ===== LOW =====
 Review Anki Cards
 ===== EOS =====

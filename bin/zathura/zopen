@@ -18,7 +18,7 @@ CACHE_FILE = '{}/recently-opened.txt'.format(gutils.xdg.getdir('data'))
 
 def main():
     try:
-        cmd = 'wmctrl -lx | grep zathura | tr -s " " | cut -d\' \' -f5- '\
+        cmd = 'wmctrl -lx | grep "zathura\|okular" | tr -s " " | cut -d\' \' -f5- '\
               '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"'
         decoded = check_output(cmd)
         open_docs = decoded.split('\n')
@@ -39,27 +39,41 @@ def main():
     if open_docs:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
+    pretty_docs = list(map(lambda x: x.replace('/home/bryan/Dropbox/', ''), ordered_docs))
+
     if args.refresh:
         choice = ordered_docs[-1]
     else:
         cmd_fmt = 'printf "{}" | rofi -p "Document" -m -4 -dmenu -i'
-        choice = check_output(cmd_fmt.format('\n'.join(ordered_docs)))
+        out = check_output(cmd_fmt.format('\n'.join(pretty_docs)))
+        if '/home/bryan/' in out:
+            choice = out
+        else:
+            choice = '/home/bryan/Dropbox/{}'.format(out)
 
     add_to_cache(choice)
 
-    if args.overwrite or args.refresh:
-        active_window_class = check_output('active_window_class')
-        if active_window_class == 'Zathura':
-            pid = int(check_output('active_window_pid'))
-            log.debug('Killing Zathura Instance: {}'.format(pid))
-            os.kill(pid, signal.SIGTERM)
-        else:
-            raise RuntimeError("The option has been selected to replace the current Zathura "
-                               "instance with the new selection, but no Zathura instance is "
-                               "currently active.")
+    active_window_class = check_output('active_window_class')
+    if active_window_class == 'Zathura':
+        open_document('zathura', choice)
+    elif active_window_class == 'okular':
+        open_document('okular', choice, opts=['--unique'])
+    else:
+        open_document('okular', choice)
 
-    log.debug('Opening {} in zathura...'.format(choice))
-    sp.Popen(['zathura', choice], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+def open_document(cmd, doc, *, opts=[]):
+    if args.overwrite or args.refresh:
+        pid = int(check_output('active_window_pid'))
+        log.debug('Killing Document Instance: {}'.format(pid))
+        os.kill(pid, signal.SIGTERM)
+
+    cmd_list = [cmd]
+    cmd_list.extend(opts)
+    cmd_list.append(doc)
+
+    log.debug('Opening {} in {}...'.format(doc, cmd))
+    sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
 def promote_cached_docs(docs, cached_docs):

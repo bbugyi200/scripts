@@ -169,7 +169,7 @@ def process_logfile(fp, *, dt_start, dt_end, regexp,
         # used to track unique commands
         process_logfile.command_set = set()
 
-    strptime = lambda date: dt.datetime.strptime(date, '%Y%m%d%H%M%S')
+    strptime = lambda D: dt.datetime.strptime(D, '%Y%m%d%H%M%S')
 
     for i, line in enumerate(open(fp, 'r')):
         try:

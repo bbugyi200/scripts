@@ -143,14 +143,14 @@ if [[ "$apply" = true ]]; then
         EC="$?"
     fi
 
-    [[ "$EC" -eq 0 ]] && emsg "Applied $PATCH_NAME.patch to git repository."
+    [[ "$EC" -eq 0 ]] && imsg "Applied $PATCH_NAME.patch to git repository."
 fi
 
 # >>> CLEAN
 if [[ "$clean" = true ]]; then
     git reset --hard HEAD &> /dev/null
     git clean -f &> /dev/null
-    emsg "Restored git repository to initial state."
+    imsg "Restored git repository to initial state."
 fi
 
 # >>> INSTALL PATCH
@@ -179,7 +179,7 @@ if [[ "$install_patch" = true ]]; then
     git add -A
     git diff --staged "$BRANCH" > "$PPATH"
     git reset HEAD &> /dev/null
-    emsg "Installed patch to $PPATH."
+    imsg "Installed patch to $PPATH."
 fi
 
 # >>> INSTALL PACKAGE
@@ -209,13 +209,13 @@ if [[ "$remove" = true ]]; then
     if [[ -f "$PATCH_PATH" ]]; then
         safe-rm "$PATCH_PATH"
         rmdir "$PATCH_DIR" &> /dev/null
-        emsg "Removed $PATCH_PATH."
+        imsg "Removed $PATCH_PATH."
     fi
 
     if [[ -f "$PATCH_NOVERSION_PATH" ]]; then
         safe-rm "$PATCH_NOVERSION_PATH"
         rmdir "$PATCH_NOVERSION_DIR" &> /dev/null
-        emsg "Removed $PATCH_NOVERSION_PATH."
+        imsg "Removed $PATCH_NOVERSION_PATH."
     fi
 fi
 

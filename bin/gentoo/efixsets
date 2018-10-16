@@ -18,9 +18,9 @@ DUPLICATES="$(comm -12 <(sudo cat "$SETS_FOLDER"/shared) <(sudo cat "$SETS_FOLDE
 
 # ---------- Main ----------
 if [[ -z "$DUPLICATES" ]]; then
-    emsg "The @shared and @$HOSTNAME sets do not intersect."
+    imsg "The @shared and @$HOSTNAME sets do not intersect."
 else
-    emsg "THE @shared AND @$HOSTNAME SETS INTERSECT! ACTION(S) REQUIRED!:"
+    imsg "THE @shared AND @$HOSTNAME SETS INTERSECT! ACTION(S) REQUIRED!:"
 fi
 
 for PKG in ${DUPLICATES}; do
@@ -34,9 +34,9 @@ fi
 WORLD_FILE=/var/lib/portage/world
 WORLD_PACKAGES="$(cat $WORLD_FILE)"
 if [[ -z "$WORLD_PACKAGES" ]]; then
-    emsg "The world file is empty."
+    imsg "The world file is empty."
 else
-    emsg "THE WORLD FILE IS NOT EMPTY! ACTION(S) REQUIRED!:"
+    imsg "THE WORLD FILE IS NOT EMPTY! ACTION(S) REQUIRED!:"
 fi
 
 for PKG in ${WORLD_PACKAGES}; do

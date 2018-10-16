@@ -21,7 +21,7 @@ case $1 in
     '-'* )
         CMD=${1#-}; shift
         if [[ 'edit' == "$CMD"* ]] && [[ -z "$1" ]]; then
-            tmuxinator edit "$(tm-session_name)"
+            tmuxinator edit "$(tm-session-name)"
         else
             tmuxinator "$CMD" "$@"
         fi;;
@@ -31,6 +31,8 @@ case $1 in
             erb name="$SESSION_NAME" "$MUX_CONFIG_DIR"/default.yml > "$MUX_CONFIG_DIR"/"$SESSION_NAME".yml
         fi
 
-        tmuxinator start "$SESSION_NAME" root="$(tmdir --get "$SESSION_NAME")"
+        root="$(tm-session-root --get "$SESSION_NAME")"
+        tmuxinator start "$SESSION_NAME" root="${root}"
         tmux switch-client -t "$SESSION_NAME";;
 esac
+

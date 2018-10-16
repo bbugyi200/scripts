@@ -43,7 +43,7 @@ class MagnetCounter:
 
 
 SECONDS_IN_HOUR = 3600
-MAGNET_FILE = '{}/magnet'.format(gutils.xdg.getdir('data'))
+MAGNET_FILE = '{}/magnet'.format(gutils.xdg.init('data'))
 
 log = gutils.logging.getEasyLogger(__name__)
 magnet_counter = MagnetCounter()

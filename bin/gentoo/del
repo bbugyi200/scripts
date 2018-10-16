@@ -36,13 +36,13 @@ if sudo emerge --ask "${OPTS[@]}" "$@"; then
         for set in "${all_sets[@]}"; do
             filename=/etc/portage/sets/"${set}"
             if grep "${pkg}" "${filename}" &> /dev/null; then
-                emsg "Purging ${pkg} from @${set}."
+                imsg "Purging ${pkg} from @${set}."
                 sed -i "\|$(ecat "$pkg")/$pkg|d" "${filename}"
             fi
         done
     done
 
-    emsg "Calling updatedb to update its databases."
+    imsg "Calling updatedb to update its databases."
     updatedb
 else
     exit "$?"

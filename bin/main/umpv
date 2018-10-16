@@ -44,7 +44,7 @@ import gutils
 ############################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
-FIFO = "{}/fifo".format(gutils.xdg.getdir('runtime'))
+FIFO = "{}/fifo".format(gutils.xdg.init('runtime'))
 log.debug(FIFO)
 
 

@@ -18,7 +18,7 @@ import gutils
 ############################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
-RUNTIME_DIR = gutils.xdg.getdir('runtime')
+RUNTIME_DIR = gutils.xdg.init('runtime')
 PID_FILE = '{}/pid'.format(RUNTIME_DIR)
 FIFO_PATH = '{}/fifo'.format(RUNTIME_DIR)
 TOMORROW_MARKER = '@'
@@ -51,7 +51,7 @@ def main():
     for start, titles in events.items():
         title = ' + '.join(titles)
 
-        cmd_list = ['alarm', '-d']
+        cmd_list = ['alarm']
         opts = []
 
         if start[0] == TOMORROW_MARKER:
@@ -71,7 +71,11 @@ def main():
 
         try:
             log.debug('Command List: %s', cmd_list)
-            sp.check_call(cmd_list)
+            child_pid = os.fork()
+            if child_pid == 0:
+                os.execl('/usr/local/bin/alarm', *cmd_list)
+
+            pid, status = os.waitpid(child_pid, 0)
         except sp.CalledProcessError:
             raise RuntimeError('Current alarm was interupted.')
         else:
@@ -175,7 +179,7 @@ def create_pidfile():
         log.debug('Previous instance of {} is still alive. Sending SIGTERM...'.format(os.path.basename(__file__)))
         os.kill(e.pid, signal.SIGTERM)
         time.sleep(1)
-        gutils.create_pidfile()
+        create_pidfile()
 
 
 def term_handler(signum, frame):
@@ -187,9 +191,13 @@ def term_handler(signum, frame):
 @atexit.register
 def stop_alarm():
     """Exit Handler"""
-    sp.call(['alarm', '--stop'])
-    with open(FIFO_PATH, 'w') as fifo:
-        fifo.write('\n')
+    pid = os.fork()
+    if pid == 0:
+        os.system('alarm --stop')
+        sys.exit(1)
+    else:
+        with open(FIFO_PATH, 'w') as fifo:
+            fifo.write('\n')
 
 
 if __name__ == "__main__":

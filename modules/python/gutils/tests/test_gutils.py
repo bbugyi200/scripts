@@ -5,21 +5,27 @@ import unittest.mock as mock
 
 import gutils
 
-params = [('config', '/home/bryan/.config/test_gutils'),
-          ('data', '/home/bryan/.local/share/test_gutils'),
-          ('runtime', '/tmp/test_gutils'),
-          ('cache', '/home/bryan/.cache/test_gutils')]
+params = [('config', '/home/bryan/.config'),
+          ('data', '/home/bryan/.local/share'),
+          ('runtime', '/var/run/user/1000'),
+          ('cache', '/home/bryan/.cache')]
 
 
-@pytest.mark.parametrize('key,expected', params)
-def test_getdir(key, expected):
-    assert expected == gutils.xdg.getdir(key)
+@pytest.mark.parametrize('key,partial', params)
+def test_xdg_init(key, partial):
+    expected = '{}/{}'.format(partial, 'test_gutils')
+    assert expected == gutils.xdg.init(key)
     os.rmdir(expected)
 
 
-def test_getdir_failure():
+@pytest.mark.parametrize('key,expected', params)
+def test_xdg_get(key, expected):
+    assert expected == gutils.xdg.get(key)
+
+
+def test_init_failure():
     with pytest.raises(ValueError):
-        gutils.xdg.getdir('bad_key')
+        gutils.xdg.init('bad_key')
 
 
 def test_notify():

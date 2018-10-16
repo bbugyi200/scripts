@@ -1,15 +1,15 @@
 #!/bin/bash
 
 ###################################################################################################
-#  Writes poll-weather output to xmobar                                                           #
+#  Writes poll-timew output to xmobar                                                             #
 ###################################################################################################
 
 # shellcheck disable=SC2154
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
-fifo_path="${my_xdg_runtime}"/fifo
 [ -d "${my_xdg_runtime}" ] || mkdir "${my_xdg_runtime}"
-[ -p "${fifo_path}" ] || mkfifo "${fifo_path}"
+[ -p "${my_xdg_runtime}"/fifo ] || mkfifo "${my_xdg_runtime}"/fifo
 
-/usr/local/bin/poll-weather > "${fifo_path}"
+/usr/local/bin/poll-timew > "${my_xdg_runtime}"/fifo
+

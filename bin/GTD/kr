@@ -4,6 +4,7 @@
 
 import datetime as dt
 import subprocess as sp
+import sys  # noqa: F401
 
 import gutils
 
@@ -16,18 +17,32 @@ log = gutils.logging.getEasyLogger(__name__)
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('minutes', nargs='?', type=int, default=50,
+    parser.add_argument('vargs', nargs='*', metavar=('arg'), default=50,
                         help='Number of minutes, offset from now, the next break will be set for.')
-    parser.add_argument('-n', dest='event_name', nargs='*', default=('Study', 'Break',),
-                        help='Name of the khal event that will be created.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=args.minutes)
+        vargs = list(args.vargs)
+        minutes = 50
+
+        try:
+            minutes = int(vargs[0])
+        except ValueError as e:
+            minutes = 50
+        else:
+            vargs.pop(0)
+
+        if vargs:
+            event_name = ' '.join(vargs)
+        else:
+            event_name = 'Study Break'
+
+        log.vdebug('vargs: %s', repr(vargs))
+        breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=minutes)
 
         cmd_list = ['khal', 'new', '-a', 'daily']
         cmd_list.append(breaktime_dt.strftime('%Y-%m-%dT%H:%M'))
-        cmd_list.append(' '.join(args.event_name))
+        cmd_list.append(event_name)
         sp.check_call(cmd_list)
 
         sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)

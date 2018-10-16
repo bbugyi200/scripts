@@ -8,7 +8,7 @@ import gutils
 
 class UStack:
     def __init__(self):
-        self.fpath = '{}/dirstack.pickle'.format(gutils.xdg.getdir('data'))
+        self.fpath = '{}/dirstack.pickle'.format(gutils.xdg.init('data'))
         if os.path.isfile(self.fpath):
             with open(self.fpath, 'rb') as f:
                 self.stack = pickle.load(f)

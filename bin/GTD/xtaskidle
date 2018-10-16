@@ -19,8 +19,8 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 NAME = os.path.basename(__file__)
-PIDFILE = "{}/pid".format(gutils.xdg.getdir('runtime'))
-ARGSFILE = "{}/args".format(gutils.xdg.getdir('data'))
+PIDFILE = "{}/pid".format(gutils.xdg.init('runtime'))
+ARGSFILE = "{}/args".format(gutils.xdg.init('data'))
 MILLISECONDS_IN_MINUTE = 60000
 ACCEPTABLE_PROJECTS = ['Study', 'Dev']
 

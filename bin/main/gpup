@@ -1,12 +1,12 @@
 #!/bin/bash
 
-######################################
-#  Update and Push Current Git Repo  #
-######################################
+###################################################################################################
+#  Update and Push Current Git Repo using Generic Commit Message                                  #
+###################################################################################################
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 cd "$(gitdir)" || exit 1
 git add .
-git commit -m "Update $(grepo)"
+git commit -m "Update $(gitrepo)"
 git push

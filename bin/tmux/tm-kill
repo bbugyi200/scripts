@@ -3,7 +3,7 @@
 socket_name="$(tm-socket)"
 
 if [[ -n "$socket_name" ]]; then
-    session_name=$(tm-session_name)
+    session_name=$(tm-session-name)
     N=$(tmux -L "$socket_name" ls | wc -l)
     prompt="Confirm 'kill-session'? (y/n)"
 

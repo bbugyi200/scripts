@@ -12,13 +12,13 @@ source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 # shellcheck disable=SC2034
 scriptname="$(basename "$0")"
 # shellcheck disable=SC2034
-usage="usage: ${scriptname} DOTFILE [DOTFILE [DOTFILE] [...]]" 
+usage="usage: ${scriptname} [-d] [-h] [-u] [-v] DOTFILE [DOTFILE [...]]" 
 
 dropbox_dots_home=/home/bryan/Dropbox/dotfiles/home
 parent="${PWD#/home/bryan/}"
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,h,u" -l "debug,help,undo" -- "$@")"
+eval set -- "$(getopt -o "d,h,v,R" -l "debug,help,verbose,reverse" -- "$@")"
 
 read -r -d '' help << EOM
 ${usage}
@@ -27,15 +27,17 @@ EOM
 while [[ -n "$1" ]]; do
     case $1 in
        -d|--debug )
-           PS4='$LINENO: '
-           set -x
+           debug=true
            ;;
        -h|--help )
            echo "${help}"
            exit 0
            ;;
-       -u|--undo )
-           undo=true
+       -R|--reverse )
+           undow=true
+           ;;
+       -v|--verbose )
+           verbose=true
            ;;
        -- )
            shift
@@ -45,28 +47,56 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
 # ---------- Main ----------
 
 if [[ -z "$1" ]]; then
     die "${usage}" 2
 fi
 
-if [[ "${undo}" = true ]]; then
+if [[ "${undow}" = true ]]; then
     action_word="Undowing"
     src="${dropbox_dots_home}"/"${parent}"
     dest="${PWD}"
 else
+    action_word="Dowing"
     src="${PWD}"
     dest="${dropbox_dots_home}"/"${parent}"
-    action_word="Dowing"
 fi
 
 for dotfile in "$@"; do
-    [ -h "${dotfile}" ] && rm "${dotfile}"
+    SRC="${src}"/"${dotfile}"
+    DEST="${dest}"/"${dotfile}"
 
-    mv "${src}"/"${dotfile}" "${dest}"/"${dotfile}"
-    emsg "${action_word} ${dotfile}."
+    if [[ -h "${dotfile}" ]]; then
+        if [[ "${undow}" = true ]]; then
+            dmsg "Removing symlink: ${dotfile}."
+            safe-rm "${dotfile}"
+        else
+            emsg "${dotfile} is a symlink and hence cannot be dowed."
+            continue
+        fi
+    fi
+
+    if [[ -f "${DEST}" ]]; then
+        if [[ -f "${SRC}" ]]; then
+            dmsg "${DEST} Already Exists -> Removing ${SRC}."
+            safe-rm "${SRC}"
+        else
+            emsg "Nothing to do."
+            continue
+        fi
+    else
+        dmsg "Moving ${SRC} to ${DEST}."
+        mv "${SRC}" "${DEST}"
+    fi
+
+    imsg "${action_word} ${dotfile}."
 done
 
-emsg "Running clinks."
+imsg "Running clinks."
 clinks

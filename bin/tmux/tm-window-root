@@ -73,7 +73,7 @@ def get_rootdir(session_name, window_dict):
         rootdir = window_dict['root']
         return rootdir.replace('~', '/home/bryan')
     else:
-        out = sp.check_output(['tmdir', '--get', session_name])
+        out = sp.check_output(['tm-session-root', '--get', session_name])
         return out.decode().strip()
 
 

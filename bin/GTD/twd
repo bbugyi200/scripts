@@ -17,5 +17,6 @@ task start.any: stop &> /dev/null
 N="${1:-1}"
 notify -u low "$(timew delete @"${N}")"
 
-xmonad-poll-timew
+xmonad-timew
 task_refresh
+

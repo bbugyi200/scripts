@@ -16,7 +16,7 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main():
-    fpath = '{}/default-dirs.pickle'.format(gutils.xdg.getdir('data'))
+    fpath = '{}/default-dirs.pickle'.format(gutils.xdg.init('data'))
 
     default_dirs = dict()
     if not os.path.isfile(fpath):

@@ -27,9 +27,11 @@ def main(args):
         cmd = 'emaint_check'
 
     cmd_list.append(cmd)
-    data_dir = gutils.xdg.getdir('data')
+    data_dir = gutils.xdg.init('data')
     local_hostname = os.uname().nodename
-    local_tsfile = '{}/{}/{}.timestamp'.format(data_dir, local_hostname, cmd)
+
+    cmd_dir = '/{}/{}/{}'.format(data_dir, local_hostname, cmd)
+    local_tsfile = '{}/timestamp'.format(cmd_dir)
 
     if args.pretend:
         print(cmd)
@@ -40,7 +42,7 @@ def main(args):
             print(out.decode().strip())
         elif args.dsl == 'remote':
             remote_hostnames = [H for H in os.listdir(data_dir) if H != local_hostname]
-            remote_ts_files = ['{}/{}/{}.timestamp'.format(data_dir, H, cmd)
+            remote_ts_files = ['{}/{}/{}/timestamp'.format(data_dir, H, cmd)
                                for H in remote_hostnames]
 
             for H, fp in zip(remote_hostnames, remote_ts_files):
@@ -54,11 +56,26 @@ def main(args):
     secret = gutils.secret()
     cmd_list.extend([secret])
 
+    fp_count = '{}/count'.format(cmd_dir)
+    if os.path.exists(fp_count):
+        with open(fp_count, 'r') as f:
+            count = f.read().strip()
+
+        if int(count) > 0:
+            choice = gutils.getch('>>> Would you like to resume `{}` where you left off (y), redo the last command (r),\n start a new session (n), or exit (x)?: '.format(cmd))
+
+            if choice == 'y':
+                cmd_list.append(count)
+            elif choice == 'r':
+                cmd_list.append(str(int(count) - 1))
+            elif choice != 'n':
+                sys.exit(0)
+
     try:
         sp.check_call(cmd_list)
     except KeyboardInterrupt as e:
         print()
-        gutils.emsg('SIGINT signal detected. Terminating...')
+        gutils.imsg('SIGINT signal detected. Terminating...')
         sys.exit(130)
 
     if cmd != 'emaint_check':

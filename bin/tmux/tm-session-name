@@ -12,7 +12,11 @@ source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 scriptname="$(basename "$0")"
 
 # ---------- Main ----------
-socket_name="$(tm-socket)"
+if [[ -n "$1" ]]; then
+    socket_name="$1"; shift
+else
+    socket_name="$(tm-socket)"
+fi
 
 # shellcheck disable=SC2016
 tmux -L "${socket_name}" display-message -p "#S" | sed 's/`/\\`/g'

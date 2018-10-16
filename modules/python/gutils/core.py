@@ -7,11 +7,15 @@ classes in this module MUST be added to __all__ or they will NOT be made availab
 
 import argparse
 import atexit
+import errno
 import inspect
 import os
 import random
 import string
 import subprocess as sp
+import sys
+import termios
+import tty
 
 import gutils.g_xdg as xdg
 import gutils.shared as shared
@@ -20,8 +24,10 @@ __all__ = [
     'ArgumentParser',
     'GUtilsError',
     'StillAliveException',
+    'create_dir',
     'create_pidfile',
-    'emsg',
+    'getch',
+    'imsg',
     'mkfifo',
     'notify',
     'secret',
@@ -60,13 +66,26 @@ def ArgumentParser(*args, opt_args=[], description=None, **kwargs):
     return parser
 
 
+def create_dir(directory):
+    """ Create directory if it does not already exist.
+
+    Args:
+        directory: full directory path.
+    """
+    try:
+        os.makedirs(directory)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+
 def create_pidfile():
     """ Writes PID to file, which is created if necessary.
 
     Raises:
         StillAliveException: if old instance of script is still alive.
     """
-    PIDFILE = "{}/pid".format(xdg.getdir('runtime', stack=inspect.stack()))
+    PIDFILE = "{}/pid".format(xdg.init('runtime', stack=inspect.stack()))
     if os.path.isfile(PIDFILE):
         old_pid = int(open(PIDFILE, 'r').read())
         try:
@@ -83,7 +102,31 @@ def create_pidfile():
     open(PIDFILE, 'w').write(str(pid))
 
 
-def emsg(msg):
+def getch(prompt=None):
+    """Reads a single character from stdin.
+
+    Args:
+        prompt (optional): prompt that is presented to user.
+
+    Returns:
+        The single character that was read.
+    """
+    if prompt:
+        sys.stdout.write(prompt)
+
+    sys.stdout.flush()
+
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
+
+
+def imsg(msg):
     """Gentoo User Message"""
     print('>>> {}'.format(msg))
 

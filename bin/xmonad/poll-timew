@@ -30,7 +30,7 @@ def main():
         timew_tt_thread('Study', 'day', 2)
         timew_tt_thread('Dev', 'day', 3)
 
-        fmt = 'Study:  ({} / {})        Dev:  ({} / {})        [{}]'
+        fmt = 'Study: ({} / {})   Dev: ({} / {})   [{}]'
 
         totaltime = get_totaltime()
         print(fmt.format(tag_times[2], tag_times[0], tag_times[3], tag_times[1], totaltime))
@@ -48,10 +48,10 @@ def main():
 
         totaltime = get_totaltime()
 
-        fmt = '{tag}          "{project}"'
+        fmt = '"{project}"'
 
         format_opts = {'project': project,
-                       'tag': tag,
+                       'tag': parent_tag,
                        'currtime': currtime,
                        'totaltime': totaltime}
 
@@ -59,9 +59,8 @@ def main():
             format_opts['pdaytime'] = tag_times[2]
             format_opts['ptotaltime'] = tag_times[3]
 
-            fmt = fmt + ('                '
-                         '({currtime} / {pdaytime} / {ptotaltime})        '
-                         '[{totaltime}]')
+            fmt = fmt + ('   '
+                         '({tag}: {currtime} / {pdaytime} / {ptotaltime})   [{totaltime}]')
 
         print(fmt.format(**format_opts))
 

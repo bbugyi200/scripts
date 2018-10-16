@@ -33,4 +33,5 @@ if [[ "${restart_task}" = true ]]; then
     last_task
 fi
 
-xmonad-poll-timew
+xmonad-timew
+

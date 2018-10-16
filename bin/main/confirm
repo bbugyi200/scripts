@@ -34,6 +34,8 @@ echo
 if [[ "$choice" == "y" ]]; then
 	eval "$*"
     exit 0
+elif [[ "${choice}" == "n" ]]; then
+    exit 3
 else
     exit 1
 fi

@@ -18,4 +18,5 @@ if timew &> /dev/null; then
     timew move @1 "$(date '+%H:%M' --date="${minutes} minutes ago")" :adjust
 fi
 
-xmonad-poll-timew
+xmonad-timew
+

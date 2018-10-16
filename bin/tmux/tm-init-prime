@@ -1,0 +1,21 @@
+#!/bin/bash
+
+###################################################################################################
+#  Initializes and Starts Prime (secondary) Tmux Session                                          #
+###################################################################################################
+
+# shellcheck disable=SC2154
+
+# ---------- Modules ----------
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# ---------- Global Variables ----------
+# shellcheck disable=SC2154,SC2034
+usage="usage: ${scriptname} "
+
+session_name="$(tm-session-name default)"
+
+# ---------- Main ----------
+generate_prime_mux_session "${session_name}"
+tm-session-root --put "${session_name}\`" "$(tm-session-root --get "${session_name}")"
+tm "${session_name}\`"

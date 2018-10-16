@@ -14,7 +14,7 @@ import gutils
 
 log = gutils.logging.getEasyLogger(__name__)
 DAYPLAN_FILE = '/home/bryan/Dropbox/notes/dayplan.txt'
-TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.getdir('data'))
+TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.init('data'))
 DATE_FMT = '%Y-%m-%d'
 MAX_DAYS = 1
 

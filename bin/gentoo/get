@@ -43,7 +43,7 @@ def main(args):
                 pass
 
     if rc == 0:
-        gutils.emsg('Calling updatedb to update its databases.')
+        gutils.imsg('Calling updatedb to update its databases.')
         sp.check_call(['updatedb'])
         if not args.oneshot:
             add_to_set(args.packages, local=args.local)
@@ -97,7 +97,7 @@ def add_to_set(packages, *, local=False):
                 log.debug(msg_fmt, portage_set, entry.strip())
                 break
         else:
-            gutils.emsg('Adding {} to @{}.'.format(package, portage_set))
+            gutils.imsg('Adding {} to @{}.'.format(package, portage_set))
             lines.append(full_package_name + '\n')
 
             # Remove the package name from the world file to ensure that packages are never listed in

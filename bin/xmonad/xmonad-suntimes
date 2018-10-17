@@ -12,6 +12,9 @@ source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 # ---------- Global Variables ----------
 # shellcheck disable=SC2154,SC2034
 usage="usage: ${scriptname} "
+D="/home/bryan/Dropbox/var"
+fp_sunrise="${D}"/sunrise
+fp_sunset="${D}"/sunset
 
 [ -d "${my_xdg_runtime}" ] || mkdir "${my_xdg_runtime}"
 [ -p "${my_xdg_runtime}"/fifo ] || mkfifo "${my_xdg_runtime}"/fifo
@@ -53,12 +56,12 @@ fi
 
 # ---------- Main ----------
 if [[ "${refresh}" = true ]]; then
-    suntimes rise > /tmp/sunrise
-    suntimes set > /tmp/sunset
+    suntimes rise > "${fp_sunrise}"
+    suntimes set > "${fp_sunset}"
     sleep 5
 fi
 
-R="$(cat /tmp/sunrise)"
-S="$(cat /tmp/sunset)"
+R="$(cat ${fp_sunrise})"
+S="$(cat ${fp_sunset})"
 
 printf "%s / %s\n" "${R}" "${S}" > "${my_xdg_runtime}"/fifo

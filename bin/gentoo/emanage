@@ -15,6 +15,7 @@ import gutils
 
 log = gutils.logging.getEasyLogger(__name__)
 scriptname = os.path.basename(os.path.realpath(__file__))
+ts_fmt = '%Y%m%d%H%M%S'
 
 
 def main(args):
@@ -38,8 +39,15 @@ def main(args):
         sys.exit(0)
     elif args.dsl:
         if args.dsl == 'local':
-            out = sp.check_output(['edsl', local_tsfile])
-            print(out.decode().strip())
+            try:
+                date_string = open(local_tsfile, 'r').read().rstrip()
+                last_clean = dt.datetime.strptime(date_string, ts_fmt)
+                delta = dt.datetime.today() - last_clean
+                days = delta.days
+            except FileNotFoundError:
+                days = 99999
+
+            print(days)
         elif args.dsl == 'remote':
             remote_hostnames = [H for H in os.listdir(data_dir) if H != local_hostname]
             remote_ts_files = ['{}/{}/{}/timestamp'.format(data_dir, H, cmd)
@@ -78,8 +86,7 @@ def main(args):
         gutils.imsg('SIGINT signal detected. Terminating...')
         sys.exit(130)
 
-    if cmd != 'emaint_check':
-        write_timestamp(local_tsfile, cmd)
+    write_timestamp(local_tsfile, cmd)
 
 
 def write_timestamp(fp, cmd):
@@ -90,7 +97,7 @@ def write_timestamp(fp, cmd):
 
     with open(fp, 'w') as f:
         now = dt.datetime.now()
-        f.write(now.strftime('%m/%d/%Y'))
+        f.write(now.strftime(ts_fmt))
 
 
 if __name__ == "__main__":

@@ -1,0 +1,64 @@
+#!/bin/bash
+
+###################################################################################################
+#  Writes sunset and sunrise times to FIFO that is read by xmobar                                 #
+###################################################################################################
+
+# shellcheck disable=SC2154
+
+# ---------- Modules ----------
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# ---------- Global Variables ----------
+# shellcheck disable=SC2154,SC2034
+usage="usage: ${scriptname} "
+
+[ -d "${my_xdg_runtime}" ] || mkdir "${my_xdg_runtime}"
+[ -p "${my_xdg_runtime}"/fifo ] || mkfifo "${my_xdg_runtime}"/fifo
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,R,v" -l "debug,help,refresh,verbose" -- "$@")"
+
+read -r -d '' help << EOM
+${usage}
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -R|--refresh )
+           refresh=true
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+# ---------- Main ----------
+if [[ "${refresh}" = true ]]; then
+    suntimes rise > /tmp/sunrise
+    suntimes set > /tmp/sunset
+    sleep 5
+fi
+
+R="$(cat /tmp/sunrise)"
+S="$(cat /tmp/sunset)"
+
+printf "%s / %s\n" "${R}" "${S}" > "${my_xdg_runtime}"/fifo

@@ -184,7 +184,6 @@ def create_pidfile():
 
 def term_handler(signum, frame):
     """Signal Handler that Exits Gracefully"""
-    stop_alarm()
     sys.exit(1)
 
 
@@ -194,7 +193,7 @@ def stop_alarm():
     pid = os.fork()
     if pid == 0:
         os.system('alarm --stop')
-        sys.exit(1)
+        sys.exit(0)
     else:
         with open(FIFO_PATH, 'w') as fifo:
             fifo.write('\n')

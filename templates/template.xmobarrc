@@ -39,6 +39,7 @@ Config { font = "xft:Dina:pixelsize=13"
                     , Run PipeReader ":{{ xdg_runtime }}/calalrms/fifo" "calevent"
                     , Run PipeReader ":{{ xdg_runtime }}/volume.fifo" "volume"
                     , Run PipeReader ":{{ xdg_runtime }}/alarm/fifo" "counter"
+                    , Run PipeReader ":{{ xdg_runtime }}/xmonad-suntimes/fifo" "suntimes"
                     , Run UnsafeStdinReader
                     ]
        , sepChar = "%"

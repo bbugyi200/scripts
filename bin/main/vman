@@ -1,8 +1,39 @@
 #!/bin/bash
 # Enables vim :Man command from the terminal
 
-if ! vim -c "SuperMan $*"; then
-    if ! cppman "$*"; then
-        echo "No manual entry for $*"
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+rand_hex="$(hexdump -n 3 -e '4/4 "%08x" 1 ""' /dev/random)"
+tmp_file=/tmp/vman."${rand_hex}"
+
+truncate "${tmp_file}"
+N=
+
+for m in "$@"; do
+    if [[ "${m}" =~ ^[0-9]+$ ]]; then
+        N="${m}"
+        continue
     fi
-fi
+
+    # shellcheck disable=SC2086
+    if ! man ${N} "${m}" &> /dev/null; then
+        cppman_out="$(cppman "${m}")"
+        if [[ "${cppman_out}" == *"No manual"* ]]; then
+            echo "No manual entry for ${m}."
+            exit 1
+        else
+            cppman "${m}"
+            exit 0
+        fi
+    else
+        # shellcheck disable=SC2086
+        man ${N} "${m}" | col -b >> "${tmp_file}"
+
+        if [[ -n "${N}" ]]; then
+            N=
+        fi
+    fi
+done
+
+vim -c "set filetype=man" "${tmp_file}"
+rm "${tmp_file}"

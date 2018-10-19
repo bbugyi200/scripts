@@ -1,39 +1,24 @@
 #!/usr/bin/env python
 
-"""Polls and Parses `timew` Command for use with Panel Bar.
-
-I pity those who might come across this code by mere happenstance. Please do not try to replicate
-any of the atrocities you might find below.
-
-Know that I am not proud of what you have seen here today. Know that I am sorry.
-"""
-
 import datetime as dt
 import subprocess as sp
-import threading
 import re
-import queue
-
-
-timew_queue = queue.Queue()
-tag_times = [None] * 4
 
 
 def main():
-    timew_tt_thread('Study', 'week', 0)
-    timew_tt_thread('Dev', 'week', 1)
-
     child = sp.Popen(['timew'], stdout=sp.PIPE)
     output = child.communicate()[0].decode()
 
+    study_week = styled_tag_time('Study', 'week')
+    dev_week = styled_tag_time('Dev', 'week')
+    totaltime = add_times(study_week, dev_week)
+
     if child.returncode:
-        timew_tt_thread('Study', 'day', 2)
-        timew_tt_thread('Dev', 'day', 3)
+        study_day = styled_tag_time('Study', 'day')
+        dev_day = styled_tag_time('Dev', 'day')
+        fmt = 'Study:  ({} / {})        Dev:  ({} / {})        [{}]'
 
-        fmt = 'Study: ({} / {})   Dev: ({} / {})   [{}]'
-
-        totaltime = get_totaltime()
-        print(fmt.format(tag_times[2], tag_times[0], tag_times[3], tag_times[1], totaltime))
+        print(fmt.format(study_day, study_week, dev_day, dev_week, totaltime))
     else:
         project, tag, currtime = parse_status(output)
 
@@ -43,51 +28,25 @@ def main():
             index = len(tag)
 
         parent_tag = tag[:index]
-        timew_tt_thread(parent_tag, 'day', 2)
-        timew_tt_thread(parent_tag, 'week', 3)
+        pdaytime = styled_tag_time(parent_tag, 'day')  # parent daytime
+        ptotaltime = styled_tag_time(parent_tag, 'week')
 
-        totaltime = get_totaltime()
-
-        fmt = '"{project}"'
-
+        fmt = '{tag}          "{project}"'
         format_opts = {'project': project,
-                       'tag': parent_tag,
+                       'tag': tag,
                        'currtime': currtime,
                        'totaltime': totaltime}
 
         if parent_tag != '':
-            format_opts['pdaytime'] = tag_times[2]
-            format_opts['ptotaltime'] = tag_times[3]
-
-            fmt = fmt + ('   '
-                         '({tag}: {currtime} / {pdaytime} / {ptotaltime})   [{totaltime}]')
+            fmt = fmt + '                ({currtime} / {pdaytime} / {ptotaltime})        [{totaltime}]'
+            format_opts['pdaytime'] = pdaytime
+            format_opts['ptotaltime'] = ptotaltime
 
         print(fmt.format(**format_opts))
 
 
-def get_totaltime():
-    timew_queue.join()
-    return add_times(tag_times[0], tag_times[1])
-
-
-def timew_tt_thread(tag, interval, index):
-    """Timew Tag Time Thread"""
-    t = threading.Thread(target=insert_tag_time, args=(tag, interval, index), daemon=True)
-    t.start()
-
-
-def insert_tag_time(tag, interval, index):
-    timew_queue.put(index)
-
-    tag_time = styled_tag_time(tag, interval)
-    tag_times[index] = tag_time
-
-    timew_queue.get()
-    timew_queue.task_done()
-
-
-def styled_tag_time(tag, interval):
-    tag_time = _get_tag_time(tag, interval)
+def styled_tag_time(t, i):
+    tag_time = _get_tag_time(t, i)
     return _style_time(tag_time)
 
 

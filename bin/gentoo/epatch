@@ -24,21 +24,53 @@ function change_owner() {
     chown -R "${REGULAR_USER}":"${REGULAR_USER}" "${W}"
 }
 
+function patch_install() {
+    if [[ "${use_version_specifier}" ]]; then
+        PDIR="${PATCH_DIR}"
+        PPATH="${PATCH_PATH}"
+    else
+        PDIR="${PATCH_NOVERSION_DIR}"
+        PPATH="${PATCH_NOVERSION_PATH}"
+    fi
+
+    EXISTING_PATCH_PATH="$(find "${PATCH_PATH}" "${PATCH_NOVERSION_PATH}" -name "*${PATCH_NAME}.patch" 2> /dev/null | sort -u)"
+    if [[ -n "${EXISTING_PATCH_PATH}" && "${PPATH}" != "${EXISTING_PATCH_PATH}" ]]; then
+        die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n${EXISTING_PATCH_PATH}"
+    fi
+
+    [[ -d "${PDIR}" ]] || mkdir -p "${PDIR}"
+
+    if [[ -f "$(pwd)"/"${EPATCH_FILE}" ]]; then
+        BRANCH="$(tail -n 1 "${EPATCH_FILE}")"
+    else
+        BRANCH="HEAD"
+    fi
+
+    git add -A
+    git diff --staged "${BRANCH}" > "${PPATH}"
+    git reset HEAD &> /dev/null
+    imsg "Installed patch to ${PPATH}."
+}
+
 function make_real_paths() {
     if [[ -f "${PATCH_PATH}" ]]; then
         REAL_PATH="${PATCH_PATH}"
+        REAL_DIR="${PATCH_DIR}"
         REAL_PATCH_PATH="${PATCH_PATH}"
         REAL_STASH_PATH="${STASH_PATH}"
     elif [[ -f "${PATCH_NOVERSION_PATH}" ]]; then
         REAL_PATH="${PATCH_NOVERSION_PATH}"
+        REAL_DIR="${PATCH_NOVERSION_DIR}"
         REAL_PATCH_PATH="${PATCH_NOVERSION_PATH}"
         REAL_STASH_PATH="${STASH_NOVERSION_PATH}"
     elif [[ -f "${STASH_PATH}" ]]; then
         REAL_PATH="${STASH_PATH}"
+        REAL_DIR="${PATCH_DIR}"
         REAL_PATCH_PATH="${PATCH_PATH}"
         REAL_STASH_PATH="${STASH_PATH}"
     elif [[ -f "${STASH_NOVERSION_PATH}" ]]; then
         REAL_PATH="${STASH_NOVERSION_PATH}"
+        REAL_DIR="${PATCH_NOVERSION_DIR}"
         REAL_PATCH_PATH="${PATCH_NOVERSION_PATH}"
         REAL_STASH_PATH="${STASH_NOVERSION_PATH}"
     fi
@@ -123,11 +155,6 @@ while [[ -n "$1" ]]; do
 done
 
 # ---------- Quick Action Handlers ----------
-# if patch name is given with -I, install patch and package
-if [[ "${install_pkg}" = true && -n "$1" ]]; then
-    install_patch=true
-fi
-
 if [[ "${apply}" = true || "${clean}" = true || "${install_pkg}" = true || \
     "${install_patch}" = true || "${list}" = true || "${remove}" = true ||
     "${stash}" = true ]] ; then
@@ -184,35 +211,14 @@ fi
 
 # >>> INSTALL PATCH
 if [[ "${install_patch}" = true ]]; then
-    if [[ "${use_version_specifier}" ]]; then
-        PDIR="${PATCH_DIR}"
-        PPATH="${PATCH_PATH}"
-    else
-        PDIR="${PATCH_NOVERSION_DIR}"
-        PPATH="${PATCH_NOVERSION_PATH}"
-    fi
-
-    EXISTING_PATCH_PATH="$(find "${PATCH_PATH}" "${PATCH_NOVERSION_PATH}" -name "*${PATCH_NAME}.patch" 2> /dev/null | sort -u)"
-    if [[ -n "${EXISTING_PATCH_PATH}" && "${PPATH}" != "${EXISTING_PATCH_PATH}" ]]; then
-        die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n${EXISTING_PATCH_PATH}"
-    fi
-
-    [[ -d "${PDIR}" ]] || mkdir -p "${PDIR}"
-
-    if [[ -f "$(pwd)"/"${EPATCH_FILE}" ]]; then
-        BRANCH="$(tail -n 1 "${EPATCH_FILE}")"
-    else
-        BRANCH="HEAD"
-    fi
-
-    git add -A
-    git diff --staged "${BRANCH}" > "${PPATH}"
-    git reset HEAD &> /dev/null
-    imsg "Installed patch to ${PPATH}."
+    patch_install
 fi
 
 # >>> INSTALL PACKAGE
 if [[ "${install_pkg}" = true ]]; then
+    if [[ -n "${PATCH_NAME}" ]]; then
+        patch_install
+    fi
     get -f "${PATCH_NOVERSION_DIR##*/}"
 fi
 
@@ -231,39 +237,30 @@ fi
 # >>> REMOVE
 if [[ "${remove}" = true ]]; then
     check_path_exists
+    make_real_paths
 
-    if [[ -f "${PATCH_PATH}" ]]; then
-        REAL_PATCH_PATH="${PATCH_PATH}"
-    elif [[ -f "${PATCH_NOVERSION_PATH}" ]]; then
-        REAL_PATCH_PATH="${PATCH_NOVERSION_PATH}"
-    fi
-
-    safe-rm "${REAL_PATCH_PATH}"
-    rmdir "${REAL_PATCH_DIR}" &> /dev/null
-    imsg "Removed ${REAL_PATCH_PATH}."
+    safe-rm "${REAL_PATH}"
+    rmdir "${REAL_DIR}" &> /dev/null
+    imsg "Removed ${REAL_PATH}."
 fi
 
 # >>> STASH
 if [[ "${stash}" = true ]]; then
-    if [[ -n "${PATCH_NAME}" ]]; then
-        check_path_exists
-        make_real_paths
+    check_path_exists
+    make_real_paths
 
-        if [[ -f "${PATCH_PATH}" || -f "${PATCH_NOVERSION_PATH}" ]]; then
-            action="Stashed"
-            src="${REAL_PATCH_PATH}"
-            dest="${REAL_STASH_PATH}"
-        elif [[ -f "${STASH_PATH}" || -f "${STASH_NOVERSION_PATH}" ]]; then
-            action="Unstashed"
-            src="${REAL_STASH_PATH}"
-            dest="${REAL_PATCH_PATH}"
-        fi
-
-        mv "${src}" "${dest}"
-        imsg "${action} ${PATCH_NAME}."
-    else
-        find "${PATCH_DIR}" "${PATCH_NOVERSION_DIR}" -name "*.stash" 2> /dev/null | sort -u
+    if [[ -f "${PATCH_PATH}" || -f "${PATCH_NOVERSION_PATH}" ]]; then
+        action="Stashed"
+        src="${REAL_PATCH_PATH}"
+        dest="${REAL_STASH_PATH}"
+    elif [[ -f "${STASH_PATH}" || -f "${STASH_NOVERSION_PATH}" ]]; then
+        action="Unstashed"
+        src="${REAL_STASH_PATH}"
+        dest="${REAL_PATCH_PATH}"
     fi
+
+    mv "${src}" "${dest}"
+    imsg "${action} ${PATCH_NAME}."
 fi
 
 if [[ "${quick_action}" = true ]]; then

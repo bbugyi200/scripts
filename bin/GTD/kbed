@@ -36,6 +36,9 @@ def main(args):
 
 
 def set_khal_event(event_dt, event_name):
+    # Delete all other Khal events with that same event name.
+    sp.check_call(['kdel', event_name])
+
     cmd_list = ['khal', 'new', '-a', 'daily']
     cmd_list.append(event_dt.strftime('%Y-%m-%dT%H:%M'))
     cmd_list.append(event_name)

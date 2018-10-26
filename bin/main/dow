@@ -15,7 +15,7 @@ scriptname="$(basename "$0")"
 usage="usage: ${scriptname} [-d] [-h] [-u] [-v] DOTFILE [DOTFILE [...]]" 
 
 dropbox_dots_home=/home/bryan/Dropbox/dotfiles/home
-parent="${PWD#/home/bryan/}"
+parent="${PWD#/home/bryan}"
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,h,v,R" -l "debug,help,verbose,reverse" -- "$@")"
@@ -66,6 +66,7 @@ else
     action_word="Dowing"
     src="${PWD}"
     dest="${dropbox_dots_home}"/"${parent}"
+    mkdir "${dest}" &> /dev/null
 fi
 
 for dotfile in "$@"; do

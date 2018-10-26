@@ -5,10 +5,6 @@
 ######################################
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
-
-# shellcheck disable=SC2034
-secret_wrapper="emanage"
-source /home/bryan/Dropbox/scripts/modules/bash/secret.sh
 source /home/bryan/Dropbox/scripts/modules/bash/emaint.sh
 
 # ---------- Main Logic ----------
@@ -24,5 +20,5 @@ econfirm "ebvcheck -v"
 econfirm "sudo updatedb"
 econfirm "cache_cheaders"
 econfirm "elogv"
-econfirm "clear && sudo dispatch-conf"
+econfirm "sudo dispatch-conf"
 econfirm "echeck_kernel"

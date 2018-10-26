@@ -98,14 +98,15 @@ else
 fi
 
 if ! [[ -f "$FULL_SCRIPT_NAME" ]]; then
-    cp /home/bryan/Dropbox/scripts/templates/template."${EXT}" "${FULL_SCRIPT_NAME}"
+    sudo cp /home/bryan/Dropbox/scripts/templates/template."${EXT}" "${FULL_SCRIPT_NAME}"
+    sudo chown bryan:bryan "${FULL_SCRIPT_NAME}"
     imsg "Initializing the '$FULL_SCRIPT_NAME' script."
 else
     imsg "The '$FULL_SCRIPT_NAME' script already exists."
 fi
 
 if [[ "${executable}" = true ]]; then
-    chmod +x "$FULL_SCRIPT_NAME"
+    sudo chmod +x "$FULL_SCRIPT_NAME"
     clinks
 fi
 

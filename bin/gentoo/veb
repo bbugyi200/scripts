@@ -4,11 +4,6 @@
 #  Find ebuild and open up in vim  #
 ####################################
 
-# ensure running as root
-if [ "$(id -u)" != "0" ]; then
-  exec sudo "$0" "$@"
-fi
-
 overlay_dir=/home/bryan/projects/portage-overlay
 
 if [[ -z "$1" ]]; then

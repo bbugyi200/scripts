@@ -39,14 +39,7 @@ def main(args):
         sys.exit(0)
     elif args.dsl:
         if args.dsl == 'local':
-            try:
-                date_string = open(local_tsfile, 'r').read().rstrip()
-                last_clean = dt.datetime.strptime(date_string, ts_fmt)
-                delta = dt.datetime.today() - last_clean
-                days = delta.days
-            except FileNotFoundError:
-                days = 99999
-
+            days = days_since_last(local_tsfile)
             print(days)
         elif args.dsl == 'remote':
             remote_hostnames = [H for H in os.listdir(data_dir) if H != local_hostname]
@@ -54,8 +47,8 @@ def main(args):
                                for H in remote_hostnames]
 
             for H, fp in zip(remote_hostnames, remote_ts_files):
-                out = sp.check_output(['edsl', fp])
-                print('{}:{}'.format(H, out.decode().strip()))
+                days = days_since_last(fp)
+                print('{}:{}'.format(H, days))
 
         sys.exit(0)
 
@@ -70,7 +63,7 @@ def main(args):
             count = f.read().strip()
 
         if int(count) > 0:
-            choice = gutils.getch('>>> Would you like to resume `{}` where you left off (y), redo the last command (r),\n start a new session (n), or exit (x)?: '.format(cmd))
+            choice = gutils.getch('>>> Would you like to resume `{}` where you left off (y), redo the last command (r),\n start a new session (n)?: '.format(cmd))
 
             if choice == 'y':
                 cmd_list.append(count)
@@ -87,6 +80,18 @@ def main(args):
         sys.exit(130)
 
     write_timestamp(local_tsfile, cmd)
+
+
+def days_since_last(fp_timestamp):
+    try:
+        date_string = open(fp_timestamp, 'r').read().rstrip()
+        last_clean = dt.datetime.strptime(date_string, ts_fmt)
+        delta = dt.datetime.today() - last_clean
+        days = delta.days
+    except FileNotFoundError:
+        days = 99999
+
+    return days
 
 
 def write_timestamp(fp, cmd):

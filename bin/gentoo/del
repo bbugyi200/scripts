@@ -6,7 +6,7 @@
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ---------- Command-line Arguments  ----------
-eval set -- "$(getopt -o "d,D" -l "debug,depclean" -- "$@")"
+eval set -- "$(getopt -o "d,D,1" -l "debug,depclean,oneshot" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -15,6 +15,9 @@ while [[ -n "$1" ]]; do
            set -x;;
        -D|--depclean )
            depclean=true
+           ;;
+       -1|--oneshot )
+           oneshot=true
            ;;
        -- )
            shift
@@ -31,17 +34,21 @@ else
 fi
 
 if sudo emerge --ask "${OPTS[@]}" "$@"; then
-    all_sets=( "shared" "$(hostname)" )
-    for pkg in "$@"; do
-        for set in "${all_sets[@]}"; do
-            filename=/etc/portage/sets/"${set}"
-            if grep "${pkg}" "${filename}" &> /dev/null; then
-                imsg "Purging ${pkg} from @${set}."
-                sed -i "\|$(ecat "$pkg")/$pkg|d" "${filename}"
-            fi
+    if [[ "${oneshot}" = true ]]; then
+        imsg "Using --oneshot option. Package sets will not be altered."
+    else
+        all_sets=( "shared" "$(hostname)" )
+        for pkg in "$@"; do
+            for set in "${all_sets[@]}"; do
+                filename=/etc/portage/sets/"${set}"
+                if grep "${pkg}" "${filename}" &> /dev/null; then
+                    imsg "Purging ${pkg} from @${set}."
+                    sed -i "\|$(ecat "$pkg")/$pkg|d" "${filename}"
+                fi
+            done
         done
-    done
-
+    fi
+        
     imsg "Calling updatedb to update its databases."
     updatedb
 else

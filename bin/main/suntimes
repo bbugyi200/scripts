@@ -28,9 +28,9 @@ def main(args):
     pttrn = '>([0-9][0-9]?:[0-9][0-9] {})</div>'.format(am_or_pm)
     match = re.search(pttrn, source)
     time_string = match.groups()[0]
-    dt_sunset = dt.datetime.strptime(time_string, '%I:%M %p')
+    dt_suntime = dt.datetime.strptime(time_string, '%I:%M %p')
 
-    new_time_string = dt_sunset.strftime('%H:%M')
+    new_time_string = dt_suntime.strftime('%H:%M')
     print(new_time_string)
 
 

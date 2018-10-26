@@ -22,12 +22,14 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        vargs = list(args.vargs)
-        minutes = 50
+        try:
+            vargs = list(args.vargs)
+        except TypeError as e:
+            vargs = []
 
         try:
             minutes = int(vargs[0])
-        except ValueError as e:
+        except (ValueError, IndexError) as e:
             minutes = 50
         else:
             vargs.pop(0)

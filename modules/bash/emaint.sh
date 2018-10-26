@@ -4,6 +4,10 @@
 #  Bash module for Gentoo maintenance scripts (which are interfaced via the `emanage` script.     #
 ###################################################################################################
 
+# shellcheck disable=SC2034
+secret_wrapper="emanage"
+source /home/bryan/Dropbox/scripts/modules/bash/secret.sh
+
 trap 'rm ${count_path}' EXIT
 
 my_xdg_data="${xdg_data}"/emanage/"$(hostname)"/"${scriptname}"

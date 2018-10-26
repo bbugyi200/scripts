@@ -21,7 +21,8 @@ log = gutils.logging.getEasyLogger(__name__)
 
 
 def main():
-    ps = sp.Popen('prompt', stdout=sp.PIPE)
+    prompt_cmd = ['prompt', '@'] if args.less else 'prompt'
+    ps = sp.Popen(prompt_cmd, stdout=sp.PIPE)
     cmd = ps.communicate()[0].decode().strip()
 
     if cmd == '':
@@ -35,13 +36,13 @@ def shell_cmd(cmd):
     """ Returns Shell Command List """
     cmd_list = []
 
-    if cmd[0] == '@' or cmd[0].isupper():
+    if cmd[0] == '@' or args.less or cmd[0].isupper():
         log.debug('Using urxvt command list.')
         cmd_list.extend(['urxvt', '-name', 'big-floater', '-e'])
         cmd = cmd[0].lower() + cmd[1:]
-        if cmd[0] == '@':
+        if cmd[0] == '@' or args.less:
             log.debug('Piping output of "{}" to less.'.format(cmd))
-            cmd = cmd[1:]
+            cmd = cmd[1:] if cmd[0] == '@' else cmd
             cmd = '{}{}'.format(cmd, ' | less')
     else:
         log.debug('Will run "{}" in the background.'.format(cmd))
@@ -54,6 +55,8 @@ def shell_cmd(cmd):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
+    parser.add_argument('-L', dest='less', action='store_true',
+                        help='Pipe output of command to `less`.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

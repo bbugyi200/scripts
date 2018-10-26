@@ -1,0 +1,20 @@
+#!/bin/bash
+
+###################################################################################################
+#  cd to packages temp build directory for portage                                                #
+###################################################################################################
+
+# shellcheck disable=SC2154
+
+# ---------- Modules ----------
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# ---------- Global Variables ----------
+# shellcheck disable=SC2154,SC2034
+usage="usage: ${scriptname} "
+
+# ---------- Main ----------
+
+D="$(find /var/tmp/portage -type d -name "*$1*" 2> /dev/null)"
+sudo chown -R bryan:bryan "${D}"
+cd "${D}" || return 1

@@ -19,12 +19,15 @@ DATE_FMT = '%Y-%m-%d'
 MAX_DAYS = 1
 
 TEMPLATE = """===== HIGH =====
+HH:MM :: 
 ===== LOW =====
 Review Anki Cards
 ===== EOS =====
-Read EOS Book
+* Read "21st Century C"
+===== BREAKS =====
+* Workout
 
-"""
+"""  # noqa: W291
 
 
 def main():

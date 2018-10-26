@@ -4,6 +4,7 @@
 
 import argparse
 import os
+import re
 import subprocess as sp  # noqa: F401
 import sys
 
@@ -77,6 +78,9 @@ def add_to_set(packages, *, local=False):
         if '/' in package:
             full_package_name = package
         else:
+            match = re.search('=(.*)-[0-9.]+', package)
+            if match:
+                package = match.groups()[0]
             out = sp.check_output(['ecat', package])
             category = out.decode().strip()
 
@@ -113,7 +117,7 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('packages', nargs=argparse.REMAINDER, help='Package(s) to install.')
     parser.add_argument('-1', '--oneshot', action='store_true',
-                        help='Do NOT add package to @world.')
+                        help='Do NOT add package to any set (@shared, @world, ...).')
     parser.add_argument('-f', '--force', action='store_true',
                         help='Install package(s) without using the --ask option.')
     parser.add_argument('-n', '--no-install', dest='install', action='store_false',

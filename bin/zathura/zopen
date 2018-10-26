@@ -19,7 +19,7 @@ CACHE_FILE = '{}/recently-opened.txt'.format(gutils.xdg.init('data'))
 def main():
     try:
         cmd = 'wmctrl -lx | grep "zathura\|okular" | tr -s " " | cut -d\' \' -f5- '\
-              '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\)"'
+              '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\|okular\\)"'
         decoded = check_output(cmd)
         open_docs = decoded.split('\n')
         log.debug('Open Docs: {}'.format(' '.join(open_docs)))
@@ -28,7 +28,7 @@ def main():
         log.debug('No documents are currently open in zathura.')
 
     cmd = 'find /home/bryan/Dropbox /home/bryan/Downloads /home/bryan/projects -name "*.pdf" -o '\
-          '-name "*.epub" -o -name "*.djvu" -o -name "*.ps"'
+          '-name "*.epub" -o -name "*.djvu" -o -name "*.ps" -o -name "*.okular"'
     all_docs = check_output(cmd)
 
     with open(CACHE_FILE, 'r') as f:

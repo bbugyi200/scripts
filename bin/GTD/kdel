@@ -1,0 +1,23 @@
+#!/bin/bash
+
+###################################################################################################
+#  Delete all Khal events whose event summary matches the given argument ($1)                     #
+###################################################################################################
+
+# shellcheck disable=SC2154
+
+# ---------- Modules ----------
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+
+# ---------- Global Variables ----------
+# shellcheck disable=SC2154,SC2034
+usage="usage: ${scriptname} EVENT_NAME"
+
+# ---------- Main ----------
+if [[ -n "$1" ]]; then
+    event_name="$1"; shift
+else
+    die "${usage}" 2
+fi
+
+sqlite3 /home/"${USER}"/.local/share/khal/khal.db < <(echo "DELETE FROM events WHERE item LIKE '%SUMMARY:${event_name}%';")

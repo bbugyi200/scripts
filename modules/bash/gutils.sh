@@ -40,11 +40,12 @@ function die() {
         EC=1
     fi
 
-    if [[ "${MSG}" == "usage:"* ]]; then
-        MSG="  ${MSG}"
+    if [[ "${EC}" -eq 2 ]]; then
+        >&2 printf "${MSG}\n"
+    else
+        emsg "${MSG}"
     fi
 
-    emsg "${MSG}"
     exit "$EC"
 }
 

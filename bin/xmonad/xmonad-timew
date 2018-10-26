@@ -12,4 +12,3 @@ source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 [ -p "${my_xdg_runtime}"/fifo ] || mkfifo "${my_xdg_runtime}"/fifo
 
 /usr/local/bin/poll-timew > "${my_xdg_runtime}"/fifo
-

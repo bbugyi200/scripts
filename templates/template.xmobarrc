@@ -34,6 +34,9 @@ Config { font = "xft:Dina:pixelsize=13"
                                  , "--normal",  "green"
                                  , "--high",    "red"] 10
                     , Run Com "xmonad-pia" [] "pia" 50
+                    , Run Com "xmonad-timew" [] "xtimew" 600
+                    , Run Com "xmonad-weather" [] "xweather" 9000
+                    , Run Com "xmonad-suntimes" [] "xsuntimes" 216000
 					, Run PipeReader ":{{ xdg_runtime }}/xmonad-timew/fifo" "timew"
                     , Run PipeReader ":{{ xdg_runtime }}/xmonad-weather/fifo" "weather"
                     , Run PipeReader ":{{ xdg_runtime }}/calalrms/fifo" "calevent"

@@ -5,7 +5,11 @@ DROPBOX=/media/bryan/hercules/backup/dropbox
 [ -d $DROPBOX/monthly ] || mkdir -p $DROPBOX/monthly
 [ -d $DROPBOX/2months ] || mkdir -p $DROPBOX/2months
 [ -d $DROPBOX/3months ] || mkdir -p $DROPBOX/3months
-rm -rf $DROPBOX/3months && mv $DROPBOX/2months $DROPBOX/3months && cp -r $DROPBOX/monthly $DROPBOX/2months
+[ -d $DROPBOX/4months ] || mkdir -p $DROPBOX/4months
+rm -rf $DROPBOX/4months && \
+    mv $DROPBOX/3months $DROPBOX/4months && \
+    mv $DROPBOX/2months $DROPBOX/3months && \
+    cp -r $DROPBOX/monthly $DROPBOX/2months
 rsync -av --delete /home/bryan/Dropbox/ $DROPBOX/monthly/
 date > $DROPBOX/monthly/backup.txt
 

@@ -1,5 +1,8 @@
 #!/bin/bash
-# Enables vim :Man command from the terminal
+
+###################################################################################################
+#  View Man files using vim.                                                                      #
+###################################################################################################
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 

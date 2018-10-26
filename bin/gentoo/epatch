@@ -1,35 +1,57 @@
 #!/bin/bash
 
 ###################################################################################################
-#  Create / Manage User Patches on Gentoo                                                         #
+#  epatch                                                                                         #
+#                                                                                                 #
+# This script aids in the creation and maintainance of  user patches on Gentoo.                   #
 ###################################################################################################
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ensure running as root
 if [ "$(id -u)" != "0" ]; then
-  exec sudo "$0" -u "$USER" "$@"
+  exec sudo "$0" -u "${USER}" "$@"
 fi
 
 # ---------- Functions ----------
-function check_patch_exists() {
-    if ! [[ -f "$PATCH_PATH" || -f "$PATCH_NOVERSION_PATH" ]]; then
-        die "$PATCH_NAME.patch does not exist."
+function check_path_exists() {
+    if ! [[ -f "${PATCH_PATH}" || -f "${PATCH_NOVERSION_PATH}" || -f "${STASH_PATH}" || -f "${STASH_NOVERSION_PATH}" ]]; then
+        die "${PATCH_NAME} patch/stash does not exist."
     fi
 }
 
 function change_owner() {
-    chown -R "$REGULAR_USER":"$REGULAR_USER" "$W"
+    chown -R "${REGULAR_USER}":"${REGULAR_USER}" "${W}"
+}
+
+function make_real_paths() {
+    if [[ -f "${PATCH_PATH}" ]]; then
+        REAL_PATH="${PATCH_PATH}"
+        REAL_PATCH_PATH="${PATCH_PATH}"
+        REAL_STASH_PATH="${STASH_PATH}"
+    elif [[ -f "${PATCH_NOVERSION_PATH}" ]]; then
+        REAL_PATH="${PATCH_NOVERSION_PATH}"
+        REAL_PATCH_PATH="${PATCH_NOVERSION_PATH}"
+        REAL_STASH_PATH="${STASH_NOVERSION_PATH}"
+    elif [[ -f "${STASH_PATH}" ]]; then
+        REAL_PATH="${STASH_PATH}"
+        REAL_PATCH_PATH="${PATCH_PATH}"
+        REAL_STASH_PATH="${STASH_PATH}"
+    elif [[ -f "${STASH_NOVERSION_PATH}" ]]; then
+        REAL_PATH="${STASH_NOVERSION_PATH}"
+        REAL_PATCH_PATH="${PATCH_NOVERSION_PATH}"
+        REAL_STASH_PATH="${STASH_NOVERSION_PATH}"
+    fi
 }
 
 # ---------- Global Variables ----------
-USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i PATCH | -l [PATCH] | -r PATCH | [-o OVERLAY] PACKAGE]"
+USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i PATCH | -l [PATCH] | -r PATCH | -s PATCH | [-o OVERLAY] PACKAGE]"
 W=/tmp/"$(basename "$0")"
 OVERLAY="gentoo"
 EPATCH_FILE="epatch.info"
 
 read -r -d '' HELP << EOM
-$USAGE
+${USAGE}
 
 Steps to create an ebuild patch:
 
@@ -39,7 +61,7 @@ Steps to create an ebuild patch:
 EOM
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "a:,c,d,h,I,i:,l,o:,r:,V,u:" -l "apply:,clean,debug,help,install-pkg,install-patch:,list,overlay:,remove:,use-version-specifier,user:" -- "$@")"
+eval set -- "$(getopt -o "a:,c,d,h,I,i:,l,o:,r:,s:,V,u:" -l "apply:,clean,debug,help,install-pkg,install-patch:,list,overlay:,remove:,stash:,use-version-specifier,user:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -57,7 +79,7 @@ while [[ -n "$1" ]]; do
            set -x
            ;;
        -h|--help )
-           echo "$HELP"
+           echo "${HELP}"
            exit 0
            ;;
        -I|--install-pkg )
@@ -80,6 +102,11 @@ while [[ -n "$1" ]]; do
            PATCH_NAME="$1"
            remove=true
            ;;
+       -s|--stash )
+           shift
+           PATCH_NAME="$1"
+           stash=true
+           ;;
        -u|--user )
            shift
            REGULAR_USER="$1"
@@ -97,156 +124,176 @@ done
 
 # ---------- Quick Action Handlers ----------
 # if patch name is given with -I, install patch and package
-if [[ "$install_pkg" = true && -n "$1" ]]; then
+if [[ "${install_pkg}" = true && -n "$1" ]]; then
     install_patch=true
 fi
 
-if [[ "$apply" = true || "$clean" = true || "$install_pkg" = true || \
-    "$install_patch" = true || "$list" = true || "$remove" = true ]] ; then
+if [[ "${apply}" = true || "${clean}" = true || "${install_pkg}" = true || \
+    "${install_patch}" = true || "${list}" = true || "${remove}" = true ||
+    "${stash}" = true ]] ; then
     quick_action=true
         
     if [[ -n "$1" ]]; then
         PATCH_NAME="$1"; shift
     fi
 
-    if [[ -f "$(pwd)"/"$EPATCH_FILE" ]]; then
-        PATCH_SUBDIR="$(head -n 1 "$EPATCH_FILE" )"
+    if [[ -f "$(pwd)"/"${EPATCH_FILE}" ]]; then
+        PATCH_SUBDIR="$(head -n 1 "${EPATCH_FILE}" )"
         W="$(pwd)"
-    elif [[ "$(pwd)" =~ "$W"/[^/]*/.* ]]; then
+    elif [[ "$(pwd)" =~ "${W}"/[^/]*/.* ]]; then
         PATCH_SUBDIR="$(pwd | awk -F'/' '{printf "%s/%s", $4, $5}')"
     else
-        die "Cannot use this option outside of $W/CATEGORY/PACKAGE"
+        die "Cannot use this option outside of ${W}/CATEGORY/PACKAGE"
     fi
 
-    PATCH_DIR=/etc/portage/patches/"$PATCH_SUBDIR"
-    PATCH_PATH="$PATCH_DIR"/"$PATCH_NAME".patch
+    PATCH_DIR=/etc/portage/patches/"${PATCH_SUBDIR}"
+    PATCH_PATH="${PATCH_DIR}"/"${PATCH_NAME}".patch
+    STASH_PATH="${PATCH_PATH%.patch}.stash"
     
-    if [[ "$PATCH_DIR" =~ .*/[A-Za-z-]+-[0-9]+ ]]; then
+    if [[ "${PATCH_DIR}" =~ .*/[A-Za-z-]+-[0-9]+ ]]; then
         PATCH_NOVERSION_DIR="${PATCH_DIR%-*}"
     else
-        PATCH_NOVERSION_DIR="$PATCH_DIR"
+        PATCH_NOVERSION_DIR="${PATCH_DIR}"
     fi
     
-    PATCH_NOVERSION_PATH="$PATCH_NOVERSION_DIR"/"$PATCH_NAME".patch
+    PATCH_NOVERSION_PATH="${PATCH_NOVERSION_DIR}"/"${PATCH_NAME}".patch
+    STASH_NOVERSION_PATH="${PATCH_NOVERSION_PATH%.patch}.stash"
 fi
 
 
 # >>> APPLY
-if [[ "$apply" = true ]]; then
-    check_patch_exists
+if [[ "${apply}" = true ]]; then
+    check_path_exists
+    make_real_paths
 
-    if [[ -f "$PATCH_PATH" ]]; then
-        git apply "$PATCH_PATH"
-        EC="$?"
-    elif [[ -f "$PATCH_NOVERSION_PATH" ]]; then
-        git apply "$PATCH_NOVERSION_PATH"
-        EC="$?"
+    FILENAME="$(basename "${REAL_PATH}")"
+    if ! git apply "${REAL_PATH}" &> /dev/null; then
+        imsg "Failed to apply ${FILENAME} to git repository."
+        git apply -v "${REAL_PATH}"
+    else
+        imsg "Applied ${FILENAME} to git repository."
     fi
-
-    [[ "$EC" -eq 0 ]] && imsg "Applied $PATCH_NAME.patch to git repository."
 fi
 
 # >>> CLEAN
-if [[ "$clean" = true ]]; then
+if [[ "${clean}" = true ]]; then
     git reset --hard HEAD &> /dev/null
     git clean -f &> /dev/null
     imsg "Restored git repository to initial state."
 fi
 
 # >>> INSTALL PATCH
-if [[ "$install_patch" = true ]]; then
-    if [[ "$use_version_specifier" ]]; then
-        PDIR="$PATCH_DIR"
-        PPATH="$PATCH_PATH"
+if [[ "${install_patch}" = true ]]; then
+    if [[ "${use_version_specifier}" ]]; then
+        PDIR="${PATCH_DIR}"
+        PPATH="${PATCH_PATH}"
     else
-        PDIR="$PATCH_NOVERSION_DIR"
-        PPATH="$PATCH_NOVERSION_PATH"
+        PDIR="${PATCH_NOVERSION_DIR}"
+        PPATH="${PATCH_NOVERSION_PATH}"
     fi
 
-    EXISTING_PATCH_PATH="$(find "$PATCH_PATH" "$PATCH_NOVERSION_PATH" -name "*$PATCH_NAME.patch" 2> /dev/null | sort -u)"
-    if [[ -n "$EXISTING_PATCH_PATH" && "$PPATH" != "$EXISTING_PATCH_PATH" ]]; then
-        die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n$EXISTING_PATCH_PATH"
+    EXISTING_PATCH_PATH="$(find "${PATCH_PATH}" "${PATCH_NOVERSION_PATH}" -name "*${PATCH_NAME}.patch" 2> /dev/null | sort -u)"
+    if [[ -n "${EXISTING_PATCH_PATH}" && "${PPATH}" != "${EXISTING_PATCH_PATH}" ]]; then
+        die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n${EXISTING_PATCH_PATH}"
     fi
 
-    [[ -d "$PDIR" ]] || mkdir -p "$PDIR"
+    [[ -d "${PDIR}" ]] || mkdir -p "${PDIR}"
 
-    if [[ -f "$(pwd)"/"$EPATCH_FILE" ]]; then
-        BRANCH="$(tail -n 1 "$EPATCH_FILE")"
+    if [[ -f "$(pwd)"/"${EPATCH_FILE}" ]]; then
+        BRANCH="$(tail -n 1 "${EPATCH_FILE}")"
     else
         BRANCH="HEAD"
     fi
 
     git add -A
-    git diff --staged "$BRANCH" > "$PPATH"
+    git diff --staged "${BRANCH}" > "${PPATH}"
     git reset HEAD &> /dev/null
-    imsg "Installed patch to $PPATH."
+    imsg "Installed patch to ${PPATH}."
 fi
 
 # >>> INSTALL PACKAGE
-if [[ "$install_pkg" = true ]]; then
+if [[ "${install_pkg}" = true ]]; then
     get -f "${PATCH_NOVERSION_DIR##*/}"
 fi
 
 # >>> LIST
-if [[ "$list" = true ]]; then
-    if [[ -n "$PATCH_NAME" ]]; then
-        check_patch_exists
+if [[ "${list}" = true ]]; then
+    if [[ -n "${PATCH_NAME}" ]]; then
+        check_path_exists
+        make_real_paths
 
-        if [[ -f "$PATCH_PATH" ]]; then
-            pygmentize -g "$PATCH_PATH"
-        elif [[ -f "$PATCH_NOVERSION_PATH" ]]; then
-            pygmentize -g "$PATCH_NOVERSION_PATH"
-        fi
+        pygmentize -g "${REAL_PATH}"
     else
-        find "$PATCH_DIR" "$PATCH_NOVERSION_DIR" -name "*.patch" 2> /dev/null | sort -u
+        find "${PATCH_DIR}" "${PATCH_NOVERSION_DIR}" -name "*.patch" -o -name "*.stash" 2> /dev/null | sort -u
     fi
 fi
 
-# >>> REMOVE PATCH
-if [[ "$remove" = true ]]; then
-    check_patch_exists
+# >>> REMOVE
+if [[ "${remove}" = true ]]; then
+    check_path_exists
 
-    if [[ -f "$PATCH_PATH" ]]; then
-        safe-rm "$PATCH_PATH"
-        rmdir "$PATCH_DIR" &> /dev/null
-        imsg "Removed $PATCH_PATH."
+    if [[ -f "${PATCH_PATH}" ]]; then
+        REAL_PATCH_PATH="${PATCH_PATH}"
+    elif [[ -f "${PATCH_NOVERSION_PATH}" ]]; then
+        REAL_PATCH_PATH="${PATCH_NOVERSION_PATH}"
     fi
 
-    if [[ -f "$PATCH_NOVERSION_PATH" ]]; then
-        safe-rm "$PATCH_NOVERSION_PATH"
-        rmdir "$PATCH_NOVERSION_DIR" &> /dev/null
-        imsg "Removed $PATCH_NOVERSION_PATH."
+    safe-rm "${REAL_PATCH_PATH}"
+    rmdir "${REAL_PATCH_DIR}" &> /dev/null
+    imsg "Removed ${REAL_PATCH_PATH}."
+fi
+
+# >>> STASH
+if [[ "${stash}" = true ]]; then
+    if [[ -n "${PATCH_NAME}" ]]; then
+        check_path_exists
+        make_real_paths
+
+        if [[ -f "${PATCH_PATH}" || -f "${PATCH_NOVERSION_PATH}" ]]; then
+            action="Stashed"
+            src="${REAL_PATCH_PATH}"
+            dest="${REAL_STASH_PATH}"
+        elif [[ -f "${STASH_PATH}" || -f "${STASH_NOVERSION_PATH}" ]]; then
+            action="Unstashed"
+            src="${REAL_STASH_PATH}"
+            dest="${REAL_PATCH_PATH}"
+        fi
+
+        mv "${src}" "${dest}"
+        imsg "${action} ${PATCH_NAME}."
+    else
+        find "${PATCH_DIR}" "${PATCH_NOVERSION_DIR}" -name "*.stash" 2> /dev/null | sort -u
     fi
 fi
 
-if [[ "$quick_action" = true ]]; then
+if [[ "${quick_action}" = true ]]; then
     change_owner
     exit 0
 fi
 
 # ---------- Main ----------
 if [[ -z "$1" ]]; then
-    echo "$USAGE"
+    echo "${USAGE}"
     exit 2
 fi
 
 PN="$1"; shift
 
-OVERLAY_PATH="$(portageq get_repo_path / "$OVERLAY")"
-EBUILD_CHOICES_RAW="$(find "$OVERLAY_PATH" -type f -regex ".*/$PN/.*\.ebuild" | tr '\n' ' ')"
+OVERLAY_PATH="$(portageq get_repo_path / "${OVERLAY}")"
+EBUILD_CHOICES_RAW="$(find "${OVERLAY_PATH}" -type f -regex ".*/${PN}/.*\.ebuild" | tr '\n' ' ')"
 
-if [[ -z "$EBUILD_CHOICES_RAW" ]]; then
-    die "Unable to find the package $PN::$OVERLAY."
+if [[ -z "${EBUILD_CHOICES_RAW}" ]]; then
+    die "Unable to find the package ${PN}::${OVERLAY}."
 fi
 
-IFS=' ' read -r -a EBUILD_CHOICES <<< "$EBUILD_CHOICES_RAW"
+IFS=' ' read -r -a EBUILD_CHOICES <<< "${EBUILD_CHOICES_RAW}"
 
 if [[ "${#EBUILD_CHOICES[@]}" -eq 1 ]]; then
     EBUILD="${EBUILD_CHOICES[0]}"
 else
     PS3=$'\n'"Select an ebuild to patch: "
     select EBUILD in "${EBUILD_CHOICES[@]}"; do
-        case "$EBUILD" in
+        case "${EBUILD}" in
             * )
                 break
                 ;;
@@ -257,37 +304,37 @@ fi
 P="$(basename "${EBUILD%.ebuild}")"
 
 # Removes revision number from ${P}
-if [[ "$P" =~ .*-r[0-9]+ ]]; then
+if [[ "${P}" =~ .*-r[0-9]+ ]]; then
     P="${P%-r*}"
 fi
 
 # Disables STDOUT and STDERR
-if [[ "$debug" != true ]]; then
+if [[ "${debug}" != true ]]; then
     exec 5>&1 > /dev/null
     exec 2>&1
 fi
 
-ebuild "$EBUILD" clean unpack
+ebuild "${EBUILD}" clean unpack
 
 PORTAGE_BUILD_DIR=/var/tmp/portage
-WORK_DIR="$(find "$PORTAGE_BUILD_DIR" -type d -regex ".*/work/${P%_*}[^/]*")"
+WORK_DIR="$(find "${PORTAGE_BUILD_DIR}" -type d -regex ".*/work/${P%_*}[^/]*")"
 
-CATEGORY="$(echo "${WORK_DIR#$PORTAGE_BUILD_DIR}" | awk -F'/' '{print $2}')"
+CATEGORY="$(echo "${WORK_DIR#${PORTAGE_BUILD_DIR}}" | awk -F'/' '{print $2}')"
 
-TMP_WORK_DIR="$W"/"$CATEGORY"
-TMP_WORK_DIR="$TMP_WORK_DIR"/"$P"
+TMP_WORK_DIR="${W}"/"${CATEGORY}"
+TMP_WORK_DIR="${TMP_WORK_DIR}"/"${P}"
 
-[[ -d "$TMP_WORK_DIR" ]] || mkdir -p "$TMP_WORK_DIR"
-cp -r "$WORK_DIR"/* "$TMP_WORK_DIR"
+[[ -d "${TMP_WORK_DIR}" ]] || mkdir -p "${TMP_WORK_DIR}"
+cp -r "${WORK_DIR}"/* "${TMP_WORK_DIR}"
 
-cd "$TMP_WORK_DIR" || exit 1
+cd "${TMP_WORK_DIR}" || exit 1
 git init
 git add .
 git commit -m "Initial Commit"
 
 change_owner
 
-if [[ "$debug" != true ]]; then
+if [[ "${debug}" != true ]]; then
     exec 1>&5  # Restores STDOUT
 fi
-printf "$TMP_WORK_DIR"
+printf "${TMP_WORK_DIR}"

@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+
+"""
+Setup workday schedule in Khal using pomodoro intervals. The workday starts at the moment this
+script is called.
+"""
+
+import datetime as dt
+import subprocess as sp  # noqa: F401
+
+import gutils
+
+############################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
+############################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+default_start = 'START BREAK'
+default_stop = 'END BREAK'
+
+
+def main(args, study_duration, break_duration):
+    now_dt = dt.datetime.now()
+
+    Events = []
+    first_start_dt = now_dt + dt.timedelta(minutes=study_duration)
+    stop_dt = first_start_dt + dt.timedelta(minutes=break_duration)
+
+    first_start = (args.first_start if args.first_start == default_start
+                   else '{} ({})'.format(default_start, args.first_start))
+
+    Events.append((stop_dt, default_stop))
+
+    break_dt = stop_dt + dt.timedelta(minutes=study_duration)
+    for _ in range(args.sessions - 1):
+        Events.append((break_dt, default_start))
+
+        stop_dt = break_dt + dt.timedelta(minutes=break_duration)
+        break_dt = stop_dt + dt.timedelta(minutes=study_duration)
+
+        Events.append((stop_dt, default_stop))
+
+    Events.append((break_dt, 'EOS'))
+
+    # Appended last to make sure that `kdel` does not delete this event.
+    Events.append((first_start_dt, first_start))
+
+    for event_dt, event_name in Events:
+        set_khal_event(event_dt, event_name)
+
+    sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+
+def set_khal_event(event_dt, event_name):
+    # Delete all other Khal events with that same event name.
+    if not hasattr(set_khal_event, 'event_names'):
+        set_khal_event.event_names = set()
+
+    if event_name not in set_khal_event.event_names:
+        sp.check_call(['kdel', event_name])
+
+    set_khal_event.event_names.add(event_name)
+
+    cmd_list = ['khal', 'new', '-a', 'daily']
+    cmd_list.append(event_dt.strftime('%Y-%m-%dT%H:%M'))
+    cmd_list.append(event_name)
+    sp.check_call(cmd_list)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('-n', '--num-of-sessions', dest='sessions', type=int, default=6,
+                        help='Number of study sessions. Defaults to 6.')
+    parser.add_argument('-I', '--interval', nargs=2, default=("50", "15"),
+                        metavar=("STUDY_DURATION", "BREAK_DURATION"),
+                        help='Pomodoro interval to use for each study session. Arguments '
+                             'represent minutes and should both be integer values. Defaults to '
+                             '50/15.')
+    parser.add_argument('-F', '--first-break-name', dest='first_start', default=default_start,
+                        metavar='EVENT_NAME',
+                        help='Event name to use for first study break event. Defaults to {}.'.format(default_start))
+    args = parser.parse_args()
+
+    try:
+        study_duration = int(args.interval[0])
+        break_duration = int(args.interval[1])
+    except ValueError:
+        parser.error('Both arguments for the --interval option MUST be integers (e.g. -I INT INT).')
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args, study_duration, break_duration)

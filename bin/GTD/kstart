@@ -32,7 +32,7 @@ def main(args, study_duration, break_duration):
     Events.append((stop_dt, default_stop))
 
     break_dt = stop_dt + dt.timedelta(minutes=study_duration)
-    for _ in range(args.sessions - 1):
+    for _ in range(args.sessions - 2):
         Events.append((break_dt, default_start))
 
         stop_dt = break_dt + dt.timedelta(minutes=break_duration)
@@ -49,6 +49,11 @@ def main(args, study_duration, break_duration):
         set_khal_event(event_dt, event_name)
 
     sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+    # Print size (in hours) of workday.
+    total_minutes = args.sessions * (study_duration + break_duration) - break_duration
+    fmt = 'Projected Workday Duration: {} hours and {} minutes'
+    print(fmt.format(total_minutes // 60, total_minutes % 60))
 
 
 def set_khal_event(event_dt, event_name):
@@ -69,8 +74,8 @@ def set_khal_event(event_dt, event_name):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('-n', '--num-of-sessions', dest='sessions', type=int, default=6,
-                        help='Number of study sessions. Defaults to 6.')
+    parser.add_argument('-n', '--num-of-sessions', dest='sessions', type=int, default=7,
+                        help='Number of study sessions. Defaults to 7.')
     parser.add_argument('-I', '--interval', nargs=2, default=("50", "15"),
                         metavar=("STUDY_DURATION", "BREAK_DURATION"),
                         help='Pomodoro interval to use for each study session. Arguments '

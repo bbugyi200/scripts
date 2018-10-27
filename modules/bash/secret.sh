@@ -20,6 +20,5 @@ secret="$1"; shift
 secret_file="/tmp/${secret_wrapper}.secret"
 if [[ ! -f "${secret_file}" ]] || [[ "${secret}" != "$(cat "${secret_file}")" ]]; then
     # shellcheck disable=SC2154
-    echo "ERROR: $(basename "$0") is not meant to be run directly. Use the ${secret_wrapper} script!"
-    exit 1
+    die "$(basename "$0") is not meant to be run directly. Use the ${secret_wrapper} script!"
 fi

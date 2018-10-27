@@ -15,8 +15,9 @@ fi
 
 # ---------- Functions ----------
 function check_path_exists() {
-    if ! [[ -f "${PATCH_PATH}" || -f "${PATCH_NOVERSION_PATH}" || -f "${STASH_PATH}" || -f "${STASH_NOVERSION_PATH}" ]]; then
-        die "${PATCH_NAME} patch/stash does not exist."
+    if ! [[ -f "${PATCH_PATH}" || -f "${PATCH_NOVERSION_PATH}"
+         || -f "${STASH_PATH}" || -f "${STASH_NOVERSION_PATH}" ]]; then
+        die "${PN} patch/stash does not exist."
     fi
 }
 
@@ -33,7 +34,7 @@ function patch_install() {
         PPATH="${PATCH_NOVERSION_PATH}"
     fi
 
-    EXISTING_PATCH_PATH="$(find "${PATCH_PATH}" "${PATCH_NOVERSION_PATH}" -name "*${PATCH_NAME}.patch" 2> /dev/null | sort -u)"
+    EXISTING_PATCH_PATH="$(find "${PATCH_PATH}" "${PATCH_NOVERSION_PATH}" -name "*${PN}.patch" 2> /dev/null | sort -u)"
     if [[ -n "${EXISTING_PATCH_PATH}" && "${PPATH}" != "${EXISTING_PATCH_PATH}" ]]; then
         die "A patch with the same name cannot exist in a versioned patch directory and its\nnon-versioned counterpart.\n\nThe following patch must be removed before this one can be applied:\n${EXISTING_PATCH_PATH}"
     fi
@@ -99,7 +100,7 @@ while [[ -n "$1" ]]; do
     case $1 in
        -a|--apply )
            shift
-           PATCH_NAME="$1"
+           PN="$1"
            apply=true
            ;;
        -c|--clean )
@@ -119,7 +120,7 @@ while [[ -n "$1" ]]; do
            ;;
        -i|--install-patch )
            shift
-           PATCH_NAME="$1"
+           PN="$1"
            install_patch=true
            ;;
        -l|--list )
@@ -131,12 +132,12 @@ while [[ -n "$1" ]]; do
            ;;
        -r|--remove )
            shift
-           PATCH_NAME="$1"
+           PN="$1"
            remove=true
            ;;
        -s|--stash )
            shift
-           PATCH_NAME="$1"
+           PN="$1"
            stash=true
            ;;
        -u|--user )
@@ -155,13 +156,13 @@ while [[ -n "$1" ]]; do
 done
 
 # ---------- Quick Action Handlers ----------
-if [[ "${apply}" = true || "${clean}" = true || "${install_pkg}" = true || \
-    "${install_patch}" = true || "${list}" = true || "${remove}" = true ||
-    "${stash}" = true ]] ; then
+if [[ "${apply}" = true || "${clean}" = true || "${install_pkg}" = true
+   || "${install_patch}" = true || "${list}" = true || "${remove}" = true
+   || "${stash}" = true ]]; then
     quick_action=true
         
     if [[ -n "$1" ]]; then
-        PATCH_NAME="$1"; shift
+        PN="$1"; shift
     fi
 
     if [[ -f "$(pwd)"/"${EPATCH_FILE}" ]]; then
@@ -174,7 +175,7 @@ if [[ "${apply}" = true || "${clean}" = true || "${install_pkg}" = true || \
     fi
 
     PATCH_DIR=/etc/portage/patches/"${PATCH_SUBDIR}"
-    PATCH_PATH="${PATCH_DIR}"/"${PATCH_NAME}".patch
+    PATCH_PATH="${PATCH_DIR}"/"${PN}".patch
     STASH_PATH="${PATCH_PATH%.patch}.stash"
     
     if [[ "${PATCH_DIR}" =~ .*/[A-Za-z-]+-[0-9]+ ]]; then
@@ -183,7 +184,7 @@ if [[ "${apply}" = true || "${clean}" = true || "${install_pkg}" = true || \
         PATCH_NOVERSION_DIR="${PATCH_DIR}"
     fi
     
-    PATCH_NOVERSION_PATH="${PATCH_NOVERSION_DIR}"/"${PATCH_NAME}".patch
+    PATCH_NOVERSION_PATH="${PATCH_NOVERSION_DIR}"/"${PN}".patch
     STASH_NOVERSION_PATH="${PATCH_NOVERSION_PATH%.patch}.stash"
 fi
 
@@ -216,7 +217,7 @@ fi
 
 # >>> INSTALL PACKAGE
 if [[ "${install_pkg}" = true ]]; then
-    if [[ -n "${PATCH_NAME}" ]]; then
+    if [[ -n "${PN}" ]]; then
         patch_install
     fi
     get -f "${PATCH_NOVERSION_DIR##*/}"
@@ -224,7 +225,7 @@ fi
 
 # >>> LIST
 if [[ "${list}" = true ]]; then
-    if [[ -n "${PATCH_NAME}" ]]; then
+    if [[ -n "${PN}" ]]; then
         check_path_exists
         make_real_paths
 
@@ -260,7 +261,7 @@ if [[ "${stash}" = true ]]; then
     fi
 
     mv "${src}" "${dest}"
-    imsg "${action} ${PATCH_NAME}."
+    imsg "${action} ${PN}."
 fi
 
 if [[ "${quick_action}" = true ]]; then
@@ -323,6 +324,7 @@ TMP_WORK_DIR="${TMP_WORK_DIR}"/"${P}"
 
 [[ -d "${TMP_WORK_DIR}" ]] || mkdir -p "${TMP_WORK_DIR}"
 cp -r "${WORK_DIR}"/* "${TMP_WORK_DIR}"
+cp /home/bryan/Dropbox/scripts/templates/localalias.epatch "${TMP_WORK_DIR}"/.localalias
 
 cd "${TMP_WORK_DIR}" || exit 1
 git init

@@ -1,0 +1,1 @@
+{"a": "epatch -a \"$@\"", "c": "epatch -c \"$@\"", "I": "epatch -I \"$@\"", "i": "epatch -i \"$@\"", "l": "epatch -l \"$@\"", "r": "epatch -r \"$@\"", "s": "epatch -s \"$@\""}

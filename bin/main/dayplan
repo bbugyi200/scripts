@@ -18,12 +18,14 @@ TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.init('data'))
 DATE_FMT = '%Y-%m-%d'
 MAX_DAYS = 1
 
-TEMPLATE = """===== HIGH =====
-HH:MM :: 
-===== LOW =====
-Review Anki Cards
-===== EOS =====
-* Read "21st Century C"
+TEMPLATE = """===== STUDY SESSIONS =====
+[1] ::
+[2] ::
+[3] ::
+[4] ::
+[5] ::
+[6] ::
+[7] :: Read "21st Century C"
 ===== BREAKS =====
 * Workout
 

@@ -19,39 +19,46 @@ default_start = 'START BREAK'
 default_stop = 'END BREAK'
 
 
-def main(args, study_duration, break_duration):
+def main(args, work_duration, break_duration):
     now_dt = dt.datetime.now()
 
     Events = []
-    first_start_dt = now_dt + dt.timedelta(minutes=study_duration)
+    if args.first_start_time:
+        from dateutil.parser import parse
+        first_start_dt = parse(args.first_start_time)
+    else:
+        first_start_dt = now_dt + dt.timedelta(minutes=work_duration)
+
     stop_dt = first_start_dt + dt.timedelta(minutes=break_duration)
 
-    first_start = (args.first_start if args.first_start == default_start
-                   else '{} ({})'.format(default_start, args.first_start))
-
+    Events.append((first_start_dt, default_start))
     Events.append((stop_dt, default_stop))
 
-    break_dt = stop_dt + dt.timedelta(minutes=study_duration)
+    break_dt = stop_dt + dt.timedelta(minutes=work_duration)
     for _ in range(args.sessions - 2):
         Events.append((break_dt, default_start))
 
         stop_dt = break_dt + dt.timedelta(minutes=break_duration)
-        break_dt = stop_dt + dt.timedelta(minutes=study_duration)
+        break_dt = stop_dt + dt.timedelta(minutes=work_duration)
 
         Events.append((stop_dt, default_stop))
 
-    Events.append((break_dt, 'EOS'))
-
-    # Appended last to make sure that `kdel` does not delete this event.
-    Events.append((first_start_dt, first_start))
+    eos_dt = break_dt
+    Events.append((eos_dt, 'EOS'))
 
     for event_dt, event_name in Events:
         set_khal_event(event_dt, event_name)
 
     sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
+    # Print EOS Time
+    fmt = 'Projected EOS Time: {}'
+    print(fmt.format(eos_dt.strftime('%H:%M')))
+
     # Print size (in hours) of workday.
-    total_minutes = args.sessions * (study_duration + break_duration) - break_duration
+    fsdelta = first_start_dt - now_dt
+    total_minutes = ((args.sessions - 1) * (work_duration + break_duration) +
+                     (fsdelta.seconds // 60))
     fmt = 'Projected Workday Duration: {} hours and {} minutes'
     print(fmt.format(total_minutes // 60, total_minutes % 60))
 
@@ -75,22 +82,21 @@ def set_khal_event(event_dt, event_name):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('-n', '--num-of-sessions', dest='sessions', type=int, default=7,
-                        help='Number of study sessions. Defaults to 7.')
-    parser.add_argument('-I', '--interval', nargs=2, default=("50", "15"),
-                        metavar=("STUDY_DURATION", "BREAK_DURATION"),
-                        help='Pomodoro interval to use for each study session. Arguments '
-                             'represent minutes and should both be integer values. Defaults to '
-                             '50/15.')
-    parser.add_argument('-F', '--first-break-name', dest='first_start', default=default_start,
-                        metavar='EVENT_NAME',
-                        help='Event name to use for first study break event. Defaults to {}.'.format(default_start))
+                        help='Number of work sessions. Defaults to 7.')
+    parser.add_argument('-I', '--interval', default="50/15", metavar="INTERVAL",
+                        help='Pomodoro interval to use for each work session. Argument should be '
+                             'of the form "W/B" where both "W" and "B" represent minutes and '
+                             'should both be integer values. Defaults to 50/15.')
+    parser.add_argument('-T', '--first-break-time', dest='first_start_time', metavar='HH:MM',
+                        help='Explicitly set first break time.')
     args = parser.parse_args()
 
     try:
-        study_duration = int(args.interval[0])
-        break_duration = int(args.interval[1])
+        interval = args.interval.split('/')
+        work_duration = int(interval[0])
+        break_duration = int(interval[1])
     except ValueError:
-        parser.error('Both arguments for the --interval option MUST be integers (e.g. -I INT INT).')
+        parser.error('Both parts of the argument provided to the --interval option MUST be integers (e.g. -I 50/15).')
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main(args, study_duration, break_duration)
+        main(args, work_duration, break_duration)

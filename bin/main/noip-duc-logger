@@ -1,0 +1,3 @@
+#!/bin/bash
+
+logger "Successfully Updated DDNS with NOIP Dynamic Update Client"

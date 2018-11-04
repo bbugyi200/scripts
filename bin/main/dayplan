@@ -25,7 +25,8 @@ TEMPLATE = """===== STUDY SESSIONS =====
 [4] ::
 [5] ::
 [6] ::
-[7] :: Read "21st Century C"
+[7] :: Review Anki Cards
+    :: Read "21st Century C"
 ===== BREAKS =====
 * Workout
 

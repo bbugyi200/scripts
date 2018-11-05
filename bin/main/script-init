@@ -20,7 +20,6 @@ EOM
 executable="y"
 use_extension="n"
 template_id=1
-startinsert=true
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -76,6 +75,8 @@ fi
 # ---------- Global Variables ----------
 NEW_SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
+start_in_insert_mode=true
+comment_character="#"
 
 # ---------- Main ----------
 # ===== Process Command-line Arguments =====
@@ -108,7 +109,7 @@ case "$FILETYPE" in
         EXT="py"
         ;;
     * )
-        die "FILETYPE must be contained in: [python, bash, awk]"
+        die "Filetype not supported: ${FILETYPE}"
 esac
 
 # ===== Setup New Script =====
@@ -133,24 +134,20 @@ if [[ "${executable}" == "y" || "${executable}" == "yes" ]]; then
 fi
 
 # ===== Handle Pragma Marks =====
-if [[ -z "${comment_character}" ]]; then
-    comment_character="#"
-fi
+pragma_prefix="${comment_character} script-init:"
 
-pragma_mark="${comment_character} script-init:"
-
-start_mark="${pragma_mark} START"
-start_line="$(ag "${start_mark}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
+start_pragma="${pragma_prefix} START"
+start_line="$(ag "${start_pragma}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
 if [[ -z "${start_line}" ]]; then
     start_line=1
-    startinsert=false
+    start_in_insert_mode=false
 fi
 
-sed -i "s/${start_mark}//" "${FULL_NEW_SCRIPT_NAME}"
+sed -i "s/${start_pragma}//" "${FULL_NEW_SCRIPT_NAME}"
 
 # ===== Open New Script in Editor =====
 imsg "Opening the '$FULL_NEW_SCRIPT_NAME' script in an editor."
-if [[ "${startinsert}" = true ]]; then
+if [[ "${start_in_insert_mode}" = true ]]; then
     vim +"${start_line}" +startinsert "${FULL_NEW_SCRIPT_NAME}"
 else
     vim +"${start_line}" "${FULL_NEW_SCRIPT_NAME}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-
+# script-init: START
 
 import datetime as dt  # noqa: F401
 import os  # noqa: F401

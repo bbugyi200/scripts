@@ -20,6 +20,7 @@ EOM
 executable="y"
 use_extension="n"
 template_id=1
+startinsert=true
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -77,6 +78,7 @@ NEW_SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
 
 # ---------- Main ----------
+# ===== Process Command-line Arguments =====
 if [[ "$(pwd)" == "$BIN/"* && -z "$BIN_SUBDIR" ]] || [[ "$force" = true ]]; then
     FULL_BIN_PATH="$(pwd)"
 elif [[ -z "$BIN_SUBDIR" ]]; then
@@ -109,10 +111,7 @@ case "$FILETYPE" in
         die "FILETYPE must be contained in: [python, bash, awk]"
 esac
 
-if [[ -z "${comment_character}" ]]; then
-    comment_character="#"
-fi
-
+# ===== Setup New Script =====
 FULL_TEMPLATE_NAME=/home/bryan/Dropbox/scripts/templates/"${scriptname}"/template."${template_id}"."${EXT}"
 if [[ "${use_extension}" == "y" || "${use_extension}" == "yes" ]]; then
     FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}.${EXT}"
@@ -120,28 +119,8 @@ else
     FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}"
 fi
 
-pragma_mark="${comment_character} script-init:"
-
-start_mark="${pragma_mark} START"
-start_line="$(ag "${start_mark}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
-if [[ -z "${start_line}" ]]; then
-    start_line=3
-fi
-
-no_insert_mode_mark="${pragma_mark} NO INSERT MODE"
-if ag "${no_insert_mode_mark}" "${FULL_TEMPLATE_NAME}" &> /dev/null; then
-    insert_mode=false
-    start_line=1
-else
-    insert_mode=true
-fi
-
 if ! [[ -f "$FULL_NEW_SCRIPT_NAME" ]]; then
     sudo cp "${FULL_TEMPLATE_NAME}" "${FULL_NEW_SCRIPT_NAME}"
-
-    sed -i "s/${start_mark}//" "${FULL_NEW_SCRIPT_NAME}"
-    sed -i "/${no_insert_mode_mark}/d" "${FULL_NEW_SCRIPT_NAME}"
-
     sudo chown bryan:bryan "${FULL_NEW_SCRIPT_NAME}"
     imsg "Initializing the '$FULL_NEW_SCRIPT_NAME' script."
 else
@@ -153,9 +132,26 @@ if [[ "${executable}" == "y" || "${executable}" == "yes" ]]; then
     clinks
 fi
 
+# ===== Handle Pragma Marks =====
+if [[ -z "${comment_character}" ]]; then
+    comment_character="#"
+fi
+
+pragma_mark="${comment_character} script-init:"
+
+start_mark="${pragma_mark} START"
+start_line="$(ag "${start_mark}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
+if [[ -z "${start_line}" ]]; then
+    start_line=1
+    startinsert=false
+fi
+
+sed -i "s/${start_mark}//" "${FULL_NEW_SCRIPT_NAME}"
+
+# ===== Open New Script in Editor =====
 imsg "Opening the '$FULL_NEW_SCRIPT_NAME' script in an editor."
-if [[ "${insert_mode}" = true ]]; then
-    vim +"${start_line}" +startinsert "$FULL_NEW_SCRIPT_NAME"
+if [[ "${startinsert}" = true ]]; then
+    vim +"${start_line}" +startinsert "${FULL_NEW_SCRIPT_NAME}"
 else
     vim +"${start_line}" "${FULL_NEW_SCRIPT_NAME}"
 fi

@@ -7,14 +7,19 @@
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,D:,f,F:,h,N,x" -l "debug,bin-directory:,filetype:,help,not-executable,use-extension" -- "$@")"
+eval set -- "$(getopt -o "d,D:,f,F:,h,N,T:,x" -l "debug,bin-directory:,filetype:,help,executable:,template-id:,use-extension:" -- "$@")"
 
-USAGE="usage: $(basename "$0") [-d] [-h] [-D BIN_SUBDIR] [-f] [-N] [-x] -F FILETYPE SCRIPT_NAME"
-executable=true
+USAGE="usage: $(basename "$0") [-d] [-D BIN_SUBDIR] [-f] [-h] [-N | --executable={y|n}] [-x | --use-extension={y|n}] [-T TEMPLATE_ID] -F FILETYPE SCRIPT_NAME"
+scriptname="${scriptname}"
 
 read -r -d '' HELP << EOM
 $USAGE
 EOM
+
+# Default Command-line Arguments
+executable="y"
+use_extension="n"
+template_id=1
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -30,6 +35,10 @@ while [[ -n "$1" ]]; do
            shift
            BIN_SUBDIR="$1"
            ;;
+       --executable )
+           shift
+           executable="$1"
+           ;;
        -f )
            force=true
            ;;
@@ -37,11 +46,19 @@ while [[ -n "$1" ]]; do
            shift
            FILETYPE="$1"
            ;;
-       -N|--not-executable )
-           executable=false
+       -N )
+           executable="n"
            ;;
-       -x|--use-extension )
-           use_extension=true
+       --use-extension )
+           shift
+           use_extension="$1"
+           ;;
+       -T|--template-id )
+           shift
+           template_id="$1"
+           ;;
+       -x )
+           use_extension="y"
            ;;
        -- )
            shift
@@ -56,7 +73,7 @@ if [[ -z "$1" ]] || [[ -z "$FILETYPE" ]]; then
 fi
 
 # ---------- Global Variables ----------
-SCRIPT_NAME="$1"; shift
+NEW_SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
 
 # ---------- Main ----------
@@ -91,25 +108,32 @@ case "$FILETYPE" in
         die "FILETYPE must be contained in: [python, bash, awk]"
 esac
 
-if [[ "$use_extension" = true ]]; then
-    FULL_SCRIPT_NAME="${SCRIPT_NAME}.${EXT}"
+FULL_TEMPLATE_NAME=/home/bryan/Dropbox/scripts/templates/"${scriptname}"/template."${template_id}"."${EXT}"
+if [[ "${use_extension}" == "y" || "${use_extension}" == "yes" ]]; then
+    FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}.${EXT}"
 else
-    FULL_SCRIPT_NAME="${SCRIPT_NAME}"
+    FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}"
 fi
 
-if ! [[ -f "$FULL_SCRIPT_NAME" ]]; then
-    sudo cp /home/bryan/Dropbox/scripts/templates/template."${EXT}" "${FULL_SCRIPT_NAME}"
-    sudo chown bryan:bryan "${FULL_SCRIPT_NAME}"
-    imsg "Initializing the '$FULL_SCRIPT_NAME' script."
-else
-    imsg "The '$FULL_SCRIPT_NAME' script already exists."
+start_marker="# START"
+start_line="$(ag "${start_marker}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
+if [[ -z "${start_line}" ]]; then
+    start_line=3
 fi
 
-if [[ "${executable}" = true ]]; then
-    sudo chmod +x "$FULL_SCRIPT_NAME"
+if ! [[ -f "$FULL_NEW_SCRIPT_NAME" ]]; then
+    sudo cp "${FULL_TEMPLATE_NAME}" "${FULL_NEW_SCRIPT_NAME}"
+    sed -i "s/${start_marker}//" "${FULL_NEW_SCRIPT_NAME}"
+    sudo chown bryan:bryan "${FULL_NEW_SCRIPT_NAME}"
+    imsg "Initializing the '$FULL_NEW_SCRIPT_NAME' script."
+else
+    imsg "The '$FULL_NEW_SCRIPT_NAME' script already exists."
+fi
+
+if [[ "${executable}" == "y" || "${executable}" == "yes" ]]; then
+    sudo chmod +x "$FULL_NEW_SCRIPT_NAME"
     clinks
 fi
 
-imsg "Editing the '$FULL_SCRIPT_NAME' script in vim."
-vim +3 "$FULL_SCRIPT_NAME"
-
+imsg "Opening the '$FULL_NEW_SCRIPT_NAME' script in an editor."
+vim +"${start_line}" +startinsert "$FULL_NEW_SCRIPT_NAME"

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 read -r -d '' doc << EOM
-# START
+# script-init: START
 EOM
 
 # ---------- Modules ----------

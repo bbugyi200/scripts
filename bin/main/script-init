@@ -115,7 +115,7 @@ else
     FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}"
 fi
 
-start_marker="# START"
+start_marker="# script-init: START"
 start_line="$(ag "${start_marker}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
 if [[ -z "${start_line}" ]]; then
     start_line=3

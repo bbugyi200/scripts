@@ -100,6 +100,7 @@ case "$FILETYPE" in
         ;;
     latex )
         EXT="tex"
+        comment_character="%"
         ;;
     python )
         EXT="py"
@@ -108,6 +109,10 @@ case "$FILETYPE" in
         die "FILETYPE must be contained in: [python, bash, awk]"
 esac
 
+if [[ -z "${comment_character}" ]]; then
+    comment_character="#"
+fi
+
 FULL_TEMPLATE_NAME=/home/bryan/Dropbox/scripts/templates/"${scriptname}"/template."${template_id}"."${EXT}"
 if [[ "${use_extension}" == "y" || "${use_extension}" == "yes" ]]; then
     FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}.${EXT}"
@@ -115,15 +120,28 @@ else
     FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}"
 fi
 
-start_marker="# script-init: START"
-start_line="$(ag "${start_marker}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
+pragma_mark="${comment_character} script-init:"
+
+start_mark="${pragma_mark} START"
+start_line="$(ag "${start_mark}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
 if [[ -z "${start_line}" ]]; then
     start_line=3
 fi
 
+no_insert_mode_mark="${pragma_mark} NO INSERT MODE"
+if ag "${no_insert_mode_mark}" "${FULL_TEMPLATE_NAME}" &> /dev/null; then
+    insert_mode=false
+    start_line=1
+else
+    insert_mode=true
+fi
+
 if ! [[ -f "$FULL_NEW_SCRIPT_NAME" ]]; then
     sudo cp "${FULL_TEMPLATE_NAME}" "${FULL_NEW_SCRIPT_NAME}"
-    sed -i "s/${start_marker}//" "${FULL_NEW_SCRIPT_NAME}"
+
+    sed -i "s/${start_mark}//" "${FULL_NEW_SCRIPT_NAME}"
+    sed -i "/${no_insert_mode_mark}/d" "${FULL_NEW_SCRIPT_NAME}"
+
     sudo chown bryan:bryan "${FULL_NEW_SCRIPT_NAME}"
     imsg "Initializing the '$FULL_NEW_SCRIPT_NAME' script."
 else
@@ -136,4 +154,8 @@ if [[ "${executable}" == "y" || "${executable}" == "yes" ]]; then
 fi
 
 imsg "Opening the '$FULL_NEW_SCRIPT_NAME' script in an editor."
-vim +"${start_line}" +startinsert "$FULL_NEW_SCRIPT_NAME"
+if [[ "${insert_mode}" = true ]]; then
+    vim +"${start_line}" +startinsert "$FULL_NEW_SCRIPT_NAME"
+else
+    vim +"${start_line}" "${FULL_NEW_SCRIPT_NAME}"
+fi

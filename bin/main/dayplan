@@ -29,6 +29,7 @@ TEMPLATE = """===== STUDY SESSIONS =====
     :: Read "21st Century C"
 ===== BREAKS =====
 * Workout
+* Walk the Dogs
 
 """  # noqa: W291
 

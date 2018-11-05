@@ -1,10 +1,13 @@
 #!/bin/bash
 
-############################
-#  Wrapper for Tmuxinator  #
-############################
+read -r -d '' doc << EOM
+Wrapper for Tmuxinator
+EOM
+
+source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 MUX_CONFIG_DIR=~/.config/tmuxinator
+usage="${usage} [-MUX_OPTION [-MUX_OPTION [...]] | MUX_SESSION]"
 
 if [[ "$1" == "-d" ]]; then
     PS4='$LINENO: '
@@ -12,9 +15,13 @@ if [[ "$1" == "-d" ]]; then
     shift
 fi
 
+if [[ "$1" == "-h" ]]; then
+    printf "${doc}\n\n${usage}\n"
+    exit 0
+fi
+
 if [[ -z "$1" ]]; then
-    echo "usage: tm SESSION_NAME"
-    exit 2
+    die "${usage}" 2
 fi
 
 case $1 in
@@ -35,4 +42,3 @@ case $1 in
         tmuxinator start "$SESSION_NAME" root="${root}"
         tmux switch-client -t "$SESSION_NAME";;
 esac
-

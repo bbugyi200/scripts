@@ -5,8 +5,8 @@
 #################################
 
 clear
-timew summary from "6:00" to tomorrow :id 2> /dev/null
-if [[ "$?" -ne 0 ]]; then
+
+if ! timew summary from "0:00" to tomorrow :id 2> /dev/null; then
    timew summary from "$(date --date='yesterday' +%Y-%m-%d)T06:00" to tomorrow :id
 fi
 timew

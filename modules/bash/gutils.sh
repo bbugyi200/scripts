@@ -2,10 +2,12 @@
 #  Global Utility Functions for Shell Scripts  #
 ################################################
 
-
+# ---------- Global Variables ----------
 # shellcheck disable=SC2034
 scriptname="$(basename "$0")"
+usage="usage: ${scriptname}"
 
+# ---------- XDG User Directories ----------
 # shellcheck disable=SC2034
 if [[ -n "${XDG_RUNTIME_DIR}" ]]; then
     xdg_runtime="${XDG_RUNTIME_DIR}"
@@ -31,6 +33,7 @@ my_xdg_runtime="${xdg_runtime}"/"${scriptname}"
 my_xdg_config="${xdg_config}"/"${scriptname}"
 my_xdg_data="${xdg_data}"/"${scriptname}"
 
+# ---------- Function Definitions ----------
 function die() {
     MSG="$1"; shift
 
@@ -41,17 +44,18 @@ function die() {
     fi
 
     if [[ "${EC}" -eq 2 ]]; then
-        >&2 printf "${MSG}\n"
-    else
-        emsg "${MSG}"
+        MSG="Failed to parse command-line options.\n\n${MSG}"
     fi
 
+    emsg "${MSG}"
     exit "$EC"
 }
 
 function emsg() {
     MSG="$1"; shift
-    >&2 printf "[ERROR] $MSG\n" | tee >(logger -t "$(basename "$0")")
+    FULL_MSG="[ERROR] $MSG\n"
+    >&2 printf "${FULL_MSG}"
+    logger -t "${scriptname}" "${FULL_MSG}"
 }
 
 function dmsg() {

@@ -9,7 +9,6 @@ source /home/bryan/Dropbox/scripts/modules/bash/emaint.sh
 
 # ---------- Main Logic ----------
 econfirm "epcsync"
-econfirm "egenerate_mirrors"
 econfirm "sudo emerge --sync" && notify "Portage Package Database Sync is Complete."
 econfirm "sudo emerge --ask --update --deep --newuse --keep-going @world" && notify "Portage Package Updates are Complete."
 econfirm "sudo emerge --ask --depclean"
@@ -17,7 +16,7 @@ econfirm "sudo revdep-rebuild"
 econfirm "sudo smart-live-rebuild"
 econfirm "sudo npm update -g"
 econfirm "ebvcheck -v"
-econfirm "sudo updatedb"
 econfirm "cache_cheaders"
+econfirm "sudo updatedb"
 econfirm "elogv"
 econfirm "sudo dispatch-conf"

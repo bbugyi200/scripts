@@ -82,6 +82,7 @@ def set_khal_event(event_dt, event_name):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('-n', '--num-of-sessions', dest='sessions', type=int, default=7,
+                        metavar='N',
                         help='Number of work sessions. Defaults to 7.')
     parser.add_argument('-I', '--interval', default="50/15", metavar="INTERVAL",
                         help='Pomodoro interval to use for each work session. Argument should be '
@@ -95,8 +96,9 @@ if __name__ == "__main__":
         interval = args.interval.split('/')
         work_duration = int(interval[0])
         break_duration = int(interval[1])
-    except ValueError:
-        parser.error('Both parts of the argument provided to the --interval option MUST be integers (e.g. -I 50/15).')
+    except (ValueError, IndexError):
+        parser.error('The argument provided to the --interval option MUST be of the form "W/B", '
+                     'where "W" and "B" are integer values (e.g. 50/15).')
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main(args, work_duration, break_duration)

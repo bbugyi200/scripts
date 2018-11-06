@@ -19,17 +19,18 @@ DATE_FMT = '%Y-%m-%d'
 MAX_DAYS = 1
 
 TEMPLATE = """===== STUDY SESSIONS =====
-[1] ::
-[2] ::
-[3] ::
-[4] ::
-[5] ::
-[6] ::
-[7] :: Review Anki Cards
-    :: Read "21st Century C"
+[1]
+[2]
+[3]
+[4]
+[5]
+[6]
+[7]
+  :: Review Anki Cards
+  :: Read "21st Century C"
 ===== BREAKS =====
-* Workout
-* Walk the Dogs
+* [ ] Workout
+* [ ] Walk the Dogs
 
 """  # noqa: W291
 

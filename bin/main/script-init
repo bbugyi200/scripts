@@ -1,26 +1,27 @@
 #!/bin/bash
 
-#################################################
-#  Initialize Script using Predefined Template  #
-#################################################
+read -r -d '' doc << EOM
+Initialize a new script using a predefined template. After the new script has been initialized,
+it is opened in vim.
+EOM
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,D:,f,F:,h,N,T:,x" -l "debug,bin-directory:,filetype:,help,executable:,template-id:,use-extension:" -- "$@")"
 
-USAGE="usage: $(basename "$0") [-d] [-D BIN_SUBDIR] [-f] [-h] [-N | --executable={y|n}] [-x | --use-extension={y|n}] [-T TEMPLATE_ID] -F FILETYPE SCRIPT_NAME"
+usage="${usage} [-d] [-D BIN_SUBDIR] [-f] [-h] [-N | --executable={y|n}] [-x | --use-extension={y|n}] [-T TEMPLATE_ID] -F FILETYPE SCRIPT_NAME"
 scriptname="${scriptname}"
 
-read -r -d '' HELP << EOM
-$USAGE
+read -r -d '' help << EOM
+${doc}
+
+${usage}
 EOM
 
-# Default Command-line Arguments
 executable="y"
 use_extension="n"
 template_id=1
-
 while [[ -n "$1" ]]; do
     case $1 in
        -d|--debug )
@@ -28,7 +29,7 @@ while [[ -n "$1" ]]; do
            set -x
            ;;
        -h|--help )
-           echo "$HELP"
+           echo "$help"
            exit 0
            ;;
        -D|--bin-directory )
@@ -69,17 +70,27 @@ while [[ -n "$1" ]]; do
 done
 
 if [[ -z "$1" ]] || [[ -z "$FILETYPE" ]]; then
-    die "$USAGE" 2
+    die "${usage}" 2
 fi
 
 # ---------- Global Variables ----------
 NEW_SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
-start_in_insert_mode=true
+EXT="${FILETYPE}"
 comment_character="#"
 
 # ---------- Main ----------
-# ===== Process Command-line Arguments =====
+# ===== Process Filetype =====
+case "$FILETYPE" in
+    tex )
+        comment_character="%"
+        ;;
+    python )
+        EXT="py"
+        ;;
+esac
+
+# ===== Calculate Filesystem Paths =====
 if [[ "$(pwd)" == "$BIN/"* && -z "$BIN_SUBDIR" ]] || [[ "$force" = true ]]; then
     FULL_BIN_PATH="$(pwd)"
 elif [[ -z "$BIN_SUBDIR" ]]; then
@@ -94,40 +105,24 @@ if [[ "$(pwd)" != "$FULL_BIN_PATH" ]]; then
     imsg "Entering $FULL_BIN_PATH."
 fi
 
-case "$FILETYPE" in
-    awk )
-        EXT="awk"
-        ;;
-    bash )
-        EXT="sh"
-        ;;
-    latex )
-        EXT="tex"
-        comment_character="%"
-        ;;
-    python )
-        EXT="py"
-        ;;
-    * )
-        die "Filetype not supported: ${FILETYPE}"
-esac
-
-# ===== Setup New Script =====
-FULL_TEMPLATE_NAME=/home/bryan/Dropbox/scripts/templates/"${scriptname}"/template."${template_id}"."${EXT}"
 if [[ "${use_extension}" == "y" || "${use_extension}" == "yes" ]]; then
     FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}.${EXT}"
 else
     FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}"
 fi
 
+# ===== Initialize New Script =====
+# >>> Copy Template Contents to New Script
+FULL_TEMPLATE_NAME=/home/bryan/Dropbox/scripts/templates/"${scriptname}"/template."${template_id}"."${FILETYPE}"
 if ! [[ -f "$FULL_NEW_SCRIPT_NAME" ]]; then
+    imsg "Initializing the '$FULL_NEW_SCRIPT_NAME' script."
     sudo cp "${FULL_TEMPLATE_NAME}" "${FULL_NEW_SCRIPT_NAME}"
     sudo chown bryan:bryan "${FULL_NEW_SCRIPT_NAME}"
-    imsg "Initializing the '$FULL_NEW_SCRIPT_NAME' script."
 else
     imsg "The '$FULL_NEW_SCRIPT_NAME' script already exists."
 fi
 
+# >>> Make New Script Executable
 if [[ "${executable}" == "y" || "${executable}" == "yes" ]]; then
     sudo chmod +x "$FULL_NEW_SCRIPT_NAME"
     clinks
@@ -136,19 +131,16 @@ fi
 # ===== Handle Pragma Marks =====
 pragma_prefix="${comment_character} script-init:"
 
+# >>> START
 start_pragma="${pragma_prefix} START"
-start_line="$(ag "${start_pragma}" "${FULL_TEMPLATE_NAME}" | awk -F':' '{print $1}')"
-if [[ -z "${start_line}" ]]; then
-    start_line=1
-    start_in_insert_mode=false
-fi
-
+start_line="$(ag "${start_pragma}" "${FULL_NEW_SCRIPT_NAME}" | awk -F':' '{print $1}')"
 sed -i "s/${start_pragma}//" "${FULL_NEW_SCRIPT_NAME}"
 
 # ===== Open New Script in Editor =====
-imsg "Opening the '$FULL_NEW_SCRIPT_NAME' script in an editor."
-if [[ "${start_in_insert_mode}" = true ]]; then
-    vim +"${start_line}" +startinsert "${FULL_NEW_SCRIPT_NAME}"
-else
-    vim +"${start_line}" "${FULL_NEW_SCRIPT_NAME}"
+Vim_Opts=()
+if [[ -n "${start_line}" ]]; then
+    Vim_Opts+=( +"${start_line}" +startinsert )
 fi
+
+imsg "Opening the '$FULL_NEW_SCRIPT_NAME' script in vim."
+vim "${Vim_Opts[@]}" "${FULL_NEW_SCRIPT_NAME}"

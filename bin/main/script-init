@@ -8,6 +8,15 @@ EOM
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
 # ---------- Function Definitions ----------
+function exit_handler() {
+    EC="$1"; shift
+
+    if [[ "${parent_dir_created}" = true && "${EC}" -ne 0 ]]; then
+        dmsg "Removing directory: ${FULL_BIN_PATH}"
+        rm -rf "${FULL_BIN_PATH}"
+    fi
+}
+
 function find_templates() {
     id="$1"; shift
     filetype="$1"; shift
@@ -34,9 +43,9 @@ function open_editor() {
 }
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,D:,f,F:,h,N,T:,x" -l "debug,bin-directory:,filetype:,help,executable:,template-id:,use-extension:" -- "$@")"
+eval set -- "$(getopt -o "d,D:,f,F:,h,N,T:,v,x" -l "debug,bin-directory:,filetype:,help,executable:,template-id:,verbose,use-extension:" -- "$@")"
 
-usage="${usage} [-d] [-D BIN_SUBDIR] [-f] [-h] [-N | --executable={y|n}] [-x | --use-extension={y|n}] [-T TEMPLATE_ID] -F FILETYPE SCRIPT_NAME"
+usage="${usage} [-d] [-D BIN_SUBDIR] [-f] [-h] [-N | --executable={y|n}] [-x | --use-extension={y|n}] [-T TEMPLATE_ID] [-v] -F FILETYPE SCRIPT_NAME"
 scriptname="${scriptname}"
 
 read -r -d '' help << EOM
@@ -51,8 +60,7 @@ template_id=1
 while [[ -n "$1" ]]; do
     case $1 in
        -d|--debug )
-           PS4='$LINENO: '
-           set -x
+           debug=true
            ;;
        -h|--help )
            echo "$help"
@@ -84,6 +92,9 @@ while [[ -n "$1" ]]; do
            shift
            template_id="$1"
            ;;
+       -v|--verbose )
+           verbose=true
+           ;;
        -x )
            use_extension="y"
            ;;
@@ -95,9 +106,17 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
 if [[ -z "$1" ]] || [[ -z "$FILETYPE" ]]; then
     die "${usage}" 2
 fi
+
+# ---------- Traps ----------
+trap 'exit_handler $?' EXIT
 
 # ---------- Global Variables ----------
 NEW_SCRIPT_NAME="$1"; shift
@@ -121,8 +140,19 @@ else
     FULL_BIN_PATH="$BIN"/"$BIN_SUBDIR"
 fi
 
+NEW_SCRIPT_PARENT_DIR="$(dirname "${NEW_SCRIPT_NAME}")"
+if [[ "${NEW_SCRIPT_PARENT_DIR}" != "." ]]; then
+    FULL_BIN_PATH="${FULL_BIN_PATH}"/"${NEW_SCRIPT_PARENT_DIR}"
+    NEW_SCRIPT_NAME="$(basename "${NEW_SCRIPT_NAME}")"
+fi
+
 if [[ "$(pwd)" != "$FULL_BIN_PATH" ]]; then
-    [ -d "$FULL_BIN_PATH" ] || die "The directory $FULL_BIN_PATH does NOT exist." 
+    if ! [[ -d "${FULL_BIN_PATH}" ]]; then
+        dmsg "Creating directory: ${FULL_BIN_PATH}"
+        mkdir -p "${FULL_BIN_PATH}"
+        parent_dir_created=true
+    fi
+
     cd "$FULL_BIN_PATH" || exit 1
     imsg "Entering $FULL_BIN_PATH."
 fi

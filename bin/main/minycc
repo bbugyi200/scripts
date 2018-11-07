@@ -1,24 +1,24 @@
 #!/bin/bash
 
-read -r -d '' doc << EOM
-Initialize TARGET File using a Predefined Templates (inspired by cookiecutter)
+# shellcheck disable=SC1090
 
-TARGET can be a new script, configuration file, markup file, etc....
-After TARGET has been initialized, it is opened in vim.
+read -r -d '' doc << EOM
+Miny CookieCutter (inspired by cookiecutter)
+
+Initializes TARGET file using a predefined template. TARGET can be a new script,
+configuration file, markup file, etc.... After TARGET has been initialized, it
+is opened in vim.
 EOM
 
-source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
+source /usr/lib/gutils.sh
+source "$HOME"/.config/"${scriptname}"/config
+
+# Set default bin directory if not specified in config file.
+if [[ -z "${BIN_DIR}" ]]; then
+    BIN_DIR=./
+fi
 
 # ---------- Function Definitions ----------
-function exit_handler() {
-    EC="$1"; shift
-
-    if [[ "${parent_dir_created}" = true && "${EC}" -ne 0 ]]; then
-        dmsg "Removing directory: ${FULL_BIN_PATH}"
-        rm -rf "${FULL_BIN_PATH}"
-    fi
-}
-
 function find_templates() {
     id="$1"; shift
     filetype="$1"; shift
@@ -118,11 +118,19 @@ if [[ -z "$1" ]] || [[ -z "$FILETYPE" ]]; then
 fi
 
 # ---------- Traps ----------
+function exit_handler() {
+    EC="$1"; shift
+
+    if [[ "${parent_dir_created}" = true && "${EC}" -ne 0 ]]; then
+        dmsg "Removing directory: ${FULL_BIN_PATH}"
+        rm -rf "${FULL_BIN_PATH}"
+    fi
+}
+
 trap 'exit_handler $?' EXIT
 
 # ---------- Global Variables ----------
 NEW_SCRIPT_NAME="$1"; shift
-BIN="/home/bryan/Dropbox/scripts/bin"
 EXT="${FILETYPE}"
 
 # ---------- Main ----------
@@ -134,12 +142,12 @@ case "$FILETYPE" in
 esac
 
 # ===== Calculate Filesystem Paths =====
-if [[ "$(pwd)" == "$BIN/"* && -z "$BIN_SUBDIR" ]] || [[ "$force" = true ]]; then
+if [[ "$(pwd)" == "$BIN_DIR/"* && -z "$BIN_SUBDIR" ]] || [[ "$force" = true ]]; then
     FULL_BIN_PATH="$(pwd)"
 elif [[ -z "$BIN_SUBDIR" ]]; then
-    FULL_BIN_PATH="$BIN"/main
+    FULL_BIN_PATH="$BIN_DIR"/"$DEFAULT_BIN_SUBDIR"
 else
-    FULL_BIN_PATH="$BIN"/"$BIN_SUBDIR"
+    FULL_BIN_PATH="$BIN_DIR"/"$BIN_SUBDIR"
 fi
 
 NEW_SCRIPT_PARENT_DIR="$(dirname "${NEW_SCRIPT_NAME}")"
@@ -180,7 +188,7 @@ imsg "Found matching template: $(basename "${FULL_TEMPLATE_NAME}")"
 if ! [[ -f "$FULL_NEW_SCRIPT_NAME" ]]; then
     imsg "Initializing the '$FULL_NEW_SCRIPT_NAME' script."
     sudo cp "${FULL_TEMPLATE_NAME}" "${FULL_NEW_SCRIPT_NAME}"
-    sudo chown bryan:bryan "${FULL_NEW_SCRIPT_NAME}"
+    sudo chown "$USER":"$USER" "${FULL_NEW_SCRIPT_NAME}"
 else
     imsg "The '$FULL_NEW_SCRIPT_NAME' script already exists."
     open_editor "${start_line}"
@@ -189,7 +197,9 @@ fi
 # >>> Make New Script Executable
 if [[ "${executable}" == "y" || "${executable}" == "yes" ]]; then
     sudo chmod +x "$FULL_NEW_SCRIPT_NAME"
-    clinks
+    if [[ -n "${EXEC_HOOK_CMD}" ]]; then
+        eval "${EXEC_HOOK_CMD}"
+    fi
 fi
 
 # ===== Custom Template Engine =====

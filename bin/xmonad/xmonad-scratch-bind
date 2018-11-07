@@ -6,7 +6,7 @@
 ##############################################################################################
 
 # ---------- Modules ----------
-source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,h,q" -l "debug,help,quiet" -- "$@")"

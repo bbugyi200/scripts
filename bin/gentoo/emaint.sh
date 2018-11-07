@@ -6,7 +6,7 @@
 
 # shellcheck disable=SC2034
 secret_wrapper="emanage"
-source /home/bryan/Dropbox/scripts/modules/bash/secret.sh
+source /home/bryan/Dropbox/scripts/lib/bash/secret.sh
 
 trap 'rm ${count_path}' EXIT
 

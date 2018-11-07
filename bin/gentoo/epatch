@@ -6,7 +6,7 @@
 # This script aids in the creation and maintainance of  user patches on Gentoo.                   #
 ###################################################################################################
 
-source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
 
 # ensure running as root
 if [ "$(id -u)" != "0" ]; then

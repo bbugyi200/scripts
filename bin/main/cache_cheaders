@@ -7,7 +7,7 @@
 ###################################################################################################
 
 # ---------- Modules ----------
-source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
 
 # ---------- Main ----------
 

@@ -37,11 +37,11 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
 
 # shellcheck disable=SC2034
 secret_wrapper="emanage"
-source /home/bryan/Dropbox/scripts/modules/bash/secret.sh
+source /home/bryan/Dropbox/scripts/lib/bash/secret.sh
 
 # ---------- Functions ----------
 function warn_user() {

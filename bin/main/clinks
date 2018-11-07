@@ -81,7 +81,7 @@ bin_stow xmonad
 bin_stow zathura
 
 ##### MODULES / LIBRARIES / HEADERS
-stow --dir=/home/bryan/Dropbox/scripts/modules --target=/usr/local/python "$FLAG" python
+stow --dir=/home/bryan/Dropbox/scripts/lib --target=/usr/local/python "$FLAG" python
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
 stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib

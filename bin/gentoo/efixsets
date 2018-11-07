@@ -4,7 +4,7 @@
 #  Enforce Unofficial Portage Set Policies  #
 #############################################
 
-source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
 
 # ---------- Functions ----------
 function purge_line() {

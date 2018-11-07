@@ -7,7 +7,7 @@ TARGET can be a new script, configuration file, markup file, etc....
 After TARGET has been initialized, it is opened in vim.
 EOM
 
-source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
+source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
 
 # ---------- Function Definitions ----------
 function exit_handler() {

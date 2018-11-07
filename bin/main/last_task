@@ -6,7 +6,7 @@ import sys
 import gutils
 
 ############################################################################################
-#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
+#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
 try:

@@ -10,9 +10,12 @@ configuration file, markup file, etc.... After TARGET has been initialized, it
 is opened in vim.
 EOM
 
+# ---------- Source Libraries / Configs ----------
 source /usr/lib/gutils.sh
-source "$HOME"/.config/"${scriptname}"/config
+my_xdg_config="${my_xdg_config}"
+my_xdg_data="${my_xdg_data}"
 
+source "${my_xdg_config}"/config
 # Set default bin directory if not specified in config file.
 if [[ -z "${BIN_DIR}" ]]; then
     BIN_DIR=./
@@ -29,7 +32,6 @@ function find_templates() {
         name="${id}*.${filetype}"
     fi
 
-    # shellcheck disable=SC2154
     find -L "${my_xdg_data}" -name "${name}"
 }
 

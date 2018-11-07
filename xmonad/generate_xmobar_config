@@ -20,7 +20,7 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):
-    fp_xmobar_template = '/home/bryan/Dropbox/scripts/templates/template.xmobarrc'
+    fp_xmobar_template = '/home/bryan/Dropbox/var/templates/template.xmobarrc'
     fp_xmobar_config = '/home/bryan/.xmobarrc'
 
     xdg_runtime = gutils.xdg.get('runtime')

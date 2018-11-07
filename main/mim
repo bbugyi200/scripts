@@ -38,9 +38,6 @@ case "$GLOBAL_MARK" in
     'G' )
         MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/gentoo.sh'
         ;;
-    'H' )
-        MARKED_FILE='/home/bryan/Dropbox/scripts/templates/HW/template.tex'
-        ;;
     'L' )
         MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/plugins.vim'
         ;;

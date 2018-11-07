@@ -5,7 +5,7 @@
 ##########################
 function bin_stow() {
     D="$1"; shift
-    stow --dir=/home/bryan/Dropbox/scripts/bin \
+    stow --dir=/home/bryan/Dropbox/bin \
         --target=/usr/local/bin \
         --ignore=".*\.sh" \
         --ignore=".*\.py" \
@@ -18,7 +18,7 @@ function bin_stow() {
 if [[ -z "$1" ]]; then
     FLAG=-R
 else
-    FLAG=$1
+    FLAG="$1"; shift
 fi
 
 #######################
@@ -82,11 +82,11 @@ bin_stow zathura
 
 ##### MODULES / LIBRARIES / HEADERS
 pylib_directory="$(find -L /usr/lib -maxdepth 1 -type d -name "python3.*")"
-stow --dir=/home/bryan/Dropbox/scripts/lib --target="${pylib_directory}" "$FLAG" python
-stow --dir=/home/bryan/Dropbox/scripts/lib --target=/usr/lib "$FLAG" bash
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/src "$FLAG" src
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/include "$FLAG" include
-stow --dir=/home/bryan/Dropbox/scripts/C --target=/usr/local/lib "$FLAG" lib
+stow --dir=/home/bryan/Dropbox/lib --target="${pylib_directory}" "$FLAG" python
+stow --dir=/home/bryan/Dropbox/lib --target=/usr/lib "$FLAG" bash
+stow --dir=/home/bryan/Dropbox/lib --target=/usr/local/lib "$FLAG" C
+stow --dir=/home/bryan/Dropbox --target=/usr/local/src "$FLAG" src
+stow --dir=/home/bryan/Dropbox --target=/usr/local/include "$FLAG" include
 
 ##### DOTFILES
 stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan "$FLAG" home

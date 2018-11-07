@@ -8,7 +8,7 @@ else
 fi
 
 mkdir $1
-rsync -av ~/Dropbox/scripts/templates/$ft/ ./$1/
+rsync -av ~/Dropbox/var/templates/$ft/ ./$1/
 
 for f in Makefile .lshrc; do
     sed -i "s/PROGRAM_NAME/$1/g" $1/$f

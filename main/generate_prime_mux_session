@@ -20,7 +20,7 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):
-    fp_template = '/home/bryan/Dropbox/scripts/templates/template.tmuxinator'
+    fp_template = '/home/bryan/Dropbox/var/templates/template.tmuxinator'
     dp_mux_config = '/home/bryan/.config/tmuxinator'
 
     with open(fp_template, 'r') as f:

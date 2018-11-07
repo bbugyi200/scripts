@@ -324,7 +324,7 @@ TMP_WORK_DIR="${TMP_WORK_DIR}"/"${P}"
 
 [[ -d "${TMP_WORK_DIR}" ]] || mkdir -p "${TMP_WORK_DIR}"
 cp -r "${WORK_DIR}"/* "${TMP_WORK_DIR}"
-cp /home/bryan/Dropbox/scripts/templates/localalias.epatch "${TMP_WORK_DIR}"/.localalias
+cp /home/bryan/Dropbox/var/templates/localalias.epatch "${TMP_WORK_DIR}"/.localalias
 
 cd "${TMP_WORK_DIR}" || exit 1
 git init

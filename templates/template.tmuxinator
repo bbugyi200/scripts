@@ -1,6 +1,0 @@
-# ~/.config/tmuxinator/{{ session_name }}.yml
-
-root: <%= @settings['root'] %>
-name: {{ session_name }}
-socket_name: primes
-{{ options }}

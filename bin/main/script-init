@@ -11,7 +11,19 @@ source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 function find_templates() {
     id="$1"; shift
     filetype="$1"; shift
-    find /home/bryan/Dropbox/scripts/templates/"${scriptname}" -name "*${id}.${filetype}"
+
+    # shellcheck disable=SC2154
+    find -L "${my_xdg_data}" -name "*${id}.${filetype}"
+}
+
+function open_editor() {
+    Vim_Opts=()
+    if [[ -n "${start_line}" ]]; then
+        Vim_Opts+=( +"${start_line}" +startinsert )
+    fi
+
+    vim "${Vim_Opts[@]}" "${FULL_NEW_SCRIPT_NAME}"
+    exit 0
 }
 
 # ---------- Command-line Arguments ----------
@@ -132,6 +144,7 @@ if ! [[ -f "$FULL_NEW_SCRIPT_NAME" ]]; then
     sudo chown bryan:bryan "${FULL_NEW_SCRIPT_NAME}"
 else
     imsg "The '$FULL_NEW_SCRIPT_NAME' script already exists."
+    open_editor
 fi
 
 # >>> Make New Script Executable
@@ -140,7 +153,7 @@ if [[ "${executable}" == "y" || "${executable}" == "yes" ]]; then
     clinks
 fi
 
-# ===== Render Template Engine =====
+# ===== Custom Template Engine =====
 # >>> START
 start_mark="{# START #}"
 start_line="$(ag "${start_mark}" "${FULL_NEW_SCRIPT_NAME}" | awk -F':' '{print $1}')"
@@ -158,11 +171,5 @@ while read evar; do
     sed -i "s/${sed_epttrn}/${evalue}/" "${FULL_NEW_SCRIPT_NAME}"
 done < <(grep -P -o "${grep_epttrn}" "${FULL_NEW_SCRIPT_NAME}" | sed "s/${sed_epttrn}/\1/")
 
-
 # ===== Open New Script in Editor =====
-Vim_Opts=()
-if [[ -n "${start_line}" ]]; then
-    Vim_Opts+=( +"${start_line}" +startinsert )
-fi
-
-vim "${Vim_Opts[@]}" "${FULL_NEW_SCRIPT_NAME}"
+open_editor

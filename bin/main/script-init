@@ -7,6 +7,13 @@ EOM
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
 
+# ---------- Function Definitions ----------
+function find_templates() {
+    id="$1"; shift
+    filetype="$1"; shift
+    find /home/bryan/Dropbox/scripts/templates/"${scriptname}" -name "*${id}.${filetype}"
+}
+
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,D:,f,F:,h,N,T:,x" -l "debug,bin-directory:,filetype:,help,executable:,template-id:,use-extension:" -- "$@")"
 
@@ -77,14 +84,10 @@ fi
 NEW_SCRIPT_NAME="$1"; shift
 BIN="/home/bryan/Dropbox/scripts/bin"
 EXT="${FILETYPE}"
-comment_character="#"
 
 # ---------- Main ----------
 # ===== Process Filetype =====
 case "$FILETYPE" in
-    tex )
-        comment_character="%"
-        ;;
     python )
         EXT="py"
         ;;
@@ -111,9 +114,18 @@ else
     FULL_NEW_SCRIPT_NAME="${NEW_SCRIPT_NAME}"
 fi
 
+number_of_templates="$(find_templates "${template_id}" "${FILETYPE}" | wc -l)"
+if [[ "${number_of_templates}" -eq 0 ]]; then
+    die "Failed to find any matching templates."
+elif [[ "${number_of_templates}" -gt 1 ]]; then
+    die "Multiple templates matched. Template must be unique."
+fi
+
+FULL_TEMPLATE_NAME=$(find_templates "${template_id}" "${FILETYPE}")
+imsg "Found matching template: $(basename "${FULL_TEMPLATE_NAME}")"
+
 # ===== Initialize New Script =====
 # >>> Copy Template Contents to New Script
-FULL_TEMPLATE_NAME=/home/bryan/Dropbox/scripts/templates/"${scriptname}"/template."${template_id}"."${FILETYPE}"
 if ! [[ -f "$FULL_NEW_SCRIPT_NAME" ]]; then
     imsg "Initializing the '$FULL_NEW_SCRIPT_NAME' script."
     sudo cp "${FULL_TEMPLATE_NAME}" "${FULL_NEW_SCRIPT_NAME}"
@@ -128,13 +140,24 @@ if [[ "${executable}" == "y" || "${executable}" == "yes" ]]; then
     clinks
 fi
 
-# ===== Handle Pragma Marks =====
-pragma_prefix="${comment_character} script-init:"
-
+# ===== Render Template Engine =====
 # >>> START
-start_pragma="${pragma_prefix} START"
-start_line="$(ag "${start_pragma}" "${FULL_NEW_SCRIPT_NAME}" | awk -F':' '{print $1}')"
-sed -i "s/${start_pragma}//" "${FULL_NEW_SCRIPT_NAME}"
+start_mark="{# START #}"
+start_line="$(ag "${start_mark}" "${FULL_NEW_SCRIPT_NAME}" | awk -F':' '{print $1}')"
+sed -i "s/${start_mark}//" "${FULL_NEW_SCRIPT_NAME}"
+
+# >>> Environment Variable Replacements
+grep_epttrn="{{ env\.(.*?) }}"
+sed_epttrn="{{ env\.\([^ ]*\) }}"
+while read evar; do
+    evalue="$(eval "echo \"\$${evar}\"")"
+    if [[ -z "${evalue}" ]]; then
+        die "Environment variable NOT defined: \$${evar}"
+    fi
+
+    sed -i "s/${sed_epttrn}/${evalue}/" "${FULL_NEW_SCRIPT_NAME}"
+done < <(grep -P -o "${grep_epttrn}" "${FULL_NEW_SCRIPT_NAME}" | sed "s/${sed_epttrn}/\1/")
+
 
 # ===== Open New Script in Editor =====
 Vim_Opts=()
@@ -142,5 +165,4 @@ if [[ -n "${start_line}" ]]; then
     Vim_Opts+=( +"${start_line}" +startinsert )
 fi
 
-imsg "Opening the '$FULL_NEW_SCRIPT_NAME' script in vim."
 vim "${Vim_Opts[@]}" "${FULL_NEW_SCRIPT_NAME}"

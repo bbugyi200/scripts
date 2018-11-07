@@ -12,11 +12,18 @@ function find_templates() {
     id="$1"; shift
     filetype="$1"; shift
 
+    if [[ "${id}" =~ ^[0-9]+$ ]]; then
+        name="*${id}.${filetype}"
+    else
+        name="${id}*.${filetype}"
+    fi
+
     # shellcheck disable=SC2154
-    find -L "${my_xdg_data}" -name "*${id}.${filetype}"
+    find -L "${my_xdg_data}" -name "${name}"
 }
 
 function open_editor() {
+    start_line="$1"; shift
     Vim_Opts=()
     if [[ -n "${start_line}" ]]; then
         Vim_Opts+=( +"${start_line}" +startinsert )
@@ -144,7 +151,7 @@ if ! [[ -f "$FULL_NEW_SCRIPT_NAME" ]]; then
     sudo chown bryan:bryan "${FULL_NEW_SCRIPT_NAME}"
 else
     imsg "The '$FULL_NEW_SCRIPT_NAME' script already exists."
-    open_editor
+    open_editor "${start_line}"
 fi
 
 # >>> Make New Script Executable
@@ -172,4 +179,4 @@ while read evar; do
 done < <(grep -P -o "${grep_epttrn}" "${FULL_NEW_SCRIPT_NAME}" | sed "s/${sed_epttrn}/\1/")
 
 # ===== Open New Script in Editor =====
-open_editor
+open_editor "${start_line}"

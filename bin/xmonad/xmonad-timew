@@ -6,7 +6,7 @@
 
 # shellcheck disable=SC2154
 
-source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
+source /usr/lib/gutils.sh
 
 [ -d "${my_xdg_runtime}" ] || mkdir "${my_xdg_runtime}"
 [ -p "${my_xdg_runtime}"/fifo ] || mkfifo "${my_xdg_runtime}"/fifo

@@ -5,7 +5,7 @@
 ############################
 
 # ---------- Modules ----------
-source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
+source /usr/lib/gutils.sh
 
 # ---------- Global Variables ----------
 # shellcheck disable=SC2034

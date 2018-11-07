@@ -4,7 +4,7 @@
 #  Zathura Utility Script for better Navigation #
 #################################################
 
-source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
+source /usr/lib/gutils.sh
 
 # ---------- Functions ----------
 function switch_directions() {

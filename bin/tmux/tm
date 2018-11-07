@@ -4,7 +4,7 @@ read -r -d '' doc << EOM
 Wrapper for Tmuxinator
 EOM
 
-source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
+source /usr/lib/gutils.sh
 
 MUX_CONFIG_DIR=~/.config/tmuxinator
 usage="${usage} [-d] [-h] [-MUX_OPTION [-MUX_OPTION [...]] | MUX_SESSION]"

@@ -4,7 +4,7 @@
 #  View Man files using vim.                                                                      #
 ###################################################################################################
 
-source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
+source /usr/lib/gutils.sh
 
 rand_hex="$(hexdump -n 3 -e '4/4 "%08x" 1 ""' /dev/random)"
 tmp_file=/tmp/vman."${rand_hex}"

@@ -4,8 +4,8 @@
 #  Runs periodic maintenance tasks meant to cleanup the filesystem.  #
 ######################################################################
 
-source /home/bryan/Dropbox/scripts/lib/bash/gutils.sh
-source emaint.sh
+source /usr/lib/gutils.sh
+source /home/bryan/Dropbox/scripts/bin/gentoo/emaint.sh
 
 # ---------- Main Logic ----------
 TMP=/home/bryan/Dropbox/tmp

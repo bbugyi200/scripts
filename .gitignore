@@ -6,3 +6,4 @@
 bin/ProtectMyLaptop/keys.py
 python/objs/*
 lemonbar/panel-*
+modules/*

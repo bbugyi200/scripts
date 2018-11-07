@@ -5,7 +5,7 @@
 ######################################################################
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
-source /home/bryan/Dropbox/scripts/modules/bash/emaint.sh
+source emaint.sh
 
 # ---------- Main Logic ----------
 TMP=/home/bryan/Dropbox/tmp

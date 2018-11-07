@@ -1,5 +1,17 @@
 #!/bin/bash
 
+##########################
+#  Function Definitions  #
+##########################
+function bin_stow() {
+    D="$1"; shift
+    stow --dir=/home/bryan/Dropbox/scripts/bin \
+        --target=/usr/local/bin \
+        --ignore=".*\.sh" \
+        --ignore=".*\.py" \
+        "${FLAG}" "${D}"
+}
+
 ##################################
 #  parse command-line arguments  #
 ##################################
@@ -59,14 +71,14 @@ if [[ $(hostname) == "athena" ]]; then
 fi
 
 ##### SCRIPTS
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" awk
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" gentoo
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" GTD
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" main
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" ProtectMyLaptop
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" tmux
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" xmonad
-stow --dir=/home/bryan/Dropbox/scripts/bin --target=/usr/local/bin "$FLAG" zathura
+bin_stow awk
+bin_stow gentoo
+bin_stow GTD
+bin_stow main
+bin_stow ProtectMyLaptop
+bin_stow tmux
+bin_stow xmonad
+bin_stow zathura
 
 ##### MODULES / LIBRARIES / HEADERS
 stow --dir=/home/bryan/Dropbox/scripts/modules --target=/usr/local/python "$FLAG" python

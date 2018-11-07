@@ -1,8 +1,10 @@
 #!/bin/bash
 
 read -r -d '' doc << EOM
-Initialize a new script using a predefined template. After the new script has been initialized,
-it is opened in vim.
+Initialize TARGET File using a Predefined Templates (inspired by cookiecutter)
+
+TARGET can be a new script, configuration file, markup file, etc....
+After TARGET has been initialized, it is opened in vim.
 EOM
 
 source /home/bryan/Dropbox/scripts/modules/bash/gutils.sh
@@ -45,13 +47,13 @@ function open_editor() {
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,D:,f,F:,h,N,T:,v,x" -l "debug,bin-directory:,filetype:,help,executable:,template-id:,verbose,use-extension:" -- "$@")"
 
-usage="${usage} [-d] [-D BIN_SUBDIR] [-f] [-h] [-N | --executable={y|n}] [-x | --use-extension={y|n}] [-T TEMPLATE_ID] [-v] -F FILETYPE SCRIPT_NAME"
+usage="${usage} [-d] [-D BIN_SUBDIR] [-f] [-h] [-N | --executable={y|n}] [-x | --use-extension={y|n}] [-T TEMPLATE_ID] [-v] -F FILETYPE TARGET"
 scriptname="${scriptname}"
 
 read -r -d '' help << EOM
-${doc}
+${usage^}
 
-${usage}
+${doc}
 EOM
 
 executable="y"
@@ -124,7 +126,7 @@ BIN="/home/bryan/Dropbox/scripts/bin"
 EXT="${FILETYPE}"
 
 # ---------- Main ----------
-# ===== Process Filetype =====
+# ===== Special Filetype Customizations =====
 case "$FILETYPE" in
     python )
         EXT="py"

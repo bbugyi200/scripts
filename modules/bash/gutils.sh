@@ -2,36 +2,43 @@
 #  Global Utility Functions for Shell Scripts  #
 ################################################
 
-# ---------- Global Variables ----------
-# shellcheck disable=SC2034
-scriptname="$(basename "$0")"
-usage="usage: ${scriptname}"
+if [[ "${GUTILS_HAS_BEEN_SOURCED}" != true ]]; then
+    GUTILS_HAS_BEEN_SOURCED=true
 
-# ---------- XDG User Directories ----------
-# shellcheck disable=SC2034
-if [[ -n "${XDG_RUNTIME_DIR}" ]]; then
-    xdg_runtime="${XDG_RUNTIME_DIR}"
-else
-    xdg_runtime=/tmp
+    # ---------- Global Variables ----------
+    scriptname="$(basename "$0")"
+    # shellcheck disable=SC2034
+    usage="usage: ${scriptname}"
+    
+    # ---------- XDG User Directories ----------
+    # shellcheck disable=SC2034
+    if [[ -n "${XDG_RUNTIME_DIR}" ]]; then
+        xdg_runtime="${XDG_RUNTIME_DIR}"
+    else
+        xdg_runtime=/tmp
+    fi
+    
+    # shellcheck disable=SC2034
+    if [[ -n "${XDG_CONFIG_HOME}" ]]; then
+        xdg_config="${XDG_CONFIG_HOME}"
+    else
+        xdg_config=/home/"${USER}"
+    fi
+    
+    # shellcheck disable=SC2034
+    if [[ -n "${XDG_DATA_HOME}" ]]; then
+        xdg_data="${XDG_DATA_HOME}"
+    else
+        xdg_data=/home/"${USER}"/.local/share
+    fi
+    
+    # shellcheck disable=SC2034
+    my_xdg_runtime="${xdg_runtime}"/"${scriptname}"
+    # shellcheck disable=SC2034
+    my_xdg_config="${xdg_config}"/"${scriptname}"
+    # shellcheck disable=SC2034
+    my_xdg_data="${xdg_data}"/"${scriptname}"
 fi
-
-# shellcheck disable=SC2034
-if [[ -n "${XDG_CONFIG_HOME}" ]]; then
-    xdg_config="${XDG_CONFIG_HOME}"
-else
-    xdg_config=/home/"${USER}"
-fi
-
-# shellcheck disable=SC2034
-if [[ -n "${XDG_DATA_HOME}" ]]; then
-    xdg_data="${XDG_DATA_HOME}"
-else
-    xdg_data=/home/"${USER}"/.local/share
-fi
-
-my_xdg_runtime="${xdg_runtime}"/"${scriptname}"
-my_xdg_config="${xdg_config}"/"${scriptname}"
-my_xdg_data="${xdg_data}"/"${scriptname}"
 
 # ---------- Function Definitions ----------
 function die() {

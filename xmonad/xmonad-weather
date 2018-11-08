@@ -8,8 +8,8 @@
 
 source /usr/lib/gutils.sh
 
-fifo_path="${my_xdg_runtime}"/fifo
-[ -d "${my_xdg_runtime}" ] || mkdir "${my_xdg_runtime}"
+fifo_path="${MY_XDG_RUNTIME}"/fifo
+[ -d "${MY_XDG_RUNTIME}" ] || mkdir "${MY_XDG_RUNTIME}"
 [ -p "${fifo_path}" ] || mkfifo "${fifo_path}"
 
 /usr/local/bin/poll-weather > "${fifo_path}"

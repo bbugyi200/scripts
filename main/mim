@@ -21,13 +21,13 @@ GLOBAL_MARK=${1^^}; shift
 
 case "$GLOBAL_MARK" in
     'A' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/aliases.sh'
+        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/aliases.sh'
         ;;
     'B' )
         MARKED_FILE='/home/bryan/.xmobarrc'
         ;;
     'D' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/GTD.sh'
+        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/GTD.sh'
         ;;
     'E' )
         MARKED_FILE='/etc/profile.d/private.sh'
@@ -36,10 +36,10 @@ case "$GLOBAL_MARK" in
         MARKED_FILE='/home/bryan/.config/flake8'
         ;;
     'G' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/gentoo.sh'
+        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/gentoo.sh'
         ;;
     'L' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/extras/plugins.vim'
+        MARKED_FILE='/home/bryan/Dropbox/home/.vim/plugins.vim'
         ;;
     'M' )
         MARKED_FILE='/home/bryan/.Xmodmap'
@@ -48,19 +48,19 @@ case "$GLOBAL_MARK" in
         MARKED_FILE='/home/bryan/.zprofile'
         ;;
     'Q' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.config/qutebrowser/config.py'
+        MARKED_FILE='/home/bryan/Dropbox/home/.config/qutebrowser/config.py'
         ;;
     'T' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.tmux.conf'
+        MARKED_FILE='/home/bryan/Dropbox/home/.tmux.conf'
         ;;
     'V' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.vim/vimrc'
+        MARKED_FILE='/home/bryan/Dropbox/home/.vim/vimrc'
         ;;
     'X' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.xmonad/xmonad.hs'
+        MARKED_FILE='/home/bryan/Dropbox/home/.xmonad/xmonad.hs'
         ;;
     'Z' )
-        MARKED_FILE='/home/bryan/Dropbox/dotfiles/home/.zshrc'
+        MARKED_FILE='/home/bryan/Dropbox/home/.zshrc'
         ;;
 esac
 

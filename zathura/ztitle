@@ -6,11 +6,11 @@
 
 eval set -- "$(getopt -o "d,h,p" -l "debug,help,path" -- "$@")"
 
-scriptname="$(basename "$0")"
-usage="usage: ${scriptname} [-d] [-h]"
+SCRIPTNAME="$(basename "$0")"
+USAGE="usage: ${SCRIPTNAME} [-d] [-h]"
 
 read -r -d '' help << EOM
-${usage}
+${USAGE}
 EOM
 
 while [[ -n "$1" ]]; do

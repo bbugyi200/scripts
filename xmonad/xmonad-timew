@@ -8,7 +8,8 @@
 
 source /usr/lib/gutils.sh
 
-[ -d "${my_xdg_runtime}" ] || mkdir "${my_xdg_runtime}"
-[ -p "${my_xdg_runtime}"/fifo ] || mkfifo "${my_xdg_runtime}"/fifo
+[ -d "${MY_XDG_RUNTIME}" ] || mkdir "${MY_XDG_RUNTIME}"
+[ -p "${MY_XDG_RUNTIME}"/fifo ] || mkfifo "${MY_XDG_RUNTIME}"/fifo
 
-/usr/local/bin/poll-timew > "${my_xdg_runtime}"/fifo
+/usr/local/bin/poll-timew > "${MY_XDG_RUNTIME}"/fifo
+

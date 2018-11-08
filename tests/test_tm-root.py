@@ -4,7 +4,7 @@ import importlib.util
 import importlib.machinery
 import unittest.mock as mock
 
-loader = importlib.machinery.SourceFileLoader("tmroot", "/home/bryan/Dropbox/scripts/bin/main/tm-window-root")
+loader = importlib.machinery.SourceFileLoader("tmroot", "/home/bryan/Dropbox/bin/main/tm-window-root")
 spec = importlib.util.spec_from_loader("tmroot", loader)
 tmroot = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(tmroot)

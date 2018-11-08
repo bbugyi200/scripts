@@ -11,19 +11,19 @@ source /usr/lib/gutils.sh
 
 # ---------- Global Variables ----------
 # shellcheck disable=SC2154,SC2034
-usage="usage: ${scriptname} "
+USAGE="usage: ${SCRIPTNAME} "
 D="/home/bryan/Dropbox/var"
 fp_sunrise="${D}"/sunrise
 fp_sunset="${D}"/sunset
 
-[ -d "${my_xdg_runtime}" ] || mkdir "${my_xdg_runtime}"
-[ -p "${my_xdg_runtime}"/fifo ] || mkfifo "${my_xdg_runtime}"/fifo
+[ -d "${MY_XDG_RUNTIME}" ] || mkdir "${MY_XDG_RUNTIME}"
+[ -p "${MY_XDG_RUNTIME}"/fifo ] || mkfifo "${MY_XDG_RUNTIME}"/fifo
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,h,R,v" -l "debug,help,refresh,verbose" -- "$@")"
 
 read -r -d '' help << EOM
-${usage}
+${USAGE}
 EOM
 
 while [[ -n "$1" ]]; do
@@ -63,5 +63,6 @@ else
     R="$(cat ${fp_sunrise})"
     S="$(cat ${fp_sunset})"
 
-    printf "%s / %s\n" "${R}" "${S}" > "${my_xdg_runtime}"/fifo
+    printf "%s / %s\n" "${R}" "${S}" > "${MY_XDG_RUNTIME}"/fifo
 fi
+

@@ -6,7 +6,13 @@
 
 source /usr/lib/gutils.sh
 
+if [[ -n "$1" ]]; then
+    MSG="$1"; shift
+else
+    MSG="Update $(gitrepo)"
+fi
+
 cd "$(gitdir)" || exit 1
 git add .
-git commit -m "Update $(gitrepo)"
+git commit -m "${MSG}"
 git push

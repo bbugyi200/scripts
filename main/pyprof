@@ -19,15 +19,15 @@ source /usr/lib/gutils.sh
 
 # ---------- Global Variables ----------
 # shellcheck disable=SC2034
-scriptname="$(basename "$0")"
-usage="usage: $(basename "$0") PYTHON_SCRIPT [OPTIONS]"
-xdg_runtime=/tmp/"${scriptname}"
+SCRIPTNAME="$(basename "$0")"
+USAGE="usage: $(basename "$0") PYTHON_SCRIPT [OPTIONS]"
+XDG_RUNTIME=/tmp/"${SCRIPTNAME}"
 
-[ -d "${xdg_runtime}" ] || mkdir "${xdg_runtime}"
+[ -d "${XDG_RUNTIME}" ] || mkdir "${XDG_RUNTIME}"
 
 # ---------- Main ----------
 if [[ -z "$1" ]]; then
-    die "${usage}" 2
+    die "${USAGE}" 2
 fi
 
 pyscript="$1"
@@ -38,8 +38,8 @@ if ! [[ -f "${pyscript}" ]]; then
 fi
 
 pyscript_filename="$(basename "${pyscript}")"
-pstats_file="${xdg_runtime}"/"${pyscript_filename}".stats
-tmp_script="${xdg_runtime}"/"${pyscript_filename}"
+pstats_file="${XDG_RUNTIME}"/"${pyscript_filename}".stats
+tmp_script="${XDG_RUNTIME}"/"${pyscript_filename}"
 
 cp -f "${pyscript}" "${tmp_script}"
 sed -E -i '/^def .+\(/i@profile' "${tmp_script}"

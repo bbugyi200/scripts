@@ -10,18 +10,18 @@ source /usr/lib/gutils.sh
 
 # ---------- Global Variables ----------
 # shellcheck disable=SC2034
-scriptname="$(basename "$0")"
+SCRIPTNAME="$(basename "$0")"
 # shellcheck disable=SC2034
-usage="usage: ${scriptname} [-d] [-h] [-u] [-v] DOTFILE [DOTFILE [...]]" 
+USAGE="usage: ${SCRIPTNAME} [-d] [-h] [-u] [-v] DOTFILE [DOTFILE [...]]" 
 
-dropbox_dots_home=/home/bryan/Dropbox/dotfiles/home
+dropbox_dots_home=/home/bryan/Dropbox/home
 parent="${PWD#/home/bryan}"
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,h,v,R" -l "debug,help,verbose,reverse" -- "$@")"
 
 read -r -d '' help << EOM
-${usage}
+${USAGE}
 EOM
 
 while [[ -n "$1" ]]; do
@@ -55,7 +55,7 @@ fi
 # ---------- Main ----------
 
 if [[ -z "$1" ]]; then
-    die "${usage}" 2
+    die "${USAGE}" 2
 fi
 
 if [[ "${undow}" = true ]]; then

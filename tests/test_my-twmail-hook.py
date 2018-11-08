@@ -6,7 +6,7 @@ import importlib.machinery
 import os
 import unittest.mock as mock
 
-loader = importlib.machinery.SourceFileLoader("twmail", "/home/bryan/Dropbox/scripts/bin/main/my-twmail-hook")
+loader = importlib.machinery.SourceFileLoader("twmail", "/home/bryan/Dropbox/bin/main/my-twmail-hook")
 spec = importlib.util.spec_from_loader("twmail", loader)
 twmail = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(twmail)

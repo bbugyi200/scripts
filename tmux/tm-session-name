@@ -9,7 +9,7 @@ source /usr/lib/gutils.sh
 
 # ---------- Global Variables ----------
 # shellcheck disable=SC2034
-scriptname="$(basename "$0")"
+SCRIPTNAME="$(basename "$0")"
 
 # ---------- Main ----------
 if [[ -n "$1" ]]; then

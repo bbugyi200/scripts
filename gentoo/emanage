@@ -14,7 +14,7 @@ import gutils
 ############################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
-scriptname = os.path.basename(os.path.realpath(__file__))
+SCRIPTNAME = os.path.basename(os.path.realpath(__file__))
 ts_fmt = '%Y%m%d%H%M%S'
 
 

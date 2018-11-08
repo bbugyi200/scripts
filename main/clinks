@@ -67,7 +67,7 @@ done
 #  use 'stow' to make links  #
 ##############################
 if [[ $(hostname) == "athena" ]]; then
-	stow --dir=/home/bryan/Dropbox/scripts/bin --target=/etc "$FLAG" cron.jobs
+	stow --dir=/home/bryan/Dropbox/bin --target=/etc "$FLAG" cron.jobs
 fi
 
 ##### SCRIPTS
@@ -83,20 +83,20 @@ bin_stow zathura
 ##### MODULES / LIBRARIES / HEADERS
 pylib_directory="$(find -L /usr/lib -maxdepth 1 -type d -name "python3.*")"
 stow --dir=/home/bryan/Dropbox/lib --target="${pylib_directory}" "$FLAG" python
-stow --dir=/home/bryan/Dropbox/lib --target=/usr/lib "$FLAG" bash
 stow --dir=/home/bryan/Dropbox/lib --target=/usr/local/lib "$FLAG" C
+stow --dir=/home/bryan/Dropbox/lib --target=/usr/local/lib "$FLAG" zsh
 stow --dir=/home/bryan/Dropbox --target=/usr/local/src "$FLAG" src
 stow --dir=/home/bryan/Dropbox --target=/usr/local/include "$FLAG" include
 
 ##### DOTFILES
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/home/bryan "$FLAG" home
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/root "$FLAG" home
-stow --dir=/home/bryan/Dropbox/dotfiles --target=/usr --no-folding "$FLAG" usr
+stow --dir=/home/bryan/Dropbox --target=/home/bryan "$FLAG" home
+stow --dir=/home/bryan/Dropbox --target=/root "$FLAG" home
+stow --dir=/home/bryan/Dropbox --target=/usr --no-folding "$FLAG" usr
 
 ###########################################
 #  ROOT_DUPLICATE_DIRS Post-stow Actions  #
 ###########################################
-if [[ "$FLAG" != "-D" ]] && [[ -d /home/bryan/"$D" ]]; then
+if [[ "$FLAG" != "-D" ]]; then
     for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
         rm -rf /root/"$D"
         mkdir -p /root/"$D"

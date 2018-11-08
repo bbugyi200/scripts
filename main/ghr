@@ -7,7 +7,7 @@
 source /usr/lib/gutils.sh
 
 if [[ -z "$1" ]]; then
-    die "usage: $(basename "$0") REPO" 
+    die "USAGE: $(basename "$0") REPO" 
 fi
 
 REPO="$1"; shift

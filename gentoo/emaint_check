@@ -9,8 +9,8 @@
 
 # ---------- Global Variables ----------
 max_update_days=7
-scriptname="$(basename "$0")"
-USAGE="usage: ${scriptname} [-d] [-h]"
+SCRIPTNAME="$(basename "$0")"
+USAGE="usage: ${SCRIPTNAME} [-d] [-h]"
 
 read -r -d '' HELP << EOM
 $USAGE

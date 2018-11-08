@@ -10,9 +10,9 @@ source /usr/lib/secret.sh
 
 trap 'rm ${count_path}' EXIT
 
-my_xdg_data="${xdg_data}"/emanage/"$(hostname)"/"${scriptname}"
-count_path="${my_xdg_data}"/count
-[ -d "${my_xdg_data}" ] || mkdir "${my_xdg_data}"
+MY_XDG_DATA="${XDG_DATA}"/emanage/"$(hostname)"/"${SCRIPTNAME}"
+count_path="${MY_XDG_DATA}"/count
+[ -d "${MY_XDG_DATA}" ] || mkdir "${MY_XDG_DATA}"
 
 slave_count=0
 if [[ -n "$1" ]]; then

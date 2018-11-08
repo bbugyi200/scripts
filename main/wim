@@ -21,12 +21,12 @@ if [[ -z "$1" ]]; then
 fi
 
 CMD="$1"; shift
-SCRIPT_PATH="$(find /home/bryan/Dropbox/scripts -type f -name "$CMD")"
+SCRIPT_PATH="$(find /home/bryan/Dropbox/bin -type f -name "$CMD")"
 
 if [[ -n "$SCRIPT_PATH" ]]; then
     vim -c "silent! normal g;" "$SCRIPT_PATH"
 else
-    LOCATION="$(ag "(^(alias|function)[ ]+|^)${CMD}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/dotfiles | awk -F: '{ print "+" $2 " " $1 }')"
+    LOCATION="$(ag "(^(alias|function)[ ]+|^)${CMD}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/home | awk -F: '{ print "+" $2 " " $1 }')"
 
     if [[ -z "$LOCATION" ]]; then
         printf "ERROR: unable to find '%s'." "$CMD"

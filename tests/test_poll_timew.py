@@ -3,7 +3,7 @@ import unittest.mock as mock
 
 import pytest
 
-m = imp.load_source('poll-timew', '/home/bryan/Dropbox/scripts/bin/xmonad/poll-timew')
+m = imp.load_source('poll-timew', '/home/bryan/Dropbox/bin/xmonad/poll-timew')
 
 
 def test_style_time():

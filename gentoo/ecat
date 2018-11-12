@@ -1,39 +1,77 @@
 #!/bin/bash
 
-###################################################################
-#  Attempts to Find Package's Corresponding Category              #
-###################################################################
+read -r -d '' doc << EOM
+Takes a Gentoo package name and returns the fully qualified version.
+
+e.g. 'ecat PACKAGE' --> 'CATEGORY/PACKAGE'
+EOM
+
+source /usr/lib/gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,v,x" -l "debug,help,verbose,clipboard" -- "$@")"
+
+USAGE="${USAGE} [-d] [-h] [-v] [-x] PACKAGE"
+
+read -r -d '' help << EOM
+${doc}
+
+${USAGE}
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -x|--clipboard )
+           clipboard=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
 
 if [[ -z "$1" ]]; then
     echo "usage: $(basename "$0") PACKAGE"
     exit 2
 fi
 
-if [[ "$1" == "-x" ]]; then
-    shift
-    clipboard=true
-fi
-
 package="$1"; shift
 category="$(eix --nocolor --only-names "/$package$" | awk -F'/' '{print $1}')"
 
-if [[ -z "$category" ]]; then
+if [[ -z "${category}" ]]; then
     category="$(emerge --search "%/$package$" | grep "^\*" | awk '{print $2}' | awk -F'/' '{print $1}')"
 fi
 
-if [[ -z "$category" ]]; then
+if [[ -z "${category}" ]]; then
     notify-send -u critical "$(basename "$0")" "The category could NOT be found."
 fi
 
-if [[ "$(echo "$category" | wc -l)" -gt 1 ]]; then
-    error_msg="Unable to Determine the packages category."
-    if [[ "$clipboard" = true ]]; then
-        notify-send -u critical "$(basename "$0")" "$error_msg"
-    else
-        printf "ERROR: %s" "$error_msg"
-    fi
-
-    exit 1
+number_of_categories="$(echo "$category" | wc -l)"
+if [[ "${number_of_categories}" -gt 1 ]]; then
+    # shellcheck disable=SC2206
+    category_choices=( ${category} )
+    PS3=$'\n'"Select a category for ${package}: "
+    select choice in "${category_choices[@]}"; do
+        category="${choice}"
+        break
+    done >&2
 fi
 
 if [[ "$clipboard" = true ]]; then

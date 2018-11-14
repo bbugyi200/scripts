@@ -82,7 +82,7 @@ bin_stow zathura
 
 ##### MODULES / LIBRARIES / HEADERS
 pylib_directory="$(find -L /usr/lib -maxdepth 1 -type d -name "python3.*")"
-stow --dir=/home/bryan/Dropbox/lib --target="${pylib_directory}" "$FLAG" python
+stow --dir=/home/bryan/Dropbox/lib --target="${pylib_directory}"/site-packages "$FLAG" python
 stow --dir=/home/bryan/Dropbox/lib --target=/usr/local/lib "$FLAG" C
 stow --dir=/home/bryan/Dropbox/lib --target=/usr/local/lib "$FLAG" zsh
 stow --dir=/home/bryan/Dropbox --target=/usr/local/src "$FLAG" src

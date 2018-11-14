@@ -4,7 +4,7 @@
 #  Runs periodic maintenance tasks meant to cleanup the filesystem.  #
 ######################################################################
 
-source /usr/lib/gutils.sh
+source gutils.sh
 source /home/bryan/Dropbox/bin/gentoo/emaint.sh
 
 # ---------- Main Logic ----------

@@ -4,7 +4,7 @@
 #  Prints GitHub Repository in SSH Format  #
 ############################################
 
-source /usr/lib/gutils.sh
+source gutils.sh
 
 if [[ -z "$1" ]]; then
     die "USAGE: $(basename "$0") REPO" 

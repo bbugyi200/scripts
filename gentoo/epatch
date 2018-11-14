@@ -6,7 +6,7 @@
 # This script aids in the creation and maintainance of  user patches on Gentoo.                   #
 ###################################################################################################
 
-source /usr/lib/gutils.sh
+source gutils.sh
 
 # ensure running as root
 if [ "$(id -u)" != "0" ]; then

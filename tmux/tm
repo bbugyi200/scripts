@@ -4,10 +4,10 @@ read -r -d '' doc << EOM
 Wrapper for Tmuxinator
 EOM
 
-source /usr/lib/gutils.sh
+source gutils.sh
 
 MUX_CONFIG_DIR=~/.config/tmuxinator
-USAGE="${usage} [-d] [-h] [-MUX_OPTION [-MUX_OPTION [...]] | MUX_SESSION]"
+USAGE="${USAGE} [-d] [-h] [-MUX_OPTION [-MUX_OPTION [...]] | MUX_SESSION]"
 
 if [[ "$1" == "-d" ]]; then
     PS4='$LINENO: '

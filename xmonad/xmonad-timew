@@ -6,7 +6,7 @@
 
 # shellcheck disable=SC2154
 
-source /usr/lib/gutils.sh
+source gutils.sh
 
 [ -d "${MY_XDG_RUNTIME}" ] || mkdir "${MY_XDG_RUNTIME}"
 [ -p "${MY_XDG_RUNTIME}"/fifo ] || mkfifo "${MY_XDG_RUNTIME}"/fifo

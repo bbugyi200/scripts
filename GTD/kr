@@ -37,7 +37,7 @@ if __name__ == "__main__":
         if vargs:
             event_name = ' '.join(vargs)
         else:
-            event_name = 'Study Break'
+            event_name = 'START BREAK'
 
         log.vdebug('vargs: %s', repr(vargs))
         breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=minutes)

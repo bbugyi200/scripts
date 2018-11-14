@@ -37,7 +37,7 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-source /usr/lib/gutils.sh
+source gutils.sh
 
 # shellcheck disable=SC2034
 secret_wrapper="emanage"

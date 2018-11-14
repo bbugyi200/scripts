@@ -5,7 +5,7 @@
 ###################################################################################################
 
 # ---------- Modules ----------
-source /usr/lib/gutils.sh
+source gutils.sh
 
 # ---------- Global Variables ----------
 # shellcheck disable=SC2034

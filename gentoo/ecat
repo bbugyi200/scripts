@@ -6,7 +6,7 @@ Takes a Gentoo package name and returns the fully qualified version.
 e.g. 'ecat PACKAGE' --> 'CATEGORY/PACKAGE'
 EOM
 
-source /usr/lib/gutils.sh
+source gutils.sh
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,h,v,x" -l "debug,help,verbose,clipboard" -- "$@")"

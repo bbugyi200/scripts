@@ -4,7 +4,7 @@
 #  Enforce Unofficial Portage Set Policies  #
 #############################################
 
-source /usr/lib/gutils.sh
+source gutils.sh
 
 # ---------- Functions ----------
 function purge_line() {

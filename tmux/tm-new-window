@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tmux -L "$(tm-socket)" command-prompt -p "window name:" "new-window; rename-window '%%'"

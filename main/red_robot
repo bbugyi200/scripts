@@ -1,0 +1,99 @@
+#!/usr/bin/env python
+
+"""
+Reddit robot that posts automatically at a certain time of day (based on
+cron job) using post specifications found from scanning directory.
+"""
+
+import datetime as dt  # noqa: F401
+import os  # noqa: F401
+import shutil
+import subprocess as sp  # noqa: F401
+import sys  # noqa: F401
+import time
+
+import praw
+import yaml
+
+import gutils
+
+############################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
+############################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
+
+dp_pending = '{}/pending'.format(gutils.xdg.init('data'))
+dp_completed = '{}/completed'.format(gutils.xdg.init('data'))
+
+gutils.create_dir(dp_pending)
+gutils.create_dir(dp_completed)
+
+
+def main(args):
+    user_agent = 'User-Agent: linux:red_robot:v0.1.0 (by /u/bbugyi200)'
+
+    reddit = praw.Reddit(client_id=envvar('client_id'),
+                         client_secret=envvar('client_secret'),
+                         username=envvar('username'),
+                         password=envvar('password'),
+                         user_agent=user_agent)
+
+    s = 0
+    for D in scan(dp_pending, dp_completed):
+        time.sleep(s)
+
+        SR = reddit.subreddit(D['subreddit'])
+        SR.submit(D['title'], url=D['url'], selftext=D['text'])
+
+        msg = 'Submitted post to Reddit.{}: {}'.format(D['subreddit'], D['fname'])
+        gutils.notify(msg, urgency='high')
+
+        s = 600
+
+
+def envvar(name):
+    return os.environ['REDDIT_{}'.format(name.upper())]
+
+
+def scan(dp_new, dp_old):
+    for fname in os.listdir(dp_new):
+        if fname[0] == '.':
+            continue
+
+        if '.' not in fname:
+            msg = 'Yaml file must have the following format: <name>.<subreddit>'
+            raise RuntimeError(msg)
+
+        D = {}
+        D['subreddit'] = fname.split('.')[1]
+
+        fp_post = '{}/{}'.format(dp_new, fname)
+
+        with open(fp_post, 'r') as f:
+            Y = yaml.load(f)
+            D.update(Y)
+
+        shutil.move(fp_post, '{}/{}'.format(dp_old, fname))
+
+        if os.path.exists(fp_post):
+            os.remove(fp_post)
+
+        if 'title' not in D:
+            raise RuntimeError('Invalid post. The "title" option must be specified.')
+
+        for key in ['url', 'text']:
+            if key not in D:
+                D[key] = None
+
+        D['fname'] = fname
+        yield D
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

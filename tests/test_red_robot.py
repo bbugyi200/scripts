@@ -49,8 +49,8 @@ def test_scan__PASS(remove_posts):
         assert D['text'] == post_values[i]['text']
         assert D['subreddit'] == post_values[i]['subreddit']
 
-        fp_completed = '{}/{}'.format(S.dp_completed, post_values[i]['fname'])
-        assert os.path.exists(fp_completed)
+        fp_pending = '{}/{}'.format(S.dp_pending, post_values[i]['fname'])
+        assert not os.path.exists(fp_pending)
 
 
 def test_scan__FAIL(remove_posts):
@@ -60,6 +60,35 @@ def test_scan__FAIL(remove_posts):
 
     with pytest.raises(RuntimeError):
         list(S.scan(S.dp_pending, S.dp_completed))
+
+
+def test_too_early__PASS(now):
+    assert not S.too_early(now, '19910304')
+
+
+def test_too_early__FAIL(now):
+    assert S.too_early(now, '20250101')
+
+
+def test_scan__MULTI_SUBREDDIT(remove_posts):
+    contents = """url: "https://github.com/bbugyi200/cookie"
+title:
+    bash: "cookie: A Bash Script that Generates Files from Templates"
+    linux: "cookie: A Template-based File Generator for Linux Admins"
+"""
+    with open('{}/{}'.format(S.dp_pending, 'test.post'), 'w') as f:
+        f.write(contents)
+
+    count = 0
+    for D in S.scan(S.dp_pending, S.dp_completed):
+        count += 1
+
+    assert 2 == count
+
+
+@pytest.fixture
+def now():
+    return dt.datetime.now()
 
 
 @pytest.fixture

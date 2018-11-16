@@ -48,9 +48,9 @@ def main(args):
         SR.submit(D['title'], url=D['url'], selftext=D['text'])
 
         msg = 'Submitted post to Reddit.{}: {}'.format(D['subreddit'], D['fname'])
-        gutils.notify(msg, urgency='high')
+        gutils.notify(msg, '-t', '0')
 
-        s = 600
+        s = 510
 
 
 def envvar(name):
@@ -75,7 +75,11 @@ def scan(dp_new, dp_old):
             Y = yaml.load(f)
             D.update(Y)
 
-        shutil.move(fp_post, '{}/{}'.format(dp_old, fname))
+        now = dt.datetime.now()
+        if 'start_on' in D and too_early(now, D['start_on']):
+            continue
+
+        shutil.move(fp_post, '{}/{}.{}'.format(dp_old, fname, now.strftime('%Y%m%d%H%m%S')))
 
         if os.path.exists(fp_post):
             os.remove(fp_post)
@@ -88,7 +92,23 @@ def scan(dp_new, dp_old):
                 D[key] = None
 
         D['fname'] = fname
+
+        if isinstance(D['title'], dict):
+            for subreddit, title in D['title'].items():
+                D['title'] = title
+                D['subreddit'] = subreddit
+                yield D
+            continue
+
         yield D
+
+
+def too_early(now, date_string):
+    earliest_post_date = dt.datetime.strptime(date_string, '%Y%m%d')
+    if now < earliest_post_date:
+        return True
+
+    return False
 
 
 if __name__ == "__main__":

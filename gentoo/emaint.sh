@@ -6,7 +6,7 @@
 
 # shellcheck disable=SC2034
 secret_wrapper="emanage"
-source /usr/lib/secret.sh
+source secret.sh
 
 trap 'rm ${count_path}' EXIT
 

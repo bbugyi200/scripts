@@ -1,0 +1,13 @@
+#!/bin/bash
+
+#################################
+#  Restart the Clipster Daemon  #
+#################################
+
+clipster_pid="$(cat /tmp/clipster.pid 2> /dev/null)"
+kill "${clipster_pid}" &> /dev/null
+
+sleep 1
+
+kill -9 "${clipster_pid}" &> /dev/null
+clipster -d &> /dev/null & disown

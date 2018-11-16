@@ -41,7 +41,7 @@ source gutils.sh
 
 # shellcheck disable=SC2034
 secret_wrapper="emanage"
-source /usr/lib/secret.sh
+source secret.sh
 
 # ---------- Functions ----------
 function warn_user() {

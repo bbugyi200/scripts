@@ -13,6 +13,7 @@ TMP=/home/bryan/Dropbox/tmp
 mkdir "$TMP"
 
 econfirm "sort_qb_quickmarks"
+econfirm "clean_recent_file_log"
 econfirm "efixsets"
 econfirm "sudo eclean --deep packages"
 econfirm "sudo eclean --deep distfiles"

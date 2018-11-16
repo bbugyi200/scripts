@@ -6,23 +6,72 @@ EOM
 
 source gutils.sh
 
-MUX_CONFIG_DIR=~/.config/tmuxinator
-USAGE="${USAGE} [-d] [-h] [-MUX_OPTION [-MUX_OPTION [...]] | MUX_SESSION]"
+# ---------- Command-line Arguments ----------
+export USAGE_GRAMMAR=(
+    "[-d] [-v] [-MUX_CMD [ARGS]]"
+    "[-d] [-v] MUX_SESSION"
+    "-h"
+)
 
-if [[ "$1" == "-d" ]]; then
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    MUX_SESSION     The tmuxinator session to start.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -MUX_CMD [ARGS]
+        A valid tmuxinaor command prefixed with a single dash. This option
+        has the same syntax as specified by tmuxinator and thus MAY have
+        arguments.
+
+    -h | --help
+        View this help message.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+       * )
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
     PS4='$LINENO: '
     set -x
-    shift
-fi
-
-if [[ "$1" == "-h" ]]; then
-    printf "${doc}\n\n${USAGE}\n"
-    exit 0
 fi
 
 if [[ -z "$1" ]]; then
-    die "${USAGE}" 2
+    die "$(usage)" 2
 fi
+
+# ---------- Main ----------
+MUX_CONFIG_DIR=~/.config/tmuxinator
 
 case $1 in
     '-'* )

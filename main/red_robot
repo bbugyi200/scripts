@@ -10,6 +10,7 @@ import os  # noqa: F401
 import shutil
 import subprocess as sp  # noqa: F401
 import sys  # noqa: F401
+import syslog
 import time
 
 import praw
@@ -24,6 +25,8 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 scriptname = os.path.basename(os.path.realpath(__file__))
 
+error_flag = False
+
 dp_pending = '{}/pending'.format(gutils.xdg.init('data'))
 dp_completed = '{}/completed'.format(gutils.xdg.init('data'))
 
@@ -32,6 +35,8 @@ gutils.create_dir(dp_completed)
 
 
 def main(args):
+    global error_flag
+
     user_agent = 'User-Agent: linux:red_robot:v0.1.0 (by /u/bbugyi200)'
 
     reddit = praw.Reddit(client_id=envvar('client_id'),
@@ -41,16 +46,34 @@ def main(args):
                          user_agent=user_agent)
 
     s = 0
+    exceptions_raised = []
     for D in scan(dp_pending, dp_completed):
         time.sleep(s)
 
-        SR = reddit.subreddit(D['subreddit'])
-        SR.submit(D['title'], url=D['url'], selftext=D['text'])
+        try:
+            SR = reddit.subreddit(D['subreddit'])
+            SR.submit(D['title'], url=D['url'], selftext=D['text'])
+        except Exception as e:
+            exceptions_raised.append(e)
+            error_flag = True
+
+            msg_fmt = "Failed to submit post to Reddit.{}: {}\n\n{}"
+            msg = msg_fmt.format(D['subreddit'], D['fname'], str(e))
+            gutils.notify(msg, '-t', '0')
+            syslog.syslog(syslog.LOG_ERR, msg)
+            continue
 
         msg = 'Submitted post to Reddit.{}: {}'.format(D['subreddit'], D['fname'])
         gutils.notify(msg, '-t', '0')
+        syslog.syslog(syslog.LOG_INFO, msg)
 
         s = 510
+
+    if exceptions_raised:
+        for e in exceptions_raised:
+            raise Exception(exceptions_raised)
+
+        sys.exit(1)
 
 
 def envvar(name):
@@ -62,30 +85,24 @@ def scan(dp_new, dp_old):
         if fname[0] == '.':
             continue
 
-        if '.' not in fname:
-            msg = 'Yaml file must have the following format: <name>.<subreddit>'
-            raise RuntimeError(msg)
-
-        D = {}
-        D['subreddit'] = fname.split('.')[1]
-
         fp_post = '{}/{}'.format(dp_new, fname)
 
         with open(fp_post, 'r') as f:
             Y = yaml.load(f)
-            D.update(Y)
 
         now = dt.datetime.now()
-        if 'start_on' in D and too_early(now, D['start_on']):
-            continue
+        if 'start_on' in Y:
+            if isinstance(Y['start_on'], list):
+                start_on = Y['start_on'][0]
+                Y['start_on'].remove(start_on)
+            else:
+                start_on = Y['start_on']
 
-        shutil.move(fp_post, '{}/{}.{}'.format(dp_old, fname, now.strftime('%Y%m%d%H%m%S')))
+            if too_early(now, start_on):
+                continue
 
-        if os.path.exists(fp_post):
-            os.remove(fp_post)
-
-        if 'title' not in D:
-            raise RuntimeError('Invalid post. The "title" option must be specified.')
+        D = {}
+        D.update(Y)
 
         for key in ['url', 'text']:
             if key not in D:
@@ -93,14 +110,37 @@ def scan(dp_new, dp_old):
 
         D['fname'] = fname
 
-        if isinstance(D['title'], dict):
+        def complete_entry():
+            global error_flag
+
+            if 'start_on' in Y and Y['start_on'] != []:
+                with open(fname, 'w') as f:
+                    yaml.dump(Y, f)
+            elif not error_flag:
+                shutil.move(fp_post, '{}/{}.{}'.format(dp_old,
+                                                       fname,
+                                                       now.strftime('%Y%m%d%H%m%S')))
+
+                if os.path.exists(fp_post):
+                    os.remove(fp_post)
+            else:
+                error_flag = False
+
+        if 'title' in D and isinstance(D['title'], dict):
             for subreddit, title in D['title'].items():
                 D['title'] = title
                 D['subreddit'] = subreddit
                 yield D
+
+            complete_entry()
             continue
 
+        for field in ['title', 'subreddit']:
+            if field not in D:
+                raise RuntimeError('Required field not defined: {}'.format(field))
+
         yield D
+        complete_entry()
 
 
 def too_early(now, date_string):

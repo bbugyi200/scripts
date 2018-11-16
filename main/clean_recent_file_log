@@ -1,0 +1,14 @@
+#!/bin/bash
+
+##############################################################
+#  Remove Non-Existant Files from RECENTLY_EDITED_FILES_LOG  #
+##############################################################
+
+TMP_RECENTLY_EDITED_FILES_LOG=/tmp/"$(basename "${RECENTLY_EDITED_FILES_LOG}")"
+cp "${RECENTLY_EDITED_FILES_LOG}" "${TMP_RECENTLY_EDITED_FILES_LOG}"
+
+while IFS='' read -r file || [[ -n "${file}" ]]; do
+    if ! [[ -f "${file}" ]]; then
+        sed -i "/${file//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
+    fi
+done < "${TMP_RECENTLY_EDITED_FILES_LOG}"

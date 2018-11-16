@@ -1,18 +1,18 @@
 #!/bin/bash
 
-###################################################################################################
-#  Moves configuration file(s) into my Dropbox dotfiles where they will be stowed across multiple #
-#  machines.                                                                                      #
-###################################################################################################
+read -r -d '' doc <<-EOM
+Moves configuration file(s) into my Dropbox dotfiles where they will be stowed
+across multiple machines.
+EOM
 
 # ---------- Modules ----------
 source gutils.sh
 
 # ---------- Global Variables ----------
-# shellcheck disable=SC2034
-SCRIPTNAME="$(basename "$0")"
-# shellcheck disable=SC2034
-USAGE="usage: ${SCRIPTNAME} [-d] [-h] [-u] [-v] DOTFILE [DOTFILE [...]]" 
+export USAGE_GRAMMAR=(
+    "[-d] [-R] [-v] DOTFILE [DOTFILE [...]]"
+    "-h"
+)
 
 dropbox_dots_home=/home/bryan/Dropbox/home
 parent="${PWD#/home/bryan}"
@@ -21,7 +21,25 @@ parent="${PWD#/home/bryan}"
 eval set -- "$(getopt -o "d,h,v,R" -l "debug,help,verbose,reverse" -- "$@")"
 
 read -r -d '' help << EOM
-${USAGE}
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    DOTFILE     A dotfile to dow / undow.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -R | --reverse
+        Undow DOTFILE.
+
+    -v | --verbose
+        Enable verbose output.
 EOM
 
 while [[ -n "$1" ]]; do
@@ -55,7 +73,7 @@ fi
 # ---------- Main ----------
 
 if [[ -z "$1" ]]; then
-    die "${USAGE}" 2
+    die "$(usage)" 2
 fi
 
 if [[ "${undow}" = true ]]; then

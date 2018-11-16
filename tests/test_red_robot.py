@@ -15,51 +15,75 @@ spec.loader.exec_module(S)
 import pytest  # noqa
 
 
+dp_pending = '/tmp/red_robot/pending'
+dp_completed = '/tmp/red_robot/completed'
+
+
 def test_envvar():
     assert 'bbugyi200' == S.envvar('username')
 
 
 def test_scan__PASS(remove_posts):
     post_values = [{'title': 'T1', 'url': 'U1', 'subreddit': 'subreddit1',
-                    'text': None, 'fname': 'A.subreddit1'},
+                    'text': None, 'fname': 'A'},
                    {'title': 'T2', 'url': 'U2', 'subreddit': 'subreddit2',
-                    'text': None, 'fname': 'B.subreddit2'},
+                    'text': None, 'fname': 'B'},
                    {'title': 'T3', 'url': None, 'subreddit': 'subreddit3',
-                    'text': 'Markdown Text', 'fname': 'C.subreddit3'}]
+                    'text': 'Markdown Text', 'fname': 'C'}]
 
-    A = '{}/{}'.format(S.dp_pending, post_values[0]['fname'])
-    B = '{}/{}'.format(S.dp_pending, post_values[1]['fname'])
-    C = '{}/{}'.format(S.dp_pending, post_values[2]['fname'])
+    post_url_fmt = 'title: {}\nurl: {}\nsubreddit: {}'
+    post_text_fmt = 'title: {}\ntext: {}\nsubreddit: {}'
 
-    post_contents = ['title: {}\nurl: {}'.format(post_values[0]['title'], post_values[0]['url']),
-                     'title: {}\nurl: {}'.format(post_values[1]['title'], post_values[1]['url'])]
+    post_contents = []
+    post_fps = []
+    for i in range(3):
+        if post_values[i]['url'] is None:
+            post_fmt = post_text_fmt
+            url_or_text = 'text'
+        else:
+            post_fmt = post_url_fmt
+            url_or_text = 'url'
 
-    with open(A, 'w') as f:
-        f.write(post_contents[0])
+        post_contents.append(post_fmt.format(post_values[i]['title'],
+                                             post_values[i][url_or_text],
+                                             post_values[i]['subreddit']))
 
-    with open(B, 'w') as f:
-        f.write(post_contents[1])
+        post_fps.append('{}/{}'.format(dp_pending, post_values[i]['fname']))
 
-    with open(C, 'w') as f:
-        f.write('title: {}\ntext: {}'.format(post_values[2]['title'], post_values[2]['text']))
+        with open(post_fps[i], 'w') as f:
+            f.write(post_contents[i])
 
-    for i, D in enumerate(S.scan(S.dp_pending, S.dp_completed)):
+    for _, D in enumerate(S.scan(dp_pending, dp_completed)):
+        i = ...
+        for j, vals in enumerate(post_values):
+            if post_values[j]['fname'] == D['fname']:
+                i = j
+
         assert D['title'] == post_values[i]['title']
         assert D['url'] == post_values[i]['url']
         assert D['text'] == post_values[i]['text']
         assert D['subreddit'] == post_values[i]['subreddit']
 
-        fp_pending = '{}/{}'.format(S.dp_pending, post_values[i]['fname'])
-        assert not os.path.exists(fp_pending)
+
+def test_scan__COMPLETES_POST(remove_posts):
+    fp_post = '{}/{}'.format(dp_pending, 'post')
+    with open(fp_post, 'w') as f:
+        f.write('title: TITLE\nurl: URL\nsubreddit: SUBREDDIT')
+
+    assert os.path.exists(fp_post)
+
+    list(S.scan(dp_pending, dp_completed))
+
+    assert not os.path.exists(fp_post)
 
 
 def test_scan__FAIL(remove_posts):
-    fp_pending = '{}/{}'.format(S.dp_pending, 'NoTitle.subreddit')
+    fp_pending = '{}/{}'.format(dp_pending, 'NoTitle.subreddit')
     with open(fp_pending, 'w') as f:
         f.write('url: U')
 
     with pytest.raises(RuntimeError):
-        list(S.scan(S.dp_pending, S.dp_completed))
+        list(S.scan(dp_pending, dp_completed))
 
 
 def test_too_early__PASS(now):
@@ -76,11 +100,11 @@ title:
     bash: "cookie: A Bash Script that Generates Files from Templates"
     linux: "cookie: A Template-based File Generator for Linux Admins"
 """
-    with open('{}/{}'.format(S.dp_pending, 'test.post'), 'w') as f:
+    with open('{}/{}'.format(dp_pending, 'test.post'), 'w') as f:
         f.write(contents)
 
     count = 0
-    for D in S.scan(S.dp_pending, S.dp_completed):
+    for D in S.scan(dp_pending, dp_completed):
         count += 1
 
     assert 2 == count
@@ -93,29 +117,9 @@ def now():
 
 @pytest.fixture
 def remove_posts():
-    dir_paths = [S.dp_pending, S.dp_completed]
-    for dp in dir_paths:
-        temp_dir = '/tmp/red_robot/{}'.format(os.path.basename(dp))
-        if not os.path.exists(temp_dir):
-            os.system('mkdir -p {}'.format(temp_dir))
-
-        if not os.path.exists(dp):
-            os.system('mkdir -p {}'.format(dp))
-
-        for fn in os.listdir(dp):
-            fp = '{}/{}'.format(dp, fn)
-            shutil.move(fp, '{}/{}'.format(temp_dir, fn))
-            if os.path.exists(fp):
-                os.remove(fp)
+    os.system('mkdir -p {}'.format(dp_pending))
+    os.system('mkdir -p {}'.format(dp_completed))
 
     yield
-
-    for dp in dir_paths:
-        temp_dir = '/tmp/red_robot/{}'.format(os.path.basename(dp))
-        for fname in os.listdir(dp):
-            os.remove('{}/{}'.format(dp, fname))
-
-        shutil.rmtree(dp)
-        os.system('mv -f {} {}'.format(temp_dir, dp))
 
     shutil.rmtree('/tmp/red_robot')

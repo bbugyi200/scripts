@@ -1,42 +1,111 @@
 #!/bin/bash
 
-###################################################################################################
-#  View Man files using vim.                                                                      #
-###################################################################################################
+read -r -d '' doc << EOM
+View man page(s) using vim (or default system editor).
+EOM
 
+# ---------- Modules ----------
 source gutils.sh
 
-rand_hex="$(hexdump -n 3 -e '4/4 "%08x" 1 ""' /dev/random)"
-tmp_file=/tmp/vman."${rand_hex}"
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,v" -l "debug,help,verbose" -- "$@")"
 
-truncate "${tmp_file}"
-N=
+export USAGE_GRAMMAR=(
+    "[-d] [-v] [SECTION] PAGE [[SECTION] PAGE ...]"
+    "-h"
+)
 
-for m in "$@"; do
-    if [[ "${m}" =~ ^[0-9]+$ ]]; then
-        N="${m}"
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    PAGE        Name of the manual page.
+    SECTION     Section number (1-8).
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -v | --verbose
+        Enable verbose output.
+
+    -h | --help
+        View this help message.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+if [[ -z "$1" ]]; then
+    die "$(usage)" 2
+fi
+
+# ---------- Main ----------
+all_files=( )
+tmp_dir=/tmp/vman; [ -d "${tmp_dir}" ] || mkdir -p "${tmp_dir}"
+section=
+
+for page in "$@"; do
+    tmp_file="${tmp_dir}"/"${page}".man
+    truncate "${tmp_file}"
+    if [[ "${page}" =~ ^[0-9]+$ ]]; then
+        section="${page}"
         continue
     fi
 
     # shellcheck disable=SC2086
-    if ! man ${N} "${m}" &> /dev/null; then
-        cppman_out="$(cppman "${m}")"
-        if [[ "${cppman_out}" == *"No manual"* ]]; then
-            echo "No manual entry for ${m}."
-            exit 1
-        else
-            cppman "${m}"
-            exit 0
+    if ! man ${section} "${page}" &> /dev/null; then
+        if command -v cppman &> /dev/null; then
+            cppman_out="$(cppman "${page}")"
+            if ! [[ "${cppman_out}" == *"No manual"* ]]; then
+                cppman "${page}"
+                exit 0
+            fi
         fi
+
+        echo "No manual entry for ${page}."
+        exit 1
     else
         # shellcheck disable=SC2086
-        man ${N} "${m}" | col -b >> "${tmp_file}"
+        man ${section} "${page}" | col -b >> "${tmp_file}"
 
-        if [[ -n "${N}" ]]; then
-            N=
+        if [[ -n "${section}" ]]; then
+            section=
         fi
     fi
+
+    all_files+=( "${tmp_file}" )
 done
 
-vim -c "set filetype=man" "${tmp_file}"
-rm "${tmp_file}"
+if [[ -z "${EDITOR}" ]]; then
+    EDITOR=vim
+fi
+
+"${EDITOR}" "${all_files[@]}"
+
+rm -rf "${tmp_dir}"

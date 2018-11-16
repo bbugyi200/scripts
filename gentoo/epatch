@@ -1,10 +1,14 @@
 #!/bin/bash
 
-###################################################################################################
-#  epatch                                                                                         #
-#                                                                                                 #
-# This script aids in the creation and maintainance of  user patches on Gentoo.                   #
-###################################################################################################
+read -r -d '' doc <<-EOM
+This script aids in the creation and maintainance of  user patches on Gentoo.
+
+Steps to create an ebuild patch:
+
+1) Run \`cd \$(epatch PACKAGE)\` (will cd to temp working directory).
+2) Make your code changes.
+3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
+EOM
 
 source gutils.sh
 
@@ -78,19 +82,64 @@ function make_real_paths() {
 }
 
 # ---------- Global Variables ----------
-USAGE="usage: $(basename "$0") [-h] [-d] [-a PATCH | -c | -I [PATCH] | [-V] -i PATCH | -l [PATCH] | -r PATCH | -s PATCH | [-o OVERLAY] PACKAGE]"
+export USAGE_GRAMMAR=(
+    "[-d] -a PATCH"
+    "[-d] -c"
+    "[-d] [-V] -i PATCH"
+    "[-d] [-V] -I [PATCH]"
+    "[-d] -l [PATCH]"
+    "[-d] -r PATCH"
+    "[-d] -s PATCH"
+    "[-d] [-o OVERLAY] PACKAGE"
+    "-h"
+)
+
 W=/tmp/"$(basename "$0")"
 OVERLAY="gentoo"
 EPATCH_FILE="epatch.info"
 
 read -r -d '' HELP << EOM
-${USAGE}
+$(usage)
 
-Steps to create an ebuild patch:
+${doc}
 
-1) Run \`cd \$(epatch PACKAGE)\` (will cd to temp working directory).
-2) Make your code changes.
-3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
+Positional Arguments:
+    PACKAGE     The package that you are trying to patch.
+
+Optional Arguments:
+    -c | --clean
+        Restore git repository to initial state before changes were made.
+
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -i PATCH | --install-patch PATCH
+        Use the temp repository's current working directory contents to
+        generate a patch. Then install the patch to /etc/portage/patches/PATCH.patch.
+
+    -I [PATCH] | --install-pkg [PATCH]
+         Use 'emerge' to install package to system. If PATCH was provided,
+         first install patch (like running --install-patch PATCH).
+
+    -l [PATCH] | --list [PATCH]
+        If PATCH was provided, output contents of the PATCH.patch file
+        to STDOUT. Otherwise list all patches active on this system. 
+
+    -o OVERLAY | --overlay OVERLAY
+        Use OVERLAY instead of the official Gentoo overlay.
+
+    -r PATCH | --remove PATCH
+        Uninstall patch by removing PATCH.patch from /etc/portage/patches.
+
+    -s PATCH | --stash PATCH
+        Stash (disable) PATCH by leaving it in the /etc/portage/patches
+        directory but renaming it to PATCH.stash.
+
+    -V | --use-version-specifier
+        Apply this patch to the current version of the package ONLY.
 EOM
 
 # ---------- Command-line Arguments ----------
@@ -271,8 +320,7 @@ fi
 
 # ---------- Main ----------
 if [[ -z "$1" ]]; then
-    echo "${USAGE}"
-    exit 2
+    die "$(usage)" 2
 fi
 
 PN="$1"; shift

@@ -20,3 +20,5 @@ econfirm "cache_cheaders"
 econfirm "sudo updatedb"
 econfirm "elogv"
 econfirm "sudo dispatch-conf"
+
+exit 0  # Fixes issue caused by nonzero return status from last econfirm

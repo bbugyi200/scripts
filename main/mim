@@ -64,9 +64,7 @@ case "$GLOBAL_MARK" in
         ;;
 esac
 
-if grep -q "^'$GLOBAL_MARK" /home/bryan/.vim/viminfo; then
-    vim -c "normal \`$GLOBAL_MARK" -c "bdelete 1" -c "silent! normal g;"
-elif [[ -n "$MARKED_FILE" ]]; then
+if [[ -n "$MARKED_FILE" ]]; then
     vim -c 'silent! normal g;' -c "normal m$GLOBAL_MARK" "$MARKED_FILE"
 else
     echo "ERROR: global mark not found."

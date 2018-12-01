@@ -1,0 +1,24 @@
+#!/bin/bash
+
+###############################################################################
+#  Hack used to wait for okular to open before running zopen                  #
+###############################################################################
+
+if ! WS_is_Empty; then
+    exit 1
+fi
+
+max_wait=10
+sleep_time=0.1
+max_iterations="$(echo "scale=0; ${max_wait} / ${sleep_time}" | bc)"
+
+i=0
+while [[ "$(active_window_class)" != "okular" ]]; do
+    i=$((i+1))
+
+    if [[ ${i} -ge "${max_iterations}" ]]; then
+        exit 1
+    fi
+
+    sleep "${sleep_time}"
+done

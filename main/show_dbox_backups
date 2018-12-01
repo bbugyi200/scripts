@@ -1,0 +1,18 @@
+#!/bin/bash
+
+###############################################################################
+#  Display the dates of the last daily / weekly / monthly Dropbox Backups     #
+###############################################################################
+
+function show() {
+    directory="$1"; shift
+    update_date="$(cat /media/bryan/hercules/backup/dropbox/"${directory}"/backup.txt)"
+    printf "%s\n%s\n\n" "---------- ${directory^^} ----------" "${update_date}"
+}
+
+show daily
+show weekly
+show monthly
+show 2months
+show 3months
+show 4months

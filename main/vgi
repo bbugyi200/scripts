@@ -6,6 +6,11 @@
 
 source gutils.sh
 
+if [[ "$1" == "-g" ]]; then
+    vim ~/.gitignore_global
+    exit 0
+fi
+
 GIT_ROOT="$(gitdir 2> /dev/null)"
 [ -d "$GIT_ROOT" ] || die "Not a git repository."
 cd "$GIT_ROOT" || exit 1

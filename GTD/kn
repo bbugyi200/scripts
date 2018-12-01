@@ -23,7 +23,7 @@ def main(args):
     start_dt = parse(args.start_time)
     now = dt.datetime.now()
 
-    if start_dt < now:
+    if start_dt < now or args.tomorrow:
         start_dt = start_dt.replace(day=start_dt.day + 1)
 
     cmd_list = ['khal', 'new', '-a', 'daily', start_dt.strftime('%Y-%m-%dT%H:%M'),
@@ -37,6 +37,8 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('start_time', help='Start-time of event.')
     parser.add_argument('event_name', nargs='*', help='Event name.')
+    parser.add_argument('-T', '--tomorrow', action='store_true',
+                        help="Create event for tomorrow instead of today.")
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

@@ -44,7 +44,7 @@ def main(args):
                 pass
 
     if rc == 0:
-        gutils.imsg('Calling updatedb to update its databases.')
+        gutils.io.imsg('Calling updatedb to update its databases.')
         sp.check_call(['updatedb'])
         if not args.oneshot:
             add_to_set(args.packages, local=args.local)
@@ -96,12 +96,12 @@ def add_to_set(packages, *, local=False):
         portage_set = set_fpath.split('/')[-1]
 
         for entry in open(set_fpath, 'r'):
-            if full_package_name in entry:
+            if full_package_name == entry.strip():
                 msg_fmt = "The following package entry already exists in the @%s set:\n\t%s"
                 log.debug(msg_fmt, portage_set, entry.strip())
                 break
         else:
-            gutils.imsg('Adding {} to @{}.'.format(package, portage_set))
+            gutils.io.imsg('Adding {} to @{}.'.format(full_package_name, portage_set))
             lines.append(full_package_name + '\n')
 
             # Remove the package name from the world file to ensure that packages are never listed in

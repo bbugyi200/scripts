@@ -1,0 +1,36 @@
+#!/bin/bash
+
+####################################################################
+#  Wrapper for vim wrappers. Exits with non-zero status if .zshrc  #
+# (or files .zshrc sources) is edited.                             #
+####################################################################    
+
+function just_changed() {
+    start_time="$1"; shift
+    last_file="$1"; shift
+
+    mod_time="$(stat "${last_file}" | awk '/Modify/ {print $2, $3}' | awk -F'.' '{print $1}')"
+
+    if [[ "${start_time}" < "$(date -d "${mod_time}" +%s)" ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+if [[ -z "$1" ]]; then
+    echo "usage: zim VICMD VIARGS"
+    exit 2
+fi
+
+vicmd="$1"; shift
+start_time="$(date +%s)"
+
+if /usr/local/bin/"${vicmd}" "$@"; then
+    last_file="$(tail -n 1 "${RECENTLY_EDITED_FILES_LOG}")"
+    if [[ "${last_file}" == "/home/bryan/Dropbox/lib/zsh/"* ]] || [[ "${last_file}" == "/home/bryan/Dropbox/home/.zshrc" ]]; then
+        if just_changed "${start_time}" "${last_file}"; then
+            exit 1
+        fi
+    fi
+fi

@@ -20,14 +20,23 @@ ts_fmt = '%Y%m%d%H%M%S'
 
 def main(args):
     cmd_list = []
+    cmd_opts = []
+
+    log.vdebug('args => %s', repr(args))
+
     if args.update:
         cmd = 'eupdate'
     elif args.cleanup:
         cmd = 'ecleanup'
     elif args.maint_check:
         cmd = 'emaint_check'
+        cmd_opts.append(str(args.max_days))
+    else:
+        raise RuntimeError('No maintenance task specified.')
 
     cmd_list.append(cmd)
+    cmd_list.extend(cmd_opts)
+
     data_dir = gutils.xdg.init('data')
     local_hostname = os.uname().nodename
 
@@ -63,7 +72,10 @@ def main(args):
             count = f.read().strip()
 
         if int(count) > 0:
-            choice = gutils.getch('>>> Would you like to resume `{}` where you left off (y), redo the last command (r),\n start a new session (n)?: '.format(cmd))
+            import textwrap
+
+            prompt = '>>> Would you like to resume `{}` where you left off (y), redo the last command (r), or start a new session (n)?: '.format(cmd)
+            choice = gutils.io.getch('\n'.join(textwrap.wrap(prompt, 80)))
 
             if choice == 'y':
                 cmd_list.append(count)
@@ -76,7 +88,7 @@ def main(args):
         sp.check_call(cmd_list)
     except KeyboardInterrupt as e:
         print()
-        gutils.imsg('SIGINT signal detected. Terminating...')
+        gutils.io.imsg('SIGINT signal detected. Terminating...')
         sys.exit(130)
 
     write_timestamp(local_tsfile, cmd)
@@ -107,12 +119,19 @@ def write_timestamp(fp, cmd):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
+
+    default = 15
+    parser.add_argument('-M', '--max-days', nargs='?', type=int, default=default,
+                        help="Max number of days without update before complaining. This option "
+                             "is only checked when used with the '--maint-check' option. Defaults "
+                             "to {}.".format(default))
+
     ex_group = parser.add_mutually_exclusive_group()
     ex_group.add_argument('-u', '--update', dest='update', action='store_true',
                          help='Update the machine.')
     ex_group.add_argument('-c', '--cleanup', dest='cleanup', action='store_true',
                          help='Run cleanup tasks.')
-    ex_group.add_argument('-m', '--maint-check', dest='maint_check', action='store_true',
+    ex_group.add_argument('-m', '--maint-check', action='store_true',
                          help='Check if any maintenance is due.')
     ex_group2 = parser.add_mutually_exclusive_group()
     ex_group2.add_argument('-D', '--days-since-last', dest='dsl', choices=['local', 'remote'],
@@ -122,6 +141,7 @@ if __name__ == "__main__":
                              '"remote" indicates all remote machines.')
     ex_group2.add_argument('-P', '--pretend', dest='pretend', action='store_true',
                         help='Prints the command list instead of executing it.')
+
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

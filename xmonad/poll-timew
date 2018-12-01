@@ -152,10 +152,10 @@ def parse_status(status):
     project = ' '.join(head_list[3:]).replace('"', '')
     raw_currtime = tail.split()[-1]
 
-    max_length = 30
+    max_length = 35
     if len(project) > max_length:
         project = project[:max_length]
-        project = project[:project.rfind(' ')] + '...'
+        project = project + '...'
     project = project.replace('Project: ', '')
     project = project.strip('[]')
 

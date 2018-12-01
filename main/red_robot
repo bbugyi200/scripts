@@ -63,11 +63,11 @@ def main(args):
             syslog.syslog(syslog.LOG_ERR, msg)
             continue
 
-        msg = 'Submitted post to Reddit.{}: {}'.format(D['subreddit'], D['fname'])
+        msg = "Submitted post to '{}' subreddit: {}".format(D['subreddit'], D['fname'])
         gutils.notify(msg, '-t', '0')
         syslog.syslog(syslog.LOG_INFO, msg)
 
-        s = 510
+        s = 600
 
     if exceptions_raised:
         for e in exceptions_raised:
@@ -113,7 +113,8 @@ def scan(dp_new, dp_old):
         def complete_entry():
             global error_flag
 
-            if 'start_on' in Y and Y['start_on'] != []:
+            if 'start_on' in Y and isinstance(Y['start_on'], list) and len(Y['start_on']) > 0:
+                del Y['start_on'][0]
                 with open(fname, 'w') as f:
                     yaml.dump(Y, f)
             elif not error_flag:
@@ -123,7 +124,8 @@ def scan(dp_new, dp_old):
 
                 if os.path.exists(fp_post):
                     os.remove(fp_post)
-            else:
+
+            if error_flag:
                 error_flag = False
 
         if 'title' in D and isinstance(D['title'], dict):

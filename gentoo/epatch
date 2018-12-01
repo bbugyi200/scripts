@@ -5,9 +5,9 @@ This script aids in the creation and maintainance of  user patches on Gentoo.
 
 Steps to create an ebuild patch:
 
-1) Run \`cd \$(epatch PACKAGE)\` (will cd to temp working directory).
+1) Run \`cd \$(epatch PACKAGE)\` (will cd to temp git repository).
 2) Make your code changes.
-3) Run \`epatch -i PATCH\` (while still in the temp working directory) to install PATCH.patch.
+3) Run \`epatch -i PATCH\` (while still in the temp git repository) to install PATCH.patch.
 EOM
 
 source gutils.sh
@@ -104,17 +104,30 @@ $(usage)
 ${doc}
 
 Positional Arguments:
-    PACKAGE     The package that you are trying to patch.
+    PACKAGE     The package that you want to patch.
 
 Optional Arguments:
-    -c | --clean
-        Restore git repository to initial state before changes were made.
-
     -d | --debug
         Enable debug mode.
 
     -h | --help
         View this help message.
+
+    -o OVERLAY | --overlay OVERLAY
+        Use OVERLAY instead of the official Gentoo overlay.
+
+    -V | --use-version-specifier
+        Apply this patch to the current version of the package ONLY.
+
+Action Specifiers:
+    The options listed below will only work when run inside of the temporary
+    git repository that was created using '${SCRIPTNAME} [-o OVERLAY] PACKAGE'.
+
+    -a PATCH | --apply PATCH
+        Apply PATCH to the temp git repository.
+
+    -c | --clean
+        Restore temp git repository to initial state (before changes were made).
 
     -i PATCH | --install-patch PATCH
         Use the temp repository's current working directory contents to
@@ -128,18 +141,13 @@ Optional Arguments:
         If PATCH was provided, output contents of the PATCH.patch file
         to STDOUT. Otherwise list all patches active on this system. 
 
-    -o OVERLAY | --overlay OVERLAY
-        Use OVERLAY instead of the official Gentoo overlay.
-
     -r PATCH | --remove PATCH
         Uninstall patch by removing PATCH.patch from /etc/portage/patches.
 
     -s PATCH | --stash PATCH
         Stash (disable) PATCH by leaving it in the /etc/portage/patches
-        directory but renaming it to PATCH.stash.
-
-    -V | --use-version-specifier
-        Apply this patch to the current version of the package ONLY.
+        directory but renaming it to PATCH.stash. If PATCH.stash already
+        exists, then PATCH is unstashed (renamed to PATCH.patch).
 EOM
 
 # ---------- Command-line Arguments ----------

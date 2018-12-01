@@ -42,8 +42,11 @@ if sudo emerge --ask "${OPTS[@]}" "$@"; then
             for set in "${all_sets[@]}"; do
                 filename=/etc/portage/sets/"${set}"
                 if grep "${pkg}" "${filename}" &> /dev/null; then
-                    imsg "Purging ${pkg} from @${set}."
-                    sed -i "\|$(ecat "$pkg")/$pkg|d" "${filename}"
+                    full_pkg="$(ecat "${pkg}")"/"${pkg}"
+                    if grep -q "${full_pkg}\$" "${filename}"; then
+                        imsg "Purging ${full_pkg} from @${set}."
+                        sed -i "\|${full_pkg}\$|d" "${filename}"
+                    fi
                 fi
             done
         done

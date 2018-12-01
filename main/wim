@@ -1,33 +1,87 @@
 #!/bin/bash
 
-############################################################################
-#  usage: `wim <command>`                                                  # 
-#                                                                          #
-# If <command> is a script, finds script's location and opens it in vim.   #
-# Otherwise, assumes <command> is an alias or function definition and      #
-# searches dotfiles for it. Once found it opens that dotfile in vim and    #
-# jumps to the line number of the correpsonding alias/function definition. #
-############################################################################       
+read -r -d '' doc << EOM
+If COMMAND is a script, finds script's location and opens it in vim.
+Otherwise, assumes COMMAND is an alias or function definition and
+searches dotfiles for it. Once found it opens that dotfile in vim and
+jumps to the line number of the correpsonding alias/function definition.
+EOM
 
-if [[ "$1" == "-d" ]]; then
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,n,v" -l "debug,help,no-script,verbose" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-s] [-v] COMMAND"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    COMMAND     The name of the script/alias/function to load.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -n | --no-script
+        Force alias/function to be used in case alias/function AND script are
+        defined with the same name.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -n|--no-script )
+           force_script=true
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
     PS4='$LINENO: '
     set -x
-    shift
 fi
 
 if [[ -z "$1" ]]; then
-    echo "usage: wim <command>"
-    exit 1
+    die "$(usage)" 2
 fi
 
+# ---------- Main ----------
 CMD="$1"; shift
 SCRIPT_PATH="$(find /home/bryan/Dropbox/bin -type f -name "$CMD")"
 
-if [[ -n "$SCRIPT_PATH" ]]; then
+if [[ -n "${SCRIPT_PATH}" ]] && [[ "${force_script}" != true ]]; then
     vim -c "silent! normal g;" "$SCRIPT_PATH"
 else
-    LOCATION="$(ag "(^(alias|function)[ ]+|^)${CMD}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/lib/zsh | awk -F: '{ print "+" $2 " " $1 }')"
-
+    LOCATION="$(ag -s "(^(alias|function)[ ]+|^)${CMD}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/lib/zsh | awk -F: '{ print "+" $2 " " $1 }' | head -n 1)"
     if [[ -z "$LOCATION" ]]; then
         printf "ERROR: unable to find '%s'." "$CMD"
         exit 1

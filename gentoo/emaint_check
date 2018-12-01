@@ -7,10 +7,13 @@
 # maintenance before this script complains.                                                       # 
 ###################################################################################################
 
+source gutils.sh
+
 # ---------- Global Variables ----------
-max_update_days=7
-SCRIPTNAME="$(basename "$0")"
-USAGE="usage: ${SCRIPTNAME} [-d] [-h]"
+export USAGE_GRAMMAR=(
+    "[-d] MAX_DAYS"
+    "-h"
+)
 
 read -r -d '' HELP << EOM
 $USAGE
@@ -37,7 +40,11 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-source gutils.sh
+if [[ -z "$1" ]]; then
+    die "$(usage)" 2
+fi
+
+max_update_days="$1"; shift
 
 # shellcheck disable=SC2034
 secret_wrapper="emanage"

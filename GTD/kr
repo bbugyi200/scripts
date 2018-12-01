@@ -18,7 +18,10 @@ log = gutils.logging.getEasyLogger(__name__)
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('vargs', nargs='*', metavar=('arg'), default=50,
-                        help='Number of minutes, offset from now, the next break will be set for.')
+                        help='Number of minutes, offset from now, the next break will be set for '
+                             'OR name of the calendar event that will be created.')
+    parser.add_argument('-e', '--end-break', action='store_true',
+                        help='Set khal event name to "END BREAK".')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
@@ -36,6 +39,8 @@ if __name__ == "__main__":
 
         if vargs:
             event_name = ' '.join(vargs)
+        elif args.end_break:
+            event_name = 'END BREAK'
         else:
             event_name = 'START BREAK'
 

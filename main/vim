@@ -4,8 +4,9 @@
 #  Wrapper for editor that logs filenames.   #
 ##############################################
 
+# Hack to make sure RECENTLY_EDITED_FILES_LOG is defined when using 'sudo'.
 if [[ -z "${RECENTLY_EDITED_FILES_LOG}" ]]; then
-    eval "$(grep RECENTLY_EDITED_FILES_LOG "$HOME"/.zprofile)"
+    eval "$(grep "export RECENTLY_EDITED_FILES_LOG=" "$HOME"/.zprofile)"
 fi
 
 /usr/bin/"$(basename "$0")" "$@"

@@ -1,105 +1,117 @@
 #!/bin/bash
 
-##########################
-#  Function Definitions  #
-##########################
-function bin_stow() {
-    D="$1"; shift
-    stow --dir=/home/bryan/Dropbox/bin \
-        --target=/usr/local/bin \
-        --ignore=".*\.sh" \
-        --ignore=".*\.py" \
-        "${FLAG}" "${D}"
+read -r -d '' doc << EOM
+Use 'stow' Command to Create Symlinks for All of My Dotfiles and Scripts
+EOM
+
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Ensure Running as root ----------
+if [ "$(id -u)" != "0" ]; then
+  exec sudo "$0" "$@"
+fi
+
+# ---------- Global Variables ----------
+ignore_patterns=( ".*\.sh" ".*\.py" ".*\.pyc" ".*\.archive\.tar\.gz" )
+ignore_flags=()
+for pttrn in "${ignore_patterns[@]}"; do
+    ignore_flags+=("--ignore=${pttrn}")
+done
+
+# ---------- Function Definitions ----------
+function stow_it() {
+    src="$1"; shift
+    target="$1"; shift
+
+    dir="${src%/*}"
+    subdir="${src##*/}"
+
+    stow --dir="${dir}" --target="${target}" "${ignore_flags[*]}" "${FLAG}" "${subdir}"
 }
 
-##################################
-#  parse command-line arguments  #
-##################################
+# ---------- Parse Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,v" -l "debug,help,verbose" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-v] [STOW_FLAG]"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    STOW_FLAG       Option flag to pass to the 'stow' command. Defaults to '-R'.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
 if [[ -z "$1" ]]; then
     FLAG=-R
 else
     FLAG="$1"; shift
 fi
 
-#######################
-#  mkdirs for clinks  #
-#######################
-if [[ "$FLAG" != "-D" ]]; then
-    DATA_DIRS=("applications" "okular" "qutebrowser")
-    for D in "${DATA_DIRS[@]}" ; do
-        mkdir -p /home/bryan/.local/share/"$D" &> /dev/null
-        sudo mkdir -p /root/.local/share/"$D" &> /dev/null
-    done
-
-    # Directories inside /home/<user> that should be created before stowing configs
-    HOME_DIRS=(".config" ".gnupg" ".matlab" ".ssh" ".weechat" ".xmonad")
-    for D in "${HOME_DIRS[@]}"; do
-        mkdir /home/bryan/"$D" &> /dev/null
-        sudo mkdir /root/"$D" &> /dev/null
-    done
-
-    # Directories inside /usr/local that should be created before stowing configs
-    USR_DIRS=("python" "src" "include" "lib")
-    for D in "${USR_DIRS[@]}"; do
-        sudo mkdir /usr/local/"$D" &> /dev/null
-    done
-fi
-
-############################
-#  ensure running as root  #
-############################
-if [ "$(id -u)" != "0" ]; then
-  exec sudo "$0" "$@"
-fi
-
-##########################################
-#  ROOT_DUPLICATE_DIRS Pre-stow Actions  #
-##########################################
-# The directories listed in ROOT_DUPLICATE_DIRS will be removed from the /root folder before
-# running stow commands and then a recursive copy is made from /home/bryan/<DIR> to /root/<DIR>
-# after the stow commands have concluded.
-ROOT_DUPLICATE_DIRS=(".ssh")
-for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
-    rm -rf /root/"$D"
-done
-
-##############################
-#  use 'stow' to make links  #
-##############################
+# ---------- Main ----------
 if [[ $(hostname) == "athena" ]]; then
-	stow --dir=/home/bryan/Dropbox/bin --target=/etc "$FLAG" cron.jobs
+	stow_it "/home/bryan/Dropbox/bin/cron.jobs" "/etc"
 fi
 
 ##### SCRIPTS
-bin_stow awk
-bin_stow gentoo
-bin_stow GTD
-bin_stow main
-bin_stow ProtectMyLaptop
-bin_stow tmux
-bin_stow xmonad
-bin_stow zathura
+stow_it "/home/bryan/Dropbox/bin/awk" "/usr/local/bin"
+stow_it "/home/bryan/Dropbox/bin/gentoo" "/usr/local/bin"
+stow_it "/home/bryan/Dropbox/bin/GTD" "/usr/local/bin"
+stow_it "/home/bryan/Dropbox/bin/main" "/usr/local/bin"
+stow_it "/home/bryan/Dropbox/bin/ProtectMyLaptop" "/usr/local/bin"
+stow_it "/home/bryan/Dropbox/bin/tmux" "/usr/local/bin"
+stow_it "/home/bryan/Dropbox/bin/xmonad" "/usr/local/bin"
+stow_it "/home/bryan/Dropbox/bin/zathura" "/usr/local/bin"
 
 ##### MODULES / LIBRARIES / HEADERS
 pylib_directory="$(find -L /usr/lib -maxdepth 1 -type d -name "python3.*")"
-stow --dir=/home/bryan/Dropbox/lib --target="${pylib_directory}"/site-packages "$FLAG" python
-stow --dir=/home/bryan/Dropbox/lib --target=/usr/local/lib "$FLAG" C
-stow --dir=/home/bryan/Dropbox/lib --target=/usr/local/lib "$FLAG" zsh
-stow --dir=/home/bryan/Dropbox --target=/usr/local/src "$FLAG" src
-stow --dir=/home/bryan/Dropbox --target=/usr/local/include "$FLAG" include
+stow_it "/home/bryan/Dropbox/lib/python" "${pylib_directory}/site-packages"
+stow_it "/home/bryan/Dropbox/lib/C" "/usr/local/lib"
+stow_it "/home/bryan/Dropbox/lib/zsh" "/usr/local/lib"
+stow_it "/home/bryan/Dropbox/src" "/usr/local/src"
+stow_it "/home/bryan/Dropbox/include" "/usr/local/include"
 
 ##### DOTFILES
-stow --dir=/home/bryan/Dropbox --target=/home/bryan "$FLAG" home
-stow --dir=/home/bryan/Dropbox --target=/root "$FLAG" home
-stow --dir=/home/bryan/Dropbox --target=/usr --no-folding "$FLAG" usr
-
-###########################################
-#  ROOT_DUPLICATE_DIRS Post-stow Actions  #
-###########################################
-if [[ "$FLAG" != "-D" ]]; then
-    for D in "${ROOT_DUPLICATE_DIRS[@]}"; do
-        rm -rf /root/"$D"
-        mkdir -p /root/"$D"
-        cp -rf /home/bryan/"$D"/* /root/"$D"
-    done
-fi
+stow_it "/home/bryan/Dropbox/home" "/home/bryan"
+stow_it "/home/bryan/Dropbox/usr" "/usr"

@@ -15,6 +15,50 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
+def main(args):
+    try:
+        vargs = list(args.vargs)
+    except TypeError as e:
+        vargs = []
+
+    try:
+        minutes = int(vargs[0])
+    except (ValueError, IndexError) as e:
+        minutes = 50
+    else:
+        vargs.pop(0)
+
+    default_event_name = 'START BREAK'
+
+    if vargs:
+        event_name = ' '.join(vargs)
+    elif args.end_break:
+        event_name = 'END BREAK'
+        sp.check_call(['task', 'start.any:', 'stop'])
+    else:
+        event_name = default_event_name
+
+    log.vdebug('vargs: %s', repr(vargs))
+
+    breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=minutes)
+
+    event_list = [event_name]
+    dt_list = [breaktime_dt]
+
+    if event_name == default_event_name and args.review:
+        review_dt = dt.datetime.now() + dt.timedelta(minutes=(minutes - 5))
+        dt_list.append(review_dt)
+        event_list.append('START REVIEW')
+
+    for D, event in zip(dt_list, event_list):
+        cmd_list = ['khal', 'new', '-a', 'daily']
+        cmd_list.append(D.strftime('%Y-%m-%dT%H:%M'))
+        cmd_list.append(event)
+        sp.check_call(cmd_list)
+
+    sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('vargs', nargs='*', metavar=('arg'), default=50,
@@ -22,34 +66,9 @@ if __name__ == "__main__":
                              'OR name of the calendar event that will be created.')
     parser.add_argument('-e', '--end-break', action='store_true',
                         help='Set khal event name to "END BREAK".')
+    parser.add_argument('-n', '--no-review', dest='review', action='store_false',
+                        help='Do NOT create a "START REVIEW" event.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        try:
-            vargs = list(args.vargs)
-        except TypeError as e:
-            vargs = []
-
-        try:
-            minutes = int(vargs[0])
-        except (ValueError, IndexError) as e:
-            minutes = 50
-        else:
-            vargs.pop(0)
-
-        if vargs:
-            event_name = ' '.join(vargs)
-        elif args.end_break:
-            event_name = 'END BREAK'
-        else:
-            event_name = 'START BREAK'
-
-        log.vdebug('vargs: %s', repr(vargs))
-        breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=minutes)
-
-        cmd_list = ['khal', 'new', '-a', 'daily']
-        cmd_list.append(breaktime_dt.strftime('%Y-%m-%dT%H:%M'))
-        cmd_list.append(event_name)
-        sp.check_call(cmd_list)
-
-        sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+        main(args)

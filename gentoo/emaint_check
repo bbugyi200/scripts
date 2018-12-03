@@ -84,6 +84,8 @@ for action in "update" "cleanup"; do
     fi
 done
 
+exit 0  # Skip checks for remote machines. Delete this line when you get a new laptop!
+
 # >>> REMOTE(S)
 for line in $(emanage --days-since-last remote --update); do
     hostname="${line%:*}"

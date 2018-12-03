@@ -94,7 +94,7 @@ for dotfile in "$@"; do
     if [[ -h "${dotfile}" ]]; then
         if [[ "${undow}" = true ]]; then
             dmsg "Removing symlink: ${dotfile}."
-            safe-rm "${dotfile}"
+            safe-rm -rf "${dotfile}"
         else
             emsg "${dotfile} is a symlink and hence cannot be dowed."
             continue
@@ -104,7 +104,7 @@ for dotfile in "$@"; do
     if [[ -f "${DEST}" ]]; then
         if [[ -f "${SRC}" ]]; then
             dmsg "${DEST} Already Exists -> Removing ${SRC}."
-            safe-rm "${SRC}"
+            safe-rm -rf "${SRC}"
         else
             emsg "Nothing to do."
             continue

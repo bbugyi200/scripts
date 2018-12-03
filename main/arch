@@ -3,79 +3,88 @@
 """Archive Utility. Used to Archive and Compress Local Files and Directories."""
 
 import argparse
+import contextlib
 import enum
-import os
+import os  # noqa
 import shutil
 import subprocess as sp
-import sys
+import sys  # noqa
 
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
 
 ARCH_DIR = 'archive'
 GLOB_ARCH_DIR = '/media/bryan/hercules/archive'
 TARGZ_FILE = '.archive.tar.gz'
 
 
-class ArchiveError(Exception):
-    """Custom Archive Exception"""
-
-
 class Action(enum.Enum):
     """ Action Flags """
     ARCHIVE = enum.auto()
+    RESTORE = enum.auto()
     COMPRESS = enum.auto()
     EXTRACT = enum.auto()
     GLOBAL = enum.auto()
 
 
-def main():
-    try:
-        {Action.ARCHIVE: archive,
-         Action.GLOBAL: global_archive,
-         Action.COMPRESS: compress,
-         Action.EXTRACT: extract}[args.action]()
-    except ArchiveError as e:
-        print('{}\n'.format(str(e)), file=sys.stderr)
-        sys.exit(1)
+def main(args):
+    if os.path.isdir(ARCH_DIR) and os.path.isfile(TARGZ_FILE):
+        raise RuntimeError(
+            'Something has gone wrong. Either {} or the {} '
+            'directory should exist, but not both.'.format(ARCH_DIR, TARGZ_FILE)
+        )
+
+    file_actions = {Action.ARCHIVE: archive,
+                    Action.GLOBAL: global_archive,
+                    Action.RESTORE: restore}
+
+    archive_actions = {Action.COMPRESS: compress,
+                       Action.EXTRACT: extract}
+
+    if args.action in file_actions:
+        file_actions[args.action](args.files)
+    elif args.action in archive_actions:
+        archive_actions[args.action]()
 
 
-def archive(auto_compress=False):
+def archive(files):
     """ Archive Files/Directories """
-    if not args.files:
-        raise ArchiveError("Must provide files/directories to archive!")
+    if not os.path.isdir(ARCH_DIR) and not os.path.isfile(TARGZ_FILE):
+        os.makedirs(ARCH_DIR)
 
-    for f in args.files:
-        if not os.path.exists(f):
-            raise ArchiveError("{} does not exist!".format(f))
+    with arch_context():
+        if not files:
+            raise RuntimeError("Must provide files/directories to archive!")
 
-    if not os.path.isdir(ARCH_DIR):
-        auto_compress = True
-        if os.path.isfile(TARGZ_FILE):
-            extract(verbose=False)
-        else:
-            os.makedirs(ARCH_DIR)
+        for f in files:
+            if not os.path.exists(f):
+                raise RuntimeError("{} does not exist!".format(f))
 
-    for f in args.files:
-        shutil.move(f, ARCH_DIR)
-
-    if auto_compress:
-        compress(verbose=False)
+            shutil.move(f, ARCH_DIR)
+            log.info('Archived {} Locally.'.format(f))
 
 
-def global_archive():
+def global_archive(files):
     """ Add Files to Global Archive """
-    if not any([os.path.isdir(ARCH_DIR), os.path.isfile(TARGZ_FILE), args.files]):
+    if not any([os.path.isdir(ARCH_DIR), os.path.isfile(TARGZ_FILE), files]):
         msgfmt = "Neither a {} directory nor a {} file exist!\n\nEither create a local "\
                  "archive before using this option, or provide the file(s) you would "\
                  "like to archive as command line arguments."
-        raise ArchiveError(msgfmt.format(ARCH_DIR, TARGZ_FILE))
+        raise RuntimeError(msgfmt.format(ARCH_DIR, TARGZ_FILE))
 
     cwd = os.getcwd()
     global_replica = '{}/{}'.format(GLOB_ARCH_DIR, cwd[1:])
     if not os.path.isdir(global_replica):
         os.makedirs(global_replica)
 
-    for f in args.files:
+    for f in files:
+        if not os.path.exists(f):
+            raise RuntimeError('File does not exist: {}'.format(f))
+
         shutil.move(f, global_replica)
+        log.info('Archived {} Globally.'.format(f))
 
     if os.path.isfile(TARGZ_FILE):
         extract(verbose=False)
@@ -86,28 +95,75 @@ def global_archive():
         os.rmdir(ARCH_DIR)
 
 
+def restore(files):
+    with arch_context():
+        for f in files:
+            archive_prefix = 'archive/'
+            if f.startswith(archive_prefix):
+                f = f[len(archive_prefix):]
+
+            fpath = '{}/{}'.format(ARCH_DIR, f)
+            if not os.path.exists(fpath):
+                raise RuntimeError('File does not exist: {}'.format(fpath))
+
+            log.info('Restored {}.'.format(f))
+            shutil.move(fpath, os.getcwd())
+
+
 def compress(verbose=True):
     """ Compress Archive Folder """
-    flags = 'czvf' if verbose else 'czf'
-    sp.check_call(['tar', flags, TARGZ_FILE, '--remove-files', ARCH_DIR])
+    if not os.path.isdir(ARCH_DIR):
+        raise RuntimeError('Archive directory does not exist: {}'.format(ARCH_DIR))
+
+    flags = '-czvf' if verbose else '-czf'
+    try:
+        sp.check_call(['tar', '--warning=no-file-changed', flags, TARGZ_FILE, '--remove-files', ARCH_DIR])
+    except sp.CalledProcessError as e:
+        # ignore 'no-file-changed' errors
+        if e.returncode != 1:
+            raise
 
 
 def extract(verbose=True):
     """ Extract Archive Folder """
+    if not os.path.isfile(TARGZ_FILE):
+        raise RuntimeError('Archive file does not exist: {}'.format(TARGZ_FILE))
+
     flags = 'xzvf' if verbose else 'xzf'
     sp.check_call(['tar', flags, TARGZ_FILE])
     os.remove(TARGZ_FILE)
 
 
+@contextlib.contextmanager
+def arch_context():
+    if not os.path.isdir(ARCH_DIR) and not os.path.isfile(TARGZ_FILE):
+        raise RuntimeError('No archive exists.')
+
+    do_compress = False
+    if os.path.isfile(TARGZ_FILE):
+        do_compress = True
+        extract(verbose=False)
+
+    try:
+        yield
+    finally:
+        if do_compress:
+            compress(verbose=False)
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = gutils.ArgumentParser()
     parser.add_argument('files', nargs=argparse.REMAINDER, help='file(s) to archive')
+
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-a', dest='action', action='store_const', const=Action.ARCHIVE, help='add FILES to local archive (default)')
-    group.add_argument('-A', dest='action', action='store_const', const=Action.GLOBAL, help='add FILES to global archive')
-    group.add_argument('-c', dest='action', action='store_const', const=Action.COMPRESS, help='compress local archive')
-    group.add_argument('-x', dest='action', action='store_const', const=Action.EXTRACT, help='extract local archive')
+    group.add_argument('-a', dest='action', action='store_const', const=Action.ARCHIVE, help='Add FILES to local archive (default)')
+    group.add_argument('-A', dest='action', action='store_const', const=Action.GLOBAL, help='Add FILES to global archive')
+    group.add_argument('-r', dest='action', action='store_const', const=Action.RESTORE, help='Restore FILES from local archive')
+    group.add_argument('-c', dest='action', action='store_const', const=Action.COMPRESS, help='Compress local archive')
+    group.add_argument('-x', dest='action', action='store_const', const=Action.EXTRACT, help='Extract local archive')
     group.set_defaults(action=Action.ARCHIVE)
+
     args = parser.parse_args()
 
-    main()
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

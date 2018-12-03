@@ -27,9 +27,8 @@ def main():
         open_docs = None
         log.debug('No documents are currently open in zathura.')
 
-    cmd = 'find /home/bryan/Dropbox /home/bryan/Downloads /home/bryan/projects -name "*.pdf" -o '\
-          '-name "*.epub" -o -name "*.djvu" -o -name "*.ps" -o -name "*.okular"'
-    all_docs = check_output(cmd)
+    out = sp.check_output(['find', '/home/bryan/Dropbox', '/home/bryan/Downloads', '/media/bryan/hercules/archive/home/bryan/Dropbox', '-name', '*.pdf', '-o', '-name', '*.epub', '-o', '-name', '*.djvu', '-o', '-name', '*.ps', '-o', '-name', '*.okular'])
+    all_docs = out.decode().strip()
 
     with open(CACHE_FILE, 'r') as f:
         cached_docs = [x.strip() for x in f.readlines()]
@@ -39,17 +38,21 @@ def main():
     if open_docs:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
-    pretty_docs = list(map(lambda x: x.replace('/home/bryan/Dropbox/', ''), ordered_docs))
+    pretty_docs = [x.replace('/home/bryan/Dropbox/', '') for x in ordered_docs]
 
     if args.refresh:
         choice = ordered_docs[-1]
     else:
-        cmd_fmt = 'printf "{}" | rofi -p "Document" -m -4 -dmenu -i'
-        out = check_output(cmd_fmt.format('\n'.join(pretty_docs)))
-        if '/home/bryan/' in out:
-            choice = out
+        ps = sp.Popen(['printf', '{}'.format('\n'.join(pretty_docs))], stdout=sp.PIPE)
+        out = sp.check_output(['rofi', '-p', 'Document', '-m', '-4', '-dmenu', '-i'], stdin=ps.stdout)
+        ps.wait()
+
+        output = out.decode().strip()
+
+        if '/home/bryan/' in output:
+            choice = output
         else:
-            choice = '/home/bryan/Dropbox/{}'.format(out)
+            choice = '/home/bryan/Dropbox/{}'.format(output)
 
     add_to_cache(choice)
 

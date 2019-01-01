@@ -91,15 +91,21 @@ def scan(dp_new, dp_old):
             Y = yaml.load(f)
 
         now = dt.datetime.now()
+        multiple_dates = False
         if 'start_on' in Y:
             if isinstance(Y['start_on'], list):
                 start_on = Y['start_on'][0]
-                Y['start_on'].remove(start_on)
+                if len(Y['start_on']) > 0:
+                    multiple_dates = True
+                    del Y['start_on'][0]
             else:
                 start_on = Y['start_on']
 
             if too_early(now, start_on):
                 continue
+
+        with open(fp_post, 'w') as f:
+            yaml.dump(Y, f, default_flow_style=False)
 
         D = {}
         D.update(Y)
@@ -113,11 +119,7 @@ def scan(dp_new, dp_old):
         def complete_entry():
             global error_flag
 
-            if 'start_on' in Y and isinstance(Y['start_on'], list) and len(Y['start_on']) > 0:
-                del Y['start_on'][0]
-                with open(fname, 'w') as f:
-                    yaml.dump(Y, f)
-            elif not error_flag:
+            if not any([error_flag, multiple_dates]):
                 shutil.move(fp_post, '{}/{}.{}'.format(dp_old,
                                                        fname,
                                                        now.strftime('%Y%m%d%H%m%S')))

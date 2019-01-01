@@ -45,7 +45,7 @@ def main(args):
 
     if rc == 0:
         gutils.io.imsg('Calling updatedb to update its databases.')
-        sp.check_call(['updatedb'])
+        sp.Popen(['updatedb'])
         if not args.oneshot:
             add_to_set(args.packages, local=args.local)
 

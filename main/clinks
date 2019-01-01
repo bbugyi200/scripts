@@ -16,7 +16,7 @@ fi
 ignore_patterns=( ".*\.sh" ".*\.py" ".*\.pyc" ".*\.archive\.tar\.gz" )
 ignore_flags=()
 for pttrn in "${ignore_patterns[@]}"; do
-    ignore_flags+=("--ignore=${pttrn}")
+    ignore_flags+=("--ignore=\"${pttrn}\"")
 done
 
 # ---------- Function Definitions ----------
@@ -27,7 +27,7 @@ function stow_it() {
     dir="${src%/*}"
     subdir="${src##*/}"
 
-    stow --dir="${dir}" --target="${target}" "${ignore_flags[*]}" "${FLAG}" "${subdir}"
+    stow --dir="${dir}" --target="${target}" "${ignore_flags[@]}" "${FLAG}" "${subdir}"
 }
 
 # ---------- Parse Command-line Arguments ----------
@@ -83,10 +83,10 @@ if [[ "${debug}" = true && "${verbose}" = true ]]; then
     set -x
 fi
 
-if [[ -z "$1" ]]; then
-    FLAG=-R
-else
+if [[ -n "$1" ]]; then
     FLAG="$1"; shift
+else
+    FLAG=-R
 fi
 
 # ---------- Main ----------

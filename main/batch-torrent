@@ -1,0 +1,41 @@
+#!/bin/bash
+
+###############################################################################
+# Use 'torrent' to rip all movies / TV shows listed in a text file.           #
+###############################################################################
+
+is_first_magnet=true
+data_dir=/home/bryan/.local/share/torrent
+backup_dir="${data_dir}"/backups
+[ -d "${backup_dir}" ] || mkdir -p "${backup_dir}"
+
+function process_torrent_file() {
+    filename="$1"; shift
+    download_dir="$1"; shift
+
+    filepath="${data_dir}"/"${filename}"
+
+    while IFS='' read -r magnet || [[ -n "${magnet}" ]]; do
+        torrent -w /media/bryan/hercules/media/Entertainment/"${download_dir}" "${magnet}" &
+
+        if [[ "${is_first_magnet}" == true ]]; then
+            sleep 15
+        else
+            sleep 1
+        fi
+
+        is_first_magnet=false
+    done < "${filepath}"
+
+    torrent_category="${filename%%.txt}"
+    full_backup_dir="${backup_dir}"/"${torrent_category}"
+    [ -d "${full_backup_dir}" ] || mkdir -p "${full_backup_dir}"
+
+    if [[ -s "${filepath}" ]]; then
+        mv "${filepath}" "${full_backup_dir}"/"$(date +%Y%m%d%H%M)".txt
+        touch "${filepath}"
+    fi
+}
+
+process_torrent_file movies.txt "Movies"
+process_torrent_file tv.txt "TV"

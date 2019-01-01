@@ -22,8 +22,8 @@ $(usage)
 ${doc}
 
 Positional Arguments:
-    PAGE        Name of the manual page.
     SECTION     Section number (1-8).
+    PAGE        Name of the manual page.
 
 Optional Arguments:
     -d | --debug

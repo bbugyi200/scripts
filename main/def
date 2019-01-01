@@ -21,6 +21,7 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 def main(args):
     marker = '# {} marker: {}'.format(scriptname, args.marker)
     found_marker = False
+    new_alias_definition = "alias {}=''\n".format(args.name)
 
     for filename in args.file_list:
         line_number = 0
@@ -56,11 +57,14 @@ def main(args):
 
             if args.name.lower() < tmp_line and not found_line:
                 new_lines.pop()
-                new_lines.append("alias {}=''\n".format(args.name))
+                new_lines.append(new_alias_definition)
                 new_lines.append(line)
                 found_line = True
 
         if found_marker:
+            if not found_line:
+                new_lines.append(new_alias_definition)
+                line_number += 1
             break
     else:
         raise RuntimeError('Lexical position for new alias could not be found.')

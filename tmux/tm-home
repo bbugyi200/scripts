@@ -1,0 +1,18 @@
+#!/bin/bash
+
+###############################################################################
+#  Change the directory to the current tmuxinator session's window's root     #
+# directory.                                                                  #
+###############################################################################
+
+session_name="$(tmux display-message -p '#{session_name}')"
+window_index="$(tmux display-message -p '#{window_index}')"
+
+if [[ "$1" == "load" ]]; then
+    home_dir="$(tm-window-root "${session_name}" "${window_index}")"
+    action="cd ${home_dir} && ll"
+elif [[ "$1" == "save" ]]; then
+    action="tm-window-root ${session_name} ${window_index} -s $(pwd)"
+fi
+
+tm-send --action "${action}"

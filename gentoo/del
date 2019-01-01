@@ -53,7 +53,7 @@ if sudo emerge --ask "${OPTS[@]}" "$@"; then
     fi
         
     imsg "Calling updatedb to update its databases."
-    updatedb
+    updatedb &
 else
     exit "$?"
 fi

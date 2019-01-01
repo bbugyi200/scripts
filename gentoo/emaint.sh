@@ -36,7 +36,7 @@ function econfirm() {
         EC="$?"
         if [[ "${EC}" -ne 0 && "${EC}" -ne 3 ]]; then
             trap - EXIT
-            exit 0
+            exit "${EC}"
         fi
 
         return "${EC}"

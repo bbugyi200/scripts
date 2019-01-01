@@ -83,8 +83,14 @@ if [[ -n "${SCRIPT_PATH}" ]] && [[ "${force_script}" != true ]]; then
 else
     LOCATION="$(ag -s "(^(alias|function)[ ]+|^)${CMD}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/lib/zsh | awk -F: '{ print "+" $2 " " $1 }' | head -n 1)"
     if [[ -z "$LOCATION" ]]; then
-        printf "ERROR: unable to find '%s'." "$CMD"
-        exit 1
+        command_path="$(command -v "${CMD}")"
+        if [[ -n "${command_path}" ]]; then
+            vim "${command_path}"
+            exit 0
+        else
+            printf "ERROR: unable to find '%s'." "$CMD"
+            exit 1
+        fi
     fi
 
     # LOCATION is now a string of the form "+<N> <path>"

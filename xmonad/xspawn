@@ -1,0 +1,96 @@
+#!/bin/bash
+
+read -r -d '' doc << EOM
+Wraps an arbitrary application executable by creating a new XMonad workspace
+and shifting the corresponding application window to that workspace.
+EOM
+
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,v,w:" -l "debug,help,verbose,workspace-name:" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-v] [-w WORKSPACE_NAME] COMMAND [ARG [ARG [...]]]"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -v | --verbose
+        Enable verbose output.
+
+    -w | --workspace-name
+        The name of the new XMonad workspace to create. Defaults to the name
+        of the COMMAND.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -w|--workspace-name )
+           shift
+           workspace_name="$1"
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+# ---------- Main ----------
+
+if [[ -z "${workspace_name}" ]]; then
+    if [[ "$1" != "sudo" ]]; then
+        workspace_name="$1"
+    elif [[ "$2" != "-"* ]]; then
+        workspace_name="$2"
+    else
+        workspace_name="$3"
+    fi
+fi
+
+echo "${workspace_name}" > /tmp/xmonad.workspace
+
+orig_window_count="$(wmctrl -l | wc -l)"
+
+"${@}" &> /dev/null & disown
+
+for _ in {1..20}; do
+    window_count="$(wmctrl -l | wc -l)"
+    if [[ "${window_count}" -gt "${orig_window_count}" ]]; then
+        xdotool key alt+super+shift+n
+        exit 0
+    fi
+    sleep 0.1
+done
+
+exit 1

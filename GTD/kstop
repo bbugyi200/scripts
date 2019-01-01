@@ -1,0 +1,11 @@
+#!/bin/bash
+
+reset_alarms=true
+if [[ "$1" == "-n" ]]; then
+    reset_alarms=false
+fi
+
+kdel "START BREAK" && kdel "END BREAK" && kdel "START REVIEW" && kdel EOS
+if [[ "${reset_alarms}" = true ]]; then
+    setsid calalrms &> /dev/null & disown
+fi

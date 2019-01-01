@@ -13,6 +13,7 @@ will be signaled to enqueue the new magnet file for download.
 
 import atexit
 import contextlib
+import getpass
 import os
 import pickle
 import threading
@@ -87,7 +88,12 @@ def main():
     try:
         log.info('Connecting to VPN and starting transmission daemon...')
         sp.check_call(['PIA', 'start', args.vpn], stdout=sp.DEVNULL)
-        sp.check_call(['transmission-daemon'], stdout=sp.DEVNULL)
+        sp.check_call(['sudo', 'chown', '-R', '{0}:{0}'.format(getpass.getuser()), args.download_dir])
+
+        cmd_list = ['transmission-daemon']
+        if args.debug:
+            cmd_list.extend(['--log-debug', '-e', '/var/tmp/transmission.log'])
+        sp.check_call(cmd_list, stdout=sp.DEVNULL)
     except sp.CalledProcessError:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
     else:
@@ -96,6 +102,7 @@ def main():
 
         wait()
         magnet_queue.join()
+        sp.check_call(['sudo', 'chown', '-R', 'plex:plex', args.download_dir])
         notify('All torrents are complete.')
 
 
@@ -122,7 +129,7 @@ def _torrent(magnet):
             while True:
                 time.sleep(1)
                 try:
-                    sp.check_call(['transmission-remote', '-a', magnet], stdout=sp.DEVNULL)
+                    sp.check_call(['transmission-remote', '-a', magnet, '-w', args.download_dir], stdout=sp.DEVNULL)
                 except sp.CalledProcessError:
                     i += 1
                     if i <= 10:
@@ -236,9 +243,11 @@ def wait():
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('magnet', help='The torrent magnet file.')
+    parser.add_argument('-w', dest='download_dir', default='/media/bryan/hercules/media/Entertainment/Movies',
+                        help='The directory that the torrents will be downloaded to.')
     parser.add_argument('-D', type=int, dest='delay', default=0,
                         help='delay starting the script for DELAY seconds')
-    parser.add_argument('-t', type=float, dest='timeout', default=8,
+    parser.add_argument('-t', type=float, dest='timeout', default=12,
                         help='time (in hours) to attempt to complete download before timing out')
     parser.add_argument('-T', '--textme', dest='textme', action='store_true',
                         help='forward notifications via SMS messages (i.e. enable text '

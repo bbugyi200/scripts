@@ -86,12 +86,16 @@ def main(args):
 
     try:
         sp.check_call(cmd_list)
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         print()
         gutils.io.imsg('SIGINT signal detected. Terminating...')
         sys.exit(130)
-
-    write_timestamp(local_tsfile, cmd)
+    except sp.CalledProcessError:
+        # The 'confirm' script will exit with return code of 1 if key other
+        # than 'y' or 'n' (like 'x') is pressed.
+        pass
+    else:
+        write_timestamp(local_tsfile, cmd)
 
 
 def days_since_last(fp_timestamp):
@@ -120,7 +124,7 @@ def write_timestamp(fp, cmd):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
 
-    default = 15
+    default = 7
     parser.add_argument('-M', '--max-days', nargs='?', type=int, default=default,
                         help="Max number of days without update before complaining. This option "
                              "is only checked when used with the '--maint-check' option. Defaults "

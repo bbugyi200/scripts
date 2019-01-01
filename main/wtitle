@@ -1,0 +1,13 @@
+#!/bin/bash
+
+###############################################################################
+#  Set window title using xdotool                                             #
+###############################################################################
+
+if [[ -z "$1" ]]; then
+    echo "usage: $(basename "$0") TITLE"
+    exit 2
+fi
+
+title=("$@"); shift
+xdotool getactivewindow set_window --name "${title[*]}"

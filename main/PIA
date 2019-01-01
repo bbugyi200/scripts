@@ -5,6 +5,8 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
+nameserver_file=/etc/resolv.conf
+
 if [[ -z "$1" ]]; then
     if pgrep openvpn &> /dev/null; then
         action="stop"
@@ -25,8 +27,12 @@ if [ "$action" == "start" ]; then
     myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
     printf "Public IP Address: %s\n\n" "${myip}"
 
-    cp /etc/resolv.conf /etc/resolv.tmp
-    printf '%s\n%s' 'nameserver 209.222.18.222' 'nameserver 209.222.18.218' >> /etc/resolv.conf
+    cp "${nameserver_file}" /etc/resolv.tmp
+    PIA_nameservers=( "209.222.18.222" "209.222.18.218" )
+    for nameserver in "${PIA_nameservers[@]}"; do
+        sed -i "/${nameserver}/d" "${nameserver_file}"
+        printf '%s\n' "nameserver ${nameserver}" >> "${nameserver_file}"
+    done
 
     case "$vpn" in 
         nyc)
@@ -58,7 +64,7 @@ if [ "$action" == "start" ]; then
 elif [ "$action" == "stop" ]; then
     killall -9 openvpn
 
-    mv /etc/resolv.tmp /etc/resolv.conf
+    mv /etc/resolv.tmp "${nameserver_file}"
 
     sleep 2
 

@@ -10,7 +10,7 @@ source gutils.sh
 
 # ---------- Global Variables ----------
 export USAGE_GRAMMAR=(
-    "[-d] [-R] [-v] DOTFILE [DOTFILE [...]]"
+    "[-d] [-u] [-v] DOTFILE [DOTFILE [...]]"
     "-h"
 )
 
@@ -18,7 +18,7 @@ dropbox_dots_home=/home/bryan/Dropbox/home
 parent="${PWD#/home/bryan}"
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,h,v,R" -l "debug,help,verbose,reverse" -- "$@")"
+eval set -- "$(getopt -o "d,h,u,v" -l "debug,help,undo,verbose" -- "$@")"
 
 read -r -d '' help << EOM
 $(usage)
@@ -35,7 +35,7 @@ Optional Arguments:
     -h | --help
         View this help message.
 
-    -R | --reverse
+    -u | --undo
         Undow DOTFILE.
 
     -v | --verbose
@@ -51,7 +51,7 @@ while [[ -n "$1" ]]; do
            echo "${help}"
            exit 0
            ;;
-       -R|--reverse )
+       -u|--undo )
            undow=true
            ;;
        -v|--verbose )

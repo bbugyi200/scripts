@@ -28,24 +28,31 @@ def main(args):
     else:
         vargs.pop(0)
 
-    default_event_name = 'START BREAK'
+    start_break = 'START BREAK'
+    end_break = 'END BREAK'
 
     if vargs:
         event_name = ' '.join(vargs)
     elif args.end_break:
-        event_name = 'END BREAK'
-        sp.check_call(['task', 'start.any:', 'stop'])
+        event_name = end_break
+        try:
+            sp.check_call(['task', 'start.any:', 'stop'])
+        except sp.CalledProcessError:
+            pass
     else:
-        event_name = default_event_name
+        event_name = start_break
 
     log.vdebug('vargs: %s', repr(vargs))
+
+    if event_name in [start_break, end_break]:
+        sp.check_call(['kstop', '-n'])
 
     breaktime_dt = dt.datetime.now() + dt.timedelta(minutes=minutes)
 
     event_list = [event_name]
     dt_list = [breaktime_dt]
 
-    if event_name == default_event_name and args.review:
+    if args.review:
         review_dt = dt.datetime.now() + dt.timedelta(minutes=(minutes - 5))
         dt_list.append(review_dt)
         event_list.append('START REVIEW')
@@ -66,8 +73,8 @@ if __name__ == "__main__":
                              'OR name of the calendar event that will be created.')
     parser.add_argument('-e', '--end-break', action='store_true',
                         help='Set khal event name to "END BREAK".')
-    parser.add_argument('-n', '--no-review', dest='review', action='store_false',
-                        help='Do NOT create a "START REVIEW" event.')
+    parser.add_argument('-r', '--review', dest='review', action='store_true',
+                        help='Create a "START REVIEW" event for 5 minutes prior to main event.')
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """
 Setup workday schedule in Khal using pomodoro intervals. The workday starts at the moment this

@@ -12,7 +12,7 @@ if [[ "$1" == "load" ]]; then
     home_dir="$(tm-window-root "${session_name}" "${window_index}")"
     action="cd ${home_dir} && ll"
 elif [[ "$1" == "save" ]]; then
-    action="tm-window-root ${session_name} ${window_index} -s $(pwd)"
+    action="tm-window-root ${session_name} ${window_index} -s \$PWD"
 fi
 
 tm-send --action "${action}"

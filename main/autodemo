@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Used to automate the demonstration of a terminal program for the purpose of creating a GIF
 

@@ -22,4 +22,4 @@ case "$HOSTNAME" in
         ;;
 esac
 
-urxvt -name weechat -e zsh -c "$CMD"
+urxvt -name weechat -e zsh -c "wtitle WeeChat && $CMD"

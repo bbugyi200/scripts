@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """ Completes the Current Task and Starts the Next Most Urgent Task """
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Uses rofi to Prompt for a Shell Command to Run.
 

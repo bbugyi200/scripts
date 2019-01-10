@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# shellcheck disable=SC2016
+tmux_cmd='"PATH=$PATH:/usr/local/bin tm Terminal"'
+urxvt -e zsh -i -c "ssh-athena 'zsh -c ${tmux_cmd}'" &
+
+sleep 0.2
+wtitle zsh:athena

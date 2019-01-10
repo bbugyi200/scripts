@@ -5,23 +5,25 @@
 ######################################################################
 
 source gutils.sh
-source /home/bryan/Dropbox/bin/gentoo/emaint.sh
+source /home/bryan/Dropbox/bin/main/emaint.sh
 
 # ---------- Main Logic ----------
-TMP=/home/bryan/Dropbox/tmp
-[ -d "$TMP" ] && rm -rf "$TMP"
-mkdir "$TMP"
+if [[ "$(hostname)" == "athena" ]]; then
+    econfirm "efixsets"
+    econfirm "sudo eclean --deep distfiles"
 
-econfirm "sort_qb_quickmarks"
-econfirm "clean_recent_file_log"
-econfirm "efixsets"
-econfirm "sudo eclean --deep distfiles"
+    TMP=/home/bryan/Dropbox/tmp
+    econfirm "rm -rf $TMP && mkdir $TMP"
+
+    econfirm "sort_qb_quickmarks"
+    econfirm "clean_recent_file_log"
+fi
 
 D="/home/bryan/.local/share/Trash/files"
 econfirm "sudo rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 
 D="/root/.local/share/Trash/files"
-econfirm "sudo rm -rf $D && sudo mkdir $D" "sudo -i xprint -x 'ls -a $D'"
+econfirm "sudo rm -rf $D && sudo mkdir $D" "xprint -x 'ls -a $D'"
 
 D="/home/bryan/Downloads"
 econfirm "safe-rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"

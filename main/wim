@@ -52,7 +52,7 @@ while [[ -n "$1" ]]; do
            exit 0
            ;;
        -n|--no-script )
-           force_script=true
+           force_dotfile=true
            ;;
        -v|--verbose )
            verbose=true
@@ -78,7 +78,7 @@ fi
 CMD="$1"; shift
 SCRIPT_PATH="$(find /home/bryan/Dropbox/bin -type f -name "$CMD")"
 
-if [[ -n "${SCRIPT_PATH}" ]] && [[ "${force_script}" != true ]]; then
+if [[ -n "${SCRIPT_PATH}" ]] && [[ "${force_dotfile}" != true ]]; then
     vim -c "silent! normal g;" "$SCRIPT_PATH"
 else
     LOCATION="$(ag -s "(^(alias|function)[ ]+|^)${CMD}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/lib/zsh | awk -F: '{ print "+" $2 " " $1 }' | head -n 1)"

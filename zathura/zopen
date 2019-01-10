@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Zathura Helper Script. Used to Search for and then Open Documents in Zathura."""
 
@@ -27,7 +27,7 @@ def main():
         open_docs = None
         log.debug('No documents are currently open in zathura.')
 
-    out = sp.check_output(['find', '/home/bryan/Dropbox', '/home/bryan/Downloads', '/media/bryan/hercules/archive/home/bryan/Dropbox', '/home/bryan/projects', '-regex', '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'])
+    out = sp.check_output(['find', '/home/bryan/Dropbox', '/home/bryan/Downloads', '/home/bryan/projects', '-regex', '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'])
     all_docs = out.decode().strip()
 
     with open(CACHE_FILE, 'r') as f:

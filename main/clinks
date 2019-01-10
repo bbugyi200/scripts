@@ -89,14 +89,36 @@ else
     FLAG=-R
 fi
 
+# ---------- mkdir Commands ----------
+# Make sure that certain directories are not symlinked directly.
+# >>> $HOME directories
+home_dirs=(".vim" ".ssh")
+for D in "${home_dirs[@]}"; do
+    mkdir /home/bryan/"${D}" &> /dev/null
+done
+
+# >>> User Data Directories
+data_dirs=("qutebrowser" "okular")
+for D in "${data_dirs[@]}"; do
+    mkdir /home/bryan/.local/share/"${D}" &> /dev/null
+done
+
 # ---------- Main ----------
 if [[ $(hostname) == "athena" ]]; then
 	stow_it "/home/bryan/Dropbox/bin/cron.jobs" "/etc"
 fi
 
 ##### SCRIPTS
+sys_info="$(uname -a)"
+if [[ "${sys_info}" == *"gentoo"* ]]; then
+    stow_it "/home/bryan/Dropbox/bin/gentoo" "/usr/local/bin"
+fi
+
+if [[ "${sys_info}" == *"Debian"* ]]; then
+    stow_it "/home/bryan/Dropbox/bin/debian" "/usr/local/bin"
+fi
+
 stow_it "/home/bryan/Dropbox/bin/awk" "/usr/local/bin"
-stow_it "/home/bryan/Dropbox/bin/gentoo" "/usr/local/bin"
 stow_it "/home/bryan/Dropbox/bin/GTD" "/usr/local/bin"
 stow_it "/home/bryan/Dropbox/bin/main" "/usr/local/bin"
 stow_it "/home/bryan/Dropbox/bin/ProtectMyLaptop" "/usr/local/bin"
@@ -105,8 +127,7 @@ stow_it "/home/bryan/Dropbox/bin/xmonad" "/usr/local/bin"
 stow_it "/home/bryan/Dropbox/bin/zathura" "/usr/local/bin"
 
 ##### MODULES / LIBRARIES / HEADERS
-pylib_directory="$(find -L /usr/lib -maxdepth 1 -type d -name "python3.*")"
-stow_it "/home/bryan/Dropbox/lib/python" "${pylib_directory}/site-packages"
+stow_it "/home/bryan/Dropbox/lib/python" "/usr/local/lib/python"
 stow_it "/home/bryan/Dropbox/lib/C" "/usr/local/lib"
 stow_it "/home/bryan/Dropbox/lib/zsh" "/usr/local/lib"
 stow_it "/home/bryan/Dropbox/src" "/usr/local/src"

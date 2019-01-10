@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Wrapper for 'emerge' that Installs Package(s)"""
 
@@ -44,7 +44,7 @@ def main(args):
                 pass
 
     if rc == 0:
-        gutils.io.imsg('Calling updatedb to update its databases.')
+        gutils.io.imsg("Running 'updatedb' to update the database used by 'locate'.")
         sp.Popen(['updatedb'])
         if not args.oneshot:
             add_to_set(args.packages, local=args.local)

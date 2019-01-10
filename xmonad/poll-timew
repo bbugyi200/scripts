@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Polls and Parses `timew` Command for use with Panel Bar.
 

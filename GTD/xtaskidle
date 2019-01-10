@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Stops Current TW Task if Machine Idles for Too Long and Restarts it when Activity Resumes"""
 

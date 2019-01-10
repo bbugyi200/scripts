@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Wrapper for rofi that implements my version of a good input prompt."""
 

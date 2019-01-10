@@ -1,0 +1,38 @@
+#!/bin/bash
+
+######################################
+#  Runs System Maintenance Commands  #
+######################################
+
+source gutils.sh
+source /home/bryan/Dropbox/bin/main/emaint.sh
+
+# ---------- Main Logic ----------
+# >>> GENTOO
+uname_output="$(uname -a)"
+sys_info="${uname_output,,}"
+if [[ "${sys_info}" == *"gentoo"* ]]; then
+    econfirm "epcsync"
+    econfirm "sudo emerge --sync" && notify "Portage Package Database Sync is Complete."
+    econfirm "sudo emerge --ask --update --deep --newuse --keep-going @world" && notify "Portage Package Updates are Complete."
+    econfirm "sudo emerge --ask --depclean"
+    econfirm "sudo revdep-rebuild"
+    econfirm "sudo smart-live-rebuild"
+    econfirm "sudo npm update -g"
+    econfirm "ebvcheck -v"
+    econfirm "elogv"
+    econfirm "sudo dispatch-conf"
+    econfirm "cache_cheaders"
+fi
+
+# >>> DEBIAN
+if [[ "${sys_info}" == *"debian"* ]]; then
+    econfirm "sudo aptitude update"
+    econfirm "sudo aptitude full-upgrade"
+    econfirm "sudo apt autoremove"
+fi
+
+# >>> ALL
+econfirm "sudo updatedb"
+
+exit 0  # Fixes issue caused by nonzero return status from last econfirm

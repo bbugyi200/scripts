@@ -89,5 +89,12 @@ case $1 in
 
         root="$(tm-session-root --get "$SESSION_NAME")"
         tmuxinator start "$SESSION_NAME" root="${root}"
-        tmux switch-client -t "$SESSION_NAME";;
+
+        if [[ -n "$1" ]]; then
+            SOCKET_NAME="$1"; shift
+            tmux -L "$SOCKET_NAME" attach -t "$SESSION_NAME"
+        else
+            tmux switch-client -t "$SESSION_NAME"
+        fi
+        ;;
 esac

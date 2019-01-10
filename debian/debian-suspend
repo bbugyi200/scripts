@@ -1,0 +1,4 @@
+#!/bin/bash
+
+my-screenlock &
+sleep 1.5 && sudo pm-suspend

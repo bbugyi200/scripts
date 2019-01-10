@@ -9,8 +9,6 @@ EOM
 source gutils.sh
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,h,v,w:" -l "debug,help,verbose,workspace-name:" -- "$@")"
-
 export USAGE_GRAMMAR=(
     "[-d] [-v] [-w WORKSPACE_NAME] COMMAND [ARG [ARG [...]]]"
     "-h"
@@ -37,29 +35,33 @@ Optional Arguments:
         of the COMMAND.
 EOM
 
-while [[ -n "$1" ]]; do
-    case $1 in
-       -d|--debug )
-           debug=true
-           ;;
-       -h|--help )
-           echo "${help}"
-           exit 0
-           ;;
-       -v|--verbose )
-           verbose=true
-           ;;
-       -w|--workspace-name )
-           shift
-           workspace_name="$1"
-           ;;
-       -- )
-           shift
-           break
-           ;;
-    esac
-    shift
-done
+if [[ "$1" == "-"* ]]; then
+    eval set -- "$(getopt -o "d,h,v,w:" -l "debug,help,verbose,workspace-name:" -- "$@")"
+
+    while [[ -n "$1" ]]; do
+        case $1 in
+           -d|--debug )
+               debug=true
+               ;;
+           -h|--help )
+               echo "${help}"
+               exit 0
+               ;;
+           -v|--verbose )
+               verbose=true
+               ;;
+           -w|--workspace-name )
+               shift
+               workspace_name="$1"
+               ;;
+           -- )
+               shift
+               break
+               ;;
+        esac
+        shift
+    done
+fi
 
 if [[ "${debug}" = true && "${verbose}" = true ]]; then
     PS4='$LINENO: '
@@ -67,30 +69,22 @@ if [[ "${debug}" = true && "${verbose}" = true ]]; then
 fi
 
 # ---------- Main ----------
-
+full_cmd="$*"
 if [[ -z "${workspace_name}" ]]; then
     if [[ "$1" != "sudo" ]]; then
         workspace_name="$1"
-    elif [[ "$2" != "-"* ]]; then
-        workspace_name="$2"
     else
-        workspace_name="$3"
+        for _ in {0..4}; do
+            shift
+            if [[ "$1" != "-"* ]]; then
+                workspace_name="$1"
+                break
+            fi
+        done
     fi
 fi
 
-echo "${workspace_name}" > /tmp/xmonad.workspace
+printf "${workspace_name}" > /tmp/xmonad.workspace
 
-orig_window_count="$(wmctrl -l | wc -l)"
-
-"${@}" &> /dev/null & disown
-
-for _ in {1..20}; do
-    window_count="$(wmctrl -l | wc -l)"
-    if [[ "${window_count}" -gt "${orig_window_count}" ]]; then
-        xdotool key alt+super+shift+n
-        exit 0
-    fi
-    sleep 0.1
-done
-
-exit 1
+xdotool key alt+super+shift+n
+${full_cmd} &> /dev/null & disown

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Uses <CR> Markers to Iteratively Run `xdotool type KEYSTROKES` Followed by `xdotool key Return`"""
 

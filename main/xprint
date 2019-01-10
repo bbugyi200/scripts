@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Type out command on screen and then (optionally) execute it."""
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Sets Event with khal using RELATIVE Time (x minutes from now)"""
 

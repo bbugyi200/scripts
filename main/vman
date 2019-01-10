@@ -92,7 +92,7 @@ for page in "$@"; do
         exit 1
     else
         # shellcheck disable=SC2086
-        man ${section} "${page}" | col -b >> "${tmp_file}"
+        man ${section} "${page}" 2> /dev/null | col -b >> "${tmp_file}"
 
         if [[ -n "${section}" ]]; then
             section=

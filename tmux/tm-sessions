@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Displays formatted tmux sessions for tmux status-line"""
 
@@ -23,7 +23,11 @@ def main():
     sessions = []
     for S in _sessions:
         T = S[:S.index(':')]
-        if 'attached' in S:
+
+        ps = sp.check_output(['tmux', 'display', '-p', '#S'])
+        active_session_name = ps.decode().strip()
+
+        if T == active_session_name:
             sessions.append('[{}]'.format(T))
         else:
             sessions.append(T)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Generates a Prime (secondary) Tmuxinator Session Configuration File using Jinja2"""
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Sets LOW, EOS, and BED times in khal based off of BED time only."""
 

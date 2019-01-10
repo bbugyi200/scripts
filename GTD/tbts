@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """ Starts Bedtime Story (i.e. Book) Task and Adds Event to Khal,
 which is set to start MINUTES minutes from now."""

@@ -1,0 +1,12 @@
+#!/bin/bash
+
+###############################################################################
+#  Wrapper for umpv. Used by qutebrowser key bindings.                        #
+###############################################################################
+
+if [[ "$(wmctrl -lx | awk '{print $3}')" != *".mpv"* ]]; then
+    xdotool key super+backslash
+    xspawn -w mpv umpv "$@"
+else
+    umpv "$@"
+fi

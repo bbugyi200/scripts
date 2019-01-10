@@ -9,5 +9,7 @@ if [[ -z "$1" ]]; then
     exit 2
 fi
 
-title=("$@"); shift
+title=("$@")
+
+sleep 0.1
 xdotool getactivewindow set_window --name "${title[*]}"

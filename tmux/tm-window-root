@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python3
 
 """Gets / Sets Root Directory of Tmux Window (based on tmuxinator config)"""
 

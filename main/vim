@@ -14,7 +14,6 @@ fi
 for arg in "$@"; do
     # Don't log options, only files.
     if [[ -f "${arg}" ]]; then
-
         # Find absolute path to file.
         if [[ "${arg}" == "/"* ]]; then
             filepath="${arg}"
@@ -26,7 +25,6 @@ for arg in "$@"; do
         if [[ "${filepath}" != *"/tmp/"* ]]; then
             # Remove duplicate entries.
             sed -i "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
-
             echo "${filepath}" >> "${RECENTLY_EDITED_FILES_LOG}"
         fi
     fi

@@ -3,7 +3,9 @@
 """Zathura Helper Script. Used to Search for and then Open Documents in Zathura."""
 
 import os
+import re
 import signal
+import socket
 import subprocess as sp
 
 import gutils
@@ -27,7 +29,15 @@ def main():
         open_docs = None
         log.debug('No documents are currently open in zathura.')
 
-    out = sp.check_output(['find', '/home/bryan/Dropbox', '/home/bryan/Downloads', '/home/bryan/projects', '-regex', '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'])
+    directory_list = ['/home/bryan/Dropbox', '/home/bryan/Downloads', '/home/bryan/projects']
+    if socket.gethostname() == 'athena':
+        directory_list.append('/media/bryan/hercules/archive/home/bryan/Dropbox')
+
+    cmd_list = ['find']
+    cmd_list.extend(directory_list)
+    cmd_list.extend(['-regex', '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'])
+
+    out = sp.check_output(cmd_list)
     all_docs = out.decode().strip()
 
     with open(CACHE_FILE, 'r') as f:
@@ -38,7 +48,7 @@ def main():
     if open_docs:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
-    pretty_docs = [x.replace('/home/bryan/Dropbox/', '') for x in ordered_docs]
+    pretty_docs = [re.sub('^/home/bryan/Dropbox/var/books/', '', x) for x in ordered_docs]
 
     if args.refresh:
         choice = ordered_docs[-1]
@@ -49,10 +59,10 @@ def main():
 
         output = out.decode().strip()
 
-        if '/home/bryan/' in output:
+        if output.startswith('/'):
             choice = output
         else:
-            choice = '/home/bryan/Dropbox/{}'.format(output)
+            choice = '/home/bryan/Dropbox/var/books/{}'.format(output)
 
     add_to_cache(choice)
 

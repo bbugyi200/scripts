@@ -19,7 +19,6 @@ class Win:
     TIMEW = 1
     KHAL = 2
     CONFIG = 3
-    LOGS = 5
 
 
 def tmux_cmd(cmd, window, cmd_args=None, *, pane=0):
@@ -30,7 +29,13 @@ def tmux_cmd(cmd, window, cmd_args=None, *, pane=0):
             cmd_args = (cmd_args,)
         for arg in cmd_args:
             subprocess_command.append(arg)
-    sp.call(subprocess_command)
+    try:
+        sp.check_call(subprocess_command, stderr=sp.DEVNULL, stdout=sp.DEVNULL)
+    except sp.CalledProcessError:
+        subprocess_command.remove('-L')
+        subprocess_command.remove('GTD')
+        sp.check_call(subprocess_command)
+        
 
 
 def send_keys(window, keys, *, pane=0):
@@ -50,14 +55,14 @@ def check_flags(*flags):
 
 
 if __name__ == "__main__":
-    flag_opts = ['all', 'config', 'rename', 'taskw', 'timew', 'khal', 'logs']
+    flag_opts = ['all', 'config', 'rename', 'taskw', 'timew', 'khal']
     flags_help = "These flags determine what information is refreshed. This option "\
         "accepts a comma-separated list containing one or more of the following "\
         "options: {{{}}}.".format(','.join(flag_opts))
     select_window_help = "Switch to WINDOW after all refreshes are complete."
 
     parser = gutils.ArgumentParser()
-    parser.add_argument('-F', '--flags', dest='flags', default='taskw,timew,khal,logs', help=flags_help)
+    parser.add_argument('-F', '--flags', dest='flags', default='taskw,timew,khal', help=flags_help)
     parser.add_argument('-w', '--select-window', dest='window', help=select_window_help)
     args = parser.parse_args()
 
@@ -74,7 +79,7 @@ if __name__ == "__main__":
 
             tmux_cmd('rename-window', Win.MAIN, current_context)
 
-        for window, flag in [(Win.CONFIG, 'config'), (Win.LOGS, 'logs')]:
+        for window, flag in [(Win.CONFIG, 'config')]:
             if check_flags(flag):
                 send_keys(window, ':e')
 

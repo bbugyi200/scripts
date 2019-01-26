@@ -26,6 +26,9 @@ case "$GLOBAL_MARK" in
     'B' )
         MARKED_FILE='/home/bryan/.xmobarrc'
         ;;
+    'C' )
+        MARKED_FILE='/home/bryan/projects/CV/BryanBugyi_CV.tex'
+        ;;
     'D' )
         MARKED_FILE='/home/bryan/Dropbox/lib/zsh/GTD.sh'
         ;;

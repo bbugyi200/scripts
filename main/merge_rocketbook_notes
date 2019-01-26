@@ -1,0 +1,29 @@
+#!/bin/bash
+
+###############################################################################
+#  Merge All Rocketbook Notes into One PDF File                               #
+###############################################################################
+
+shopt -s nullglob  # Avoid false array results.
+
+
+function merge_pdfs() {
+    D="$1"; shift
+    prefix="$1"; shift
+    final_pdf_name="$1"; shift
+
+    pdf_files=("${D}"/"${prefix}"*)
+    if [[ -n "${pdf_files[*]}" ]]; then
+        pdfunite "${pdf_files[@]}" "${D}/${final_pdf_name}.pdf"
+    fi
+}
+
+
+for D in /home/bryan/Dropbox/var/notes/Rocketbook/*; do
+    if [[ -d "${D}" ]]; then
+        course_name="$(basename "${D}")"
+
+        merge_pdfs "${D}" "Week" "My_${course_name}_Lecture_Notes"
+        merge_pdfs "${D}" "20" "My_${course_name}_Notes"
+    fi
+done

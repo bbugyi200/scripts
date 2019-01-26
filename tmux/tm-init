@@ -8,3 +8,4 @@ urxvt -e zsh -c 'tm Terminal' &
 
 sleep 0.2
 wtitle zsh:"$(hostname)"
+fullscreen

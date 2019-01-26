@@ -79,7 +79,14 @@ for page in "$@"; do
     fi
 
     # shellcheck disable=SC2086
-    if ! man ${section} "${page}" &> /dev/null; then
+    if man ${section} "${page}" &> /dev/null; then
+        # shellcheck disable=SC2086
+        man ${section} "${page}" 2> /dev/null | col -b >> "${tmp_file}"
+
+        if [[ -n "${section}" ]]; then
+            section=
+        fi
+    else
         if command -v cppman &> /dev/null; then
             cppman_out="$(cppman "${page}")"
             if ! [[ "${cppman_out}" == *"No manual"* ]]; then
@@ -90,13 +97,6 @@ for page in "$@"; do
 
         echo "No manual entry for ${page}."
         exit 1
-    else
-        # shellcheck disable=SC2086
-        man ${section} "${page}" 2> /dev/null | col -b >> "${tmp_file}"
-
-        if [[ -n "${section}" ]]; then
-            section=
-        fi
     fi
 
     all_files+=( "${tmp_file}" )

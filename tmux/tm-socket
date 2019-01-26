@@ -8,18 +8,16 @@
 #############################################
 
 pid="$(active_window_pid)"
-full_name="$(wmctrl -lxp | grep $pid | awk -F ' ' '{ print $4 }')"
+full_name="$(wmctrl -lxp | grep "$pid" | awk -F ' ' '{ print $4 }')"
+
+socket_name="default"
 
 if [[ "$full_name" = *"URxvt" ]]; then
-    app_name="$(echo $full_name | sed 's/\..*//g')"
+    app_name="$(echo "$full_name" | sed 's/\..*//g')"
 
-    if [[ "$app_name" == "urxvt" ]]; then
-        socket_name="default"
-    else
+    if [[ "$app_name" != "urxvt" ]]; then
         socket_name="$app_name"
     fi
-
-    printf "$socket_name\n"
-else
-    exit 1
 fi
+
+printf "$socket_name\n"

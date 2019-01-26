@@ -8,9 +8,10 @@ source gutils.sh
 source /home/bryan/Dropbox/bin/main/emaint.sh
 
 # ---------- Main Logic ----------
+_uname_output="$(uname -a)"
+sys_info="${_uname_output,,}"
+
 # >>> GENTOO
-uname_output="$(uname -a)"
-sys_info="${uname_output,,}"
 if [[ "${sys_info}" == *"gentoo"* ]]; then
     econfirm "epcsync"
     econfirm "sudo emerge --sync" && notify "Portage Package Database Sync is Complete."
@@ -22,7 +23,6 @@ if [[ "${sys_info}" == *"gentoo"* ]]; then
     econfirm "ebvcheck -v"
     econfirm "elogv"
     econfirm "sudo dispatch-conf"
-    econfirm "cache_cheaders"
 fi
 
 # >>> DEBIAN

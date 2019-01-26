@@ -6,3 +6,4 @@ urxvt -e zsh -i -c "ssh-athena 'zsh -c ${tmux_cmd}'" &
 
 sleep 0.2
 wtitle zsh:athena
+fullscreen

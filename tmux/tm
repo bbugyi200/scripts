@@ -76,8 +76,12 @@ MUX_CONFIG_DIR=~/.config/tmuxinator
 case $1 in
     '-'* )
         CMD=${1#-}; shift
-        if [[ 'edit' == "$CMD"* ]] && [[ -z "$1" ]]; then
-            tmuxinator edit "$(tm-session-name)"
+        if [[ 'edit' == "$CMD"* ]]; then
+            if [[ -n "$1" ]]; then
+                tmuxinator edit "$1"
+            else
+                tmuxinator edit "$(tm-session-name)"
+            fi
         else
             tmuxinator "$CMD" "$@"
         fi;;

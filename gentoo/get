@@ -36,7 +36,7 @@ def main(args):
         if cfg_fnames != '':
             log.debug('Merging config files.')
             try:
-                cmd_fmt = 'sudo dispatch-conf && clear && {}'
+                cmd_fmt = 'sudo -E dispatch-conf && clear && {}'
                 emerge_cmd = get_emerge_cmd_list(args.packages, ask=False)
                 emerge_cmd_string = ' '.join(emerge_cmd)
                 rc = sp.check_call(cmd_fmt.format(emerge_cmd_string), shell=True)

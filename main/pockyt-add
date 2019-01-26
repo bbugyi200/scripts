@@ -1,0 +1,4 @@
+#!/bin/bash
+
+PATH="$PATH:/home/bryan/.local/bin"
+pockyt put -f '{link}' -i "$1" #&> /tmp/pockyt.errors

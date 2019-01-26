@@ -1,0 +1,4 @@
+#!/bin/bash
+
+pkill xfce4-notifyd
+/usr/lib/x86_64-linux-gnu/xfce4/notifyd/xfce4-notifyd &

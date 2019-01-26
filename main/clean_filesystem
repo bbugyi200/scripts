@@ -1,0 +1,18 @@
+#!/bin/bash
+
+###############################################################################
+#  Maintenance Script that Cleans up my Machine's Filesystem                  #
+###############################################################################
+
+# >>> HOME
+/usr/bin/safe-rm -rf /home/bryan/main* &> /dev/null
+/usr/bin/rm -rf /home/bryan/core /home/bryan/gccdump.s &> /dev/null
+
+# >>> DROPBOX
+DROPBOX_TMP=/home/bryan/Dropbox/tmp
+
+rm -rf "${DROPBOX_TMP}" && mkdir "${DROPBOX_TMP}"
+find /home/bryan/Dropbox \( -name "gccdump.s" \
+    -o -name "core" \
+    -o -name "*'s conflicted copy*" \
+    \) -delete

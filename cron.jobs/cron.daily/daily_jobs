@@ -1,11 +1,5 @@
 #!/bin/bash
 
-# Updates 'locate' database
-updatedb
-
-# Delete conflicted copies
-find /home/bryan/Dropbox -name "*'s conflicted copy*" -delete
-
-# Clear /home/bryan/Dropbox/tmp
-rm -rf /home/bryan/Dropbox/tmp
-mkdir /home/bryan/Dropbox/tmp
+/usr/bin/updatedb
+/usr/local/bin/clean_filesystem
+/usr/local/bin/merge_rocketbook_notes

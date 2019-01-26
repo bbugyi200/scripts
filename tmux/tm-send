@@ -22,71 +22,65 @@ done
 PRE=
 POST=
 
-if [[ -n "$socket_name" ]]; then
+pane_current_command=$(tmux -L "$socket_name" display-message -p '#{pane_current_command}')
+pane_title=$(tmux -L "$socket_name" display-message -p '#{pane_title}')
+active_program="$pane_current_command $pane_title"
 
-    pane_current_command=$(tmux -L "$socket_name" display-message -p '#{pane_current_command}')
-    pane_title=$(tmux -L "$socket_name" display-message -p '#{pane_title}')
-    active_program="$pane_current_command $pane_title"
+case "$action" in
+    'clear' )
+        case ${active_program,,} in
+            *"matlab"* )
+                CMD="clc";;
+            *"ghc"* )
+                CMD=":! clear";;
+            *"gdb"* )
+                CMD="shell clear";;
+            *"sqlite3"*|*"rlwrap"* )
+                CMD=".shell clear";;
+            *"weechat"* )
+                PRE="a C-u"
+                CMD="/buffer clear";;
+            *"vim"* )
+                CMD=":normal zt";;
+            * )
+                CMD="clear";;
+        esac;;
+    'quit' )
+        case ${active_program,,} in
+            *"ghc"* )
+                CMD=":quit";;
+            *"gdb"* )
+                CMD="quit";;
+            *"sqlite3"*|*"rlwrap"* )
+                CMD=".quit";;
+            *"git"* )
+                CMD="q";;
+            *"python"* )
+                CMD="exit()";;
+            *"weechat"* )
+                PRE="a C-u"
+                CMD="/quit";;
+            *"bc"* )
+                CMD="quit";;
+            *"vim"* )
+                CMD=":qa";;
+            * )
+                CMD="exit";;
+        esac;;
+    '' )
+        echo "usage: $(basename "$0") --action=<action>"
+        exit 1;;
+    * )
+        case $active_program in
+            *"vim"* )  # Precautionary Check (some zsh/bash scripts execute vim)
+                logger "$(basename "$0"): Unable to perform '$action'. Vim has been detected!"
+                exit 1;;
+            *"zsh"* | *"bash"* | *"su "* )
+                CMD=$action;;
+            * )
+                logger "$(basename "$0"): Unable to perform '$action'. Not in zsh or bash shell."
+                exit 1;
+        esac
+esac
 
-    case "$action" in
-        'clear' )
-            case ${active_program,,} in
-                *"matlab"* )
-                    CMD="clc";;
-                *"ghc"* )
-                    CMD=":! clear";;
-                *"gdb"* )
-                    CMD="shell clear";;
-                *"sqlite3"*|*"rlwrap"* )
-                    CMD=".shell clear";;
-                *"weechat"* )
-                    PRE="a C-u"
-                    CMD="/buffer clear";;
-                *"vim"* )
-                    CMD=":normal zt";;
-                * )
-                    CMD="clear";;
-            esac;;
-        'quit' )
-            case ${active_program,,} in
-                *"ghc"* )
-                    CMD=":quit";;
-                *"gdb"* )
-                    CMD="quit";;
-                *"sqlite3"*|*"rlwrap"* )
-                    CMD=".quit";;
-                *"git"* )
-                    CMD="q";;
-                *"python"* )
-                    CMD="exit()";;
-                *"weechat"* )
-                    PRE="a C-u"
-                    CMD="/quit";;
-                *"bc"* )
-                    CMD="quit";;
-                *"vim"* )
-                    CMD=":qa";;
-                * )
-                    CMD="exit";;
-            esac;;
-        '' )
-            echo "usage: $(basename "$0") --action=<action>"
-            exit 1;;
-        * )
-            case $active_program in
-                *"vim"* )  # Precautionary Check (some zsh/bash scripts execute vim)
-                    logger "$(basename "$0"): Unable to perform '$action'. Vim has been detected!"
-                    exit 1;;
-                *"zsh"* | *"bash"* | *"su "* )
-                    CMD=$action;;
-                * )
-                    logger "$(basename "$0"): Unable to perform '$action'. Not in zsh or bash shell."
-                    exit 1;
-            esac
-    esac
-
-    tmux -L "$socket_name" send-keys "$PRE" "$CMD" "$POST" "Enter"
-
-else
-    exit 1
-fi
+tmux -L "$socket_name" send-keys "$PRE" "$CMD" "$POST" "Enter"

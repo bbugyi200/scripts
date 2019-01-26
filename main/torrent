@@ -57,7 +57,7 @@ def term_handler(signum, frame):
     log.debug('Terminated via {} signal.'.format(signal.Signals(signum).name))
     for i in range(1, magnet_counter.count + 1):
         remove_magnet(i)
-    sys.exit(2)
+    sys.exit(128 + signum)
 
 
 def usr1_handler(signum, frame):

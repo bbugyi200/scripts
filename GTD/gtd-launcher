@@ -1,0 +1,4 @@
+#!/bin/bash
+
+tmuxinator start GTD root="$(tm-session-root --get GTD)"
+urxvt -name GTD -e zsh -c "wtitle GTD && fullscreen && tmux -L GTD attach -t GTD"

@@ -1,0 +1,49 @@
+#!/usr/bin/python3
+
+###############################################################################
+#  Dummy Python Script used for Testing New Stuff
+###############################################################################
+
+import datetime as dt  # noqa: F401
+import os  # noqa: F401
+import random
+import subprocess as sp  # noqa: F401
+import sys  # noqa: F401
+import threading
+import time
+
+import gutils
+
+scriptname = os.path.basename(os.path.realpath(__file__))
+
+
+def main(args):
+    sem = threading.BoundedSemaphore(3)
+    threads = []
+
+    for i in range(100):
+        time.sleep(0.1)
+        t = threading.Thread(target=worker, args=(sem, i), daemon=True)
+        t.start()
+        threads.append(t)
+
+    for t in threads:
+        t.join()
+
+
+def worker(sem, i):
+    sem.acquire()
+
+    print("Thread #{}".format(i))
+    delay = random.choice(list(range(5)))
+    time.sleep(delay)
+
+    sem.release()
+
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    args = parser.parse_args()
+
+    main(args)

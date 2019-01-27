@@ -89,7 +89,7 @@ for page in "$@"; do
     else
         if command -v cppman &> /dev/null; then
             cppman_out="$(cppman "${page}")"
-            if ! [[ "${cppman_out}" == *"No manual"* ]]; then
+            if [[ "${cppman_out}" != *"No manual"* ]]; then
                 cppman "${page}"
                 exit 0
             fi

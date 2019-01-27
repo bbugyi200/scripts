@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tmuxinator start -p <(sed '/socket_name/d' ~/.config/tmuxinator/ScratchPad.yml)

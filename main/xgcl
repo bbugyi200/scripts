@@ -1,0 +1,11 @@
+#!/bin/bash
+
+###############################################################################
+#  Clone Git Repo using Clipboard Contents                                    #
+###############################################################################
+
+repo_url="$(xclip -sel clip -out)"
+D="$(basename "${repo_url}")"
+
+git clone --recurse-submodules "${repo_url}"
+tmux send-key "cd ${D} || return 1" "Enter"

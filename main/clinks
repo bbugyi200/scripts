@@ -98,7 +98,7 @@ for D in "${home_dirs[@]}"; do
 done
 
 # >>> User Data Directories
-data_dirs=("qutebrowser" "okular")
+data_dirs=("qutebrowser" "okular" "applications")
 for D in "${data_dirs[@]}"; do
     mkdir /home/bryan/.local/share/"${D}" &> /dev/null
 done

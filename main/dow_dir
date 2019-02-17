@@ -1,0 +1,14 @@
+#!/bin/bash
+
+current_dir="$1"
+
+if [[ "${current_dir}" =~ "/home/bryan/Dropbox/home"* ]]; then
+    new_dir=/home/bryan/"${current_dir##/home/bryan/Dropbox/home}"
+elif [[ "${current_dir}" =~ "/home/bryan"* ]]; then
+    #statements
+    new_dir=/home/bryan/Dropbox/home/"${current_dir##/home/bryan}"
+else
+    exit 1
+fi
+
+printf "%s\n" "${new_dir}"

@@ -19,7 +19,7 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):
-    marker = '# {} marker: {}'.format(scriptname, args.marker)
+    marker = '# {} marker: {}'.format(scriptname, str.upper(args.marker))
     found_marker = False
     new_alias_definition = "alias {}=''\n".format(args.name)
 

@@ -6,18 +6,25 @@
 #####################################################################
 
 # How many minutes to suspend for?
-N=30
+if [[ -n "$1" ]]; then
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        N="$1"
+    else
+        >&2 printf "[ERROR] Invalid argument: $1.\n\nArgument MUST be an integer.\n"
+        exit 2
+    fi
+else
+    N=30
+fi
 
 my-screenlock &
 sleep 1.5
 
-thirty_minutes_from_start="$(date --date="${N} minutes" +%s)"
+N_minutes_from_start="$(date --date="${N} minutes" +%s)"
 
-# Suspend system for 30 minutes and 5 seconds.
-sudo rtcwake -m mem -s $((N*60 + 5))
+# Suspend system for N minutes and 5 seconds.
+sudo rtcwake -m mem -s $((N*60 + 5)) &> /dev/null
 
-if [[ "$(date +%s)" -lt "${thirty_minutes_from_start}" ]]; then
-    exit 0
+if [[ "$(date +%s)" -gt "${N_minutes_from_start}" ]]; then
+    sudo pm-hibernate
 fi
-
-sudo pm-hibernate

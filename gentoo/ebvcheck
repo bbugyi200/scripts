@@ -40,7 +40,7 @@ class PkgContainer:
         with self.lock:
             try:
                 self.packages.remove(pkg)
-            except KeyError as e:
+            except KeyError:
                 pass
 
 
@@ -133,20 +133,20 @@ def main(args):
 def check_ebuild(ebuild, show_live_pkgs=False, show_offline_pkgs=False):
     try:
         msg_fmt = '{}:: {}'
-        pkg = re.sub('-([0-9])+\..*ebuild$', '', ebuild)
+        pkg = re.sub(r'-([0-9])+\..*ebuild$', '', ebuild)
         log.vdebug('pkg: %s', pkg)
         pkg_queue.put(pkg)
 
         try:
             id_number = pkg_container.add(pkg)
-        except ValueError as e:
+        except ValueError:
             return
 
         cmd_fmt = "eix --nocolor --format '<installedversions:NAMEVERSION>' {} | head -n 1"
         ps = sp.check_output(cmd_fmt.format(pkg), shell=True)
         out = ps.decode().strip()
 
-        if not re.match('[A-z\-\d]+/[A-z\-\d]+-[\d\.]+(-r\d*)?$', out):
+        if not re.match(r'[A-z\-\d]+/[A-z\-\d]+-[\d\.]+(-r\d*)?$', out):
             if show_offline_pkgs == 'y':
                 message_manager.print(msg_fmt.format(pkg, gutils.colorize.yellow('NOT INSTALLED')), id_number)
             else:
@@ -178,7 +178,7 @@ def check_ebuild(ebuild, show_live_pkgs=False, show_offline_pkgs=False):
         for line in out_list:
             if fail_marker in line:
                 fail_msg_fmt = msg_fmt.format(pkg, gutils.colorize.red('FAILED  (New Version: {})'))
-                match = re.search('([\d\.]+)', line)
+                match = re.search(r'([\d\.]+)', line)
                 message_manager.print(fail_msg_fmt.format(match.group()), id_number)
                 break
             if pass_marker in line:

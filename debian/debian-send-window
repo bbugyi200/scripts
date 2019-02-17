@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#####################################################################
+#  Move window to given workspace (and follow)                      #
+#####################################################################
+
+desktop_id="$1"; shift
+active_window_title=$(xdotool getactivewindow getwindowname)
+
+wmctrl -t "${desktop_id}" -r "${active_window_title}" && wmctrl -a "${active_window_title}"

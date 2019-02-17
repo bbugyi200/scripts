@@ -7,23 +7,16 @@
 # which counts down to the given time.                                                            #
 ###################################################################################################
 
+source gutils.sh
+
 # My Colors
 GREY="#D9D9D9"
 
-
-if [[ -n "$XDG_RUNTIME_DIR" ]]; then
-    RUNTIME_DIR="$XDG_RUNTIME_DIR"/"$(basename "$0")"
+if pgrep "xmonad" &> /dev/null; then
+    xmonad_is_running=true
 else
-    RUNTIME_DIR=/tmp/"$(basename "$0")"
+    xmonad_is_running=false
 fi
-
-DATA_DIR=/home/$USER/.local/share/$(basename "$0")
-PID_FILE=$RUNTIME_DIR/pid
-TIMESTAMP_FILE=$DATA_DIR/timestamp
-FIFO=$RUNTIME_DIR/fifo
-
-[[ -d $RUNTIME_DIR ]] || mkdir "$RUNTIME_DIR"
-[[ -d $DATA_DIR ]] || mkdir "$DATA_DIR"
 
 time_left() {
 	echo $(("$stop_time" - $(date --date="now" +%s)))
@@ -31,78 +24,71 @@ time_left() {
 
 exit_handler() {
     printf "\n" > "$FIFO"
-    rm "$TIMESTAMP_FILE"
 }
 
+main() {
+    PID_FILE=$MY_XDG_RUNTIME/pid
 
-# ---------- Command Line Arguments ----------
-eval set -- "$(getopt -o "d,r,s,T" -l "debug,resume,stop,tomorrow" -- "$@")"
+    [[ -d $MY_XDG_RUNTIME ]] || mkdir "$MY_XDG_RUNTIME"
+    [[ -d $MY_XDG_DATA ]] || mkdir "$MY_XDG_DATA"
 
-while [[ -n "$1" ]]; do
-	case $1 in
-        -d|--debug )
-            PS4='$LINENO: '
-            set -x;;
-        -r|--resume )
-            resume=true;;
-        -s|--stop )
-            stop=true;;
-        -T|--tomorrow )
-            tomorrow=true;;
-		-- )
-			shift
-			break;;
-	esac
-	shift
-done
-
-
-if [[ "$resume" = true && ! -f $TIMESTAMP_FILE ]]; then
-    exit 1
-fi
-
-if [[ "$stop" = true ]]; then
-    exec 1> /dev/null
-fi
-
-[[ -p $FIFO ]] || mkfifo "$FIFO"
-
-
-# ---------- Another Alarm is Already Running ----------
-if [[ -f $PID_FILE ]]; then
-    if kill -0 "$(cat "$PID_FILE")" &> /dev/null; then
-        if [[ "$resume" = true ]]; then
-            echo "No need to restart! An alarm is already running!" | tee >(logger -t "$(basename "$0")")
-            exit 2
-        fi
-
-        echo "An alarm is already running! Stopping existing alarm!" | tee >(logger -t "$(basename "$0")")
-
-        kill "$(cat "$PID_FILE")"
-
-        rm "$TIMESTAMP_FILE"
-        if pgrep dunst; then
-            sleep 0.5
-            xdotool key ctrl+space  # Shortcut to close dunst notification
-        fi
-        exit 0
+    if [[ "${xmonad_is_running}" = true ]]; then
+        FIFO=$MY_XDG_RUNTIME/fifo
+        [[ -p $FIFO ]] || mkfifo "$FIFO"
+    else
+        FIFO=$MY_XDG_RUNTIME/countdown.txt
+        EVENT_NAME_FILE=$MY_XDG_RUNTIME/event_name.txt
     fi
-fi
 
-if [[ "$stop" = true ]]; then
-    printf "\n" > "$FIFO"
-    exit 1
-fi
+    # ---------- Command Line Arguments ----------
+    eval set -- "$(getopt -o "d,s,T" -l "debug,stop,tomorrow" -- "$@")"
 
-echo $$ > "$PID_FILE"
-trap ':' SIGPIPE
-trap 'exit_handler; exit 1' SIGINT
+    while [[ -n "$1" ]]; do
+        case $1 in
+            -d|--debug )
+                PS4='$LINENO: '
+                set -x;;
+            -s|--stop )
+                stop=true;;
+            -T|--tomorrow )
+                tomorrow=true;;
+            -- )
+                shift
+                break;;
+        esac
+        shift
+    done
 
 
-# ---------- Set Alarm Time ----------
-if [[ -f $TIMESTAMP_FILE ]]; then
-    stop_time=$(cat "$TIMESTAMP_FILE")
-else
+    if [[ "$stop" = true ]]; then
+        exec 1> /dev/null
+    fi
+
+    # ---------- Another Alarm is Already Running ----------
+    if [[ -f $PID_FILE ]]; then
+        if kill -0 "$(cat "$PID_FILE")" &> /dev/null; then
+            echo "An alarm is already running! Stopping existing alarm!" | tee >(logger -t "$(basename "$0")")
+
+            kill "$(cat "$PID_FILE")"
+
+            if pgrep dunst; then
+                sleep 0.5
+                xdotool key ctrl+space  # Shortcut to close dunst notification
+            fi
+            exit 0
+        fi
+    fi
+
+    if [[ "$stop" = true ]]; then
+        printf "\n" > "$FIFO"
+        exit 1
+    fi
+
+    echo $$ > "$PID_FILE"
+    trap ':' SIGPIPE
+    trap 'exit_handler; exit 1' SIGINT
+
+    # ---------- Set Alarm Time ----------
     if [[ -z "$1" ]]; then
         alrm_time="$(echo | dmenu -p "Alarm:")"
     else
@@ -112,7 +98,6 @@ else
     if [[ -z "$alrm_time" ]]; then
         exit 1
     fi
-
 
     if [[ $alrm_time == *"s" ]]; then
         stop_time=$(date --date="${alrm_time%s} seconds" +%s)
@@ -125,34 +110,44 @@ else
         stop_time=$(date --date="$alrm_time minutes" +%s)
     fi
 
-    echo "$stop_time" > "$TIMESTAMP_FILE"
-fi
+    # ---------- Set Notification Message ----------
+    if [[ -z "$1" ]]; then
+        NOTIFICATION="THE TIMER IS DONE!"
+    else
+        NOTIFICATION="$1"; shift
+    fi
 
-# ---------- Set Notification Message ----------
-if [[ -z "$1" ]]; then
-    NOTIFICATION="THE TIMER IS DONE!"
-else
-    NOTIFICATION="$1"; shift
-fi
+    if [[ "${xmonad_is_running}" != true ]]; then
+        notify-send -t 5000 "Alarm" "The \"${NOTIFICATION}\" alarm has been set for ${alrm_time}."
+        printf "${NOTIFICATION}" > "${EVENT_NAME_FILE}"
+    fi
 
+    # ---------- Main Output ----------
+    iclock="<icon=clock.xbm/>"
+    while true; do
+        TL=$(time_left)
+        if [[ $TL -ge 3600 ]]; then
+            printf "<fc=$GREY>  %d:%02d:%02d$iclock</fc>  |  \n" $((TL/3600)) $((TL%3600/60)) $((TL%3600%60)) > "$FIFO"
+        else
+            printf "<fc=$GREY>  %d:%02d$iclock</fc>  |  \n" $((TL/60)) $((TL%60)) > "$FIFO"
+        fi
 
-# ---------- Main Output ----------
-iclock="<icon=clock.xbm/>"
-while true; do
-	TL=$(time_left)
-	if [[ $TL -ge 3600 ]]; then
-		printf "<fc=$GREY>  %d:%02d:%02d$iclock</fc>  |  \n" $((TL/3600)) $((TL%3600/60)) $((TL%3600%60))
-	else
-		printf "<fc=$GREY>  %d:%02d$iclock</fc>  |  \n" $((TL/60)) $((TL%60))
-	fi
-	sleep 1
+        sleep 1
 
-	if [[ $TL -le 0 ]]; then
-		break;
-	fi
-done > "$FIFO"
+        if [[ $TL -le 0 ]]; then
+            break;
+        fi
+    done
 
+    # ---------- Timer Finished ----------
+    if [[ "${xmonad_is_running}" = true ]]; then
+        notify_msg="${NOTIFICATION}"
+    else
+        notify_msg="***** ${NOTIFICATION} *****"
+    fi
 
-# ---------- Timer Finished ----------
-notify-send -u critical -t 0 -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "Alarm" "$NOTIFICATION"
-exit_handler
+    notify-send -u critical -t 0 -i /usr/share/icons/gnome/16x16/status/appointment-soon.png "Alarm" "${notify_msg}"
+    exit_handler
+}
+
+main "$@"

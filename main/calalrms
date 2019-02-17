@@ -26,7 +26,9 @@ today = dt.date.today()
 
 
 def main():
-    gutils.mkfifo(FIFO_PATH)
+    if xmonad_is_running:
+        gutils.mkfifo(FIFO_PATH)
+
     stop_alarm()
     create_pidfile()
 
@@ -65,9 +67,10 @@ def main():
         opts.extend([start, title])
         cmd_list.extend(opts)
 
-        with open(FIFO_PATH, 'w') as fifo:
-            log.debug('Writing "{}" to {}.'.format(title, FIFO_PATH))
-            fifo.write('"{}" at {}\n'.format(title, start))
+        if xmonad_is_running:
+            with open(FIFO_PATH, 'w') as fifo:
+                log.debug('Writing "{}" to {}.'.format(title, FIFO_PATH))
+                fifo.write('"{}" at {}\n'.format(title, start))
 
         try:
             log.debug('Command List: %s', cmd_list)
@@ -195,8 +198,9 @@ def stop_alarm():
         os.system('alarm --stop')
         sys.exit(0)
     else:
-        with open(FIFO_PATH, 'w') as fifo:
-            fifo.write('\n')
+        if xmonad_is_running:
+            with open(FIFO_PATH, 'w') as fifo:
+                fifo.write('\n')
 
 
 if __name__ == "__main__":
@@ -205,6 +209,13 @@ if __name__ == "__main__":
 
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
+
+    # Check if XMonad is running
+    try:
+        sp.check_call(['pgrep', 'xmonad'])
+        xmonad_is_running = True
+    except sp.CalledProcessError:
+        xmonad_is_running = False
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main()

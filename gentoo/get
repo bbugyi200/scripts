@@ -106,7 +106,7 @@ def add_to_set(packages, *, local=False):
 
             # Remove the package name from the world file to ensure that packages are never listed in
             # both @shared and the world file.
-            cmd_fmt = 'sed -i "\|{}|d" {}'
+            cmd_fmt = r'sed -i "\|{}|d" {}'
             sp.check_call(cmd_fmt.format(full_package_name, bad_set_fpath), shell=True)
 
     with open(set_fpath, 'w') as f:

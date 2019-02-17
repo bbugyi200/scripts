@@ -18,12 +18,12 @@ log = gutils.logging.getEasyLogger(__name__)
 def main(args):
     try:
         vargs = list(args.vargs)
-    except TypeError as e:
+    except TypeError:
         vargs = []
 
     try:
         minutes = int(vargs[0])
-    except (ValueError, IndexError) as e:
+    except (ValueError, IndexError):
         minutes = 50
     else:
         vargs.pop(0)

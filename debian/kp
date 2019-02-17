@@ -1,0 +1,31 @@
+#!/bin/bash
+
+#####################################################################
+#  Displays 'alarm' data using a Notification                       #
+#####################################################################
+
+alarm_runtime=/run/user/1000/alarm
+countdown_file="${alarm_runtime}"/countdown.txt
+event_name_file="${alarm_runtime}"/event_name.txt
+error_msg="No alarm is currently set."
+
+if [[ -f "${countdown_file}" ]]; then
+    countdown="$(awk '{print $2}' ${countdown_file} | awk -F'<' '{print $1}')"
+    if [[ -n "${countdown}" ]]; then
+        event_name="$(cat "${event_name_file}")"
+        event_time="$(pgrep -a "alarm" | awk '{print $4}')"
+
+        if [[ "${event_time}" == "-T" ]]; then
+            event_time="$(pgrep -a "alarm" | awk '{print $5}') (tomorrow)"
+        fi
+
+        notify_msg="Event Name = \"${event_name}\"\nEvent Time = ${event_time}\nCountdown = ${countdown}"
+    else
+        notify_msg="${error_msg}"
+    fi
+else
+    notify_msg="${error_msg}"
+fi
+
+debian-close-notifications
+notify-send -t 2500 "Alarm" "${notify_msg}"

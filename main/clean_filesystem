@@ -9,9 +9,11 @@
 /usr/bin/rm -rf /home/bryan/core /home/bryan/gccdump.s &> /dev/null
 
 # >>> DROPBOX
-DROPBOX_TMP=/home/bryan/Dropbox/tmp
+chmod -R bryan:bryan /home/bryan/Dropbox
 
+DROPBOX_TMP=/home/bryan/Dropbox/tmp
 rm -rf "${DROPBOX_TMP}" && mkdir "${DROPBOX_TMP}"
+
 find /home/bryan/Dropbox \( -name "gccdump.s" \
     -o -name "core" \
     -o -name "*'s conflicted copy*" \

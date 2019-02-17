@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if wmctrl -a "zsh:hera(2)"; then
+    exit 0
+fi
+
+# Open Terminal
+tm-init
+
+# Rearrange Windows
+xdotool key super+ctrl+bracketright
+xdotool key super+Tab
+xdotool key super+ctrl+bracketleft
+xdotool key super+Tab
+
+# Change Window Title
+wtitle "zsh:hera(2)"

@@ -1,4 +1,23 @@
 #!/bin/bash
 
+#####################################################################
+# Lock screen and suspend for N minutes. If system is still         #
+# suspended after N minutes, wake system up and hibernate.          #
+#####################################################################
+
+# How many minutes to suspend for?
+N=30
+
 my-screenlock &
-sleep 1.5 && sudo pm-suspend
+sleep 1.5
+
+thirty_minutes_from_start="$(date --date="${N} minutes" +%s)"
+
+# Suspend system for 30 minutes and 5 seconds.
+sudo rtcwake -m mem -s $((N*60 + 5))
+
+if [[ "$(date +%s)" -lt "${thirty_minutes_from_start}" ]]; then
+    exit 0
+fi
+
+sudo pm-hibernate

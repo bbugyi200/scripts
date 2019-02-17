@@ -1,8 +1,8 @@
 #!/bin/bash
 
-###############################################################################
-#  Merge All Rocketbook Notes into One PDF File                               #
-###############################################################################
+#####################################################################
+#  Merge All Rocketbook Notes into One PDF File                     #
+#####################################################################
 
 shopt -s nullglob  # Avoid false array results.
 
@@ -14,7 +14,20 @@ function merge_pdfs() {
 
     pdf_files=("${D}"/"${prefix}"*)
     if [[ -n "${pdf_files[*]}" ]]; then
-        pdfunite "${pdf_files[@]}" "${D}/${final_pdf_name}.pdf"
+        final_pdf_path="${D}/${final_pdf_name}.pdf"
+        if [[ -f  "${final_pdf_path}" ]]; then
+            tmp_pdf_path="${D}"/temp.pdf
+
+            mv "${final_pdf_path}" "${tmp_pdf_path}"
+            pdfunite "${tmp_pdf_path}" "${pdf_files[@]}" "${final_pdf_path}"
+            rm "${tmp_pdf_path}"
+        else
+            pdfunite "${pdf_files[@]}" "${final_pdf_path}"
+        fi
+
+        backup_dir="${D}"/backup
+        mkdir -p "${backup_dir}" &> /dev/null
+        mv "${pdf_files[@]}" "${backup_dir}"
     fi
 }
 

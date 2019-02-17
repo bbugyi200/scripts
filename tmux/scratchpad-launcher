@@ -1,0 +1,4 @@
+#!/bin/bash
+
+tmuxinator start ScratchPad root="$(tm-session-root --get ScratchPad)"
+urxvt -name scratchpad -e zsh -c "wtitle ScratchPad && fullscreen && tmux -L scratchpad attach -t ScratchPad"

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+window_title="$1"; shift
+window_cmd="$1"; shift
+
+if [[ "$1" =~ ^[0-9]+$ ]]; then
+    desktop_id="$1"; shift
+fi
+
+if wmctrl "$@" -a "${window_title}"; then
+    # Fixes bug where window is pulled to front of screen but
+    # another window remains focused (in the background).
+    wmctrl "$@" -a "${window_cmd}"
+else
+    if [[ -n "${desktop_id}" ]]; then
+        wmctrl -s "${desktop_id}"
+    fi
+
+    "${window_cmd}"
+fi

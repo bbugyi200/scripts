@@ -1,0 +1,5 @@
+#!/bin/bash
+
+battery_info="$(upower -i /org/freedesktop/UPower/devices/battery_BAT0 | grep -E "state|to\ full|to\ empty|percentage")"
+debian-close-notifications
+notify-send -t 3500 "Battery" "$(sed 's/^[[:space:]]*//' <<< "${battery_info}" | tr -s ' ')"

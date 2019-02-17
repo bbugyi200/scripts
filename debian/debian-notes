@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if ! pgrep xfce4-notes; then
+    xfce4-notes &
+    sleep 0.1
+fi
+
+xfce4-popup-notes

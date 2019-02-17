@@ -35,6 +35,7 @@ def main():
 
     cmd_list = ['find']
     cmd_list.extend(directory_list)
+    cmd_list.extend(['-path', '/home/bryan/Dropbox/.dropbox.cache', '-prune', '-o'])
     cmd_list.extend(['-regex', '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'])
 
     out = sp.check_output(cmd_list)

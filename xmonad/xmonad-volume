@@ -1,8 +1,10 @@
 #!/bin/bash
 
-FIFO=$XDG_RUNTIME_DIR/volume.fifo
+if [[ "$(hostname)" != *"athena"* ]]; then
+    exit 0
+fi
 
-set -x
+FIFO=$XDG_RUNTIME_DIR/volume.fifo
 
 [[ -p $FIFO ]] || mkfifo $FIFO
 

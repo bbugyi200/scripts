@@ -1,7 +1,7 @@
 #!/bin/awk -f
 
 {
-    printf("%-5s\t%-10s\t%-10s\t%-10s\t%-15s\n", "YEAR", "INVESTED", "TOTAL", "PROFIT", "TOTAL PROFIT")
+    printf("%-5s\t%-10s\t%-10s\t%-10s\t%-15s\n", "YEAR", "INVESTED", "TOTAL", "ANNUAL PROFIT", "CUMULATIVE PROFIT")
 
     invested = total = profit = total_profit = 0
     for (i = 0; i < $3; i = i + 1) {

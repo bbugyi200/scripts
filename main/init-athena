@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if wmctrl -a zsh:athena; then
+    exit 0
+fi
+
 # shellcheck disable=SC2016
 tmux_cmd='"PATH=$PATH:/usr/local/bin tm Terminal"'
 urxvt -e zsh -i -c "ssh-athena 'zsh -c ${tmux_cmd}'" &

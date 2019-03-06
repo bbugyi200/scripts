@@ -17,7 +17,7 @@ D="/home/bryan/.local/share/Trash/files"
 econfirm "sudo rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 
 D="/root/.local/share/Trash/files"
-econfirm "sudo rm -rf $D && sudo mkdir $D" "sudo -E xprint -x 'ls -a $D'"
+econfirm "sudo rm -rf $D && sudo mkdir $D" "sudo xprint -x 'ls -a $D'"
 
 D="/home/bryan/Downloads"
 econfirm "safe-rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"

@@ -3,18 +3,37 @@
 window_title="$1"; shift
 window_cmd="$1"; shift
 
-if [[ "$1" =~ ^[0-9]+$ ]]; then
-    desktop_id="$1"; shift
+# --- CFG for regex used below ---
+#   Loc -> Int | Int:Window
+#   Window -> Int | Int.Int
+#   Int -> [0-9]
+if [[ "$1" =~ ^[0-9]+(:[0-9]+(\.[0-9]+)?)?$ ]]; then
+    if [[ "$1" == *":"* ]]; then
+        desktop_id="${1%%:*}"
+        tmux_window="${1##*:}"
+    else
+        desktop_id="$1"
+    fi
+
+    shift
+fi
+
+if [[ -n "${desktop_id}" ]]; then
+	wmctrl -s "${desktop_id}"
+
+	if [[ "$(active_window_name)" == "${window_title}" ]]; then
+		exit 0
+	fi
 fi
 
 if wmctrl "$@" -a "${window_title}"; then
     # Fixes bug where window is pulled to front of screen but
     # another window remains focused (in the background).
     wmctrl "$@" -a "${window_cmd}"
-else
-    if [[ -n "${desktop_id}" ]]; then
-        wmctrl -s "${desktop_id}"
-    fi
 
+    if [[ -n "${tmux_window}" ]]; then
+        tmux -L "${window_title}" select-window -t "${tmux_window}"
+    fi
+else
     "${window_cmd}"
 fi

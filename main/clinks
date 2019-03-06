@@ -103,6 +103,9 @@ for D in "${data_dirs[@]}"; do
     mkdir /home/bryan/.local/share/"${D}" &> /dev/null
 done
 
+# >>> Other Directories
+mkdir -p /usr/share/rlwrap/{filters,completions} &> /dev/null
+
 # ---------- Main ----------
 if [[ $(hostname) == "athena" ]]; then
 	stow_it "/home/bryan/Dropbox/bin/cron.jobs" "/etc"

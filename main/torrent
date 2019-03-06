@@ -44,7 +44,7 @@ class MagnetCounter:
 
 
 SECONDS_IN_HOUR = 3600
-MAGNET_FILE = '{}/magnet'.format(gutils.xdg.init('data'))
+ARGS_FILE = '{}/args'.format(gutils.xdg.init('data'))
 
 log = gutils.logging.getEasyLogger(__name__)
 magnet_counter = MagnetCounter()
@@ -63,11 +63,11 @@ def term_handler(signum, frame):
 def usr1_handler(signum, frame):
     """Adds New Magnet File to Queue"""
     log.debug('SIGUSR1 signal received.')
-    with open(MAGNET_FILE, 'rb') as f:
-        magnet = pickle.load(f)
+    with open(ARGS_FILE, 'rb') as f:
+        args = pickle.load(f)
 
     wait()
-    torrent(magnet)
+    torrent(args)
 
 
 @atexit.register
@@ -94,32 +94,37 @@ def main():
         if args.debug:
             cmd_list.extend(['--log-debug', '-e', '/var/tmp/transmission.log'])
         sp.check_call(cmd_list, stdout=sp.DEVNULL)
+
+        time.sleep(1)
+        sp.check_call(['transmission-remote', '-t', 'all', '-r'], stdout=sp.DEVNULL)
     except sp.CalledProcessError:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
     else:
         magnet_queue.maxsize = args.maxsize
-        torrent(args.magnet)
+
+        torrent(args)
 
         wait()
         magnet_queue.join()
-        sp.check_call(['sudo', 'chown', '-R', 'plex:plex', args.download_dir])
         notify('All torrents are complete.')
+    finally:
+        sp.check_call(['sudo', 'chown', '-R', 'plex:plex', args.download_dir])
 
 
-def torrent(magnet):
+def torrent(args):
     """Creates new torrent thread worker. """
-    t = threading.Thread(target=_torrent, args=(magnet,), daemon=True)
+    t = threading.Thread(target=_torrent, args=(args,), daemon=True)
     t.start()
     threads.append(t)
 
 
-def _torrent(magnet):
+def _torrent(args):
     """Thread worker
 
     Downloads the torrent given by the @magnet string.
     """
-    log.debug('Adding "{}" to Magnet Queue...'.format(magnet_pprint(magnet)))
-    magnet_queue.put(magnet)
+    log.debug('Adding "{}" to Magnet Queue...'.format(magnet_pprint(args.magnet)))
+    magnet_queue.put(args.magnet)
 
     magnet_id = magnet_counter.increment()
 
@@ -129,15 +134,15 @@ def _torrent(magnet):
             while True:
                 time.sleep(1)
                 try:
-                    sp.check_call(['transmission-remote', '-a', magnet, '-w', args.download_dir], stdout=sp.DEVNULL)
+                    sp.check_call(['transmission-remote', '-a', args.magnet, '-w', args.download_dir], stdout=sp.DEVNULL)
                 except sp.CalledProcessError:
                     i += 1
                     if i <= 10:
                         continue
                     else:
-                        raise RuntimeError('Failed to start "{}".'.format(magnet_pprint(magnet)))
+                        raise RuntimeError('Failed to start "{}".'.format(magnet_pprint(args.magnet)))
                 else:
-                    log.debug('Successfully added "{}".'.format(magnet_pprint(magnet)))
+                    log.debug('Successfully added "{}".'.format(magnet_pprint(args.magnet)))
                     break
 
             i = 0
@@ -147,7 +152,7 @@ def _torrent(magnet):
                 i += 1
                 if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
                     msg = "Torrent is still attempting to download \"{0}\" after {1:.1f} hour(s) "\
-                          " elapsed time. Shutting down early.".format(magnet_pprint(magnet), args.timeout)
+                          " elapsed time. Shutting down early.".format(magnet_pprint(args.magnet), args.timeout)
                     raise RuntimeError(msg)
 
                 time.sleep(SLEEP_TIME)
@@ -164,13 +169,13 @@ def _torrent(magnet):
 
                 if status_line is None:
                     msg = 'The magnet "{}" has been lost somehow. The download was perhaps '\
-                          'stopped manually?'.format(magnet_pprint(magnet))
+                          'stopped manually?'.format(magnet_pprint(args.magnet))
                     raise RuntimeError(msg)
 
                 if '100%' in status_line:
                     break
 
-            gutils.notify('Finished Downloading "{}".'.format(magnet_pprint(magnet)))
+            gutils.notify('Finished Downloading "{}".'.format(magnet_pprint(args.magnet)))
 
         finally:
             remove_magnet(magnet_id)
@@ -213,9 +218,8 @@ def create_pidfile():
     try:
         gutils.create_pidfile()
     except gutils.StillAliveException as e:
-        log.debug('Dumping "{}" to {}.'.format(magnet_pprint(args.magnet), MAGNET_FILE))
-        with open(MAGNET_FILE, 'wb') as f:
-            pickle.dump(args.magnet, f)
+        with open(ARGS_FILE, 'wb') as f:
+            pickle.dump(args, f)
 
         log.debug('Sending SIGUSR1 to {}.'.format(e.pid))
         os.kill(e.pid, signal.SIGUSR1)

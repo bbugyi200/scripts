@@ -4,4 +4,4 @@
 #  Gets Git Repo Name  #
 ########################
 
-basename "$(git rev-parse --show-toplevel)"
+git remote show origin | awk '/.git$/ {print $NF}' | head -n 1 | awk -F'/' '{print $NF}' | awk -F'.' '{print $1}'

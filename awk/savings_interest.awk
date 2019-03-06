@@ -1,5 +1,9 @@
 #!/bin/awk -f
 
+BEGIN {
+    printf("EXPECTED INPUT: %s\n\n", "<Amount> <Interest> <# of Years>");
+}
+
 {
     printf("%-5s\t%-10s\t%-10s\t%-10s\t%-15s\n", "YEAR", "INVESTED", "TOTAL", "ANNUAL PROFIT", "CUMULATIVE PROFIT")
 
@@ -11,4 +15,5 @@
         total_profit = total - invested
         printf("%-5s\t$%-10.2f\t$%-10.2f\t$%-10.2f\t$%-15.2f\n", i + 1, invested, total, profit, total_profit)
     }
+    printf("\n")
 }

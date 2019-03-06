@@ -48,7 +48,7 @@ case "$GLOBAL_MARK" in
         MARKED_FILE='/home/bryan/.Xmodmap'
         ;;
     'P' )
-        MARKED_FILE='/home/bryan/.zprofile'
+        MARKED_FILE='/home/bryan/.profile'
         ;;
     'Q' )
         MARKED_FILE='/home/bryan/Dropbox/home/.config/qutebrowser/config.py'

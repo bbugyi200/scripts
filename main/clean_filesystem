@@ -12,7 +12,10 @@
 chmod -R bryan:bryan /home/bryan/Dropbox
 
 DROPBOX_TMP=/home/bryan/Dropbox/tmp
-rm -rf "${DROPBOX_TMP}" && mkdir "${DROPBOX_TMP}"
+
+rm -rf "${DROPBOX_TMP}"
+mkdir "${DROPBOX_TMP}"
+chown -R bryan:bryan "${DROPBOX_TMP}"
 
 find /home/bryan/Dropbox \( -name "gccdump.s" \
     -o -name "core" \

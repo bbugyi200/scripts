@@ -32,10 +32,11 @@ Note: you can supply custom mpv path and options with the MPV environment
 
 import argparse
 import errno
-import os
-import subprocess
 import fcntl
+import os
 import string
+import subprocess
+import sys
 
 import gutils
 
@@ -46,6 +47,10 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 FIFO = "{}/fifo".format(gutils.xdg.init('runtime'))
 log.debug(FIFO)
+
+output_file = open('/var/tmp/umpv.log', 'w')
+sys.stdout = output_file
+sys.stderr = output_file
 
 
 # this is the same method mpv uses to decide this

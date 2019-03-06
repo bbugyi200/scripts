@@ -1,0 +1,38 @@
+#!/usr/bin/python3
+
+"""Navigate Windows on Current Desktop"""
+
+import datetime as dt  # noqa: F401
+import os  # noqa: F401
+import subprocess as sp  # noqa: F401
+import sys  # noqa: F401
+
+import gutils
+
+
+log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
+
+
+def main(args):
+    active_desktop_id = gutils.shell('active_desktop_id')
+    window_stack = gutils.shell("wmctrl -l | awk '$2=={} {{print $1}}'".format(active_desktop_id)).split()
+
+    active_window_id = gutils.shell('active_window_id')
+    old_index = window_stack.index(active_window_id)
+
+    inc = 1 if args.direction == 'next' else -1
+    new_index = (old_index + inc) % len(window_stack)
+
+    new_window_xid = window_stack[new_index]
+    gutils.shell('wmctrl -i -a {}'.format(new_window_xid))
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('direction', choices=['next', 'prev'],
+                        help='Go to next or previous window?')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

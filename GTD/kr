@@ -23,8 +23,10 @@ def main(args):
 
     try:
         minutes = int(vargs[0])
+        user_gave_minutes = True
     except (ValueError, IndexError):
-        minutes = 50
+        minutes = 52
+        user_gave_minutes = False
     else:
         vargs.pop(0)
 
@@ -35,6 +37,10 @@ def main(args):
         event_name = ' '.join(vargs)
     elif args.end_break:
         event_name = end_break
+
+        if not user_gave_minutes:
+            minutes = 17
+
         try:
             sp.check_call(['task', 'start.any:', 'stop'])
         except sp.CalledProcessError:
@@ -68,9 +74,12 @@ def main(args):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('vargs', nargs='*', metavar=('arg'), default=50,
+
+    default = 50
+    parser.add_argument('vargs', nargs='*', metavar=('arg'), default=default,
                         help='Number of minutes, offset from now, the next break will be set for '
-                             'OR name of the calendar event that will be created.')
+                             'OR name of the calendar event that will be created. Defaults to {}.'.format(default))
+
     parser.add_argument('-e', '--end-break', action='store_true',
                         help='Set khal event name to "END BREAK".')
     parser.add_argument('-r', '--review', dest='review', action='store_true',

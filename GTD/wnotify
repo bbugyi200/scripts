@@ -1,0 +1,17 @@
+#!/bin/bash
+
+bar="----------"
+read -r -d '' notify_msg <<-EOM
+	${bar} STATUS ${bar}
+	$(watson status)
+
+	${bar} WEEKLY REPORT ${bar}
+	$(watson report -w -c -G | head -n 3)
+
+	${bar} DAILY REPORT ${bar}
+	$(watson report -d -c -G | head -n 3)
+EOM
+
+
+debian-close-notifications
+notify-send -t 7000 -- "Watson" "${notify_msg}"

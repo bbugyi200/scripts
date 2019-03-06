@@ -1,0 +1,16 @@
+#!/bin/bash
+
+function process_file() {
+    printf -- "---------- %s ----------\n" "${1^^}"
+
+    while IFS='' read -r line || [[ -n "${line}" ]]; do
+        python3 <<- EOF
+		import torrent
+		print(torrent.magnet_pprint('${line}'))
+		EOF
+    done < "/home/bryan/.local/share/torrent/$1.txt" | sed 's/\+%.*//g' | sed 's/\+/ /g'
+    echo
+}
+
+process_file "movies"
+process_file "tv"

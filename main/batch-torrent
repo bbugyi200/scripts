@@ -1,8 +1,9 @@
 #!/bin/bash
 
-###############################################################################
-# Use 'torrent' to rip all movies / TV shows listed in a text file.           #
-###############################################################################
+###################################################################
+# Use 'torrent' to rip all movies / TV shows listed in a          #
+# text file.                                                      #
+###################################################################
 
 is_first_magnet=true
 data_dir=/home/bryan/.local/share/torrent
@@ -21,7 +22,7 @@ function process_torrent_file() {
         if [[ "${is_first_magnet}" == true ]]; then
             sleep 15
         else
-            sleep 1
+            sleep 3
         fi
 
         is_first_magnet=false
@@ -32,6 +33,7 @@ function process_torrent_file() {
     [ -d "${full_backup_dir}" ] || mkdir -p "${full_backup_dir}"
 
     if [[ -s "${filepath}" ]]; then
+        cp -f "${filepath}" "${full_backup_dir}"/last.txt
         mv "${filepath}" "${full_backup_dir}"/"$(date +%Y%m%d%H%M)".txt
         touch "${filepath}"
     fi

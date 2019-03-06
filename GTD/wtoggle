@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#####################################################################
+#  Toggle watson tracking.                                          #
+#####################################################################
+
+function notify() {
+    notify-send -t 3000 "Watson" "$1"
+}
+
+debian-close-notifications
+
+if [[ "$(watson status)" == "No "* ]]; then
+    watson start Study
+    notify "Starting Watson Tracker"
+else
+    watson stop
+    notify "Stopping Watson Tracker"
+fi

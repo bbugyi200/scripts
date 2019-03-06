@@ -1,0 +1,7 @@
+#!/bin/bash
+
+until ping -c1 192.168.1.154 &> /dev/null; do
+    sleep 1
+done
+
+notify-send -t 0 "***** ATHENA IS ONLINE *****"

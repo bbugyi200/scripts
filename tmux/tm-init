@@ -4,7 +4,7 @@
 #  Initialize Default Tmuxinator Session                                      #
 ###############################################################################
 
-urxvt -e zsh -c 'tm Terminal' &
+urxvt -e zsh -c "tm Terminal" &
 
 sleep 0.2
 wtitle zsh:"$(hostname)"

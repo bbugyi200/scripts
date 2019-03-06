@@ -1,30 +1,30 @@
 #!/bin/bash
 
 #####################################################################
-# Lock screen and suspend for N minutes. If system is still         #
-# suspended after N minutes, wake system up and hibernate.          #
+# Lock screen and suspend for N seconds. If system is still         #
+# suspended after N seconds, wake system up and hibernate.          #
 #####################################################################
 
-# How many minutes to suspend for?
+# How many seconds to suspend for?
 if [[ -n "$1" ]]; then
-    if [[ "$1" =~ ^[0-9]+$ ]]; then
-        N="$1"
-    else
-        >&2 printf "[ERROR] Invalid argument: $1.\n\nArgument MUST be an integer.\n"
+    if ! [[ "$1" =~ ^-?[1-9][0-9]*$ ]]; then
+        >&2 printf "%s\n" "[ERROR] Argument MUST be an integer."
         exit 2
     fi
+
+    N="$1"
 else
-    N=30
+    N=1800
 fi
 
 my-screenlock &
 sleep 1.5
 
-N_minutes_from_start="$(date --date="${N} minutes" +%s)"
+N_seconds_from_start="$(date --date="${N} seconds" +%s)"
 
-# Suspend system for N minutes and 5 seconds.
-sudo rtcwake -m mem -s $((N*60 + 5)) &> /dev/null
+# Suspend system for N+1 seconds.
+sudo rtcwake -m mem -s $((N + 1)) &> /dev/null
 
-if [[ "$(date +%s)" -gt "${N_minutes_from_start}" ]]; then
+if [[ "$(date +%s)" -gt "${N_seconds_from_start}" ]]; then
     sudo pm-hibernate
 fi

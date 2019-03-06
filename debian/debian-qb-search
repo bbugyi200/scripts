@@ -1,4 +1,7 @@
 #!/bin/bash
 
 xdotool keyup Alt_L Alt_R Super_L Super_R
-wmctrl -x -a qutebrowser && xdotool key Escape "$@"
+wmctrl -x -a qutebrowser
+
+sleep 0.1
+xdotool key Escape "$@"

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ "$(watson status)" != "No "* ]]; then
+	wtoggle && wdel
+fi
+
+kstop

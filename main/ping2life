@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+	ip_addr="$1"
+else
+	ip_addr="10.1.1.2"
+fi
+
+i=0
+until ping -c1 "${ip_addr}" &> /dev/null; do
+    sleep 1
+	if [[ "${i}" -gt 1800 ]]; then
+		notify-send -t 0 "***** FAILED TO CONNECT TO ${ip_addr} *****"
+		exit 1
+	fi
+
+	i=$((i + 1))
+done
+
+notify-send -t 0 "***** CONNECTION ESTABLISHED TO ${ip_addr} *****"

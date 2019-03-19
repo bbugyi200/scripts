@@ -4,4 +4,5 @@
 #  Gets Git Repo Name  #
 ########################
 
-git remote show origin | awk '/.git$/ {print $NF}' | head -n 1 | awk -F'/' '{print $NF}' | awk -F'.' '{print $1}'
+repo_name="$(git remote show origin | awk '/Fetch URL:/ {print $NF}' | head -n 1 | awk -F'/' '{print $NF}')"
+echo "${repo_name%%.git}"

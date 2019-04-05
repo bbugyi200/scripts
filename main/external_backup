@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Remember to run 'mount /dev/sdc /media/bryan/perseus' first!
+confirm "sudo mount /dev/sdc /media/bryan/perseus"
 
-rsync -av --delete /media/bryan/hercules/archive/ /media/bryan/perseus/archive
-rsync -av --delete /media/bryan/hercules/backup /media/bryan/perseus/backup
+printf "LAST EXTERNAL BACKUP: %s\n\n" "$(cat /media/bryan/perseus/external.txt)"
+confirm "rsync -av --delete /media/bryan/hercules /media/bryan/perseus"
 date > /media/bryan/perseus/external.txt
 notify-send "External Backup is Complete! :)"
 
-# Run 'umount /dev/sdc' when the backup is complete!
+confirm "sudo umount /dev/sdc"

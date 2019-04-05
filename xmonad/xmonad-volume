@@ -10,7 +10,7 @@ FIFO=$XDG_RUNTIME_DIR/volume.fifo
 
 while true; do
     if pgrep xmobar > /dev/null; then
-        VOLUME=$(amixer get Master | grep ".*\[[0-9]\+%" | sed "s/.*\[\([0-9]\+\)%.*$/\1/")
+        VOLUME=$(amixer get Master | grep ".*\[[0-9]\+%" | sed "s/.*\[\([0-9]\+\)%.*$/\1/" | head -n 1)
         if [[ $VOLUME -eq 0 ]]; then
             NUM_OF_BANGS=0
         else

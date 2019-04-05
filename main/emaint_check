@@ -67,7 +67,7 @@ function get_max_days() {
             max="${max_update_days}"
             ;;
         "cleanup" )
-            max="$((2*max_update_days))"
+            max="$((3 * max_update_days))"
             ;;
     esac
 

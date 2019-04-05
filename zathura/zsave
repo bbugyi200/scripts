@@ -1,0 +1,3 @@
+#!/bin/bash
+
+xdotool type --delay 100 bjbk && sleep 1 && xdotool key Escape

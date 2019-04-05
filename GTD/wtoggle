@@ -8,7 +8,9 @@ function notify() {
     notify-send -t 3000 "Watson" "$1"
 }
 
-debian-close-notifications
+if [[ "$(uname -a)" == *"Debian"* ]]; then
+	debian-close-notifications
+fi
 
 if [[ "$(watson status)" == "No "* ]]; then
     watson start Study

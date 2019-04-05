@@ -1,0 +1,29 @@
+#!/bin/bash
+
+###################################################################
+#  Sets up tmux panes to use Voltron to display GDB information.  #
+###################################################################
+
+source tmux_view.sh
+
+
+function header() {
+	bar="=========="
+	printf "%s %s %s" "${bar}" "${1^^}" "${bar}"
+}
+
+
+shell "voltron view command --hide-header 'cmds printf \"%s\n\", \"$(header "display variables")\"; enable display; display; disable display; printf \"\n%s\n\", \"$(header "function arguments")\"; info args; printf \"\n%s\n\", \"$(header "local variables")\"; info locals' --lexer c"
+
+split -h
+shell "voltron view disasm"
+
+split -p 50
+shell "voltron view registers -o"
+
+split -p 50
+shell "voltron view command 'backtrace 10'"
+
+focus 0
+split -p 40
+shell "voltron view command 'info breakpoints'"

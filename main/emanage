@@ -124,11 +124,9 @@ def write_timestamp(fp, cmd):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
 
-    default = 7
-    parser.add_argument('-M', '--max-days', nargs='?', type=int, default=default,
+    parser.add_argument('-M', '--max-days', nargs='?', type=int,
                         help="Max number of days without update before complaining. This option "
-                             "is only checked when used with the '--maint-check' option. Defaults "
-                             "to {}.".format(default))
+                             "is only checked when used with the '--maint-check' option.")
 
     ex_group = parser.add_mutually_exclusive_group()
     ex_group.add_argument('-u', '--update', dest='update', action='store_true',
@@ -147,6 +145,12 @@ if __name__ == "__main__":
                         help='Prints the command list instead of executing it.')
 
     args = parser.parse_args()
+
+    if args.maint_check and args.max_days is None:
+        parser.error(
+            'The --max-days option must be provided when --maint-check '
+            'is specified.'
+        )
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main(args)

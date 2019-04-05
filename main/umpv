@@ -35,8 +35,8 @@ import errno
 import fcntl
 import os
 import string
-import subprocess
-import sys
+import subprocess as sp
+import sys  # noqa: F401
 
 import gutils
 
@@ -48,13 +48,12 @@ log = gutils.logging.getEasyLogger(__name__)
 FIFO = "{}/fifo".format(gutils.xdg.init('runtime'))
 log.debug(FIFO)
 
-output_file = open('/var/tmp/umpv.log', 'w')
-sys.stdout = output_file
-sys.stderr = output_file
-
 
 # this is the same method mpv uses to decide this
 def is_url(filename):
+    if filename.startswith('magnet'):
+        return True
+
     parts = filename.split("://", 1)
     if len(parts) < 2:
         return False
@@ -82,6 +81,15 @@ if __name__ == "__main__":
 
     files = [make_abs(f) for f in args.files]
 
+    data_dir = '/home/bryan/.local/share/umpv'
+    last_file = '{}/last'.format(data_dir)
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+
+    if len(files) > 0:
+        with open(last_file, 'w') as f:
+            f.write(files[0])
+
     fifo_fd = -1
     try:
         fifo_fd = os.open(FIFO, os.O_NONBLOCK | os.O_WRONLY)
@@ -101,12 +109,12 @@ if __name__ == "__main__":
             # escape: \ \n "
             f = f.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
             f = "\"" + f + "\""
-            append = " append" if args.append else ""
+            append = " append-play" if args.append else ""
             fifo.write("raw loadfile " + f + "{}\n".format(append))
 
             # Fixes issue where mpv stays paused when new video is used to replace current one
             # after the current one has already concluded.
-            fifo.write("set_property pause no\n")
+            fifo.write("set pause no\n")
     else:
         # Recreate pipe if it doesn't already exist.
         # Also makes sure it's safe, and no other user can create a bogus pipe
@@ -120,6 +128,13 @@ if __name__ == "__main__":
         opts = (os.getenv("MPV") or "mpv").split()
         opts.extend(["--no-terminal", "--force-window", "--input-file=" + FIFO,
                      "--"])
-        opts.extend(files)
+        if files:
+            opts.extend(files)
+            sp.check_call(opts)
+        else:
+            opts.extend(['{}/{}'.format(data_dir, 'empty.mpeg')])
+            sp.Popen(opts)
 
-        subprocess.check_call(opts)
+            import time
+            time.sleep(0.5)
+            gutils.shell('cmpv keypress TAB')

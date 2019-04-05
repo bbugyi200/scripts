@@ -7,6 +7,7 @@ import re
 import signal
 import socket
 import subprocess as sp
+import sys  # noqa: F401
 import time
 
 import gutils
@@ -16,31 +17,45 @@ import gutils
 ############################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
-CACHE_FILE = '{}/recently-opened.txt'.format(gutils.xdg.init('data'))
+xdg_data_dir = gutils.xdg.init('data')
+CACHE_FILE = '{}/recently_opened_docs'.format(xdg_data_dir)
+FIND_CACHE_FILE = '{}/all_docs'.format(xdg_data_dir)
 
 
 def main():
+    all_docs = None
+    if args.generate_cache or not os.path.isfile(FIND_CACHE_FILE):
+        directory_list = ['/home/bryan/Dropbox', '/home/bryan/Downloads', '/home/bryan/projects']
+        if socket.gethostname() == 'athena':
+            directory_list.append('/media/bryan/hercules/archive/home/bryan/Dropbox')
+
+        cmd_list = ['find']
+        cmd_list.extend(directory_list)
+        cmd_list.extend(['-path', '/home/bryan/Dropbox/.dropbox.cache', '-prune', '-o'])
+        cmd_list.extend(['-regex', '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'])
+
+        out = sp.check_output(cmd_list)
+        all_docs = out.decode().strip()
+
+        with open(FIND_CACHE_FILE, 'w') as f:
+            f.write(all_docs)
+
+    if args.quiet:
+        sys.exit(0)
+
+    if all_docs is None:
+        out = sp.check_output(['cat', FIND_CACHE_FILE])
+        all_docs = out.decode().strip()
+
     try:
         cmd = 'wmctrl -lx | grep "zathura\|okular" | tr -s " " | cut -d\' \' -f5- '\
               '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\|okular\\)"'
-        decoded = check_output(cmd)
+        decoded = gutils.shell(cmd)
         open_docs = decoded.split('\n')
         log.debug('Open Docs: {}'.format(' '.join(open_docs)))
     except sp.CalledProcessError:
         open_docs = None
         log.debug('No documents are currently open in zathura.')
-
-    directory_list = ['/home/bryan/Dropbox', '/home/bryan/Downloads', '/home/bryan/projects']
-    if socket.gethostname() == 'athena':
-        directory_list.append('/media/bryan/hercules/archive/home/bryan/Dropbox')
-
-    cmd_list = ['find']
-    cmd_list.extend(directory_list)
-    cmd_list.extend(['-path', '/home/bryan/Dropbox/.dropbox.cache', '-prune', '-o'])
-    cmd_list.extend(['-regex', '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'])
-
-    out = sp.check_output(cmd_list)
-    all_docs = out.decode().strip()
 
     with open(CACHE_FILE, 'r') as f:
         cached_docs = [x.strip() for x in f.readlines()]
@@ -68,7 +83,7 @@ def main():
 
     add_to_cache(choice)
 
-    active_window_class = check_output('active_window_class')
+    active_window_class = gutils.shell('active_window_class')
     if active_window_class == 'Zathura':
         open_document('zathura', choice)
     elif active_window_class == 'okular':
@@ -82,7 +97,7 @@ def main():
 
 def open_document(cmd, doc, *, opts=[]):
     if args.overwrite or args.refresh:
-        pid = int(check_output('active_window_pid'))
+        pid = int(gutils.shell('active_window_pid'))
         log.debug('Killing Document Instance: {}'.format(pid))
         os.kill(pid, signal.SIGTERM)
 
@@ -141,18 +156,14 @@ def add_to_cache(doc):
             f.write(doc)
 
 
-def check_output(cmd):
-    """Wrapper for subprocess.check_output
-
-    Args:
-        cmd (str): command string.
-    """
-    out = sp.check_output(cmd, shell=True)
-    return out.decode().strip()
-
-
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
+    parser.add_argument('-C', dest='generate_cache', action='store_true',
+                        help='Re-generate the document cache (aka the "find command cache").')
+    parser.add_argument('-q', '--quiet', dest='quiet', action='store_true',
+                        help='Do not prompt the user to choose a document. Use with -C to '
+                             'silently re-generate the document cache (aka the "find command  '
+                             'cache").')
     parser.add_argument('-x', dest='overwrite', action='store_true',
                         help='Close current Zathura instance before opening new one.')
     parser.add_argument('-R', dest='refresh', action='store_true',

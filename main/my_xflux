@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if pgrep xflux; then
+	pkill -x xflux
+fi
+
+/usr/bin/xflux -z 08060 -k 3000

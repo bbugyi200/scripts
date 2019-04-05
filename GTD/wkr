@@ -4,5 +4,5 @@
 #  Wrapper for kr that starts Watson Tracking                     #
 ###################################################################
 
-wtoggle
+wtoggle && wnotify
 kr "$@"

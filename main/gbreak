@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sed -i "3{/^break/d;}" "${PWD}"/.gdbinit
+sed -i "3ibreak $*" "${PWD}"/.gdbinit

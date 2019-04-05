@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo "$@" > /run/user/1000/umpv/fifo

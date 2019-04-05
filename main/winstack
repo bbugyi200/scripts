@@ -15,6 +15,15 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):
+    hostname = gutils.shell('hostname')
+    if hostname == 'athena':
+        if args.direction == 'next':
+            gutils.shell('xdotool key super+d')
+        else:
+            gutils.shell('xdotool key super+u')
+
+        sys.exit(0)
+
     active_desktop_id = gutils.shell('active_desktop_id')
     window_stack = gutils.shell("wmctrl -l | awk '$2=={} {{print $1}}'".format(active_desktop_id)).split()
 

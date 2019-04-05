@@ -14,7 +14,7 @@ source gutils.sh
 eval set -- "$(getopt -o "d,h,n,v" -l "debug,help,no-script,verbose" -- "$@")"
 
 export USAGE_GRAMMAR=(
-    "[-d] [-s] [-v] COMMAND"
+    "[-d] [-n] [-v] COMMAND"
     "-h"
 )
 

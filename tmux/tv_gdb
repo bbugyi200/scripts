@@ -1,0 +1,16 @@
+#!/bin/bash
+
+source tmux_view.sh
+
+
+split -p 20
+focus 0
+
+split -h
+shell "watch -n 1 tail -n \$((\$(tput lines) - 2)) gdb.log"
+
+split
+loop "watch -d -n 1 cat .gdbinit; vim .gdbinit ~/.gdbinit"
+
+focus 0
+shell "tgdb"

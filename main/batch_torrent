@@ -1,0 +1,93 @@
+#!/bin/bash
+
+read -r -d '' doc << EOM
+Use 'torrent' to rip all movies / TV shows listed in a text file.
+EOM
+
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,v" -l "debug,help,verbose" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-v]"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+# ---------- Main ----------
+data_dir=/home/bryan/.local/share/torrent
+backup_dir="${data_dir}"/backups
+[ -d "${backup_dir}" ] || mkdir -p "${backup_dir}"
+
+function process_torrent_file() {
+    filename="$1"; shift
+    download_dir="$1"; shift
+
+    filepath="${data_dir}"/"${filename}"
+
+    while IFS='' read -r magnet || [[ -n "${magnet}" ]]; do
+		if [[ "${debug}" == true ]]; then
+			torrent_args="-dv"
+		fi
+
+        torrent ${torrent_args} -w /media/bryan/hercules/media/Entertainment/"${download_dir}" "${magnet}" &
+
+		sleep 5
+    done < "${filepath}"
+
+    torrent_category="${filename%%.txt}"
+    full_backup_dir="${backup_dir}"/"${torrent_category}"
+    [ -d "${full_backup_dir}" ] || mkdir -p "${full_backup_dir}"
+
+    if [[ -s "${filepath}" ]]; then
+        cp -f "${filepath}" "${full_backup_dir}"/last.txt
+        mv "${filepath}" "${full_backup_dir}"/"$(date +%Y%m%d%H%M)".txt
+        touch "${filepath}"
+    fi
+}
+
+process_torrent_file movies.txt "Movies"
+process_torrent_file tv.txt "TV"

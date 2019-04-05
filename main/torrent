@@ -44,7 +44,11 @@ class MagnetCounter:
 
 
 SECONDS_IN_HOUR = 3600
-ARGS_FILE = '{}/args'.format(gutils.xdg.init('data'))
+xdg_data_dir = gutils.xdg.init('data')
+ARGS_FILE = '{}/args'.format(xdg_data_dir)
+
+# Created after the first torrent is successfully added to transmission.
+TSM_FILE = '{}/tsm_is_online'.format(xdg_data_dir)
 
 log = gutils.logging.getEasyLogger(__name__)
 magnet_counter = MagnetCounter()
@@ -70,14 +74,17 @@ def usr1_handler(signum, frame):
     torrent(args)
 
 
-@atexit.register
 def exit_handler():
     """Stop Transmission Daemon and Disconnect from VPN"""
     sp.Popen(['killall', '-9', 'transmission-daemon'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
     sp.Popen(['PIA', 'stop'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+    if os.path.exists(TSM_FILE):
+        os.remove(TSM_FILE)
 
 
 def main():
+    atexit.register(exit_handler)
+
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
     signal.signal(signal.SIGUSR1, usr1_handler)
@@ -143,6 +150,9 @@ def _torrent(args):
                         raise RuntimeError('Failed to start "{}".'.format(magnet_pprint(args.magnet)))
                 else:
                     log.debug('Successfully added "{}".'.format(magnet_pprint(args.magnet)))
+                    if not os.path.exists(TSM_FILE):
+                        os.system('touch {}'.format(TSM_FILE))
+
                     break
 
             i = 0
@@ -218,6 +228,13 @@ def create_pidfile():
     try:
         gutils.create_pidfile()
     except gutils.StillAliveException as e:
+        if not os.path.exists(TSM_FILE):
+            while not os.path.exists(TSM_FILE):
+                log.debug('{} does not exist yet. Waiting...'.format(TSM_FILE))
+                time.sleep(1)
+
+            time.sleep(1)
+
         with open(ARGS_FILE, 'wb') as f:
             pickle.dump(args, f)
 

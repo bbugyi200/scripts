@@ -1,0 +1,8 @@
+#!/bin/bash
+
+source tmux_view.sh
+
+
+shell "vvv"
+split -h -p 40
+focus 0

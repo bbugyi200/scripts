@@ -1,0 +1,37 @@
+#!/bin/bash
+
+###################################################################
+#  Extracts zip archive containing an SRT file into the           #
+# appropriate media directory and renames it to match the         #
+# media file it corresponds to.                                   #
+###################################################################
+
+source gutils.sh
+
+
+if [[ "$1" == "-d" ]]; then
+	shift
+	PS4='$LINENO: '
+	set -x
+fi
+
+
+zip_file="$1"; shift
+
+
+srt_file="$(atool -l "${zip_file}" | grep -e "\.\(srt\|sub\)$" | awk -F'   ' '{print $NF}')"
+
+temp_file="${srt_file%.srt}"
+while [[ -n "${temp_file}" && -z "${media_file}" ]]; do
+	media_file="$(find /media/bryan/hercules/media/Entertainment -type f | /home/bryan/.fzf/bin/fzf -i --filter="${temp_file}" | grep -e "\.\(mkv\|mp4\|avi\)$" | head -n 1)"
+	temp_file="${temp_file:0:-1}"
+done
+
+if [[ -z "${media_file}" ]]; then
+	die "Unable to find fuzzy match for media file."
+fi
+
+media_dir="$(dirname "${media_file}")"
+
+sudo atool -X "${media_dir}" "${zip_file}"
+sudo mv "${media_dir}"/"${srt_file}" "${media_file%.*}".srt

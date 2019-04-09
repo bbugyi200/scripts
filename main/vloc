@@ -1,0 +1,15 @@
+#!/bin/bash
+
+IFS=' ' read -r -a files <<< "$(locate -r "$*" | tr '\n' ' ')"
+
+select f in "${files[@]}"; do
+	case "${f}" in
+		* )
+			break
+			;;
+	esac
+done
+
+if [[ -n "${f}" ]]; then
+	"${EDITOR:-vim}" "${f}"
+fi

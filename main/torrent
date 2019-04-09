@@ -173,14 +173,17 @@ def _torrent(args):
 
                 status_line = None
                 for line in out_lines:
-                    if re.match(r'^{}\s.*'.format(magnet_id), line):
+                    # Torrent status line may have a '*' next to the ID number
+                    # if that torrent has a status of 'Stopped'.
+                    if re.match(r'^{}\*?\s.*'.format(magnet_id), line):
                         status_line = line.lower()
                         break
 
                 if status_line is None:
-                    msg = 'The magnet "{}" has been lost somehow. The download was perhaps '\
-                          'stopped manually?'.format(magnet_pprint(args.magnet))
-                    raise RuntimeError(msg)
+                    raise RuntimeError(
+                        'The magnet "{0}" (#{1}) has been lost somehow.\n\n'
+                        '{2}\n'.format(magnet_pprint(args.magnet), magnet_id, '\n'.join(out_lines))
+                    )
 
                 if '100%' in status_line:
                     break

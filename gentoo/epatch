@@ -373,13 +373,35 @@ ebuild "${EBUILD}" clean unpack
 PORTAGE_BUILD_DIR=/var/tmp/portage
 WORK_DIR="$(find "${PORTAGE_BUILD_DIR}" -type d -regex ".*/work/${P%_*}[^/]*")"
 
-CATEGORY="$(echo "${WORK_DIR#${PORTAGE_BUILD_DIR}}" | awk -F'/' '{print $2}')"
+CATEGORY="$(ecat "${PN}")"
 
 TMP_WORK_DIR="${W}"/"${CATEGORY}"
 TMP_WORK_DIR="${TMP_WORK_DIR}"/"${P}"
 
 [[ -d "${TMP_WORK_DIR}" ]] || mkdir -p "${TMP_WORK_DIR}"
-cp -r "${WORK_DIR}"/* "${TMP_WORK_DIR}"
+
+if [[ -z "${WORK_DIR}" ]]; then
+	options=()
+	while IFS=  read -r -d $'\0'; do
+		options+=("$REPLY")
+	done < <(find "${PORTAGE_BUILD_DIR}"/"${CATEGORY}"/"${P}" -type d -print0)
+
+	PS3=$'\n'"Select the correct value for WORK_DIR: "
+	select WORK_DIR in "${options[@]}"; do
+			case "${WORK_DIR}" in
+				* )
+					break
+					;;
+			esac
+	done
+fi
+
+if [[ -n "${WORK_DIR}" ]]; then
+	cp -r "${WORK_DIR}"/* "${TMP_WORK_DIR}"
+else
+	die "Failed to set WORK_DIR variable."
+fi
+
 cp /home/bryan/Dropbox/var/templates/localalias.epatch "${TMP_WORK_DIR}"/.localalias
 
 cd "${TMP_WORK_DIR}" || exit 1

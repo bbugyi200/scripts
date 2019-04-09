@@ -81,6 +81,9 @@ if __name__ == "__main__":
 
     files = [make_abs(f) for f in args.files]
 
+    if os.system('pgrep mpv') != 0:
+        os.remove(FIFO)
+
     data_dir = '/home/bryan/.local/share/umpv'
     last_file = '{}/last'.format(data_dir)
     if not os.path.exists(data_dir):
@@ -126,8 +129,7 @@ if __name__ == "__main__":
         os.mkfifo(FIFO, 0o600)
 
         opts = (os.getenv("MPV") or "mpv").split()
-        opts.extend(["--no-terminal", "--force-window", "--input-file=" + FIFO,
-                     "--"])
+        opts.extend(["--no-terminal", "--force-window", "--input-file=" + FIFO, "--"])
         if files:
             opts.extend(files)
             sp.check_call(opts)

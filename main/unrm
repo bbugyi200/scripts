@@ -1,0 +1,27 @@
+#!/bin/bash
+
+###################################################################
+#  Restore a file that was deleted using 'safe-rm'.               #
+###################################################################
+
+source gutils.sh
+
+
+if [[ "$1" == "-d" ]]; then
+	shift
+	PS4='$LINENO: '
+	set -x
+fi
+
+target="$1"; shift
+dest="${PWD}/${1}"
+
+D=/home/bryan/.local/share/Trash/files
+
+
+src="${D}"/"${target}"
+if [[ -f "${src}" ]]; then
+	sudo mv "${src}" "${dest}"/ && imsg "Successfully restored file (${target})."
+else
+	die "Failed to restore file (${target})."
+fi

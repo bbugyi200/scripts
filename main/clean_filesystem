@@ -4,20 +4,30 @@
 #  Maintenance Script that Cleans up my Machine's Filesystem                  #
 ###############################################################################
 
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+	exec sudo "$0" "$@"
+fi
+
+
+RM=/bin/rm
+SAFE_RM=/usr/bin/safe-rm
+
+
 # >>> HOME
-/usr/bin/safe-rm -rf /home/bryan/main* &> /dev/null
-/usr/bin/rm -rf /home/bryan/core /home/bryan/gccdump.s &> /dev/null
+"${SAFE_RM}" -rf /home/bryan/main* &> /dev/null
+for f in "core" "gccdump.s" "databases-incognito"; do
+	"${RM}" -rf /home/bryan/"${f}" &> /dev/null
+done
 
 # >>> DROPBOX
-chmod -R bryan:bryan /home/bryan/Dropbox
-
 DROPBOX_TMP=/home/bryan/Dropbox/tmp
-
-rm -rf "${DROPBOX_TMP}"
+"${SAFE_RM}" -rf "${DROPBOX_TMP}"
 mkdir "${DROPBOX_TMP}"
-chown -R bryan:bryan "${DROPBOX_TMP}"
 
 find /home/bryan/Dropbox \( -name "gccdump.s" \
     -o -name "core" \
     -o -name "*'s conflicted copy*" \
     \) -delete
+
+chown -R bryan:bryan /home/bryan/Dropbox

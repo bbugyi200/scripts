@@ -1,0 +1,71 @@
+#!/usr/bin/python3
+
+"""
+Provides list of movies / TV shows from filesystem for user to choose from and
+then plays the user's choice using mpv.
+"""
+
+import datetime as dt  # noqa: F401
+import os  # noqa: F401
+import pickle
+import subprocess as sp  # noqa: F401
+import sys  # noqa: F401
+
+import gutils
+
+############################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
+############################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
+
+data_dir = gutils.xdg.init('data')
+cache_fp = '{}/cache'.format(data_dir)
+
+
+def main(args):
+    if args.cache:
+        find_output = gutils.shell(
+            'find /media/bryan/hercules/media/Entertainment '
+                '-name "*.avi" -o '
+                '-name "*.mkv" -o '
+                '-name "*.mp4"'
+        )
+
+        options = {}
+        for line in find_output.split('\n'):
+            options[os.path.basename(line)] = line
+
+        with open(cache_fp, 'wb') as f:
+            pickle.dump(options, f)
+
+        sys.exit(0)
+
+    with open(cache_fp, 'rb') as f:
+        options = pickle.load(f)
+
+    ps = sp.Popen(
+        ['printf', '{}'.format(
+            '\n'.join(sorted(filter(
+                lambda x: str.isalpha(x[0]),
+                options.keys()
+            )))
+        )],
+        stdout=sp.PIPE
+    )
+
+    out = sp.check_output(['rofi', '-p', 'Document', '-m', '-4', '-dmenu', '-i'], stdin=ps.stdout)
+    choice = out.decode().strip()
+
+    gutils.shell('umpv "{}"'.format(options[choice]))
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    parser.add_argument('-C', dest='cache', action='store_true',
+                        help='Generate cache for media files.')
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

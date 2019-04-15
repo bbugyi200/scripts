@@ -22,7 +22,7 @@ case $WNAME in
         CURR_WS=$(getWS)
 		if [[ $CURR_WS != $OLD_WS ]]; then
             if [[ $CURR_WS == "NSP" ]]; then
-                xdotool key super+bracketright
+                xdotool key super+equal
             fi
 			break
 		fi

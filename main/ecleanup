@@ -24,9 +24,4 @@ econfirm "safe-rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 
 econfirm "sudo safe-rm /var/tmp/*.log" "xprint -x 'ls -a /var/tmp/*.log'"
 
-if [[ -n "$(find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60)" ]]; then
-    xprint -D 2 "\nTmuxinator sessions that have not been used in over 60 days:\n"
-    find /home/bryan/.config/tmuxinator/ -type f -name "*.yml" -atime +60 -execdir confirm "safe-rm '{}' 2> /dev/null" ";"
-fi
-
 econfirm "sudo updatedb"

@@ -87,10 +87,8 @@ if __name__ == "__main__":
     parser.add_argument('file_list', nargs='+', metavar='file', help='File to search when determining where to add new alias definition.')
     args = parser.parse_args()
 
-
     if args.name[0] == '/':
         parser.error("Must specify a name for the new alias.")
-
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main(args)

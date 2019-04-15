@@ -18,7 +18,6 @@ if [[ "${sys_info}" == *"gentoo"* ]]; then
     econfirm "sudo emerge --ask --depclean"
     econfirm "sudo revdep-rebuild"
     econfirm "sudo smart-live-rebuild"
-    econfirm "sudo npm update -g"
     econfirm "ebvcheck -v"
     econfirm "elogv"
     econfirm "sudo dispatch-conf"
@@ -32,6 +31,7 @@ if [[ "${sys_info}" == *"debian"* ]]; then
 fi
 
 # >>> ALL
+econfirm "sudo npm update -g"
 econfirm "sudo updatedb"
 
 exit 0  # Fixes issue caused by nonzero return status from last econfirm

@@ -82,7 +82,10 @@ if __name__ == "__main__":
     files = [make_abs(f) for f in args.files]
 
     if os.system('pgrep mpv') != 0:
-        os.remove(FIFO)
+        try:
+            os.remove(FIFO)
+        except FileNotFoundError:
+            pass
 
     data_dir = '/home/bryan/.local/share/umpv'
     last_file = '{}/last'.format(data_dir)

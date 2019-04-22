@@ -25,7 +25,7 @@ cache_fp = '{}/cache'.format(data_dir)
 
 
 def main(args):
-    if args.cache:
+    if args.cache or not os.path.exists(cache_fp):
         find_output = gutils.shell(
             'find /media/bryan/hercules/media/Entertainment '
                 '-name "*.avi" -o '

@@ -4,4 +4,5 @@
 /usr/local/bin/etc-generator
 /usr/local/bin/clean_filesystem
 /usr/local/bin/zopen -C -q
+/usr/local/bin/mopen -C
 /usr/local/bin/merge_rocketbook_notes

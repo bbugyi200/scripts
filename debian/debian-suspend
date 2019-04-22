@@ -28,3 +28,5 @@ sudo rtcwake -m mem -s $((N + 1)) &> /dev/null
 if [[ "$(date +%s)" -gt "${N_seconds_from_start}" ]]; then
     sudo pm-hibernate
 fi
+
+debian_maint_check

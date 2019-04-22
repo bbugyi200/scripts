@@ -37,6 +37,7 @@ import os
 import string
 import subprocess as sp
 import sys  # noqa: F401
+import time
 
 import gutils
 
@@ -140,6 +141,5 @@ if __name__ == "__main__":
             opts.extend(['{}/{}'.format(data_dir, 'empty.mpeg')])
             sp.Popen(opts)
 
-            import time
             time.sleep(0.5)
             gutils.shell('cmpv keypress TAB')

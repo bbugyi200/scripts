@@ -14,4 +14,4 @@ EOM
 
 
 debian-close-notifications
-notify-send -t 7000 -- "Watson" "${notify_msg}"
+notify-send -t 3000 -- "Watson" "${notify_msg}"

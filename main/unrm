@@ -14,10 +14,15 @@ if [[ "$1" == "-d" ]]; then
 fi
 
 target="$1"; shift
-dest="${PWD}"/"${1}"
-
-
 src=/home/bryan/.local/share/Trash/files/"${target}"
+
+if [[ -n "$1" ]]; then
+	dest="${PWD}"/"$1"; shift
+else
+	dest="${PWD}"
+fi
+
+
 if [[ -f "${src}" ]]; then
 	sudo mv "${src}" "${dest}"/ && imsg "Successfully restored file (${target})."
 else

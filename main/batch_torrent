@@ -58,12 +58,16 @@ if [[ "${debug}" = true && "${verbose}" = true ]]; then
 fi
 
 # ---------- Main ----------
+first_torrent=true
 data_dir=/home/bryan/.local/share/torrent
 backup_dir="${data_dir}"/backups
-[ -d "${backup_dir}" ] || mkdir -p "${backup_dir}"
 
-first_torrent=true
-function process_torrent_file() {
+main() {
+	process_torrent_file movies.txt "Movies"
+	process_torrent_file tv.txt "TV"
+}
+
+process_torrent_file() {
     filename="$1"; shift
     download_dir="$1"; shift
 
@@ -95,5 +99,5 @@ function process_torrent_file() {
     fi
 }
 
-process_torrent_file movies.txt "Movies"
-process_torrent_file tv.txt "TV"
+
+main

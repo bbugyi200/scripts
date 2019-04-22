@@ -70,7 +70,7 @@ def usr1_handler(signum, frame):
     with open(ARGS_FILE, 'rb') as f:
         args = pickle.load(f)
 
-    wait()
+    wait_for_first_magnet()
     torrent(args)
 
 
@@ -101,9 +101,6 @@ def main():
         if args.debug:
             cmd_list.extend(['--log-debug', '-e', '/var/tmp/transmission.log'])
         sp.check_call(cmd_list, stdout=sp.DEVNULL)
-
-        time.sleep(1)
-        sp.check_call(['transmission-remote', '-t', 'all', '-r'], stdout=sp.DEVNULL)
     except sp.CalledProcessError:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
     else:
@@ -111,7 +108,7 @@ def main():
 
         torrent(args)
 
-        wait()
+        wait_for_first_magnet()
         magnet_queue.join()
         notify('All torrents are complete.')
     finally:
@@ -160,10 +157,11 @@ def _torrent(args):
                 SLEEP_TIME = 5
 
                 i += 1
-                if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
-                    msg = "Torrent is still attempting to download \"{0}\" after {1:.1f} hour(s) "\
-                          " elapsed time. Shutting down early.".format(magnet_pprint(args.magnet), args.timeout)
-                    raise RuntimeError(msg)
+                if args.timeout:
+                    if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
+                        msg = "Torrent is still attempting to download \"{0}\" after {1:.1f} hour(s) "\
+                              " elapsed time. Shutting down early.".format(magnet_pprint(args.magnet), args.timeout)
+                        raise RuntimeError(msg)
 
                 time.sleep(SLEEP_TIME)
 
@@ -178,8 +176,7 @@ def _torrent(args):
                     if re.match(r'^{}\*?\s.*'.format(magnet_id), line):
                         status_line = line.lower()
                         break
-
-                if status_line is None:
+                else:
                     raise RuntimeError(
                         'The magnet "{0}" (#{1}) has been lost somehow.\n\n'
                         '{2}\n'.format(magnet_pprint(args.magnet), magnet_id, '\n'.join(out_lines))
@@ -243,6 +240,8 @@ def create_pidfile():
 
         log.debug('Sending SIGUSR1 to {}.'.format(e.pid))
         os.kill(e.pid, signal.SIGUSR1)
+
+        # Exit without invoking exit handler.
         os._exit(0)
 
 
@@ -258,7 +257,7 @@ def magnet_pprint(magnet):
         return 'UNKNOWN TITLE'
 
 
-def wait():
+def wait_for_first_magnet():
     """Blocks until first magnet is added to queue."""
     while magnet_queue.empty():
         time.sleep(0.5)
@@ -267,20 +266,32 @@ def wait():
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('magnet', help='The torrent magnet file.')
-    parser.add_argument('-w', dest='download_dir', default='/media/bryan/hercules/media/Entertainment/Movies',
-                        help='The directory that the torrents will be downloaded to.')
-    parser.add_argument('-D', type=int, dest='delay', default=0,
-                        help='delay starting the script for DELAY seconds')
-    parser.add_argument('-t', type=float, dest='timeout', default=12,
-                        help='time (in hours) to attempt to complete download before timing out')
+
+    default = '/media/bryan/hercules/media/Entertainment/Movies'
+    parser.add_argument('-w', dest='download_dir', default=default,
+                        help='The directory that the torrents will be downloaded to. Defaults to {}.'.format(default))
+
+    default = 0
+    parser.add_argument('-D', type=int, dest='delay', default=default,
+                        help='Delay starting the script for DELAY seconds. Defaults to {}.'.format(default))
+
+    default = 0
+    parser.add_argument('-t', type=float, dest='timeout', default=default,
+                        help='Time (in hours) to attempt to complete download before timing out. If set to 0, this script will run forever without ever timing out. Defaults to {}.'.format(default))
+
     parser.add_argument('-T', '--textme', dest='textme', action='store_true',
-                        help='forward notifications via SMS messages (i.e. enable text '
-                             'notifications)')
-    parser.add_argument('--maxsize', dest='maxsize', default=3,
-                        help='max number of torrents allowed to download at one time (additional '
-                             'torrents will be enqueued and start when a space opens up)')
-    parser.add_argument('--vpn', dest='vpn', nargs='?', default='nyc', help='VPN to connect to.')
+                        help='Forward notifications via SMS messages (i.e. enable text notifications).')
+
+    default = 3
+    parser.add_argument('--maxsize', dest='maxsize', default=default,
+                        help='Max number of torrents allowed to download at one time (additional torrents will be enqueued and start when a space opens up). Defaults to {}.'.format(default))
+
+    default = 'nyc'
+    parser.add_argument('--vpn', dest='vpn', nargs='?', default=default,
+                        help='VPN to connect to. Defaults to {}.'.format(default))
+
     args = parser.parse_args()
+
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose), runtime_context():
         main()

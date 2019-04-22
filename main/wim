@@ -14,7 +14,7 @@ source gutils.sh
 eval set -- "$(getopt -o "d,h,n,v" -l "debug,help,no-script,verbose" -- "$@")"
 
 export USAGE_GRAMMAR=(
-    "[-d] [-n] [-v] COMMAND"
+    "[-d] [-n] [-v] COMMAND [COMMAND [...]]"
     "-h"
 )
 
@@ -75,24 +75,29 @@ if [[ -z "$1" ]]; then
 fi
 
 # ---------- Main ----------
-CMD="$1"; shift
-SCRIPT_PATH="$(find /home/bryan/Dropbox/bin -type f -name "$CMD")"
+all_scripts=( )
+for cmd in "$@"; do
+	script_path="$(find /home/bryan/Dropbox/bin -type f -name "${cmd}")"
+	
+	if [[ -z "${script_path}" ]] || [[ "${force_dotfile}" == true ]]; then
+	    def_vim_args="$(ag -s "(^(alias|function)[ ]+|^)${cmd}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/lib/zsh | awk -F: '{ print "+" $2 " " $1 }' | head -n 1)"
 
-if [[ -n "${SCRIPT_PATH}" ]] && [[ "${force_dotfile}" != true ]]; then
-    vim -c "silent! normal g;" "$SCRIPT_PATH"
-else
-    LOCATION="$(ag -s "(^(alias|function)[ ]+|^)${CMD}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/lib/zsh | awk -F: '{ print "+" $2 " " $1 }' | head -n 1)"
-    if [[ -z "$LOCATION" ]]; then
-        command_path="$(command -v "${CMD}")"
-        if [[ -n "${command_path}" ]]; then
-            vim "${command_path}"
-            exit 0
-        else
-            printf "ERROR: unable to find '%s'." "$CMD"
-            exit 1
-        fi
-    fi
+	    if [[ -n "${def_vim_args}" ]]; then
+			# def_vim_args is now a string of the form "+<N> <path>"
+			eval "vim ${def_vim_args}"
+			continue
+		elif [[ "${force_dotfile}" == true ]]; then
+			die "No alias/function found by the name of '${cmd}'."
+		elif command -v "${cmd}" &> /dev/null; then
+			script_path="$(command -v "${cmd}")"
+		else
+			die "Unable to find '${cmd}'."
+	    fi
+	fi
 
-    # LOCATION is now a string of the form "+<N> <path>"
-    eval "vim $LOCATION"
+	all_scripts+=( "${script_path}" )
+done
+
+if [[ "${#all_scripts[@]}" -ne 0 ]]; then
+	vim -c "silent! normal g;" "${all_scripts[@]}"
 fi

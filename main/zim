@@ -30,7 +30,9 @@ if /usr/local/bin/"${vicmd}" "$@"; then
     last_file="$(tail -n 1 "${RECENTLY_EDITED_FILES_LOG}")"
     if [[ "${last_file}" == "/home/bryan/Dropbox/lib/zsh/"* ]] || [[ "${last_file}" == "/home/bryan/Dropbox/home/.zshrc" ]]; then
         if just_changed "${start_time}" "${last_file}"; then
-            exit 1
+            exit 3
         fi
     fi
+else
+	exit "$?"
 fi

@@ -87,11 +87,11 @@ for cmd in "$@"; do
 			eval "vim ${def_vim_args}"
 			continue
 		elif [[ "${force_dotfile}" == true ]]; then
-			die "No alias/function found by the name of '${cmd}'."
+			die "No alias/function named '${cmd}' was found."
 		elif command -v "${cmd}" &> /dev/null; then
 			script_path="$(command -v "${cmd}")"
 		else
-			die "Unable to find '${cmd}'."
+			die "No script/alias/function named '${cmd}' was found."
 	    fi
 	fi
 

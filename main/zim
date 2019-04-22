@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ####################################################################
-#  Wrapper for vim wrappers. Exits with non-zero status if .zshrc  #
-# (or files .zshrc sources) is edited.                             #
-####################################################################    
+#  Wrapper for vim wrappers. Exits with special error code if      #
+# .zshrc (or files .zshrc sources) is edited.                      #
+####################################################################
 
 function just_changed() {
     start_time="$1"; shift

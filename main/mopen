@@ -30,7 +30,8 @@ def main(args):
             'find /media/bryan/hercules/media/Entertainment '
                 '-name "*.avi" -o '
                 '-name "*.mkv" -o '
-                '-name "*.mp4"'
+                '-name "*.mp4" -o '
+                '-name "*.m4v"'
         )
 
         options = {}

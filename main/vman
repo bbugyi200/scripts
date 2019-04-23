@@ -73,7 +73,7 @@ section=
 for page in "$@"; do
     tmp_file="${tmp_dir}"/"${page}".man
     truncate "${tmp_file}"
-    if [[ "${page}" =~ ^[0-9]+$ ]]; then
+    if [[ "${page}" =~ ^[0-9]p?$ ]]; then
         section="${page}"
         continue
     fi
@@ -95,8 +95,7 @@ for page in "$@"; do
             fi
         fi
 
-        echo "No manual entry for ${page}."
-        exit 1
+        die "No manual entry for ${page}.\n\n===== APROPOS OUTPUT =====\n$(2>&1 apropos "$1")"
     fi
 
     all_files+=( "${tmp_file}" )

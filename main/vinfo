@@ -22,13 +22,10 @@ $(usage)
 ${doc}
 
 Positional Arguments:
-	FILE
-		The name of the info manual. If no info file is found by this name,
-		an attempt will be made to find the correct info file and navigate
-		to the node matching the keyword given by FILE if possible.
-
-	NODE
-		The name of a node contained in the specified info manual.
+    FILE    The name of the info manual. If no info file is found by this name,
+            an attempt will be made to find the correct info file and navigate
+            to the node matching the keyword given by FILE if possible.
+    NODE    The name of a node contained in the specified info manual.
 
 Optional Arguments:
     -d | --debug
@@ -72,9 +69,35 @@ fi
 
 # ---------- Main ----------
 main() {
-	file="$(/usr/bin/info -w "$1" | awk -F'/' '{print $NF}' | awk -F'.' '{print $(NF-2)}')"
+	file="$(/usr/bin/info -w "$1" | awk -F'/' '{print $NF}' | awk -F'.' '{$NF=""; $(NF-1)=""; print $0}')"
 	if [[ -z "${file}" ]]; then
-		die "No info file for $1\n\n===== APROPOS OUTPUT =====\n$(2>&1 apropos "$1")"
+		if man -w "$1" &> /dev/null; then
+            printf "%s\n\n%s\n\n%s" \
+                "No info file for $1." \
+                "Searching for alternative documentation." \
+                "Loading man page::   $(man -w "$1" | head -n 1 | awk -F'/' '{print $NF}' | sed 's/\.\([^\.]*\)\.bz2$/(\1)/g')  "
+
+            num_of_bars=25
+            total_delay=1.0
+
+            delay="$(bc <<< "scale=10; ${total_delay} / ${num_of_bars}")"
+            clear_line="$(mkbar '\b' $((num_of_bars + 2)))"
+
+            for (( i = 0; i < "$((num_of_bars + 1))"; i++ )); do
+                bar="[$(mkbar '=' ${i})$(mkbar ' ' $((num_of_bars - i)))]"
+                printf "${bar}"
+
+                sleep "${delay}"
+
+                printf "${clear_line}"
+            done
+            printf "${bar}"
+
+			vman "$1"
+			exit 0
+		fi
+
+		die "No info file for $1.\n\n===== APROPOS OUTPUT =====\n$(2>&1 apropos "$1")"
 	fi
 
 	if [[ "${file}" == "$1" ]]; then
@@ -89,6 +112,13 @@ main() {
 	fi
 
 	vim -c "Info ${info_args}" -c 'silent only' -c 'bd1'
+}
+
+mkbar() {
+    ch="$1"; shift
+    count="$1"; shift
+
+    head -c "${count}" < /dev/zero | tr '\0' "${ch}"
 }
 
 

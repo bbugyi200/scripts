@@ -66,22 +66,23 @@ if [[ "${debug}" = true && "${verbose}" = true ]]; then
     set -x
 fi
 
+if [[ -z "$1" ]]; then
+	die "$(usage)" 2
+fi
+
 # ---------- Main ----------
 main() {
 	file="$(/usr/bin/info -w "$1" | awk -F'/' '{print $NF}' | awk -F'.' '{print $(NF-2)}')"
 	if [[ -z "${file}" ]]; then
-		die "No info file for ${node}"
+		die "No info file for $1\n\n===== APROPOS OUTPUT =====\n$(2>&1 apropos "$1")"
 	fi
 
-	if [[ "${file}" == "${1}" ]]; then
+	if [[ "${file}" == "$1" ]]; then
 		shift
 	fi
 
 	if [[ -n "$1" ]]; then
 		node="$1"; shift
-	fi
-
-	if [[ -n "${node}" ]]; then
 		info_args="${file} ${node}"
 	else
 		info_args="${file}"

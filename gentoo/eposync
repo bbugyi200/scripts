@@ -5,12 +5,12 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
-if [[ -z "$1" ]]; then
-    echo "usage: esync PACKAGE"
-    exit 2
-fi
-
 cd /home/bryan/projects/portage-overlay || exit 1
 repoman manifest
-git add -A && git commit -m "Update $* package(s)" && git push
+gpup
 layman -s bbugyi200
+
+if [[ -n "$1" ]]; then
+	pkg="$1"; shift
+	get "${pkg}"
+fi

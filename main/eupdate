@@ -32,6 +32,6 @@ fi
 
 # >>> ALL
 econfirm "sudo npm update -g"
-econfirm "sudo updatedb"
+econfirm "sudo updatedb &"
 
 exit 0  # Fixes issue caused by nonzero return status from last econfirm

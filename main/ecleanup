@@ -24,4 +24,4 @@ econfirm "safe-rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 
 econfirm "sudo safe-rm /var/tmp/*.log" "xprint -x 'ls -a /var/tmp/*.log'"
 
-econfirm "sudo updatedb"
+econfirm "sudo updatedb &"

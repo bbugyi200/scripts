@@ -1,0 +1,96 @@
+#!/bin/bash
+
+read -r -d '' doc << EOM
+Vim Utility for Reading Info Manuals
+EOM
+
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,v" -l "debug,help,verbose" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-v] FILE [NODE]"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+	FILE
+		The name of the info manual. If no info file is found by this name,
+		an attempt will be made to find the correct info file and navigate
+		to the node matching the keyword given by FILE if possible.
+
+	NODE
+		The name of a node contained in the specified info manual.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+# ---------- Main ----------
+main() {
+	file="$(/usr/bin/info -w "$1" | awk -F'/' '{print $NF}' | awk -F'.' '{print $(NF-2)}')"
+	if [[ -z "${file}" ]]; then
+		die "No info file for ${node}"
+	fi
+
+	if [[ "${file}" == "${1}" ]]; then
+		shift
+	fi
+
+	if [[ -n "$1" ]]; then
+		node="$1"; shift
+	fi
+
+	if [[ -n "${node}" ]]; then
+		info_args="${file} ${node}"
+	else
+		info_args="${file}"
+	fi
+
+	vim -c "Info ${info_args}" -c 'silent only' -c 'bd1'
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+	main "$@"
+fi

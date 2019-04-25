@@ -2,13 +2,17 @@
 
 """Zathura Helper Script. Used to Search for and then Open Documents in Zathura."""
 
+import argparse
 import os
+from pathlib import Path
 import re
 import signal
 import socket
 import subprocess as sp
 import sys  # noqa: F401
 import time
+from typing import *  # noqa: F401
+from types import *  # noqa: F401
 
 import gutils
 
@@ -22,17 +26,19 @@ CACHE_FILE = '{}/recently_opened_docs'.format(xdg_data_dir)
 FIND_CACHE_FILE = '{}/all_docs'.format(xdg_data_dir)
 
 
-def main():
+def main(args: argparse.Namespace) -> None:
+    doc_pttrn = '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'
+
     all_docs = None
     if args.generate_cache or not os.path.isfile(FIND_CACHE_FILE):
-        directory_list = ['/home/bryan/Dropbox', '/home/bryan/Downloads', '/home/bryan/projects']
+        directory_list = ['/home/bryan/Dropbox', '/home/bryan/projects']
         if socket.gethostname() == 'athena':
             directory_list.append('/media/bryan/hercules/archive/home/bryan/Dropbox')
 
         cmd_list = ['find']
         cmd_list.extend(directory_list)
         cmd_list.extend(['-path', '/home/bryan/Dropbox/.dropbox.cache', '-prune', '-o'])
-        cmd_list.extend(['-regex', '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'])
+        cmd_list.extend(['-regex', doc_pttrn])
 
         out = sp.check_output(cmd_list)
         all_docs = out.decode().strip()
@@ -47,6 +53,10 @@ def main():
         out = sp.check_output(['cat', FIND_CACHE_FILE])
         all_docs = out.decode().strip()
 
+    # Append any docs found in the Downloads directory.
+    out = sp.check_output(['find', '/home/bryan/Downloads', '-regex', doc_pttrn])
+    all_docs = all_docs + out.decode().strip()
+
     try:
         cmd = 'wmctrl -lx | grep "zathura\|okular" | tr -s " " | cut -d\' \' -f5- '\
               '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\|okular\\)"'
@@ -58,17 +68,17 @@ def main():
         log.debug('No documents are currently open in zathura.')
 
     with open(CACHE_FILE, 'r') as f:
-        cached_docs = [x.strip() for x in f.readlines()]
+        cached_docs = [Path(x.strip()) for x in f.readlines()]
 
-    ordered_docs = promote_cached_docs(all_docs.split('\n'), cached_docs)
+    ordered_docs = promote_cached_docs([Path(doc) for doc in all_docs.split('\n')], cached_docs)
 
     if open_docs:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
-    pretty_docs = [re.sub('^/home/bryan/Dropbox/var/books/', '', x) for x in ordered_docs]
+    pretty_docs = [re.sub('^/home/bryan/Dropbox/var/books/', '', str(doc)) for doc in ordered_docs]
 
     if args.refresh:
-        choice = ordered_docs[-1]
+        doc = ordered_docs[-1]
     else:
         ps = sp.Popen(['printf', '{}'.format('\n'.join(pretty_docs))], stdout=sp.PIPE)
         out = sp.check_output(['rofi', '-p', 'Document', '-m', '-4', '-dmenu', '-i'], stdin=ps.stdout)
@@ -77,39 +87,43 @@ def main():
         output = out.decode().strip()
 
         if output.startswith('/'):
-            choice = output
+            doc = output
         else:
-            choice = '/home/bryan/Dropbox/var/books/{}'.format(output)
+            doc = Path('/home/bryan/Dropbox/var/books/{}'.format(output))
 
-    add_to_cache(choice)
+    add_to_cache(doc)
 
     active_window_class = gutils.shell('active_window_class')
+    replace = args.overwrite or args.refresh
     if active_window_class == 'Zathura':
-        open_document('zathura', choice)
+        open_document('zathura', doc, replace=replace)
     elif active_window_class == 'okular':
-        open_document('okular', choice, opts=['--unique'])
+        open_document('okular', doc, opts=['--unique'], replace=replace)
     else:
-        open_document('okular', choice)
+        open_document('okular', doc, replace=replace)
 
     time.sleep(0.2)
     sp.check_call(['fullscreen'])
 
 
-def open_document(cmd, doc, *, opts=[]):
-    if args.overwrite or args.refresh:
+def open_document(cmd: str, doc: Path, *, opts: List[str] = None, replace: bool = False) -> None:
+    if opts is None:
+        opts = []
+
+    if replace:
         pid = int(gutils.shell('active_window_pid'))
         log.debug('Killing Document Instance: {}'.format(pid))
         os.kill(pid, signal.SIGTERM)
 
     cmd_list = [cmd]
     cmd_list.extend(opts)
-    cmd_list.append(doc)
+    cmd_list.append(str(doc))
 
     log.debug('Opening {} in {}...'.format(doc, cmd))
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
-def promote_cached_docs(docs, cached_docs):
+def promote_cached_docs(docs: List[Path], cached_docs: List[Path]) -> List[Path]:
     """Docs in Cache File are Brought to the Top of the List of Options"""
     D = docs[:]
     for c in list(reversed(cached_docs)):
@@ -119,13 +133,13 @@ def promote_cached_docs(docs, cached_docs):
     return D
 
 
-def demote_open_docs(docs, open_docs):
+def demote_open_docs(docs: List[Path], open_docs: List[Path]) -> List[Path]:
     """Open Docs are Moved to the Bottom of the List of Options"""
     D = docs[:]
     E = []
     for odoc in open_docs:
         for doc in docs:
-            if odoc in doc:
+            if odoc in str(doc):
                 try:
                     D.remove(doc)
                     E.append(doc)
@@ -137,7 +151,7 @@ def demote_open_docs(docs, open_docs):
     return D
 
 
-def add_to_cache(doc):
+def add_to_cache(doc: Path) -> None:
     """Adds/moves doc to the Top of the Cache File"""
     log.debug('Adding {} to cache file...'.format(doc))
     if os.path.isfile(CACHE_FILE):
@@ -145,15 +159,15 @@ def add_to_cache(doc):
             cached_docs = f.read().strip().split('\n')
 
         if doc in cached_docs:
-            cached_docs.remove(doc)
+            cached_docs.remove(str(doc))
 
-        cached_docs.insert(0, doc)
+        cached_docs.insert(0, str(doc))
 
         with open(CACHE_FILE, 'w') as f:
             f.write('\n'.join(cached_docs[:100]))
     else:
         with open(CACHE_FILE, 'w') as f:
-            f.write(doc)
+            f.write(str(doc))
 
 
 if __name__ == "__main__":
@@ -171,4 +185,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+        main(args)

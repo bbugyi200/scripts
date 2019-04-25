@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+    exec sudo "$0" "$@"
+fi
+
+
+iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# Accept LocalHost
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+
+# Accept VPN Traffic
+iptables -A INPUT -i tun+ -j ACCEPT
+iptables -A OUTPUT -o tun+ -j ACCEPT
+iptables -A OUTPUT -p udp -m udp --dport 1198 -j ACCEPT
+
+# Accept Traffic from Plex Clients
+iptables -A INPUT -p tcp --dport 32400 -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 32400 -j ACCEPT
+
+# Accept Traffic from PIA DNS Servers
+iptables -A OUTPUT -d 209.222.18.222/32 -j ACCEPT
+iptables -A OUTPUT -d 209.222.18.218/32 -j ACCEPT
+
+# REJECT EVERYTHING ELSE!
+iptables -A OUTPUT -j REJECT --reject-with icmp-net-unreachable

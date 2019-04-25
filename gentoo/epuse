@@ -5,6 +5,8 @@
 import enum
 import shutil
 import subprocess as sp  # noqa: F401
+from typing import *  # noqa: F401
+from types import *  # noqa: F401
 
 import gutils
 
@@ -27,7 +29,7 @@ class PackageNotFound(RuntimeError):
     """Raised when <category>/<package> is not found in /etc/portage/package.use."""
 
 
-def main():
+def main() -> None:
     if args.category is None:
         out = sp.check_output(['ecat', args.package])
         category = out.decode().strip()
@@ -39,6 +41,7 @@ def main():
     if args.action_flag is Action.disable:
         use_flags = ['-{}'.format(uflag) for uflag in use_flags]
 
+    action: Callable[[str, str], None]
     action = {Action.enable: enable_flag,
               Action.disable: enable_flag,
               Action.prune: prune_flag}[args.action_flag]
@@ -47,7 +50,7 @@ def main():
         action(uflag, category)
 
 
-def enable_flag(uflag, category):
+def enable_flag(uflag: str, category: str) -> None:
     try:
         current_uflags = _get_uflags(category)
     except PackageNotFound:
@@ -72,7 +75,7 @@ def enable_flag(uflag, category):
              uflag, category, args.package)
 
 
-def prune_flag(uflag, category):
+def prune_flag(uflag: str, category: str) -> None:
     try:
         current_uflags = _get_uflags(category)
     except PackageNotFound:
@@ -103,7 +106,7 @@ def prune_flag(uflag, category):
              uflag, category, args.package)
 
 
-def _get_uflags(category):
+def _get_uflags(category: str) -> List[str]:
     for line in open(pack_use_fpath, 'r'):
         if '{}/{}'.format(category, args.package) in line:
             return line.split()[1:]
@@ -113,7 +116,7 @@ def _get_uflags(category):
     raise PackageNotFound()
 
 
-def _set_uflags(uflags, category):
+def _set_uflags(uflags: List[str], category: str) -> None:
     new_lines = []
     package_lines = []
     end_section = found = False
@@ -139,14 +142,14 @@ def _set_uflags(uflags, category):
         f.writelines(new_lines)
 
 
-def _get_reverse_uflag(uflag):
+def _get_reverse_uflag(uflag: str) -> str:
     if uflag[0] == '-':
         return uflag[1:]
     else:
         return '-' + uflag
 
 
-def _log_uflag_not_set(uflag, category):
+def _log_uflag_not_set(uflag: str, category: str) -> None:
     log.error('The %s USE flag is not currently set for %s/%s.',
               uflag, category, args.package)
 

@@ -5,18 +5,24 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
+if [[ "${1}" == "-d" ]]; then
+    shift
+    PS4='$LINENO: '
+    set -x
+fi
+
 nameserver_file=/etc/resolv.conf
 
-if [[ -z "$1" ]]; then
-    if pgrep openvpn &> /dev/null; then
-        action="stop"
-    else
+if pgrep openvpn &> /dev/null; then
+    action="stop"
+else
+    if [[ -z "$1" ]]; then
         action="start"
         vpn="nyc"
+    else
+        action="$1"
+        vpn="$2"
     fi
-else
-    action="$1"
-    vpn="$2"
 fi
 
 if [ "$action" == "start" ]; then
@@ -50,16 +56,7 @@ if [ "$action" == "start" ]; then
 
     myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
     printf "\nPublic IP Address: %s" "${myip}"
-
-    iptables -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
-    iptables -A INPUT -i lo -j ACCEPT
-    iptables -A INPUT -i tun+ -j ACCEPT
-    iptables -A OUTPUT -o lo -j ACCEPT
-    iptables -A OUTPUT -d 209.222.18.222/32 -j ACCEPT
-    iptables -A OUTPUT -d 209.222.18.218/32 -j ACCEPT
-    iptables -A OUTPUT -p udp -m udp --dport 1198 -j ACCEPT
-    iptables -A OUTPUT -o tun+ -j ACCEPT
-    iptables -A OUTPUT -j REJECT --reject-with icmp-net-unreachable
+    lock_network
 
 elif [ "$action" == "stop" ]; then
     killall -9 openvpn
@@ -67,15 +64,5 @@ elif [ "$action" == "stop" ]; then
     mv /etc/resolv.tmp "${nameserver_file}"
 
     sleep 2
-
-    # Resets iptables
-    iptables -F
-    iptables -X
-    iptables -t nat -F
-    iptables -t nat -X
-    iptables -t mangle -F
-    iptables -t mangle -X
-    iptables -P INPUT ACCEPT
-    iptables -P FORWARD ACCEPT
-    iptables -P OUTPUT ACCEPT
+    unlock_network
 fi

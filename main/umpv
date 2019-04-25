@@ -34,10 +34,12 @@ import argparse
 import errno
 import fcntl
 import os
+from pathlib import Path  # noqa: F401
 import string
 import subprocess as sp
 import sys  # noqa: F401
-import time
+import typing as t  # noqa: F401
+import types as T  # noqa: F401
 
 import gutils
 
@@ -51,21 +53,23 @@ log.debug(FIFO)
 
 
 # this is the same method mpv uses to decide this
-def is_url(filename):
+def is_url(filename: str) -> bool:
     if filename.startswith('magnet'):
         return True
 
     parts = filename.split("://", 1)
     if len(parts) < 2:
         return False
+
     # protocol prefix has no special characters => it's an URL
     allowed_symbols = string.ascii_letters + string.digits + '_'
     prefix = parts[0]
+
     return all(map(lambda c: c in allowed_symbols, prefix))
 
 
 # make them absolute; also makes them safe against interpretation as options
-def make_abs(filename):
+def make_abs(filename: str) -> str:
     if not is_url(filename):
         return os.path.abspath(filename)
     return filename
@@ -80,7 +84,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--append', action='store_true', help=append_help)
     args = parser.parse_args()
 
-    files = [make_abs(f) for f in args.files]
+    files = [make_abs(fp) for fp in args.files]
 
     if os.system('pgrep mpv') != 0:
         try:
@@ -112,12 +116,12 @@ if __name__ == "__main__":
         # Unhandled race condition: what if mpv is terminating right now?
         fcntl.fcntl(fifo_fd, fcntl.F_SETFL, 0)  # set blocking mode
         fifo = os.fdopen(fifo_fd, "w")
-        for f in files:
+        for fp in files:
             # escape: \ \n "
-            f = f.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
-            f = "\"" + f + "\""
+            fp = fp.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n")
+            fp = "\"" + fp + "\""
             append = " append-play" if args.append else ""
-            fifo.write("raw loadfile " + f + "{}\n".format(append))
+            fifo.write("raw loadfile " + fp + "{}\n".format(append))
 
             # Fixes issue where mpv stays paused when new video is used to replace current one
             # after the current one has already concluded.
@@ -127,19 +131,19 @@ if __name__ == "__main__":
         # Also makes sure it's safe, and no other user can create a bogus pipe
         # that breaks security.
         try:
-            os.unlink(FIFO)
+            os.remove(FIFO)
         except OSError as e:
             pass
+
         os.mkfifo(FIFO, 0o600)
 
-        opts = (os.getenv("MPV") or "mpv").split()
-        opts.extend(["--no-terminal", "--force-window", "--input-file=" + FIFO, "--"])
+        mpv_cmd = (os.getenv("MPV") or "mpv").split()
+        mpv_cmd.extend(["--no-terminal", "--force-window", "--input-file=" + FIFO, "--"])
         if files:
-            opts.extend(files)
-            sp.check_call(opts)
+            mpv_cmd.extend(files)
+            sp.check_call(mpv_cmd)
         else:
-            opts.extend(['{}/{}'.format(data_dir, 'empty.mpeg')])
-            sp.Popen(opts)
+            sp.Popen('sleep 0.5 && cmpv keypress TAB', shell=True)
 
-            time.sleep(0.5)
-            gutils.shell('cmpv keypress TAB')
+            mpv_cmd.extend(['{}/{}'.format(data_dir, 'empty.mpeg')])
+            sp.Popen(mpv_cmd)

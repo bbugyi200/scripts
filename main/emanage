@@ -2,10 +2,14 @@
 
 """Interface for Gentoo System Maintenance Tasks"""
 
+import argparse
 import datetime as dt
 import os
+from pathlib import Path  # noqa: F401
 import subprocess as sp  # noqa: F401
 import sys
+import typing as t  # noqa: F401
+import types as T  # noqa: F401
 
 import gutils
 
@@ -18,7 +22,7 @@ SCRIPTNAME = os.path.basename(os.path.realpath(__file__))
 ts_fmt = '%Y%m%d%H%M%S'
 
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
     cmd_list = []
     cmd_opts = []
 
@@ -41,7 +45,7 @@ def main(args):
     local_hostname = os.uname().nodename
 
     cmd_dir = '/{}/{}/{}'.format(data_dir, local_hostname, cmd)
-    local_tsfile = '{}/timestamp'.format(cmd_dir)
+    local_tsfile = Path('{}/timestamp'.format(cmd_dir))
 
     if args.pretend:
         print(cmd)
@@ -52,7 +56,7 @@ def main(args):
             print(days)
         elif args.dsl == 'remote':
             remote_hostnames = [H for H in os.listdir(data_dir) if H != local_hostname]
-            remote_ts_files = ['{}/{}/{}/timestamp'.format(data_dir, H, cmd)
+            remote_ts_files = [Path('{}/{}/{}/timestamp'.format(data_dir, H, cmd))
                                for H in remote_hostnames]
 
             for H, fp in zip(remote_hostnames, remote_ts_files):
@@ -95,10 +99,10 @@ def main(args):
         # than 'y' or 'n' (like 'x') is pressed.
         pass
     else:
-        write_timestamp(local_tsfile, cmd)
+        write_timestamp(local_tsfile)
 
 
-def days_since_last(fp_timestamp):
+def days_since_last(fp_timestamp: Path) -> int:
     try:
         date_string = open(fp_timestamp, 'r').read().rstrip()
         last_clean = dt.datetime.strptime(date_string, ts_fmt)
@@ -110,7 +114,7 @@ def days_since_last(fp_timestamp):
     return days
 
 
-def write_timestamp(fp, cmd):
+def write_timestamp(fp: Path) -> None:
     """Writes Timestamp to a File"""
     dp = os.path.dirname(fp)
     if not os.path.exists(dp):
@@ -124,7 +128,7 @@ def write_timestamp(fp, cmd):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
 
-    parser.add_argument('-M', '--max-days', nargs='?', type=int,
+    parser.add_argument('-M', '--max-days', type=int, nargs='?',
                         help="Max number of days without update before complaining. This option "
                              "is only checked when used with the '--maint-check' option.")
 
@@ -136,7 +140,7 @@ if __name__ == "__main__":
     ex_group.add_argument('-m', '--maint-check', action='store_true',
                          help='Check if any maintenance is due.')
     ex_group2 = parser.add_mutually_exclusive_group()
-    ex_group2.add_argument('-D', '--days-since-last', dest='dsl', choices=['local', 'remote'],
+    ex_group2.add_argument('-D', '--days-since-last', type=str, dest='dsl', choices=['local', 'remote'],
                         help='Prints the number of days its been since the specified maintenance '
                              'task was last performed. This option takes an argument indicating '
                              'what machine(s) to check. "local" indicates the local machine and '

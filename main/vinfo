@@ -73,12 +73,12 @@ main() {
 	if [[ -z "${file}" ]]; then
 		if man -w "$1" &> /dev/null; then
             printf "%s\n\n%s\n\n%s" \
-                "No info file for $1." \
-                "Searching for alternative documentation." \
+                "Unable to find an info page for '$1'." \
+                "Searching for alternative documentation..." \
                 "Loading man page::   $(man -w "$1" | head -n 1 | awk -F'/' '{print $NF}' | sed 's/\.\([^\.]*\)\.bz2$/(\1)/g')  "
 
-            num_of_bars=25
-            total_delay=1.0
+            num_of_bars=15
+            total_delay=0.5
 
             delay="$(bc <<< "scale=10; ${total_delay} / ${num_of_bars}")"
             clear_line="$(mkbar '\b' $((num_of_bars + 2)))"
@@ -97,7 +97,7 @@ main() {
 			exit 0
 		fi
 
-		die "No info file for $1.\n\n===== APROPOS OUTPUT =====\n$(2>&1 apropos "$1")"
+		die "Unable to find an info page for '$1'.\n\n===== APROPOS OUTPUT =====\n$(2>&1 apropos "$1")"
 	fi
 
 	if [[ "${file}" == "$1" ]]; then

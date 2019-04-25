@@ -5,11 +5,14 @@ Provides list of movies / TV shows from filesystem for user to choose from and
 then plays the user's choice using mpv.
 """
 
+import argparse  # noqa: F401
 import datetime as dt  # noqa: F401
 import os  # noqa: F401
 import pickle
 import subprocess as sp  # noqa: F401
 import sys  # noqa: F401
+import typing as t  # noqa: F401
+import types as T  # noqa: F401
 
 import gutils
 
@@ -24,7 +27,7 @@ data_dir = gutils.xdg.init('data')
 cache_fp = '{}/cache'.format(data_dir)
 
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
     if args.cache or not os.path.exists(cache_fp):
         find_output = gutils.shell(
             'find /media/bryan/hercules/media/Entertainment '
@@ -49,7 +52,7 @@ def main(args):
     ps = sp.Popen(
         ['printf', '{}'.format(
             '\n'.join(sorted(filter(
-                lambda x: str.isalpha(x[0]),
+                lambda x: str.isalpha(x[0]) or x[0] == '[',
                 options.keys()
             )))
         )],

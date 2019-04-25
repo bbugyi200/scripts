@@ -21,6 +21,10 @@ iptables -A OUTPUT -p udp -m udp --dport 1198 -j ACCEPT
 iptables -A INPUT -p tcp --dport 32400 -j ACCEPT
 iptables -A OUTPUT -p tcp --sport 32400 -j ACCEPT
 
+# Accept SSH Traffic
+iptables -A INPUT -p tcp --dport 34857 -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 34857 -j ACCEPT
+
 # Accept Traffic from PIA DNS Servers
 iptables -A OUTPUT -d 209.222.18.222/32 -j ACCEPT
 iptables -A OUTPUT -d 209.222.18.218/32 -j ACCEPT

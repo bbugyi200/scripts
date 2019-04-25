@@ -34,11 +34,11 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-# This lock blocks the torrents from self-destructing (removing themselves
+# This lock blocks the torrents from "catching the Plague" (removing themselves
 # from the BitTorrent client) immediately after download. Instead, they
 # seed until the very last torrent finishes downloading, at which point
-# they all self-destruct at once.
-kill_switch = threading.Lock()
+# all torrents "become infected" and die, one after the other.
+the_plague = threading.Lock()
 
 
 class MagnetTracker:
@@ -50,7 +50,8 @@ class MagnetTracker:
         self.next_key = 0
         self.active_torrents = 0
 
-        kill_switch.acquire()
+        # Trap the plague in Pandora's Box. It is contained... for now.
+        the_plague.acquire()
 
     def __getitem__(self, i: int) -> str:
         return self.ids[i]
@@ -60,12 +61,14 @@ class MagnetTracker:
             self.active_torrents -= 1
 
             if self.active_torrents == 0:
-                kill_switch.release()
+                # Release the plague upon the world!
+                # May God have mercy on any torrent that still draws breath! ;(
+                the_plague.release()
 
             return self.active_torrents
 
     def new(self, id_list: List[str]) -> int:
-        log.vdebug("id_list = %s", id_list)
+        log.vdebug("id_list = %s", id_list)  # type: ignore
         with self.lock:
             self.next_key += 1
             self.active_torrents += 1
@@ -99,14 +102,14 @@ mqueue: 'queue.Queue[str]' = queue.Queue()
 
 
 def term_handler(signum: int, frame: FrameType) -> None:
-    """Remove All Magnet Files before Terminating"""
+    """Remove all magnet files before terminating."""
     log.debug('Terminated via {} signal.'.format(signal.Signals(signum).name))
-    purge_all()
+    genocide()
     sys.exit(128 + signum)
 
 
 def usr1_handler(signum: int, frame: FrameType) -> None:
-    """Adds New Magnet File to Queue"""
+    """Add new magnet file to queue."""
     log.debug('SIGUSR1 signal received.')
     with ARGS_FILE.open('rb') as f:
         args = pickle.load(f)
@@ -116,23 +119,24 @@ def usr1_handler(signum: int, frame: FrameType) -> None:
 
 
 def exit_handler() -> None:
-    """Stop Transmission Daemon and Disconnect from VPN"""
+    """Stop P2P Daemon and disconnect from VPN."""
     sp.Popen(['sudo', 'killall', 'deluged'])
     sp.Popen(['sudo', 'killall', 'deluge-web'])
+
     sp.Popen(['PIA', 'stop'])
 
     if MASTER_IS_ONLINE_FILE.exists():
         MASTER_IS_ONLINE_FILE.unlink()
 
 
-def main() -> None:
+def main(args: argparse.Namespace) -> None:
     atexit.register(exit_handler)
 
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
     signal.signal(signal.SIGUSR1, usr1_handler)
 
-    create_pidfile()
+    create_pidfile(args)
     time.sleep(args.delay)
 
     try:
@@ -146,7 +150,7 @@ def main() -> None:
         cmd_list = ['sudo', '-E', 'deluge-web', '--fork']
         sp.check_call(cmd_list)
 
-        purge_all()
+        genocide()
     except sp.CalledProcessError:
         raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
     else:
@@ -162,13 +166,13 @@ def main() -> None:
 
 
 def torrent(args: argparse.Namespace) -> None:
-    """Creates new torrent thread worker. """
+    """Creates new torrent thread worker."""
     thread = threading.Thread(target=_torrent, args=(args,), daemon=True)
     thread.start()
 
 
 def _torrent(args: argparse.Namespace) -> None:
-    """Thread worker
+    """Thread Worker
 
     Downloads the torrent given by the @magnet string.
     """
@@ -232,8 +236,11 @@ def _torrent(args: argparse.Namespace) -> None:
         finally:
             mtracker.done()
 
-            with kill_switch:
-                rm(mtracker[mkey])
+            with the_plague:
+                # The plague has been released! >=O
+                # So be it! We shall all die together!
+                die(mtracker[mkey])
+
                 mqueue.get()
                 mqueue.task_done()
 
@@ -252,27 +259,29 @@ def runtime_context() -> Generator:
 
 
 def notify(msg: str) -> None:
-    """Sends Desktop Notification and (possibly) SMS Notification"""
+    """Sends desktop notification and (possibly) SMS notification."""
     log.debug('Sending notification to user.'.format(msg))
     gutils.notify('-t', '0', msg)
-    if args.textme:
-        sp.check_call(['textme', msg])
 
 
-def purge_all() -> None:
+def genocide() -> None:
+    """Kill everyone (all torrents anyway).
+
+    i.e. each torrent will be removed from the P2P client.
+    """
     try:
         full_id_list = info('ID')
-        log.vdebug("full_id_list = %s", full_id_list)
+        log.vdebug("full_id_list = %s", full_id_list)  # type: ignore
     except ValueError:
         return
 
     all_ids = [ID.split()[1] for ID in full_id_list]
     for ID in all_ids:
-        rm(ID)
+        die(ID)
 
 
-def rm(ID: str) -> None:
-    """Removes Transmission Magnet File"""
+def die(ID: str) -> None:
+    """Remove torrent specified by @ID from the P2P client."""
     try:
         sp.check_call(DELUGE + ['rm', ID])
         log.debug('Successfully removed magnet #{}.'.format(ID))
@@ -280,7 +289,7 @@ def rm(ID: str) -> None:
         log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(ID))
 
 
-def create_pidfile() -> None:
+def create_pidfile(args: argparse.Namespace) -> None:
     """Duplicate Process Management"""
     try:
         gutils.create_pidfile()
@@ -315,7 +324,12 @@ def magnet_pprint(magnet: str) -> str:
 
 
 def info(field: str, ID: str = None) -> Union[str, List[str]]:
-    log.vdebug("ID = %s", ID)
+    """Wrapper for the `deluge-console info` command.
+
+    Returns:
+        Returns `str` when @ID is given and `List[str]` otherwise.
+    """
+    log.vdebug("ID = %s", ID)  # type: ignore
 
     cmd = (
         "{DELUGE} info --sort-reverse=time_added {ID} | "
@@ -359,9 +373,6 @@ if __name__ == "__main__":
     parser.add_argument('-t', type=float, dest='timeout', default=default,
                         help='Time (in hours) to attempt to complete download before timing out. If set to 0, this script will run forever without ever timing out. Defaults to {}.'.format(default))
 
-    parser.add_argument('-T', '--textme', dest='textme', action='store_true',
-                        help='Forward notifications via SMS messages (i.e. enable text notifications).')
-
     default = 0
     parser.add_argument('--maxsize', type=int, dest='maxsize', default=default,
                         help='Max number of torrents allowed to download at one time (additional torrents will be enqueued and start when a space opens up). Defaults to {}.'.format(default))
@@ -373,4 +384,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
 
-    main()
+    main(args)

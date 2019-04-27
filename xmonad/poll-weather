@@ -88,9 +88,9 @@ def format_report(loc, temp, sky=None, wind=None):
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser(opt_args=['quiet'])
+    parser = gutils.ArgumentParser()
     parser.add_argument('zipcode', nargs='?', default='08060', help='zip code of location')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose, quiet=args.quiet):
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main()

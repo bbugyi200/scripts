@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Script to make torrenting movies and TV shows easier (uses transmission as a backend).
+"""Script to make torrenting movies and TV shows easier (wraps a P2P client).
 
 Connects to a VPN (using Private Internet Access), downloads the torrent (using a magnet file),
 disconnects from the VPN when the download is finished, and then sends me a text message to let
@@ -11,8 +11,8 @@ Multiple torrents can be downloaded at the same time by simply running this scri
 will be signaled to enqueue the new magnet file for download.
 """
 
-import atexit
 import argparse
+import atexit
 import contextlib
 import getpass
 import os
@@ -34,10 +34,11 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-# This lock blocks the torrents from "catching the Plague" (removing themselves
-# from the BitTorrent client) immediately after download. Instead, they
-# seed until the very last torrent finishes downloading, at which point
-# all torrents "become infected" and die, one after the other.
+# This lock "protects" (i.e. blocks) the torrents from "catching the Plague"
+# (i.e. removing themselves from the BitTorrent client) immediately after
+# download.  Instead, they seed until the very last torrent finishes
+# downloading, at which point all torrents "become infected" and die, one after
+# the other.
 the_plague = threading.Lock()
 
 
@@ -47,16 +48,17 @@ class MagnetTracker:
         self.lock = threading.Lock()
 
         self.ids: Dict[int, str] = {}
-        self.next_key = 0
+        self.next_key = 0  # used to index into `self.ids`
         self.active_torrents = 0
 
-        # Trap the plague in Pandora's Box. It is contained... for now.
+        # I have trapped the plague in Pandora's Box. It is contained... for now.
         the_plague.acquire()
 
     def __getitem__(self, i: int) -> str:
         return self.ids[i]
 
     def done(self) -> int:
+        """Called everytime a torrent finishes downloading."""
         with self.lock:
             self.active_torrents -= 1
 
@@ -68,6 +70,12 @@ class MagnetTracker:
             return self.active_torrents
 
     def new(self, id_list: List[str]) -> int:
+        """Captures ID of new torrent.
+
+        Returns:
+            An integer key that can be used to retrieve the torrent's ID
+            (by indexing into `self.ids`).
+        """
         log.vdebug("id_list = %s", id_list)  # type: ignore
         with self.lock:
             self.next_key += 1
@@ -92,9 +100,10 @@ log = gutils.logging.getEasyLogger(__name__)
 
 xdg_data_dir = gutils.xdg.init('data')
 ARGS_FILE = xdg_data_dir / 'args'
-DELUGE = ['sudo', '-E', 'deluge-console']
-# Created after the first torrent is successfully added to transmission.
+# Created after the first torrent is successfully added to P2P client.
 MASTER_IS_ONLINE_FILE = xdg_data_dir / 'master_is_online'
+
+DELUGE = ['sudo', '-E', 'deluge-console']
 SECONDS_IN_HOUR = 3600
 
 mtracker = MagnetTracker()
@@ -104,7 +113,7 @@ mqueue: 'queue.Queue[str]' = queue.Queue()
 def term_handler(signum: int, frame: FrameType) -> None:
     """Remove all magnet files before terminating."""
     log.debug('Terminated via {} signal.'.format(signal.Signals(signum).name))
-    genocide()
+    killall()  # Remove any torrents still seeding / downloading on P2P client.
     sys.exit(128 + signum)
 
 
@@ -140,7 +149,7 @@ def main(args: argparse.Namespace) -> None:
     time.sleep(args.delay)
 
     try:
-        log.info('Connecting to VPN and starting transmission daemon...')
+        log.info('Connecting to VPN and starting P2P client daemon...')
         sp.check_call(['PIA', 'start', args.vpn])
         sp.check_call(['sudo', 'chown', '-R', '{0}:{0}'.format(getpass.getuser()), args.download_dir])
 
@@ -150,9 +159,11 @@ def main(args: argparse.Namespace) -> None:
         cmd_list = ['sudo', '-E', 'deluge-web', '--fork']
         sp.check_call(cmd_list)
 
-        genocide()
+        # Remove any torrents that might have been saved from your
+        # last P2P session.
+        killall()
     except sp.CalledProcessError:
-        raise RuntimeError('Failed to start the VPN and/or the transmission daemon.')
+        raise RuntimeError('Failed to start the VPN and/or the P2P client daemon.')
     else:
         mqueue.maxsize = args.maxsize
 
@@ -239,7 +250,7 @@ def _torrent(args: argparse.Namespace) -> None:
             with the_plague:
                 # The plague has been released! >=O
                 # So be it! We shall all die together!
-                die(mtracker[mkey])
+                kill(mtracker[mkey])
 
                 mqueue.get()
                 mqueue.task_done()
@@ -264,7 +275,7 @@ def notify(msg: str) -> None:
     gutils.notify('-t', '0', msg)
 
 
-def genocide() -> None:
+def killall() -> None:
     """Kill everyone (all torrents anyway).
 
     i.e. each torrent will be removed from the P2P client.
@@ -277,10 +288,10 @@ def genocide() -> None:
 
     all_ids = [ID.split()[1] for ID in full_id_list]
     for ID in all_ids:
-        die(ID)
+        kill(ID)
 
 
-def die(ID: str) -> None:
+def kill(ID: str) -> None:
     """Remove torrent specified by @ID from the P2P client."""
     try:
         sp.check_call(DELUGE + ['rm', ID])
@@ -327,13 +338,13 @@ def info(field: str, ID: str = None) -> Union[str, List[str]]:
     """Wrapper for the `deluge-console info` command.
 
     Returns:
-        Returns `str` when @ID is given and `List[str]` otherwise.
+        Return type is `str` when @ID is given and `List[str]` otherwise.
     """
     log.vdebug("ID = %s", ID)  # type: ignore
 
     cmd = (
         "{DELUGE} info --sort-reverse=time_added {ID} | "
-        "awk -F: '{{if($1==\"{field}\")print $0}}'".format(
+        "awk -F: '{{if ($1==\"{field}\") print $0}}'".format(
             DELUGE=' '.join(DELUGE),
             field=field,
             ID=('' if ID is None else ID)

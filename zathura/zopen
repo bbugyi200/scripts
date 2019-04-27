@@ -21,9 +21,10 @@ import gutils
 ############################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
+
 xdg_data_dir = gutils.xdg.init('data')
-CACHE_FILE = '{}/recently_opened_docs'.format(xdg_data_dir)
-FIND_CACHE_FILE = '{}/all_docs'.format(xdg_data_dir)
+CACHE_FILE = xdg_data_dir / 'recently_opened_docs'
+FIND_CACHE_FILE = xdg_data_dir / 'all_docs'
 
 
 def main(args: argparse.Namespace) -> None:

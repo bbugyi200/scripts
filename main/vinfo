@@ -75,23 +75,9 @@ main() {
             printf "%s\n\n%s\n\n%s" \
                 "Unable to find an info page for '$1'." \
                 "Searching for alternative documentation..." \
-                "Loading man page::   $(man -w "$1" | head -n 1 | awk -F'/' '{print $NF}' | sed 's/\.\([^\.]*\)\.bz2$/(\1)/g')  "
+                "Loading man page::   $(man -w "$1" | head -n 1 | awk -F'/' '{print $NF}' | sed 's/\.\([^\.]*\)\.bz2$/(\1)/g')"
 
-            num_of_bars=15
-            total_delay=0.5
-
-            delay="$(bc <<< "scale=10; ${total_delay} / ${num_of_bars}")"
-            clear_line="$(mkbar '\b' $((num_of_bars + 2)))"
-
-            for (( i = 0; i < "$((num_of_bars + 1))"; i++ )); do
-                bar="[$(mkbar '=' ${i})$(mkbar ' ' $((num_of_bars - i)))]"
-                printf "${bar}"
-
-                sleep "${delay}"
-
-                printf "${clear_line}"
-            done
-            printf "${bar}"
+            sleep 1
 
 			vman "$1"
 			exit 0

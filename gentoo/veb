@@ -1,37 +1,132 @@
 #!/bin/bash
 
-####################################
-#  Find ebuild and open up in vim  #
-####################################
+read -r -d '' doc << EOM
+Find ebuild and open up in vim.
+EOM
 
-overlay_dir=/home/bryan/projects/portage-overlay
+# ---------- Modules ----------
+source gutils.sh
 
-if [[ -z "$1" ]]; then
-    pushd "$overlay_dir" || exit 1
-    vim -c 'exe "normal \<C-p>"'
-    popd || exit 1
-    exit 0
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,v" -l "debug,help,verbose" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-g] [-v] PACKAGE"
+    "[-d] [-g] [-v] CATEGORY PACKAGE [VERSION]"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    CATEGORY    Portage package category.
+    PACKAGE     Portage package name.
+    VERSION     Portage package version.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
 fi
 
-if [[ -z "$2" ]]; then
-    package="$1"; shift
-    pushd "$overlay_dir" || exit 1
-    vim "$(find "$overlay_dir" -type f -name "$package*ebuild")"
-    popd || exit 1
-else
-    category="$1"; shift
-    package="$1"; shift
+if [[ -z "$1" ]]; then
+    die "$(usage)" 2
+fi
 
-    if [[ -z "$1" ]]; then
-        echo "usage: veb CATEGORY PACKAGE VERSION"
-        exit 2
+# ---------- Global Variables ----------
+my_overlay_dir=/home/bryan/projects/portage-overlay
+overlay_dir="${my_overlay_dir}"
+
+# ---------- Main ----------
+main() {
+    if [[ -n "$2" ]]; then
+        category="$1"; shift
+        package="$1"; shift
+
+        if [[ -n "$1" ]]; then
+            version="$1"; shift
+
+            package_dir="${my_overlay_dir}"/"$category"/"$package"
+            mkdir -p "$package_dir" &> /dev/null
+            pushd "${package_dir}" > /dev/null || exit 1
+            vim "$package_dir/$package-$version.ebuild"
+            popd > /dev/null || exit 1
+        else
+            set_overlay_dir "${category}"
+
+            if ! [[ -d "${overlay_dir}"/"${category}" ]]; then
+                die "No category exists that matches '${category}'."
+            fi
+
+            pkg_path="$(find "$overlay_dir"/"${category}" -type f -name "$package*ebuild" | head -n 1)"
+            if [[ -z "${pkg_path}" ]]; then
+                die "Failed to find a package that matches '${category}/${package}'."
+            fi
+
+            pushd "$(dirname "${pkg_path}")" > /dev/null || exit 1
+            vim "${pkg_path}"
+            popd > /dev/null || exit 1
+        fi
+    else
+        package="$1"; shift
+
+        set_overlay_dir
+
+        pkg_path="$(find "$overlay_dir" -type f -name "$package*ebuild" | head -n 1)"
+        if [[ -z "${pkg_path}" ]]; then
+            die "Failed to find a package that matches '${package}'."
+        fi
+
+        pushd "$(dirname "${pkg_path}")" > /dev/null || exit 1
+        vim "${pkg_path}"
+        popd > /dev/null || exit 1
     fi
-    
-    version="$1"; shift
+}
 
-    package_dir="$overlay_dir/$category/$package"
-    mkdir -p "$package_dir" &> /dev/null
-    pushd "$overlay_dir" || exit 1
-    vim "$package_dir/$package-$version.ebuild"
-    popd || exit 1
+set_overlay_dir() {
+    # Search my personal overlay first. If no package is found, search the
+    # global portage overlay.
+    category="$1"; shift
+    if [[ -z "$(find "$overlay_dir"/"${category}" -type f -name "$package*ebuild" 2> /dev/null)" ]]; then
+        overlay_dir=/var/db/pkg
+    fi
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+	main "$@"
 fi

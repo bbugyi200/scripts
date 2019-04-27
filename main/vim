@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##############################################
-#  Wrapper for editor that logs filenames.   #
+#  Wrapper for editor that logs filepaths.   #
 ##############################################
 
 # Hack to make sure RECENTLY_EDITED_FILES_LOG is defined when using 'sudo'.
@@ -9,8 +9,16 @@ if [[ -z "${RECENTLY_EDITED_FILES_LOG}" ]]; then
     eval "$(grep "export RECENTLY_EDITED_FILES_LOG=" "$HOME"/.profile)"
 fi
 
-/usr/bin/"$(basename "$0")" "$@"
 
+# If file is owned by root, open using `sudo`.
+if [[ -f "$1" ]] && [[ "$(stat --format '%U' "$1")" == "root" ]]; then
+    sudo -E /usr/bin/"$(basename "$0")" "$@"
+else
+    /usr/bin/"$(basename "$0")" "$@"
+fi
+
+
+# Log filepaths of all files that were edited.
 for arg in "$@"; do
     # Don't log options, only files.
     if [[ -f "${arg}" ]]; then

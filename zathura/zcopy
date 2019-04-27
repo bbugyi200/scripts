@@ -1,0 +1,10 @@
+#!/bin/bash
+
+###################################################################
+#  Duplicates the running Zathura instance.                       #
+###################################################################
+
+fname="$(wmctrl -lx | grep "zathura.Zathura" | tail -n 1 | tr -s " " | cut -d' ' -f5-)"
+fpath="$(grep "${fname}" ~/.local/share/zopen/all_docs | head -n 1)"
+
+zathura "${fpath}"

@@ -164,7 +164,6 @@ while [[ -n "$1" ]]; do
            clean=true
            ;;
        -d|--debug )
-           debug=true
            PS4='$LINENO: '
            set -x
            ;;
@@ -362,13 +361,7 @@ if [[ "${P}" =~ .*-r[0-9]+ ]]; then
     P="${P%-r*}"
 fi
 
-# Disables STDOUT and STDERR
-if [[ "${debug}" != true ]]; then
-    exec 5>&1 > /dev/null
-    exec 2>&1
-fi
-
-ebuild "${EBUILD}" clean unpack
+ebuild "${EBUILD}" clean unpack &> /dev/null
 
 PORTAGE_BUILD_DIR=/var/tmp/portage
 WORK_DIR="$(find "${PORTAGE_BUILD_DIR}" -type d -regex ".*/work/${P%_*}[^/]*")"
@@ -405,13 +398,13 @@ fi
 cp /home/bryan/Dropbox/var/templates/localalias.epatch "${TMP_WORK_DIR}"/.localalias
 
 cd "${TMP_WORK_DIR}" || exit 1
-git init
-git add .
-git commit -m "Initial Commit"
+
+{
+    git init
+    git add .
+    git commit -m "Initial Commit"
+} &> /dev/null
 
 change_owner
 
-if [[ "${debug}" != true ]]; then
-    exec 1>&5  # Restores STDOUT
-fi
 printf "${TMP_WORK_DIR}"

@@ -1,0 +1,62 @@
+#!/usr/bin/python3
+
+"""MPV Helper for Seeking to a Specific Point"""
+
+import argparse  # noqa: F401
+import datetime as dt  # noqa: F401
+import os  # noqa: F401
+from pathlib import Path  # noqa: F401
+import subprocess as sp  # noqa: F401
+import sys  # noqa: F401
+from typing import *  # noqa: F401
+from types import *  # noqa: F401
+
+import gutils
+
+############################################################################################
+#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
+############################################################################################
+
+log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
+
+
+def main(args: argparse.Namespace) -> None:
+    uinput = gutils.shell('prompt "[MPV] Goto"')
+    # Already Formatted
+    if ':' in uinput:
+        print(uinput)
+        sys.exit(0)
+
+    loc = uinput[:]
+
+    # Uses special minute syntax (i.e. ends in 'm').
+    if loc[-1] == 'm':
+        iloc = int(loc[:-1])
+        H = iloc // 60
+        M = iloc % 60
+
+        if H == 0:
+            loc = '{}:00'.format(M)
+        else:
+            loc = '0{}:{}:00'.format(H, M)
+
+        print(loc)
+        sys.exit(0)
+
+    # Add colons in all the right places.
+    i = 2; j = 0
+    length = len(loc)
+    while i < length:
+        loc = loc[:-(i + j)] + ':' + loc[-(i + j):]
+        i += 2; j += 1
+
+    print(loc)
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

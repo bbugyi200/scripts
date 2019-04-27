@@ -5,33 +5,41 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
+
+source gutils.sh
+
+
 if [[ "${1}" == "-d" ]]; then
-    shift
+    shift; debug=true
     PS4='$LINENO: '
     set -x
 fi
 
-nameserver_file=/etc/resolv.conf
+if [[ -z "$1" ]]; then
+    action="start"
+    vpn="nyc"
+else
+    action="$1"
+    vpn="$2"
+fi
 
 if pgrep openvpn &> /dev/null; then
-    action="stop"
-else
-    if [[ -z "$1" ]]; then
-        action="start"
-        vpn="nyc"
-    else
-        action="$1"
-        vpn="$2"
+    if [[ "${action}" == "start" ]]; then
+        die "OpenVPN is already running."
     fi
 fi
 
+
+nameserver_file=/etc/resolv.conf
 if [ "$action" == "start" ]; then
     if pgrep "openvpn" > /dev/null; then
         printf "\n\nPIA is already running!\n\n"
         exit 1
     fi
     myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
-    printf "Public IP Address: %s\n\n" "${myip}"
+    if [[ "${debug}" == true ]]; then
+        printf "Public IP Address: %s\n\n" "${myip}"
+    fi
 
     cp "${nameserver_file}" /etc/resolv.tmp
     PIA_nameservers=( "209.222.18.222" "209.222.18.218" )
@@ -52,10 +60,13 @@ if [ "$action" == "start" ]; then
     esac
     openvpn --mute-replay-warnings --config "/etc/openvpn/pia/$CONF" &
 
-    sleep 7
-
     myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
-    printf "\nPublic IP Address: %s" "${myip}"
+
+    if [[ "${debug}" == true ]]; then
+        sleep 7
+        printf "\nPublic IP Address: %s" "${myip}"
+    fi
+
     lock_network
 
 elif [ "$action" == "stop" ]; then
@@ -63,6 +74,5 @@ elif [ "$action" == "stop" ]; then
 
     mv /etc/resolv.tmp "${nameserver_file}"
 
-    sleep 2
     unlock_network
 fi

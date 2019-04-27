@@ -1,10 +1,17 @@
 #!/bin/bash
 
-confirm "sudo mount /dev/sdc /media/bryan/perseus"
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+    exec sudo "$0" "$@"
+fi
+
+
+confirm "mount /dev/sdc /media/bryan/perseus"
 
 printf "LAST EXTERNAL BACKUP: %s\n\n" "$(cat /media/bryan/perseus/external.txt)"
 confirm "rsync -av --delete /media/bryan/hercules /media/bryan/perseus"
-date > /media/bryan/perseus/external.txt
-notify-send "External Backup is Complete! :)"
 
-confirm "sudo umount /dev/sdc"
+date > /media/bryan/perseus/external.txt
+
+notify-send "External Backup is Complete! :)"
+confirm "umount /dev/sdc"

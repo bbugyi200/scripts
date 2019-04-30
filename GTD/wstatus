@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if watson_is_on; then
+    echo "<icon=play.xbm/>"
+else
+    echo "<icon=pause.xbm/>"
+fi

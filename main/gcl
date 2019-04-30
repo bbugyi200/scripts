@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [[ "${1}" == "-d" ]]; then
+    shift
+    PS4='$LINENO: '
+    set -x
+fi
+
+
+if [[ -n "$1" ]]; then
+    repo="$1"
+else
+    repo="$(xclip -selection clipboard -out)"
+fi
+
+git clone --recurse-submodules "${repo}"
+
+project_dir="$(basename "${repo}")"
+
+cd "${project_dir}" || exit 1
+ctags -Rf .tags .
+
+echo "${project_dir}"

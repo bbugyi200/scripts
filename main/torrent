@@ -16,17 +16,17 @@ import atexit
 import contextlib
 import getpass
 import os
-import pickle
-import threading
-import time
-import signal
-import re
 from pathlib import Path  # noqa: F401
+import pickle
+import queue
+import re
+import signal
 import subprocess as sp
 import sys
-from typing import *
+import threading
+import time
 from types import *
-import queue
+from typing import *
 
 import gutils
 
@@ -96,16 +96,13 @@ class MagnetTracker:
             return self.next_key
 
 
-log = gutils.logging.getEasyLogger(__name__)
-
-xdg_data_dir = gutils.xdg.init('data')
-ARGS_FILE = xdg_data_dir / 'args'
+XDG_DATA_DIR = gutils.xdg.init('data')
+ARGS_FILE = XDG_DATA_DIR / 'args'
 # Created after the first torrent is successfully added to P2P client.
-MASTER_IS_ONLINE_FILE = xdg_data_dir / 'master_is_online'
-
+MASTER_IS_ONLINE_FILE = XDG_DATA_DIR / 'master_is_online'
 DELUGE = ['sudo', '-E', 'deluge-console']
-SECONDS_IN_HOUR = 3600
 
+log = gutils.logging.getEasyLogger(__name__)
 mtracker = MagnetTracker()
 mqueue: 'queue.Queue[str]' = queue.Queue()
 
@@ -130,7 +127,6 @@ def usr1_handler(signum: int, frame: FrameType) -> None:
 def exit_handler() -> None:
     """Stop P2P Daemon and disconnect from VPN."""
     sp.Popen(['sudo', 'killall', 'deluged'])
-    sp.Popen(['sudo', 'killall', 'deluge-web'])
 
     sp.Popen(['PIA', 'stop'])
 
@@ -154,9 +150,6 @@ def main(args: argparse.Namespace) -> None:
         sp.check_call(['sudo', 'chown', '-R', '{0}:{0}'.format(getpass.getuser()), args.download_dir])
 
         cmd_list = ['sudo', '-E', 'deluged']
-        sp.check_call(cmd_list)
-
-        cmd_list = ['sudo', '-E', 'deluge-web', '--fork']
         sp.check_call(cmd_list)
 
         # Remove any torrents that might have been saved from your
@@ -227,6 +220,7 @@ def _torrent(args: argparse.Namespace) -> None:
 
                 i += 1
                 if args.timeout:
+                    SECONDS_IN_HOUR = 3600
                     if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
                         msg = "Torrent is still attempting to download \"{0}\" after {1:.1f} hour(s) "\
                               " elapsed time. Shutting down early.".format(magnet_pprint(args.magnet), args.timeout)

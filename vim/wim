@@ -77,7 +77,7 @@ fi
 # ---------- Main ----------
 all_scripts=( )
 for cmd in "$@"; do
-	script_path="$(find /home/bryan/Dropbox/bin -type f -name "${cmd}")"
+	script_path="$(find /home/bryan/Dropbox/bin -type f -name "${cmd}" | head -n 1)"
 	
 	if [[ -z "${script_path}" ]] || [[ "${force_dotfile}" == true ]]; then
 	    def_vim_args="$(ag -s "(^(alias|function)[ ]+|^)${cmd}( \(\)|\(\)| {|=)" /home/bryan/Dropbox/lib/zsh | awk -F: '{ print "+" $2 " " $1 }' | head -n 1)"

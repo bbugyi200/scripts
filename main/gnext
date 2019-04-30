@@ -1,0 +1,13 @@
+#!/bin/bash
+
+branch="${1:-master}"; shift
+
+next_commit="$(git rev-list --topo-order HEAD.."${branch}" | tail -1)"
+if [[ -z "${next_commit}" ]]; then
+    echo "[ERROR] There are no more commits ahead. The ${branch} branch is already checked out."
+    exit 1
+elif [[ "${next_commit}" == "$(git rev-parse "${branch}")" ]]; then
+    git checkout "${branch}"
+else
+    git checkout "${next_commit}"
+fi

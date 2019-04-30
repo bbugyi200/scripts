@@ -13,7 +13,7 @@ import gutils
 log = gutils.logging.getEasyLogger(__name__)
 
 
-def main():
+def main() -> None:
     ps = sp.check_output(['tmux', 'ls'])
     out = ps.decode().strip()
 

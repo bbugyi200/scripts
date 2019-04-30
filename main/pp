@@ -1,0 +1,21 @@
+#!/bin/bash
+
+header() {
+    for (( i = 0; i < "$((32 + ${#1}))"; i++ )); do
+        printf "="
+    done; printf "\n"
+
+    printf "=============== ${1} ===============\n"
+
+    for (( i = 0; i < "$((32 + ${#1}))"; i++ )); do
+        printf "="
+    done; printf "\n"
+}
+
+pid="$(ps -eF | fzf | awk '{printf "%s", $2}')"
+pgid="$(ps -o pgid -p "${pid}" | tail -n 1)"
+fmt=uname,pid,ppid,pgid,sid,pcpu,pmem,etime,start,cmd
+
+if [[ -n "${pid}" ]]; then
+    cat <(ps -o "${fmt}" "${pid}" && printf "\n") <(header "PGID:: ${pgid}" && ps -axo "${fmt}" | awk "{if(\$4==${pgid} && \$2 != ${pid}) print \$0}" && printf "\n") <(header "lsof -p ${pid}" && lsof -p "${pid}" && echo && header "/proc/${pid}/status") /proc/"${pid}"/status | less
+fi

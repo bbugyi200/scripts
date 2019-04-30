@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [[ "${1}" == "-d" ]]; then
+    shift
+    PS4='$LINENO: '
+    set -x
+fi
+
+
+mpv_history="/home/bryan/.config/mpv/history.log"
+tmp_history="/tmp/mpv.history.log"
+
+rm -f "${tmp_history}"
+while read line; do
+    fpath="$(echo "${line}" | awk -F'|' '{print $NF}' | sed 's/^\s\+//')"
+    if [[ "${fpath}" == "/"* ]]; then
+        if ! [[ -f "${fpath}" ]]; then
+            continue
+        fi
+    fi
+
+    echo "${line}" >> "${tmp_history}"
+done < "${mpv_history}"
+
+/usr/bin/safe-rm "${mpv_history}"
+mv "${tmp_history}" "${mpv_history}"
+
+sudo chown bryan:bryan "${mpv_history}"

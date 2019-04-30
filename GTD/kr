@@ -2,9 +2,12 @@
 
 """Sets Event with khal using RELATIVE Time (x minutes from now)"""
 
+import argparse
 import datetime as dt
 import subprocess as sp
 import sys  # noqa: F401
+from typing import *  # noqa: F401
+from types import *  # noqa: F401
 
 import gutils
 
@@ -13,9 +16,12 @@ import gutils
 ############################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
+data_dir = gutils.xdg.init('data')
+minutes_fp = data_dir / 'minutes'
 
 
-def main(args):
+
+def main(args: argparse.Namespace) -> None:
     try:
         vargs = list(args.vargs)
     except TypeError:
@@ -39,7 +45,11 @@ def main(args):
         event_name = end_break
 
         if not user_gave_minutes:
-            minutes = 17
+            if minutes_fp.exists():
+                with minutes_fp.open('r') as f:
+                    minutes = int(int(f.read()) * 0.33)
+            else:
+                minutes = 17
 
         try:
             sp.check_call(['task', 'start.any:', 'stop'])
@@ -48,7 +58,11 @@ def main(args):
     else:
         event_name = start_break
 
-    log.vdebug('vargs: %s', repr(vargs))
+    if not args.end_break:
+        with minutes_fp.open('w') as f:
+            f.write(str(minutes))
+
+    log.vdebug('vargs: %s', repr(vargs))  # type: ignore
 
     if event_name in [start_break, end_break]:
         sp.check_call(['kstop', '-n'])

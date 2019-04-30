@@ -3,4 +3,5 @@
 /usr/local/bin/textme "cron.weekly/weekly_jobs: This weekly test message is necessary in order to ensure this phone number stays active."
 /usr/local/bin/sort_qb_quickmarks
 /usr/local/bin/clean_recent_file_log
+/usr/local/bin/clean_mpv_history
 /usr/local/bin/cache_cheaders

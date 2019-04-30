@@ -5,7 +5,7 @@ This script aids in the creation and maintainance of  user patches on Gentoo.
 
 Steps to create an ebuild patch:
 
-1) Run \`cd \$(epatch PACKAGE)\` (will cd to temp git repository).
+1) Run \`cd "\$(epatch PACKAGE)"\` (will cd to temp git repository).
 2) Make your code changes.
 3) Run \`epatch -i PATCH\` (while still in the temp git repository) to install PATCH.patch.
 EOM
@@ -51,7 +51,7 @@ function patch_install() {
         BRANCH="HEAD"
     fi
 
-    git add -A
+    git add -u
     git diff --staged "${BRANCH}" > "${PPATH}"
     git reset HEAD &> /dev/null
     imsg "Installed patch to ${PPATH}."
@@ -398,6 +398,7 @@ fi
 cp /home/bryan/Dropbox/var/templates/localalias.epatch "${TMP_WORK_DIR}"/.localalias
 
 cd "${TMP_WORK_DIR}" || exit 1
+ctags -Rf .tags .
 
 {
     git init

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ "$(stat --format '%s' ~/.config/watson/state)" -eq 2 ]]; then
+    exit 1
+else
+    exit 0
+fi

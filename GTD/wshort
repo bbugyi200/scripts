@@ -1,0 +1,11 @@
+#!/bin/bash
+
+minutes="$(printf '%.0f' "$1")"; shift
+
+frames_fp=~/.config/watson/frames
+last_endtime="$(tail -n 3 "${frames_fp}" | head -n 1 | sed 's/^\s*//')"
+new_endtime=$((last_endtime - (minutes * 60)))
+
+sed -i "s/${last_endtime}/${new_endtime}/g" "${frames_fp}"
+
+notify-send "$(basename "$0")" "Shortening last event by ${minutes} minutes."

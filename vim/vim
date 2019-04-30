@@ -29,11 +29,15 @@ for arg in "$@"; do
             filepath="$PWD"/"${arg}"
         fi
 
-        # Don't log temporary files.
-        if [[ "${filepath}" != *"/tmp/"* ]]; then
-            # Remove duplicate entries.
-            sed -i "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
-            echo "${filepath}" >> "${RECENTLY_EDITED_FILES_LOG}"
-        fi
+        # Don't log files that match these patterns.
+        for ignore_pttrn in "/tmp/" ".git/"; do
+            if [[ "${filepath}" == *"${ignore_pttrn}"* ]]; then
+                continue
+            fi
+        done
+
+        # Remove duplicate entries.
+        sed -i "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
+        echo "${filepath}" >> "${RECENTLY_EDITED_FILES_LOG}"
     fi
 done

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Stops Current TW Task if Machine Idles for Too Long and Restarts it when Activity Resumes"""
+"""Stops Current Task if Machine Idles for Too Long and Restarts it when Activity Resumes"""
 
 import datetime as dt
 import os
@@ -52,14 +52,9 @@ def main():
         if idletime >= args.idletime * MILLISECONDS_IN_MINUTE:
             log.debug('System has been idle for {} milliseconds.'.format(idletime))
 
-            out = sp.check_output('timew | head -n 1', shell=True)
-            curr_tw_event = out.decode().strip()
-            if not any([' {} '.format(project) in curr_tw_event for project in ACCEPTABLE_PROJECTS]):
-                raise RuntimeError('Either no task is started or current task\'s corresponding project is not in {}.'.format(ACCEPTABLE_PROJECTS))
-
-            message = 'Stopping current TW task.'
+            message = 'Stopping current task.'
             log.info(message)
-            check_call('task', 'start.any:', 'stop')
+            check_call('watson', 'stop')
         else:
             time.sleep(args.delay * 60)
             continue
@@ -73,10 +68,10 @@ def main():
 
             if idletime <= args.idletime * MILLISECONDS_IN_MINUTE:
                 log.info('Restarting last task...')
-                check_call('last_task')
+                check_call('watson', 'restart')
 
                 delta = dt.datetime.now() - dt_stop
-                msg_fmt = 'The last active TW task has been restarted.\n\nTask was stopped for {0:.1f} minutes.'
+                msg_fmt = 'The last active task has been restarted.\n\nTask was stopped for {0:.1f} minutes.'
                 message = msg_fmt.format((delta.seconds // 60) + ((delta.seconds % 60) / 60))
                 gutils.notify(message, urgency='low')
 
@@ -86,10 +81,9 @@ def main():
                 log.info('Timed out after {} minutes of idle activity. Terminating {}.'.format(args.waittime, NAME))
                 sys.exit(0)
             elif (idletime >= args.multiplier * args.idletime * MILLISECONDS_IN_MINUTE) and not already_shortened_timew:
-                msg = 'Shortening last timewarrior event by {} minutes.'.format(args.idletime)
+                msg = 'Shortening last event by {} minutes.'.format(args.idletime)
                 log.debug(msg)
-                check_call('timew', 'shorten', '@1', '{}mins'.format(args.idletime))
-                gutils.notify(msg)
+                check_call('wshort', str(args.idletime))
                 already_shortened_timew = True
 
 

@@ -62,10 +62,11 @@ def main(args: argparse.Namespace) -> None:
         cmd = 'wmctrl -lx | grep "zathura\|okular" | tr -s " " | cut -d\' \' -f5- '\
               '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\|okular\\)"'
         decoded = gutils.shell(cmd)
-        open_docs = decoded.split('\n')
-        log.debug('Open Docs: {}'.format(' '.join(open_docs)))
+
+        open_docs = [Path(x) for x in decoded.split('\n')]
+        log.debug('Open Docs: {}'.format(open_docs))
     except sp.CalledProcessError:
-        open_docs = None
+        open_docs = []
         log.debug('No documents are currently open in zathura.')
 
     with open(CACHE_FILE, 'r') as f:
@@ -140,7 +141,7 @@ def demote_open_docs(docs: List[Path], open_docs: List[Path]) -> List[Path]:
     E = []
     for odoc in open_docs:
         for doc in docs:
-            if odoc in str(doc):
+            if str(odoc) in str(doc):
                 try:
                     D.remove(doc)
                     E.append(doc)

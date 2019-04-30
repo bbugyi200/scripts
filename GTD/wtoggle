@@ -12,10 +12,27 @@ if [[ "$(uname -a)" == *"Debian"* ]]; then
 	debian-close-notifications
 fi
 
-if [[ "$(watson status)" == "No "* ]]; then
-    watson start Study
-    notify "Starting Watson Tracker"
-else
-    watson stop
-    notify "Stopping Watson Tracker"
-fi
+lock_file=/tmp/"$(basename "$0")"
+/bin/cp -f /home/bryan/.config/get-shit-done.ini /tmp/sites.ini
+
+(
+    flock 200 || exit 1
+    cd /tmp || exit 1
+
+    if [[ -f /run/user/1000/xtaskidle/pid ]]; then
+        kill "$(cat /run/user/1000/xtaskidle/pid)"
+    fi
+
+    if [[ "$(watson status)" == "No "* ]]; then
+        watson start Study
+        notify "Starting Watson Tracker"
+
+        xtaskidle -d &> /dev/null &
+        sudo get-shit-done work &> /dev/null
+    else
+        watson stop
+        notify "Stopping Watson Tracker"
+    fi
+) 200> "${lock_file}"
+
+rm -rf "${lock_file}"

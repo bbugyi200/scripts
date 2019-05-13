@@ -11,8 +11,8 @@ source gutils.sh
 eval set -- "$(getopt -o "d,h,v" -l "debug,help,verbose" -- "$@")"
 
 export USAGE_GRAMMAR=(
-    "[-d] [-g] [-v] PACKAGE"
-    "[-d] [-g] [-v] CATEGORY PACKAGE [VERSION]"
+    "[-d] [-v] PACKAGE"
+    "[-d] [-v] CATEGORY PACKAGE [VERSION]"
     "-h"
 )
 

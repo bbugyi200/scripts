@@ -56,7 +56,8 @@ def main(args: argparse.Namespace) -> None:
 
     # Append any docs found in the Downloads directory.
     out = sp.check_output(['find', '/home/bryan/Downloads', '-regex', doc_pttrn])
-    all_docs = all_docs + out.decode().strip()
+    all_docs = all_docs + '\n' + out.decode().strip()
+    log.vdebug('----- Downloads -----\n%s', out.decode().strip())  # type: ignore
 
     try:
         cmd = 'wmctrl -lx | grep "zathura\|okular" | tr -s " " | cut -d\' \' -f5- '\

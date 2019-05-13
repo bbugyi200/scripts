@@ -26,7 +26,7 @@ def main(args: argparse.Namespace) -> None:
     cmd_list = []
     cmd_opts = []
 
-    log.vdebug('args => %s', repr(args))
+    log.vdebug('args => %s', repr(args))  # type: ignore
 
     if args.update:
         cmd = 'eupdate'

@@ -28,7 +28,6 @@ lock_file=/tmp/"$(basename "$0")"
         notify "Starting Watson Tracker"
 
         xtaskidle -d &> /dev/null &
-        sudo get-shit-done work &> /dev/null
     else
         watson stop
         notify "Stopping Watson Tracker"

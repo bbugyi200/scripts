@@ -57,8 +57,8 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
     """Construct the Contents of the Final Log File that the User Views"""
     dt_start, dt_end = get_daterange(args.daterange)
 
-    log.vdebug('dt_start: %s', dt_start)
-    log.vdebug('dt_end: %s', dt_end)
+    log.vdebug('dt_start: %s', dt_start)  # type: ignore
+    log.vdebug('dt_end: %s', dt_end)  # type: ignore
 
     hostname = os.uname().nodename if hostname is None else hostname
     regexp = '.*' if regexp is None else regexp
@@ -167,7 +167,7 @@ def process_logfile(fp, *, dt_start, dt_end, regexp,
 
     if not hasattr(process_logfile, 'command_set'):
         # used to track unique commands
-        process_logfile.command_set = set()
+        process_logfile.command_set = set()  # type: ignore
 
     strptime = lambda D: dt.datetime.strptime(D, '%Y%m%d%H%M%S')
 
@@ -193,7 +193,7 @@ def process_logfile(fp, *, dt_start, dt_end, regexp,
             skip_date_check or date <= dt_end,
             skip_date_check or date >= dt_start,
             re.search(regexp, cmd) is not None,
-            not unique or stripped_cmd not in process_logfile.command_set,
+            not unique or stripped_cmd not in process_logfile.command_set,  # type: ignore
         ]
 
         if all(conditions):
@@ -201,7 +201,7 @@ def process_logfile(fp, *, dt_start, dt_end, regexp,
             matched_lines.append(build_log_entry(hostname, user, date, wd, cmd))
 
         if unique:
-            process_logfile.command_set.add(stripped_cmd)
+            process_logfile.command_set.add(stripped_cmd)  # type: ignore
 
     return matched_lines
 
@@ -234,12 +234,14 @@ def get_daterange(daterange):
 
 def parse_date(date):
     """Custom Date Parser."""
-    D = None if date is None else date.lower()
+    if date is None:
+        D = "now"
+    else:
+        D = date.lower()
 
-    if D in ["bot", "eot", None]:
+    if D in ["bot", "eot"]:
         D = {"bot": "20170101000000",
-             "eot": "now",
-             None: "now"}[D]
+             "eot": "now"}[D]
 
     if re.match('^[0-9]+[dwmy]$', D):
         N = int(D[:-1])
@@ -251,7 +253,7 @@ def parse_date(date):
         }[D[-1]]
 
         kwargs = {key: N}
-        return dt.datetime.now() - relativedelta(**kwargs)
+        return dt.datetime.now() - relativedelta(**kwargs)  # type: ignore
 
     if D == 'today':
         return delta_today(0)

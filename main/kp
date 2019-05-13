@@ -2,6 +2,12 @@
 
 pid="$(ps -aux | fzf | awk '{print $2}')"
 
-if [[ -n "${pid}" ]]; then
-    kill -"${2:-9}" "${pid}"
+if [[ -z "${pid}" ]]; then
+    exit 0
 fi
+
+kill "${pid}"
+{
+    sleep 1
+    kill -9 "${pid}" &> /dev/null
+} &

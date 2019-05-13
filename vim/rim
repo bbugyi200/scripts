@@ -1,10 +1,14 @@
 #!/bin/bash
 
 if [[ -n "$1" ]]; then
-    vim "$(awk "BEGIN{IGNORECASE = 1} /\/[^/]*$1[^/]*$/ {printf \"%s\n\", \$0}" "${RECENTLY_EDITED_FILES_LOG}" | tail -n 1)"
+    fpath="$(awk "BEGIN{IGNORECASE = 1} /\/[^/]*$1[^/]*$/ {printf \"%s\n\", \$0}" "${RECENTLY_EDITED_FILES_LOG}" | tail -n 1)"
 else
-    fpath="$(tac "${RECENTLY_EDITED_FILES_LOG}" | fzf)"
-    if [[ -n "${fpath}" ]]; then
-        vim "${fpath}"
-    fi
+    fpath="$(tac "${RECENTLY_EDITED_FILES_LOG}" | fzf --tiebreak=index)"
 fi
+
+if [[ -z "${fpath}" ]]; then
+    echo "[ERROR] No filename matched."
+    exit 1
+fi
+
+vim "${fpath}"

@@ -44,7 +44,7 @@ the_plague = threading.Lock()
 
 class MagnetTracker:
     """Thread-Safe Counter of Magnet Files"""
-    def __init__(self) -> None:
+    def __init__(self):
         self.lock = threading.Lock()
 
         self.ids: Dict[int, str] = {}
@@ -107,33 +107,6 @@ mtracker = MagnetTracker()
 mqueue: 'queue.Queue[str]' = queue.Queue()
 
 
-def term_handler(signum: int, frame: FrameType) -> None:
-    """Remove all magnet files before terminating."""
-    log.debug('Terminated via {} signal.'.format(signal.Signals(signum).name))
-    killall()  # Remove any torrents still seeding / downloading on P2P client.
-    sys.exit(128 + signum)
-
-
-def usr1_handler(signum: int, frame: FrameType) -> None:
-    """Add new magnet file to queue."""
-    log.debug('SIGUSR1 signal received.')
-    with ARGS_FILE.open('rb') as f:
-        args = pickle.load(f)
-
-    wait_for_first_magnet()
-    torrent(args)
-
-
-def exit_handler() -> None:
-    """Stop P2P Daemon and disconnect from VPN."""
-    sp.Popen(['sudo', 'killall', 'deluged'])
-
-    sp.Popen(['PIA', 'stop'])
-
-    if MASTER_IS_ONLINE_FILE.exists():
-        MASTER_IS_ONLINE_FILE.unlink()
-
-
 def main(args: argparse.Namespace) -> None:
     atexit.register(exit_handler)
 
@@ -152,9 +125,12 @@ def main(args: argparse.Namespace) -> None:
         cmd_list = ['sudo', '-E', 'deluged']
         sp.check_call(cmd_list)
 
+        cmd_list = ['sudo', '-E', 'deluge-web', '--fork']
+        sp.check_call(cmd_list)
+
         # Remove any torrents that might have been saved from your
         # last P2P session.
-        killall()
+        kill_all_torrents()
     except sp.CalledProcessError:
         raise RuntimeError('Failed to start the VPN and/or the P2P client daemon.')
     else:
@@ -167,6 +143,62 @@ def main(args: argparse.Namespace) -> None:
         notify('All torrents are complete.')
     finally:
         sp.check_call(['sudo', 'chown', '-R', 'plex:plex', args.download_dir])
+
+
+def exit_handler() -> None:
+    """Stop P2P Daemon and disconnect from VPN."""
+    sp.Popen(['sudo', 'killall', 'deluged'])
+    sp.Popen(['sudo', 'killall', 'deluge-web'])
+
+    sp.Popen(['PIA', 'stop'])
+
+    if MASTER_IS_ONLINE_FILE.exists():
+        MASTER_IS_ONLINE_FILE.unlink()
+
+
+def term_handler(signum: int, frame: FrameType) -> None:
+    """Remove all magnet files before terminating."""
+    log.debug('Terminated via {} signal.'.format(signal.Signals(signum).name))
+    kill_all_torrents()  # Remove any torrents still seeding / downloading on P2P client.
+    sys.exit(128 + signum)
+
+
+def usr1_handler(signum: int, frame: FrameType) -> None:
+    """Add new magnet file to queue."""
+    log.debug('SIGUSR1 signal received.')
+    with ARGS_FILE.open('rb') as f:
+        args = pickle.load(f)
+
+    wait_for_first_magnet()
+    torrent(args)
+
+
+def wait_for_first_magnet() -> None:
+    """Blocks until first magnet is added to queue."""
+    while mqueue.empty():
+        time.sleep(0.5)
+
+
+def create_pidfile(args: argparse.Namespace) -> None:
+    """Duplicate Process Management"""
+    try:
+        gutils.create_pidfile()
+    except gutils.StillAliveException as e:
+        if not MASTER_IS_ONLINE_FILE.exists():
+            while not MASTER_IS_ONLINE_FILE.exists():
+                log.debug('{} does not exist yet. Waiting...'.format(MASTER_IS_ONLINE_FILE))
+                time.sleep(1)
+
+            time.sleep(1)
+
+        with ARGS_FILE.open('wb') as f:
+            pickle.dump(args, f)
+
+        log.debug('Sending SIGUSR1 to {}.'.format(e.pid))
+        os.kill(e.pid, signal.SIGUSR1)
+
+        # Exit without invoking exit handler.
+        os._exit(0)
 
 
 def torrent(args: argparse.Namespace) -> None:
@@ -242,9 +274,9 @@ def _torrent(args: argparse.Namespace) -> None:
             mtracker.done()
 
             with the_plague:
-                # The plague has been released! >=O
+                # The plague has been released!
                 # So be it! We shall all die together!
-                kill(mtracker[mkey])
+                kill_torrent(mtracker[mkey])
 
                 mqueue.get()
                 mqueue.task_done()
@@ -269,7 +301,7 @@ def notify(msg: str) -> None:
     gutils.notify('-t', '0', msg)
 
 
-def killall() -> None:
+def kill_all_torrents() -> None:
     """Kill everyone (all torrents anyway).
 
     i.e. each torrent will be removed from the P2P client.
@@ -282,38 +314,16 @@ def killall() -> None:
 
     all_ids = [ID.split()[1] for ID in full_id_list]
     for ID in all_ids:
-        kill(ID)
+        kill_torrent(ID)
 
 
-def kill(ID: str) -> None:
+def kill_torrent(ID: str) -> None:
     """Remove torrent specified by @ID from the P2P client."""
     try:
         sp.check_call(DELUGE + ['rm', ID])
         log.debug('Successfully removed magnet #{}.'.format(ID))
     except sp.CalledProcessError:
         log.debug('Attempted to remove magnet #{} but it is NOT active.'.format(ID))
-
-
-def create_pidfile(args: argparse.Namespace) -> None:
-    """Duplicate Process Management"""
-    try:
-        gutils.create_pidfile()
-    except gutils.StillAliveException as e:
-        if not MASTER_IS_ONLINE_FILE.exists():
-            while not MASTER_IS_ONLINE_FILE.exists():
-                log.debug('{} does not exist yet. Waiting...'.format(MASTER_IS_ONLINE_FILE))
-                time.sleep(1)
-
-            time.sleep(1)
-
-        with ARGS_FILE.open('wb') as f:
-            pickle.dump(args, f)
-
-        log.debug('Sending SIGUSR1 to {}.'.format(e.pid))
-        os.kill(e.pid, signal.SIGUSR1)
-
-        # Exit without invoking exit handler.
-        os._exit(0)
 
 
 def magnet_pprint(magnet: str) -> str:
@@ -356,12 +366,6 @@ def info(field: str, ID: str = None) -> Union[str, List[str]]:
     return ret if ID is None else ret[0]
 
 
-def wait_for_first_magnet() -> None:
-    """Blocks until first magnet is added to queue."""
-    while mqueue.empty():
-        time.sleep(0.5)
-
-
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('magnet', help='The torrent magnet file.')
@@ -383,7 +387,7 @@ if __name__ == "__main__":
                         help='Max number of torrents allowed to download at one time (additional torrents will be enqueued and start when a space opens up). Defaults to {}.'.format(default))
 
     default = 'nyc'
-    parser.add_argument('--vpn', type=str, dest='vpn', nargs='?', default=default,
+    parser.add_argument('--vpn', type=str, dest='vpn', default=default,
                         help='VPN to connect to. Defaults to {}.'.format(default))
 
     args = parser.parse_args()

@@ -2,9 +2,9 @@
 
 report() {
     study_lines="$(watson report "$1" -c -G | grep "Study" 2> /dev/null)"
+    EC="$?"
 
-    # shellcheck disable=SC2181
-    if [[ "$?" -eq 0 ]]; then
+    if [[ "${EC}" -eq 0 ]]; then
         echo "${study_lines}" | sed -e 's/Study - //' -e 's/ [0-9][0-9]s//'
     else
         echo "0m"

@@ -72,7 +72,7 @@ main() {
 	file="$(/usr/bin/info -w "$1" | awk -F'/' '{print $NF}' | awk -F'.' '{$NF=""; $(NF-1)=""; print $0}')"
 	if [[ -z "${file}" ]]; then
 		if man -w "$1" &> /dev/null; then
-            printf "%s\n\n%s\n\n%s" \
+            printf "%s\n\n%s\n\n%s\n" \
                 "Unable to find an info page for '$1'." \
                 "Searching for alternative documentation..." \
                 "Loading man page::   $(man -w "$1" | head -n 1 | awk -F'/' '{print $NF}' | sed 's/\.\([^\.]*\)\.bz2$/(\1)/g')"
@@ -86,7 +86,7 @@ main() {
 		die "Unable to find an info page for '$1'.\n\n===== APROPOS OUTPUT =====\n$(2>&1 apropos "$1")"
 	fi
 
-	if [[ "${file}" == "$1" ]]; then
+	if [[ "${file// /}" == "$1" ]]; then
 		shift
 	fi
 

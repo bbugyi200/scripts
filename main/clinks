@@ -12,13 +12,6 @@ if [ "$(id -u)" != "0" ]; then
   exec sudo "$0" "$@"
 fi
 
-# ---------- Global Variables ----------
-ignore_patterns=( ".*\.sh" ".*\.py" ".*\.pyc" ".*\.archive\.tar\.gz" ".*\.mypy_cache.*" )
-ignore_flags=()
-for pttrn in "${ignore_patterns[@]}"; do
-    ignore_flags+=("--ignore=\"${pttrn}\"")
-done
-
 # ---------- Function Definitions ----------
 function stow_it() {
     src="$1"; shift
@@ -27,7 +20,8 @@ function stow_it() {
     dir="${src%/*}"
     subdir="${src##*/}"
 
-    stow --dir="${dir}" --target="${target}" "${ignore_flags[@]}" "${FLAG}" "${subdir}"
+    # So ~/.stow-global-ignore is used instead of /root/.stow-global-ignore.
+    runuser -l bryan -c "stow --dir=\"${dir}\" --target=\"${target}\" \"${FLAG}\" \"${subdir}\""
 }
 
 # ---------- Parse Command-line Arguments ----------

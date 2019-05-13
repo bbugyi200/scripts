@@ -320,11 +320,26 @@ if __name__ == "__main__":
                              'run.')
     args = parser.parse_args()
 
+
     if args.daterange is not None and len(args.daterange) not in (1, 2):
         parser.error(
             'The -D option requires either 1 or 2 arguments, '
             'but you have given {}.'.format(len(args.daterange))
         )
+
+    for i in range(len(args.daterange)):
+        try:
+            parse(args.daterange[i])
+        except ValueError:
+            if not re.match('^(BOT|EOT|now|today|[1-9][0-9]*(d|w|m|y))$', args.daterange[i]):
+                parser.error(
+                    'Unrecognized date string format. Supported date string '
+                    'formats include\nany format supported by the \'dateutil\' '
+                    'library or any of the following special\nvalues:\n\t'
+                    'BOT, EOT, now, today, Nd, Nw, Nm, or Ny '
+                    '(where N is an integer value).'
+                )
+
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main(args)

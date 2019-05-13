@@ -6,11 +6,16 @@ This script is coupled with the 'log_shell_command' script which, in turn, shoul
 into your zshrc configuration file.
 """
 
+import argparse
 import datetime as dt
 import os
+from pathlib import Path  # noqa: F401
 import re
 import subprocess as sp  # noqa: F401
+import sys  # noqa: F401
 import time
+from typing import *  # noqa: F401
+from types import *  # noqa: F401
 
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
@@ -25,21 +30,24 @@ log = gutils.logging.getEasyLogger(__name__)
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
-def main(args):
-    fp_results = '/tmp/{0}/{0}.log'.format(scriptname)
-    fp_results_dir = os.path.dirname(fp_results)
-    if not os.path.exists(fp_results_dir):
-        os.makedirs(fp_results_dir)
+class LogsNotFound(Exception):
+    """Raised when no Log Files can be Found."""
 
-    logdir = '/home/bryan/Dropbox/var/logs/shell-history'
 
-    if not os.path.exists(logdir):
+def main(args: argparse.Namespace) -> None:
+    fp_results = Path('/tmp/{0}/{0}.log'.format(scriptname))
+    dp_results = fp_results.parent
+    dp_results.mkdir(parents=True, exist_ok=True)
+
+    logdir = Path('/home/bryan/Dropbox/var/logs/shell-history')
+
+    if not logdir.exists():
         raise RuntimeError('The directory {} does not exist.'.format(logdir))
 
     build_custom_log(logdir, fp_results,
                      daterange=args.daterange,
                      username=args.username,
-                     wdir=args.wdir,
+                     wdir=Path(args.wdir) if args.wdir is not None else None,
                      hostname=args.hostname,
                      regexp=args.regexp,
                      unique=args.unique)
@@ -48,12 +56,13 @@ def main(args):
         sp.check_call(['vim', '+', fp_results])
 
 
-class LogsNotFound(Exception):
-    """Raised when no Log Files can be Found."""
-
-
-def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
-                     wdir=None, hostname=None, regexp=None, unique=False):
+def build_custom_log(logdir: Path, fp_results: Path, *,
+                     daterange: List[str] = None,
+                     username: str = None,
+                     wdir: Path = None,
+                     hostname: str = None,
+                     regexp: str = None,
+                     unique: bool = False) -> None:
     """Construct the Contents of the Final Log File that the User Views"""
     dt_start, dt_end = get_daterange(args.daterange)
 
@@ -69,7 +78,7 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
     dt_tmp = dt_start
     entry_count = 0
     while date_ym_value(dt_tmp) <= date_ym_value(dt_end):
-        fp_log = '{}/{}/{}/{:02}.log'.format(logdir, hostname, dt_tmp.year, dt_tmp.month)
+        fp_log = Path('{}/{}/{}/{:02}.log'.format(logdir, hostname, dt_tmp.year, dt_tmp.month))
 
         try:
             if hostname.lower() == 'all':
@@ -96,7 +105,7 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
         f.write(fmt.format(scriptname, entry_count))
 
 
-def date_ym_value(date):
+def date_ym_value(date: dt.datetime) -> int:
     """
     Returns value that can be used to compare datetime objects while only considering the date's
     month and year.
@@ -104,7 +113,7 @@ def date_ym_value(date):
     return (100 * date.year) + date.month
 
 
-def merge_hosts(logdir, year, month):
+def merge_hosts(logdir: Path, year: int, month: int) -> Path:
     """Concatenates Logfiles from All Hostnames.
 
     Exceptions:
@@ -122,9 +131,9 @@ def merge_hosts(logdir, year, month):
     if all_log_files == []:
         raise LogsNotFound()
 
-    fp_log = '/tmp/{}/{}/{:02}.log'.format(scriptname, year, month)
+    fp_log = Path('/tmp/{}/{}/{:02}.log'.format(scriptname, year, month))
 
-    fp_dir = os.path.dirname(fp_log)
+    fp_dir = fp_log.parent
     if not os.path.exists(fp_dir):
         os.makedirs(fp_dir)
 
@@ -143,9 +152,9 @@ def merge_hosts(logdir, year, month):
     return fp_log
 
 
-def process_logfile(fp, *, dt_start, dt_end, regexp,
-                    username=None, wdir=None, unique=False,
-                    skip_date_check=False):
+def process_logfile(fp: Path, *, dt_start: dt.datetime, dt_end: dt.datetime, regexp: str,
+                    username: str = None, wdir: Path = None, unique: bool = False,
+                    skip_date_check: bool = False) -> List[str]:
     """Process a single shell command log file.
 
     Each log file contains the shell command history for a specific month (e.g. 2018/10.log).
@@ -180,25 +189,24 @@ def process_logfile(fp, *, dt_start, dt_end, regexp,
             log.debug("line.split(':'): %s", line.split(':'))
             raise e
 
-        if skip_date_check:
-            date = None
-        else:
-            date = strptime(date_string)
-
         stripped_cmd = cmd.strip()
 
         conditions = [
             username is None or user == username,
             wdir is None or wd == wdir,
-            skip_date_check or date <= dt_end,
-            skip_date_check or date >= dt_start,
             re.search(regexp, cmd) is not None,
             not unique or stripped_cmd not in process_logfile.command_set,  # type: ignore
         ]
 
+        date = strptime(date_string)
+        if not skip_date_check:
+            conditions.extend([
+                date >= dt_start,
+                date <= dt_end
+            ])
+
         if all(conditions):
-            date = date if not skip_date_check else strptime(date_string)
-            matched_lines.append(build_log_entry(hostname, user, date, wd, cmd))
+            matched_lines.append(build_log_entry(hostname, user, date, Path(wd), cmd))
 
         if unique:
             process_logfile.command_set.add(stripped_cmd)  # type: ignore
@@ -206,24 +214,27 @@ def process_logfile(fp, *, dt_start, dt_end, regexp,
     return matched_lines
 
 
-def build_log_entry(hostname, user, date, wdir, cmd):
+def build_log_entry(hostname: str, user: str, date: dt.datetime, wdir: Path, cmd: str) -> str:
     """Construct a Log Entry using the Final (prettified) Format"""
     entry_fmt = '[{}] ({}@{}) {}\n\t{}\n'
     return entry_fmt.format(date.strftime('%Y-%m-%d %H:%M:%S'), user, hostname, wdir, cmd)
 
 
-def get_daterange(daterange):
+def get_daterange(daterange: List[str]) -> Tuple[dt.datetime, dt.datetime]:
     """Get Daterange of Logs to View.
 
     Returns:
         tuple: (datetime, datetime)
     """
     if daterange is not None:
+        new_daterange: Union[List[str], List[Optional[str]]]
         if len(daterange) == 1:
-            daterange = (daterange[0], None)
+            new_daterange = [daterange[0], None]
+        else:
+            new_daterange = daterange
 
-        dt_start = parse_date(daterange[0])
-        dt_end = parse_date(daterange[1])
+        dt_start = parse_date(new_daterange[0])
+        dt_end = parse_date(new_daterange[1])
     else:
         now = dt.datetime.now()
         dt_start = now.replace(year=(now.year - 1))
@@ -232,7 +243,7 @@ def get_daterange(daterange):
     return dt_start, dt_end
 
 
-def parse_date(date):
+def parse_date(date: Optional[str]) -> dt.datetime:
     """Custom Date Parser."""
     if date is None:
         D = "now"
@@ -267,7 +278,7 @@ def parse_date(date):
     return parse(D)
 
 
-def delta_today(N):
+def delta_today(N: int) -> dt.datetime:
     """Returns Datetime Relative to Today at 12AM"""
     today = dt.date.today()
     return dt.datetime.combine(today, dt.time.min) + dt.timedelta(days=N)

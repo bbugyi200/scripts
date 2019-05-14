@@ -36,15 +36,15 @@ class LogsNotFound(Exception):
 
 def main(args: argparse.Namespace) -> None:
     fp_results = Path('/tmp/{0}/{0}.log'.format(scriptname))
+
     dp_results = fp_results.parent
     dp_results.mkdir(parents=True, exist_ok=True)
 
-    logdir = Path('/home/bryan/Dropbox/var/logs/shell-history')
+    dp_hist = Path('/home/bryan/Dropbox/var/logs/shell-history')
+    if not dp_hist.exists():
+        raise RuntimeError('The directory {} does not exist.'.format(dp_hist))
 
-    if not logdir.exists():
-        raise RuntimeError('The directory {} does not exist.'.format(logdir))
-
-    build_custom_log(logdir, fp_results,
+    build_custom_log(dp_hist, fp_results,
                      daterange=args.daterange,
                      username=args.username,
                      wdir=None if args.wdir is None else Path(args.wdir),
@@ -56,7 +56,7 @@ def main(args: argparse.Namespace) -> None:
         sp.check_call(['vim', '+', fp_results])
 
 
-def build_custom_log(logdir: Path, fp_results: Path, *,
+def build_custom_log(dp_hist: Path, fp_results: Path, *,
                      daterange: List[str] = None,
                      username: str = None,
                      wdir: Path = None,
@@ -72,17 +72,17 @@ def build_custom_log(logdir: Path, fp_results: Path, *,
     hostname = os.uname().nodename if hostname is None else hostname
     regexp = '.*' if regexp is None else regexp
 
-    with open(fp_results, 'w') as f:
+    with fp_results.open('w') as f:
         f.write('# vim: filetype={}\n\n'.format(scriptname))
 
     dt_tmp = dt_start
     entry_count = 0
     while date_ym_value(dt_tmp) <= date_ym_value(dt_end):
-        fp_log = Path('{}/{}/{}/{:02}.log'.format(logdir, hostname, dt_tmp.year, dt_tmp.month))
+        fp_log = Path('{}/{}/{}/{:02}.log'.format(dp_hist, hostname, dt_tmp.year, dt_tmp.month))
 
         try:
             if hostname.lower() == 'all':
-                fp_log = merge_hosts(logdir, dt_tmp.year, dt_tmp.month)
+                fp_log = merge_hosts(dp_hist, dt_tmp.year, dt_tmp.month)
 
             skip_date_check = ((dt_tmp.month != dt_start.month or dt_tmp.year != dt_start.year) and
                                (dt_tmp.month != dt_end.month or dt_tmp.year != dt_end.year))
@@ -91,7 +91,7 @@ def build_custom_log(logdir: Path, fp_results: Path, *,
                                         username=username, wdir=wdir, unique=unique,
                                         skip_date_check=skip_date_check)
 
-            with open(fp_results, 'a+') as f:
+            with fp_results.open('a+') as f:
                 f.writelines(log_lines)
 
             entry_count += len(log_lines)
@@ -100,7 +100,7 @@ def build_custom_log(logdir: Path, fp_results: Path, *,
         finally:
             dt_tmp = dt_tmp + relativedelta(months=1)
 
-    with open(fp_results, 'a+') as f:
+    with fp_results.open('a+') as f:
         fmt = '# Number of shell commands matched by {} query:  {}'
         f.write(fmt.format(scriptname, entry_count))
 
@@ -113,7 +113,7 @@ def date_ym_value(date: dt.datetime) -> int:
     return (100 * date.year) + date.month
 
 
-def merge_hosts(logdir: Path, year: int, month: int) -> Path:
+def merge_hosts(dp_hist: Path, year: int, month: int) -> Path:
     """Concatenates Logfiles from All Hostnames.
 
     Exceptions:
@@ -122,9 +122,9 @@ def merge_hosts(logdir: Path, year: int, month: int) -> Path:
     Returns:
         str: Filepath for new (temporary) log file that should be processed.
     """
-    all_hostnames = [d for d in os.listdir(logdir)
-                     if os.path.isdir('{}/{}'.format(logdir, d))]
-    possible_log_files = ['{}/{}/{}/{:02}.log'.format(logdir, H, year, month)
+    all_hostnames = [d for d in os.listdir(dp_hist)
+                     if os.path.isdir('{}/{}'.format(dp_hist, d))]
+    possible_log_files = ['{}/{}/{}/{:02}.log'.format(dp_hist, H, year, month)
                           for H in all_hostnames]
     all_log_files = list(filter(lambda x: os.path.exists(x), possible_log_files))
 

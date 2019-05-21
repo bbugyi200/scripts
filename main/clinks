@@ -7,10 +7,25 @@ EOM
 # ---------- Modules ----------
 source gutils.sh
 
-# ---------- Ensure Running as root ----------
-if [ "$(id -u)" != "0" ]; then
-  exec sudo "$0" "$@"
+# ---------- Check if Running at Work -----------
+sys_info="$(uname -a)"
+if [[ "${sys_info}" == *"Darwin"* ]]; then
+    at_work=true
+
+    getopt=/usr/local/Cellar/gnu-getopt/2.33.2/bin/getopt
+
+    user=bbugyi
+    home=/Users/"${user}"
+    projects=projects
+else
+    getopt=/usr/bin/getopt
+
+    user=bryan
+    home=/home/"${user}"
+    projects=Dropbox
 fi
+
+projects_path="${home}/${projects}"
 
 # ---------- Function Definitions ----------
 function stow_it() {
@@ -21,11 +36,11 @@ function stow_it() {
     subdir="${src##*/}"
 
     # So ~/.stow-global-ignore is used instead of /root/.stow-global-ignore.
-    runuser -l bryan -c "stow --dir=\"${dir}\" --target=\"${target}\" \"${FLAG}\" \"${subdir}\""
+    stow --dir="${dir}" --target="${target}" "${FLAG}" "${subdir}"
 }
 
 # ---------- Parse Command-line Arguments ----------
-eval set -- "$(getopt -o "d,h,v" -l "debug,help,verbose" -- "$@")"
+eval set -- "$("${getopt}" -o "d,h,v" -l "debug,help,verbose" -- "$@")"
 
 export USAGE_GRAMMAR=(
     "[-d] [-v] [STOW_FLAG]"
@@ -88,49 +103,52 @@ fi
 # >>> $HOME directories
 home_dirs=(".vim" ".ssh")
 for D in "${home_dirs[@]}"; do
-    mkdir /home/bryan/"${D}" &> /dev/null
+    mkdir "${home}"/"${D}" &> /dev/null
 done
 
 # >>> User Data Directories
 data_dirs=("qutebrowser" "okular" "applications")
 for D in "${data_dirs[@]}"; do
-    mkdir /home/bryan/.local/share/"${D}" &> /dev/null
+    mkdir "${home}"/.local/share/"${D}" &> /dev/null
 done
 
-# >>> Other Directories
-mkdir -p /usr/share/rlwrap/{filters,completions} &> /dev/null
-
 # ---------- Main ----------
-if [[ $(hostname) == "athena" ]]; then
-	stow_it "/home/bryan/Dropbox/bin/cron.jobs" "/etc"
+if [[ "${at_work}" != true ]]; then
+    # >>> Other Directories
+    mkdir -p /usr/share/rlwrap/{filters,completions} &> /dev/null
+
+    if [[ $(hostname) == "athena" ]]; then
+	    stow_it "${projects_path}/bin/cron.jobs" "/etc"
+    fi
+
+    ##### SCRIPTS
+    if [[ "${sys_info}" == *"gentoo"* ]]; then
+        stow_it "${projects_path}/bin/gentoo" "/usr/local/bin"
+        stow_it "${projects_path}/bin/xmonad" "/usr/local/bin"
+    fi
+    
+    if [[ "${sys_info}" == *"Debian"* ]]; then
+        stow_it "${projects_path}/bin/debian" "/usr/local/bin"
+    fi
+
+    ##### MODULES / LIBRARIES / HEADERS
+    stow_it "${projects_path}/lib/python" "/usr/local/lib/python"
+    stow_it "${projects_path}/lib/C" "/usr/local/lib"
+    stow_it "${projects_path}/lib/zsh" "/usr/local/lib"
+    stow_it "${projects_path}/src" "/usr/local/src"
+    stow_it "${projects_path}/include" "/usr/local/include"
+
+    ##### DOTFILES
+    stow_it "${projects_path}/usr" "/usr"
 fi
 
 ##### SCRIPTS
-sys_info="$(uname -a)"
-if [[ "${sys_info}" == *"gentoo"* ]]; then
-    stow_it "/home/bryan/Dropbox/bin/gentoo" "/usr/local/bin"
-fi
-
-if [[ "${sys_info}" == *"Debian"* ]]; then
-    stow_it "/home/bryan/Dropbox/bin/debian" "/usr/local/bin"
-fi
-
-stow_it "/home/bryan/Dropbox/bin/awk" "/usr/local/bin"
-stow_it "/home/bryan/Dropbox/bin/GTD" "/usr/local/bin"
-stow_it "/home/bryan/Dropbox/bin/main" "/usr/local/bin"
-stow_it "/home/bryan/Dropbox/bin/ProtectMyLaptop" "/usr/local/bin"
-stow_it "/home/bryan/Dropbox/bin/tmux" "/usr/local/bin"
-stow_it "/home/bryan/Dropbox/bin/xmonad" "/usr/local/bin"
-stow_it "/home/bryan/Dropbox/bin/vim" "/usr/local/bin"
-stow_it "/home/bryan/Dropbox/bin/zathura" "/usr/local/bin"
-
-##### MODULES / LIBRARIES / HEADERS
-stow_it "/home/bryan/Dropbox/lib/python" "/usr/local/lib/python"
-stow_it "/home/bryan/Dropbox/lib/C" "/usr/local/lib"
-stow_it "/home/bryan/Dropbox/lib/zsh" "/usr/local/lib"
-stow_it "/home/bryan/Dropbox/src" "/usr/local/src"
-stow_it "/home/bryan/Dropbox/include" "/usr/local/include"
+stow_it "${projects_path}/bin/awk" "/usr/local/bin"
+stow_it "${projects_path}/bin/GTD" "/usr/local/bin"
+stow_it "${projects_path}/bin/main" "/usr/local/bin"
+stow_it "${projects_path}/bin/tmux" "/usr/local/bin"
+stow_it "${projects_path}/bin/vim" "/usr/local/bin"
+stow_it "${projects_path}/bin/zathura" "/usr/local/bin"
 
 ##### DOTFILES
-stow_it "/home/bryan/Dropbox/home" "/home/bryan"
-stow_it "/home/bryan/Dropbox/usr" "/usr"
+stow_it "${projects_path}/home" "${home}"

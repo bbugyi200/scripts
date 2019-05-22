@@ -8,7 +8,7 @@
 ###################################################
 
 HOSTNAME="$(hostname)"
-LOGFILE="/home/bryan/Dropbox/var/logs/shell-history/$HOSTNAME/$(date +%Y/%m).log"
+LOGFILE="${HOME}/Dropbox/var/logs/shell-history/$HOSTNAME/$(date +%Y/%m).log"
 LOGDIR="$(dirname "$LOGFILE")"
 [ -d "$LOGDIR" ] || mkdir -p "$LOGDIR"
 

@@ -13,19 +13,11 @@ if [[ "${sys_info}" == *"Darwin"* ]]; then
     at_work=true
 
     getopt=/usr/local/Cellar/gnu-getopt/2.33.2/bin/getopt
-
-    user=bbugyi
-    home=/Users/"${user}"
-    projects=projects
 else
     getopt=/usr/bin/getopt
-
-    user=bryan
-    home=/home/"${user}"
-    projects=Dropbox
 fi
 
-projects_path="${home}/${projects}"
+projects_path="${HOME}"/Dropbox
 
 # ---------- Function Definitions ----------
 function stow_it() {
@@ -151,4 +143,4 @@ stow_it "${projects_path}/bin/vim" "/usr/local/bin"
 stow_it "${projects_path}/bin/zathura" "/usr/local/bin"
 
 ##### DOTFILES
-stow_it "${projects_path}/home" "${home}"
+stow_it "${projects_path}/home" "${HOME}"

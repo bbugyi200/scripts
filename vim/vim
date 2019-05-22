@@ -11,8 +11,10 @@ fi
 
 
 # If file is owned by root, open using `sudo`.
-if [[ -f "$1" ]] && [[ "$(stat --format '%U' "$1")" == "root" ]]; then
-    sudo -E /usr/bin/"$(basename "$0")" "$@"
+if [[ -f "$1" ]] && [[ -z "$AT_WORK" ]]; then
+    if [[ "$(stat --format '%U' "$1")" == "root" ]]; then
+        sudo -E /usr/bin/"$(basename "$0")" "$@"
+    fi
 else
     /usr/bin/"$(basename "$0")" "$@"
 fi
@@ -37,7 +39,7 @@ for arg in "$@"; do
         done
 
         # Remove duplicate entries.
-        sed -i "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
+        sed -i '.bak' "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
         echo "${filepath}" >> "${RECENTLY_EDITED_FILES_LOG}"
     fi
 done

@@ -25,6 +25,10 @@ iptables -A OUTPUT -p tcp --sport 32400 -j ACCEPT
 iptables -A INPUT -p tcp --dport 34857 -j ACCEPT
 iptables -A OUTPUT -p tcp --sport 34857 -j ACCEPT
 
+# Accept Local Traffic
+iptables -A OUTPUT -d 192.168.1.0/24 -j ACCEPT
+iptables -A INPUT -d 192.168.1.0/24 -j ACCEPT
+
 # Accept Traffic from PIA DNS Servers
 iptables -A OUTPUT -d 209.222.18.222/32 -j ACCEPT
 iptables -A OUTPUT -d 209.222.18.218/32 -j ACCEPT

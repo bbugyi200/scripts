@@ -132,10 +132,10 @@ if __name__ == "__main__":
     waittime_help = 'Time (in minutes) to wait for activity after stopping task'
 
     parser = gutils.ArgumentParser()
-    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=5, help=idle_help)
+    parser.add_argument('-i', dest='idletime', nargs='?', type=float, default=10, help=idle_help)
     parser.add_argument('-D', dest='delay', nargs='?', type=float, default=0.5, help=delay_help)
     parser.add_argument('-w', dest='waittime', nargs='?', type=float, default=30, help=waittime_help)
-    parser.add_argument('-s', dest='multiplier', nargs='?', type=int, default=2,
+    parser.add_argument('-s', dest='multiplier', nargs='?', type=int, default=1,
                         help='Multiplier (int) used to determine when to trim TimeWarrior time.')
     args = parser.parse_args()
 

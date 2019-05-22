@@ -6,8 +6,4 @@ if [[ -z "${pid}" ]]; then
     exit 0
 fi
 
-kill "${pid}"
-{
-    sleep 1
-    kill -9 "${pid}" &> /dev/null
-} &
+kill -"${1:-15}" "${pid}"

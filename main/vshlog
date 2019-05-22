@@ -198,7 +198,7 @@ def process_logfile(fp: Path, *,
 
         conditions = [
             username is None or user == username,
-            wdir is None or wd == wdir,
+            wdir is None or wd == str(wdir),
             re.search(regexp, cmd) is not None,
             not unique or stripped_cmd not in process_logfile.command_set,  # type: ignore
         ]
@@ -324,18 +324,19 @@ if __name__ == "__main__":
             'but you have given {}.'.format(len(args.daterange))
         )
 
-    for i in range(len(args.daterange)):
-        try:
-            parse(args.daterange[i])
-        except ValueError:
-            if not re.match('^(BOT|EOT|now|today|[1-9][0-9]*(d|w|m|y))$', args.daterange[i]):
-                parser.error(
-                    'Unrecognized date string format. Supported date string '
-                    'formats include\nany format supported by the \'dateutil\' '
-                    'library or any of the following special\nvalues:\n\t'
-                    'BOT, EOT, now, today, Nd, Nw, Nm, or Ny '
-                    '(where N is an integer value).'
-                )
+    if args.daterange is not None:
+        for i in range(len(args.daterange)):
+            try:
+                parse(args.daterange[i])
+            except ValueError:
+                if not re.match('^(BOT|EOT|now|today|[1-9][0-9]*(d|w|m|y))$', args.daterange[i]):
+                    parser.error(
+                        'Unrecognized date string format.\n\n'
+                        'Supported date string formats include any format '
+                        'supported by the \'dateutil\' library or any of the '
+                        'following special values: BOT, EOT, now, today, Nd, '
+                        'Nw, Nm, or Ny (where N is an integer value).'
+                    )
 
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):

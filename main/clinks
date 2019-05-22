@@ -36,7 +36,7 @@ function stow_it() {
     subdir="${src##*/}"
 
     # So ~/.stow-global-ignore is used instead of /root/.stow-global-ignore.
-    stow --dir="${dir}" --target="${target}" "${FLAG}" "${subdir}"
+    stow --dir="${dir}" --target="${target}" -"${FLAG}" "${subdir}"
 }
 
 # ---------- Parse Command-line Arguments ----------
@@ -95,7 +95,7 @@ fi
 if [[ -n "$1" ]]; then
     FLAG="$1"; shift
 else
-    FLAG=-R
+    FLAG=R
 fi
 
 # ---------- mkdir Commands ----------

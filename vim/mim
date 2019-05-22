@@ -21,49 +21,49 @@ GLOBAL_MARK=${1^^}; shift
 
 case "$GLOBAL_MARK" in
     'A' )
-        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/aliases.sh'
+        MARKED_FILE="$HOME/Dropbox/home/.config/aliases.sh"
         ;;
     'B' )
-        MARKED_FILE='/home/bryan/.xmobarrc'
+        MARKED_FILE="$HOME/.xmobarrc"
         ;;
     'C' )
-        MARKED_FILE='/home/bryan/projects/CV/BryanBugyi_CV.tex'
+        MARKED_FILE="$HOME/projects/CV/BryanBugyi_CV.tex"
         ;;
     'D' )
-        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/GTD.sh'
+        MARKED_FILE="$HOME/Dropbox/home/.config/GTD.sh"
         ;;
     'E' )
         MARKED_FILE='/etc/profile.d/private.sh'
         ;;
     'F' )
-        MARKED_FILE='/home/bryan/.config/flake8'
+        MARKED_FILE="$HOME/.config/flake8"
         ;;
     'G' )
-        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/gentoo.sh'
+        MARKED_FILE="$HOME/Dropbox/home/.config/gentoo.sh"
         ;;
     'L' )
-        MARKED_FILE='/home/bryan/Dropbox/home/.vim/plugins.vim'
+        MARKED_FILE="$HOME/Dropbox/home/.vim/plugins.vim"
         ;;
     'M' )
-        MARKED_FILE='/home/bryan/.Xmodmap'
+        MARKED_FILE="$HOME/.Xmodmap"
         ;;
     'P' )
-        MARKED_FILE='/home/bryan/.profile'
+        MARKED_FILE="$HOME/.profile"
         ;;
     'Q' )
-        MARKED_FILE='/home/bryan/Dropbox/home/.config/qutebrowser/config.py'
+        MARKED_FILE="$HOME/Dropbox/home/.config/qutebrowser/config.py"
         ;;
     'T' )
-        MARKED_FILE='/home/bryan/Dropbox/home/.tmux.conf'
+        MARKED_FILE="$HOME/Dropbox/home/.tmux.conf"
         ;;
     'V' )
-        MARKED_FILE='/home/bryan/Dropbox/home/.vim/vimrc'
+        MARKED_FILE="$HOME/Dropbox/home/.vim/vimrc"
         ;;
     'X' )
-        MARKED_FILE='/home/bryan/Dropbox/home/.xmonad/xmonad.hs'
+        MARKED_FILE="$HOME/Dropbox/home/.xmonad/xmonad.hs"
         ;;
     'Z' )
-        MARKED_FILE='/home/bryan/Dropbox/home/.zshrc'
+        MARKED_FILE="$HOME/Dropbox/home/.zshrc"
         ;;
 esac
 

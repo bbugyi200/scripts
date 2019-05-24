@@ -10,13 +10,32 @@ if [[ -z "${RECENTLY_EDITED_FILES_LOG}" ]]; then
 fi
 
 
+scriptname="$(basename "$0")"
+if [[ -f /usr/local/bin/"${scriptname}" ]]; then
+    editor=/usr/local/bin/"${scriptname}"
+else
+    editor=/usr/bin/"${scriptname}"
+fi
+
+function set_pane_title() {
+    if [[ -n "${TMUX}" ]]; then
+        # shellcheck disable=SC1003
+        printf '\033]2;%s\033\\' "$1"
+    fi
+}
+
+# Set tmux pane title to 'vim'.
+old_pane_title="$(tmux display-message -p '#{pane_title}')"
+set_pane_title "vim"
+
+
 # If file is owned by root, open using `sudo`.
 if [[ -f "$1" ]] && [[ -z "$AT_WORK" ]]; then
     if [[ "$(stat --format '%U' "$1")" == "root" ]]; then
-        sudo -E /usr/bin/"$(basename "$0")" "$@"
+        sudo -E "${editor}" "$@"
     fi
 else
-    /usr/bin/"$(basename "$0")" "$@"
+    "${editor}" "$@"
 fi
 
 
@@ -43,3 +62,5 @@ for arg in "$@"; do
         echo "${filepath}" >> "${RECENTLY_EDITED_FILES_LOG}"
     fi
 done
+
+set_pane_title "${old_pane_title}"

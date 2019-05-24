@@ -95,17 +95,19 @@ fi
 # >>> $HOME directories
 home_dirs=(".vim" ".ssh")
 for D in "${home_dirs[@]}"; do
-    mkdir "${home}"/"${D}" &> /dev/null
+    mkdir "${HOME}"/"${D}" &> /dev/null
 done
 
 # >>> User Data Directories
 data_dirs=("qutebrowser" "okular" "applications")
 for D in "${data_dirs[@]}"; do
-    mkdir "${home}"/.local/share/"${D}" &> /dev/null
+    mkdir "${HOME}"/.local/share/"${D}" &> /dev/null
 done
 
 # ---------- Main ----------
-if [[ "${at_work}" != true ]]; then
+if [[ "${at_work}" == true ]]; then
+    stow_it "${projects_path}/bin/macos" "$HOME/.local/bin"
+else
     # >>> Other Directories
     mkdir -p /usr/share/rlwrap/{filters,completions} &> /dev/null
 
@@ -115,12 +117,12 @@ if [[ "${at_work}" != true ]]; then
 
     ##### SCRIPTS
     if [[ "${sys_info}" == *"gentoo"* ]]; then
-        stow_it "${projects_path}/bin/gentoo" "/usr/local/bin"
-        stow_it "${projects_path}/bin/xmonad" "/usr/local/bin"
+        stow_it "${projects_path}/bin/gentoo" "$HOME/.local/bin"
+        stow_it "${projects_path}/bin/xmonad" "$HOME/.local/bin"
     fi
     
     if [[ "${sys_info}" == *"Debian"* ]]; then
-        stow_it "${projects_path}/bin/debian" "/usr/local/bin"
+        stow_it "${projects_path}/bin/debian" "$HOME/.local/bin"
     fi
 
     ##### MODULES / LIBRARIES / HEADERS
@@ -135,12 +137,12 @@ if [[ "${at_work}" != true ]]; then
 fi
 
 ##### SCRIPTS
-stow_it "${projects_path}/bin/awk" "/usr/local/bin"
-stow_it "${projects_path}/bin/GTD" "/usr/local/bin"
-stow_it "${projects_path}/bin/main" "/usr/local/bin"
-stow_it "${projects_path}/bin/tmux" "/usr/local/bin"
-stow_it "${projects_path}/bin/vim" "/usr/local/bin"
-stow_it "${projects_path}/bin/zathura" "/usr/local/bin"
+stow_it "${projects_path}/bin/awk" "$HOME/.local/bin"
+stow_it "${projects_path}/bin/GTD" "$HOME/.local/bin"
+stow_it "${projects_path}/bin/main" "$HOME/.local/bin"
+stow_it "${projects_path}/bin/tmux" "$HOME/.local/bin"
+stow_it "${projects_path}/bin/vim" "$HOME/.local/bin"
+stow_it "${projects_path}/bin/zathura" "$HOME/.local/bin"
 
 ##### DOTFILES
 stow_it "${projects_path}/home" "${HOME}"

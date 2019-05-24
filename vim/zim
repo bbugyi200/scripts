@@ -9,6 +9,10 @@ function just_changed() {
     start_time="$1"; shift
     last_file="$1"; shift
 
+    if [[ "$(uname -a)" == *"Darwin"* ]]; then
+        return 0
+    fi
+
     mod_time="$(stat "${last_file}" | awk '/Modify/ {print $2, $3}' | awk -F'.' '{print $1}')"
 
     if [[ "${start_time}" < "$(date -d "${mod_time}" +%s)" ]]; then
@@ -26,9 +30,9 @@ fi
 vicmd="$1"; shift
 start_time="$(date +%s)"
 
-if /usr/local/bin/"${vicmd}" "$@"; then
+if "$HOME"/.local/bin/"${vicmd}" "$@"; then
     last_file="$(tail -n 1 "${RECENTLY_EDITED_FILES_LOG}")"
-    if [[ "${last_file}" == "/home/bryan/Dropbox/lib/zsh/"* ]] || [[ "${last_file}" == "/home/bryan/Dropbox/home/.zshrc" ]]; then
+    if [[ "${last_file}" =~ ~/Dropbox/home/\.config/[^/]*\.sh ]] || [[ "${last_file}" == ~/Dropbox/home/.zshrc ]]; then
         if just_changed "${start_time}" "${last_file}"; then
             exit 3
         fi

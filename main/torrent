@@ -156,14 +156,14 @@ def exit_handler() -> None:
         MASTER_IS_ONLINE_FILE.unlink()
 
 
-def term_handler(signum: int, frame: FrameType) -> None:
+def term_handler(signum: signal.Signals, frame: FrameType) -> None:
     """Remove all magnet files before terminating."""
     log.debug('Terminated via {} signal.'.format(signal.Signals(signum).name))
     kill_all_torrents()  # Remove any torrents still seeding / downloading on P2P client.
     sys.exit(128 + signum)
 
 
-def usr1_handler(signum: int, frame: FrameType) -> None:
+def usr1_handler(signum: signal.Signals, frame: FrameType) -> None:
     """Add new magnet file to queue."""
     log.debug('SIGUSR1 signal received.')
     with ARGS_FILE.open('rb') as f:

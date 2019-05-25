@@ -1,15 +1,18 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """Ebuild Version Check for Portage Overlay.
 
 Uses app-portage/euscan to verify that ebuilds in the specified portage overlay are up to date.
 """
 
+import argparse
 import os
 import subprocess as sp  # noqa: F401
 import re
 import threading
 import queue
+from typing import *  # noqa: F401
+from types import *  # noqa: F401
 
 import gutils
 
@@ -22,12 +25,12 @@ log = gutils.logging.getEasyLogger(__name__)
 
 class PkgContainer:
     """Thread-Safe Set-Like Container for Portage Packages."""
-    def __init__(self):
+    def __init__(self) -> None:
         self.lock = threading.Lock()
-        self.packages = set()
+        self.packages: Set[str] = set()
         self.current_id = 0
 
-    def add(self, pkg):
+    def add(self, pkg: str) -> int:
         with self.lock:
             if pkg in self.packages:
                 raise ValueError
@@ -36,7 +39,7 @@ class PkgContainer:
                 self.current_id += 1
                 return self.current_id
 
-    def remove(self, pkg):
+    def remove(self, pkg: str) -> None:
         with self.lock:
             try:
                 self.packages.remove(pkg)
@@ -52,12 +55,12 @@ class MessageManager:
     two different packages could try to print to STDOUT at the same exact time,
     resulting in mangled text.
     """
-    def __init__(self):
+    def __init__(self) -> None:
         self.lock = threading.Lock()
         self.last_id = 0
-        self.pending = {}
+        self.pending: Dict[int, str] = {}
 
-    def print(self, msg, id_number):
+    def print(self, msg: str, id_number: int) -> None:
         with self.lock:
             if id_number == self.last_id + 1:
                     self.last_id += 1
@@ -67,7 +70,7 @@ class MessageManager:
                 log.debug('Freezing package ID: %s', id_number)
                 self.pending[id_number] = msg
 
-    def check_pending(self):
+    def check_pending(self) -> None:
         next_id = self.last_id + 1
         if next_id in self.pending:
             msg = self.pending[next_id]
@@ -78,7 +81,7 @@ class MessageManager:
 
             self.check_pending()
 
-    def release(self, msg):
+    def release(self, msg: str) -> None:
         if msg != '':
             print(msg)
             status = 'checked'
@@ -87,7 +90,7 @@ class MessageManager:
 
         log.debug('Releasing package ID: %d (%s)', self.last_id, status)
 
-    def noop(self, id_number):
+    def noop(self, id_number: int) -> None:
         with self.lock:
             if id_number == self.last_id + 1:
                 self.last_id += 1
@@ -97,11 +100,11 @@ class MessageManager:
 
 pkg_container = PkgContainer()
 message_manager = MessageManager()
-pkg_queue = queue.Queue()
-threads = []
+pkg_queue: 'queue.Queue[str]' = queue.Queue()
+threads: List[threading.Thread] = []
 
 
-def main(args):
+def main(args: argparse.Namespace) -> None:
     if args.color == 'n':
         for attr in dir(gutils.colorize):
             if not attr.startswith('_'):
@@ -113,7 +116,7 @@ def main(args):
     # ebuilds in this list are of the form 'CATEGORY/PACKAGE-VERSION.ebuild'
     all_ebuilds = ['/'.join([ebuild_path_list[-3], ebuild_path_list[-1]])
                    for ebuild_path_list in [ebpath.split('/') for ebpath in all_ebuild_paths]]
-    log.vdebug('all_ebuilds: %s', all_ebuilds)
+    log.vdebug('all_ebuilds: %s', all_ebuilds)  # type: ignore
 
     msg_fmt = 'Ebuild Version Check will be run for the following overlay: {}\n'
     if args.verbose:
@@ -130,11 +133,12 @@ def main(args):
         print('\nFinished. {} packages checked.'.format(len(pkg_container.packages)))
 
 
-def check_ebuild(ebuild, show_live_pkgs=False, show_offline_pkgs=False):
+def check_ebuild(ebuild: str, *, show_live_pkgs: bool = False,
+                 show_offline_pkgs: bool = False) -> None:
     try:
         msg_fmt = '{}:: {}'
         pkg = re.sub(r'-([0-9])+\..*ebuild$', '', ebuild)
-        log.vdebug('pkg: %s', pkg)
+        log.vdebug('pkg: %s', pkg)  # type: ignore
         pkg_queue.put(pkg)
 
         try:
@@ -166,11 +170,11 @@ def check_ebuild(ebuild, show_live_pkgs=False, show_offline_pkgs=False):
         try:
             ps = sp.check_output(['euscan', pkg])
         except sp.CalledProcessError:
-            log.vdebug('Package: %s', pkg)
+            log.vdebug('Package: %s', pkg)  # type: ignore
             raise
 
         out = ps.decode().strip()
-        log.vdebug('Euscan Output: %s', out)
+        log.vdebug('Euscan Output: %s', out)  # type: ignore
 
         out_list = out.split('\n')
         fail_marker = 'Upstream Version: '
@@ -179,6 +183,12 @@ def check_ebuild(ebuild, show_live_pkgs=False, show_offline_pkgs=False):
             if fail_marker in line:
                 fail_msg_fmt = msg_fmt.format(pkg, gutils.colorize.red('FAILED  (New Version: {})'))
                 match = re.search(r'([\d\.]+)', line)
+
+                if match is None:
+                    raise RuntimeError(
+                        "Unable to parse version number from euscan output."
+                    )
+
                 message_manager.print(fail_msg_fmt.format(match.group()), id_number)
                 break
             if pass_marker in line:
@@ -191,7 +201,7 @@ def check_ebuild(ebuild, show_live_pkgs=False, show_offline_pkgs=False):
         pkg_queue.task_done()
 
 
-def get_all_files(directory):
+def get_all_files(directory: str) -> List[str]:
     F = []
     for root, dirs, files in os.walk(directory):
         for name in files:
@@ -201,17 +211,28 @@ def get_all_files(directory):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('-D', dest='overlay_dir', default='/var/lib/layman/bbugyi200',
-                        help='Location (directory path) of the portage overlay.')
-    parser.add_argument('-T', '--max-thread-count', type=int, default=8,
-                        help='Max number of threads to start. Defaults to 8.')
-    parser.add_argument('--color', choices=('y', 'n'), default='y', help='Colorize output? Defaults to \'y\'.')
-    parser.add_argument('--live-builds', dest='live', action='store', choices=('y', 'n'),
-                        default='n',
-                        help='Print status for live ebuilds (ebuilds with version 9999). Defaults to \'n\'.')
-    parser.add_argument('--offline', choices=('y', 'n'), default='n',
-                        help='Print status for packages that are not installed on this machine. Defaults to \'n\'.')
+
+    default = '/var/lib/layman/bbugyi200'
+    parser.add_argument('-D', dest='overlay_dir', default=default,
+                        help='Location (directory path) of the portage overlay. Defaults to {}.'.format(default))
+
+    default = 8
+    parser.add_argument('-T', '--max-thread-count', type=int, default=default,
+                        help='Max number of threads to start. Defaults to {}.'.format(default))
+
+    default = 'y'
+    parser.add_argument('--color', choices=('y', 'n'), default=default, help='Colorize output? Defaults to \'{}\'.'.format(default))
+
+    default = 'n'
+    parser.add_argument('--live-builds', dest='live', action='store', choices=('y', 'n'), default=default,
+                        help='Print status for live ebuilds (ebuilds with version 9999). Defaults to \'{}\'.'.format(default))
+
+    default = 'n'
+    parser.add_argument('--offline', choices=('y', 'n'), default=default,
+                        help='Print status for packages that are not installed on this machine. Defaults to \'{}\'.'.format(default))
+
     args = parser.parse_args()
+
 
     with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
         main(args)

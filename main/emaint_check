@@ -16,7 +16,7 @@ export USAGE_GRAMMAR=(
 )
 
 read -r -d '' HELP << EOM
-$USAGE
+$(usage)
 EOM
 
 # ---------- Command-line Arguments ----------
@@ -84,15 +84,13 @@ for action in "update" "cleanup"; do
     fi
 done
 
-exit 0  # Skip checks for remote machines. Delete this line when you get a new laptop!
-
 # >>> REMOTE(S)
-for line in $(emanage --days-since-last remote --update); do
-    hostname="${line%:*}"
-    days="${line#*:}"
+# for line in $(emanage --days-since-last remote --update); do
+#     hostname="${line%:*}"
+#     days="${line#*:}"
 
-    max_days="$(get_max_days update)"
-    if [[ "${days}" -ge "$((2*max_days))" ]]; then
-        warn_user "update" "@${hostname}" "${days}"
-    fi
-done
+#     max_days="$(get_max_days update)"
+#     if [[ "${days}" -ge "$((2*max_days))" ]]; then
+#         warn_user "update" "@${hostname}" "${days}"
+#     fi
+# done

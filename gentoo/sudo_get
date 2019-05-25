@@ -2,5 +2,4 @@
 
 # shellcheck disable=SC2230
 
-get="$(which -a get | tail -n 1)"
-sudo -E "${get}" "$@"
+sudo -E "get" "$@"

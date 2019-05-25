@@ -81,6 +81,7 @@ def add_to_set(packages, *, local=False):
             match = re.search('=(.*)-[0-9.]+', package)
             if match:
                 package = match.groups()[0]
+
             out = sp.check_output(['ecat', package])
             category = out.decode().strip()
 

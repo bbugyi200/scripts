@@ -11,10 +11,10 @@ EOM
 source gutils.sh
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,h,n,v" -l "debug,help,no-script,verbose" -- "$@")"
+eval set -- "$(getopt -o "a,d,h,v" -l "alias,debug,help,verbose" -- "$@")"
 
 export USAGE_GRAMMAR=(
-    "[-d] [-n] [-v] COMMAND [COMMAND [...]]"
+    "[-d] [-a] [-v] COMMAND [COMMAND [...]]"
     "-h"
 )
 
@@ -28,15 +28,15 @@ Positional Arguments:
     COMMAND     The name of the script/alias/function to load.
 
 Optional Arguments:
+    -a | --alias
+        Force alias/function to be used in case alias/function AND script are
+        defined with the same name.
+
     -d | --debug
         Enable debug mode.
 
     -h | --help
         View this help message.
-
-    -n | --no-script
-        Force alias/function to be used in case alias/function AND script are
-        defined with the same name.
 
     -v | --verbose
         Enable verbose output.
@@ -44,15 +44,15 @@ EOM
 
 while [[ -n "$1" ]]; do
     case $1 in
+       -a|--alias )
+           force_dotfile=true
+           ;;
        -d|--debug )
            debug=true
            ;;
        -h|--help )
            echo "${help}"
            exit 0
-           ;;
-       -n|--no-script )
-           force_dotfile=true
            ;;
        -v|--verbose )
            verbose=true

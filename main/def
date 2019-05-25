@@ -22,10 +22,10 @@ def main(args):
     marker = '# {} marker: {}'.format(scriptname, str.upper(args.marker))
     found_marker = False
 
-    if args.function:
-        new_definition = "{}() {{ :; }}\n".format(args.name)
-    else:
+    if args.alias:
         new_definition = "alias {}=''\n".format(args.name)
+    else:
+        new_definition = "{}() {{ :; }}\n".format(args.name)
 
     for filename in args.file_list:
         line_number = 0
@@ -76,10 +76,10 @@ def main(args):
     with open(filename, 'w') as f:
             f.writelines(new_lines)
 
-    if args.function:
-        column_number = 7 + len(args.name)
-    else:
+    if args.alias:
         column_number = 9 + len(args.name)
+    else:
+        column_number = 7 + len(args.name)
 
     cursor_call = 'call cursor({}, {})'.format(line_number, column_number)
     cmd_list = ['vim', '+startinsert', '-c', cursor_call, filename]
@@ -91,7 +91,7 @@ def main(args):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('name', metavar='alias_name', help='Name of the new alias.')
-    parser.add_argument('-f', '--function', action='store_true', help='Define function instead of alias.')
+    parser.add_argument('-a', '--alias', action='store_true', help='Define alias instead of function.')
     parser.add_argument('-m', '--marker', default='DEFAULT', help='Marks the start line.')
     parser.add_argument('file_list', nargs='+', metavar='file', help='File to search when determining where to add new alias definition.')
     args = parser.parse_args()

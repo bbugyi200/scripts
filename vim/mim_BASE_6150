@@ -1,0 +1,75 @@
+#!/bin/bash
+
+####################################################################
+#  usage: `mim <GLOBAL_MARK>`                                      #
+#                                                                  #
+# Opens vim and goes to <GLOBAL_MARK>.                             #
+####################################################################
+
+if [[ -z "$1" ]]; then
+    echo "usage: mim <mark>"
+    exit 2
+fi
+
+if [[ "$1" == "-d" ]] || [[ "$1" == "--debug" ]]; then
+    PS4='$LINENO: '
+    set -x
+    shift
+fi
+
+GLOBAL_MARK=${1^^}; shift
+
+case "$GLOBAL_MARK" in
+    'A' )
+        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/aliases.sh'
+        ;;
+    'B' )
+        MARKED_FILE='/home/bryan/.xmobarrc'
+        ;;
+    'C' )
+        MARKED_FILE='/home/bryan/projects/CV/BryanBugyi_CV.tex'
+        ;;
+    'D' )
+        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/GTD.sh'
+        ;;
+    'E' )
+        MARKED_FILE='/etc/profile.d/private.sh'
+        ;;
+    'F' )
+        MARKED_FILE='/home/bryan/.config/flake8'
+        ;;
+    'G' )
+        MARKED_FILE='/home/bryan/Dropbox/lib/zsh/gentoo.sh'
+        ;;
+    'L' )
+        MARKED_FILE='/home/bryan/Dropbox/home/.vim/plugins.vim'
+        ;;
+    'M' )
+        MARKED_FILE='/home/bryan/.Xmodmap'
+        ;;
+    'P' )
+        MARKED_FILE='/home/bryan/.profile'
+        ;;
+    'Q' )
+        MARKED_FILE='/home/bryan/Dropbox/home/.config/qutebrowser/config.py'
+        ;;
+    'T' )
+        MARKED_FILE='/home/bryan/Dropbox/home/.tmux.conf'
+        ;;
+    'V' )
+        MARKED_FILE='/home/bryan/Dropbox/home/.vim/vimrc'
+        ;;
+    'X' )
+        MARKED_FILE='/home/bryan/Dropbox/home/.xmonad/xmonad.hs'
+        ;;
+    'Z' )
+        MARKED_FILE='/home/bryan/Dropbox/home/.zshrc'
+        ;;
+esac
+
+if [[ -n "$MARKED_FILE" ]]; then
+    vim -c 'silent! normal g;' -c "normal m$GLOBAL_MARK" "$MARKED_FILE"
+else
+    echo "ERROR: global mark not found."
+    exit 1
+fi

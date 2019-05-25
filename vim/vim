@@ -10,6 +10,13 @@ if [[ -z "${RECENTLY_EDITED_FILES_LOG}" ]]; then
 fi
 
 
+if [[ "${1}" == "-d" ]]; then
+    shift
+    PS4='$LINENO: '
+    set -x
+fi
+
+
 scriptname="$(basename "$0")"
 if [[ -f /usr/local/bin/"${scriptname}" ]]; then
     editor=/usr/local/bin/"${scriptname}"
@@ -33,6 +40,8 @@ set_pane_title "vim"
 if [[ -f "$1" ]] && [[ -z "$AT_WORK" ]]; then
     if [[ "$(stat --format '%U' "$1")" == "root" ]]; then
         sudo -E "${editor}" "$@"
+    else
+        "${editor}" "$@"
     fi
 else
     "${editor}" "$@"
@@ -58,7 +67,11 @@ for arg in "$@"; do
         done
 
         # Remove duplicate entries.
-        sed -i '.bak' "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
+        if [[ "$(uname -a)" == *"Darwin"* ]]; then
+            sed -i '.bak' "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
+        else
+            sed -i "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
+        fi
         echo "${filepath}" >> "${RECENTLY_EDITED_FILES_LOG}"
     fi
 done

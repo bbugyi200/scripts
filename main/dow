@@ -71,7 +71,6 @@ if [[ "${debug}" = true && "${verbose}" = true ]]; then
 fi
 
 # ---------- Main ----------
-
 if [[ -z "$1" ]]; then
     die "$(usage)" 2
 fi

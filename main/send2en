@@ -1,0 +1,21 @@
+#!/bin/bash
+
+###################################################################
+#  Send Email to my Evernote Address                              #
+###################################################################
+
+# ensure running as root
+if [ "$(id -u)" != "0" ]; then
+    exec sudo "$0" "$@"
+fi
+
+subject="$1"; shift
+body="$1"; shift
+
+sendmail -t <<EOF
+To: bryanbugyi34.c054be4@m.evernote.com 
+Subject: ${subject}
+Content-Type: text/html
+
+${body}
+EOF

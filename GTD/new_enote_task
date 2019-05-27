@@ -1,0 +1,47 @@
+#!/usr/bin/python3
+
+"""Adds new inbox task to Evernote."""
+
+import argparse  # noqa: F401
+import datetime as dt  # noqa: F401
+import os  # noqa: F401
+from pathlib import Path  # noqa: F401
+import subprocess as sp  # noqa: F401
+import sys  # noqa: F401
+from typing import *  # noqa: F401
+from types import *  # noqa: F401
+
+import gutils
+
+log = gutils.logging.getEasyLogger(__name__)
+scriptname = os.path.basename(os.path.realpath(__file__))
+
+
+def main(args: argparse.Namespace) -> None:
+    raw_out = gutils.shell('prompt send2en')
+
+    if raw_out[0] not in ["'", '"']:
+        subject, body = raw_out.split(maxsplit=1)
+    else:
+        isep = raw_out[1:].find('"') + 1
+        log.vdebug("isep = %d", isep)  # type: ignore
+
+        subject = raw_out[:isep + 1]
+        body = raw_out[isep + 2:]
+
+    log.vdebug("subject = %s", subject)  # type: ignore
+    log.vdebug("body = %s", body)  # type: ignore
+    gutils.shell('send2en "{}" "{}"'.format(
+        subject.strip('\'"'),
+        '' if body is None else body.strip('\'"')
+    ))
+
+    gutils.notify('Added new task to Evernote.')
+
+
+if __name__ == "__main__":
+    parser = gutils.ArgumentParser()
+    args = parser.parse_args()
+
+    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
+        main(args)

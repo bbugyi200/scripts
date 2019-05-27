@@ -133,7 +133,7 @@ def main(args: argparse.Namespace) -> None:
         print('\nFinished. {} packages checked.'.format(len(pkg_container.packages)))
 
 
-def check_ebuild(ebuild: str, *, show_live_pkgs: bool = False,
+def check_ebuild(ebuild: str, show_live_pkgs: bool = False,
                  show_offline_pkgs: bool = False) -> None:
     try:
         msg_fmt = '{}:: {}'

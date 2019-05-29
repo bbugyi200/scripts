@@ -3,5 +3,6 @@
 if [[ -n "$1" ]]; then
     git checkout "$@"
 else
+    # shellcheck disable=SC1083
     git checkout @{-1}  # Last Branch (aka 'git checkout -')
 fi

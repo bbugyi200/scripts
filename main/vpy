@@ -1,0 +1,9 @@
+#!/bin/bash
+
+fpath="$(find . -type f -name "*.py" | fzf)"
+
+if [[ -n "${fpath}" ]]; then
+    pushd "$(dirname "${fpath}")" > /dev/null || return 1
+    vim "$(basename "${fpath}")"
+    popd || return 1
+fi

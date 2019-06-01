@@ -60,11 +60,11 @@ class MessageManager:
     def print(self, msg: str, id_number: int) -> None:
         with self.lock:
             if id_number == self.last_id + 1:
-                    self.last_id += 1
-                    self.release(msg)
-                    self.check_pending()
+                self.last_id += 1
+                self.release(msg)
+                self.check_pending()
             else:
-                log.debug('Freezing package ID: %s', id_number)
+                log.debug('Freezing package ID: #%d (last_id == #%d)', id_number, self.last_id)
                 self.pending[id_number] = msg
 
     def check_pending(self) -> None:
@@ -89,10 +89,8 @@ class MessageManager:
 
     def noop(self, id_number: int) -> None:
         with self.lock:
-            if id_number == self.last_id + 1:
-                self.last_id += 1
-            else:
-                self.pending[id_number] = ''
+            self.pending[id_number] = ''
+            self.check_pending()
 
 
 pkg_container = PkgContainer()
@@ -121,32 +119,40 @@ def main(args: argparse.Namespace) -> None:
 
     pkg_queue.maxsize = args.max_thread_count
     for ebuild in sorted(all_ebuilds):
-        t = threading.Thread(target=check_ebuild, args=(ebuild, args.live, args.offline), daemon=True)
-        t.start()
-        threads.append(t)
-
-    pkg_queue.join()
-    if args.verbose:
-        print('\nFinished. {} packages checked.'.format(len(pkg_container.packages)))
-
-
-def check_ebuild(ebuild: str, show_live_pkgs: bool = False,
-                 show_offline_pkgs: bool = False) -> None:
-    try:
-        msg_fmt = '{}:: {}'
         pkg = re.sub(r'-([0-9])+\..*ebuild$', '', ebuild)
-        log.vdebug('pkg: %s', pkg)  # type: ignore
-        pkg_queue.put(pkg)
 
         try:
             id_number = pkg_container.add(pkg)
         except ValueError:
-            return
+            continue
 
+        log.debug('ID: %d', id_number)
+
+        if args.max_thread_count > 1:
+            t = threading.Thread(target=check_pkg, args=(pkg, id_number, args.live, args.offline), daemon=True)
+            t.start()
+            threads.append(t)
+        else:
+            check_pkg(pkg, id_number, args.live, args.offline)
+
+    if args.max_thread_count > 1:
+        pkg_queue.join()
+
+    if args.verbose:
+        print('\nFinished. {} packages checked.'.format(len(pkg_container.packages)))
+
+
+def check_pkg(pkg: str, id_number: int, show_live_pkgs: bool = False,
+              show_offline_pkgs: bool = False) -> None:
+    log.vdebug('pkg: %s', pkg)  # type: ignore
+    pkg_queue.put(pkg)
+
+    try:
         cmd_fmt = "eix --nocolor --format '<installedversions:NAMEVERSION>' {} | head -n 1"
         ps = sp.check_output(cmd_fmt.format(pkg), shell=True)
         out = ps.decode().strip()
 
+        msg_fmt = '{}:: {}'
         if not re.match(r'[A-z\-\d]+/[A-z\-\d]+-[\d\.]+(-r\d*)?$', out):
             if show_offline_pkgs == 'y':
                 message_manager.print(msg_fmt.format(pkg, gutils.colorize.yellow('NOT INSTALLED')), id_number)
@@ -178,6 +184,7 @@ def check_ebuild(ebuild: str, show_live_pkgs: bool = False,
         pass_marker = "Didn't find any new version"
         for line in out_list:
             if fail_marker in line:
+                log.debug('{} FAILED (#{}).'.format(pkg, id_number))
                 fail_msg_fmt = msg_fmt.format(pkg, gutils.colorize.red('FAILED  (New Version: {})'))
                 match = re.search(r'([\d\.]+)', line)
 
@@ -189,9 +196,11 @@ def check_ebuild(ebuild: str, show_live_pkgs: bool = False,
                 message_manager.print(fail_msg_fmt.format(match.group()), id_number)
                 break
             if pass_marker in line:
+                log.debug('{} PASSED (#{}).'.format(pkg, id_number))
                 message_manager.print(msg_fmt.format(pkg, gutils.colorize.green('PASSED')), id_number)
                 break
         else:
+            log.debug('{} UNKNOWN (#{}).'.format(pkg, id_number))
             message_manager.print(msg_fmt.format(pkg, gutils.colorize.yellow('UNKNOWN')), id_number)
     finally:
         pkg_queue.get()

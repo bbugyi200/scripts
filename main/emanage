@@ -142,22 +142,22 @@ if __name__ == "__main__":
                         help="Max number of days without update before complaining. This option "
                              "is only checked when used with the '--maint-check' option.")
 
-    ex_group = parser.add_mutually_exclusive_group()
-    ex_group.add_argument('-u', '--update', dest='update', action='store_true',
-                         help='Update the machine.')
-    ex_group.add_argument('-c', '--cleanup', dest='cleanup', action='store_true',
-                         help='Run cleanup tasks.')
-    ex_group.add_argument('-m', '--maint-check', action='store_true',
-                         help='Check if any maintenance is due.')
+    g1 = parser.add_mutually_exclusive_group()
+    g1.add_argument('-u', '--update', dest='update', action='store_true',
+                    help='Update the machine.')
+    g1.add_argument('-c', '--cleanup', dest='cleanup', action='store_true',
+                    help='Run cleanup tasks.')
+    g1.add_argument('-m', '--maint-check', action='store_true',
+                    help='Check if any maintenance is due.')
 
-    ex_group2 = parser.add_mutually_exclusive_group()
-    ex_group2.add_argument('-D', '--days-since-last', type=str, dest='dsl', choices=['local', 'remote'],
-                        help='Prints the number of days its been since the specified maintenance '
-                             'task was last performed. This option takes an argument indicating '
-                             'what machine(s) to check. "local" indicates the local machine and '
-                             '"remote" indicates all remote machines.')
-    ex_group2.add_argument('-P', '--pretend', dest='pretend', action='store_true',
-                        help='Prints the command list instead of executing it.')
+    g2 = parser.add_mutually_exclusive_group()
+    g2.add_argument('-D', '--days-since-last', type=str, dest='dsl', choices=['local', 'remote'],
+                    help='Prints the number of days its been since the specified maintenance '
+                    'task was last performed. This option takes an argument indicating '
+                    'what machine(s) to check. "local" indicates the local machine and '
+                    '"remote" indicates all remote machines.')
+    g2.add_argument('-P', '--pretend', dest='pretend', action='store_true',
+                    help='Prints the command list instead of executing it.')
 
     args = parser.parse_args()
 

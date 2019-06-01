@@ -95,7 +95,13 @@ for page in "$@"; do
             fi
         fi
 
-        die "No manual entry for ${page}.\n\n===== APROPOS OUTPUT =====\n$(2>&1 apropos "$1")"
+        err_msg="No manual entry for ${page}."
+        apropos_output="$(2>&1 apropos "$1")"; EC=$?
+        if [[ "${EC}" -eq 0 ]]; then
+            die "${err_msg}\n\n===== APROPOS OUTPUT =====\n${apropos_output}"
+        else
+            die "${err_msg}"
+        fi
     fi
 
     all_files+=( "${tmp_file}" )

@@ -18,22 +18,10 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args: argparse.Namespace) -> None:
-    raw_out = gutils.shell('prompt send2en')
+    raw_out = gutils.shell('prompt Inbox')
 
-    if raw_out[0] not in ["'", '"']:
-        subject, body = raw_out.split(maxsplit=1)
-    else:
-        isep = raw_out[1:].find('"') + 1
-        log.vdebug("isep = %d", isep)  # type: ignore
-
-        subject = raw_out[:isep + 1]
-        body = raw_out[isep + 2:]
-
-    log.vdebug("subject = %s", subject)  # type: ignore
-    log.vdebug("body = %s", body)  # type: ignore
-    gutils.shell('send2en "{}" "{}"'.format(
-        subject.strip('\'"'),
-        '' if body is None else body.strip('\'"')
+    gutils.shell('send2en "{}"'.format(
+        raw_out.strip('\'"'),
     ))
 
     gutils.notify('Added new task to Evernote.')

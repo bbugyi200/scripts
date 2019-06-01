@@ -16,9 +16,6 @@ from types import *  # noqa: F401
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
 
 log = gutils.logging.getEasyLogger(__name__)
 

@@ -48,11 +48,11 @@ function patch_install() {
     if [[ -f "$(pwd)"/"${EPATCH_FILE}" ]]; then
         BRANCH="$(tail -n 1 "${EPATCH_FILE}")"
     else
-        BRANCH="HEAD"
+        BRANCH="origin/master"
     fi
 
     git add -u
-    git diff --staged "${BRANCH}" > "${PPATH}"
+    git diff "${BRANCH}" > "${PPATH}"
     git reset HEAD &> /dev/null
     imsg "Installed patch to ${PPATH}."
 }

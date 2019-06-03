@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """Generates a Prime (secondary) Tmuxinator Session Configuration File using Jinja2"""
 
@@ -20,8 +20,8 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 def main(args):
-    fp_template = '/home/bryan/Dropbox/var/templates/template.tmuxinator'
-    dp_mux_config = '/home/bryan/.config/tmuxinator'
+    fp_template = '{}/Dropbox/var/templates/template.tmuxinator'.format(os.environ['HOME'])
+    dp_mux_config = '{}/.config/tmuxinator'.format(os.environ['HOME'])
 
     with open(fp_template, 'r') as f:
         contents = f.read()

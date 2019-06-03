@@ -16,6 +16,6 @@ USAGE="usage: ${SCRIPTNAME} "
 session_name="$(tm-session-name default)"
 
 # ---------- Main ----------
-generate_prime_mux_session "${session_name}"
+henerate_prime_mux_session "${session_name}"
 tm-session-root --put "${session_name}\`" "$(tm-session-root --get "${session_name}")"
 tm "${session_name}\`"

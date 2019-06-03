@@ -7,16 +7,18 @@
 # Otherwise, exit with nonzero status.      #
 #############################################
 
-pid="$(active_window_pid)"
-full_name="$(wmctrl -lxp | grep "$pid" | awk -F ' ' '{ print $4 }')"
-
 socket_name="default"
-
-if [[ "$full_name" = *"URxvt" ]]; then
-    app_name="$(echo "$full_name" | sed 's/\..*//g')"
-
-    if [[ "$app_name" != "urxvt" ]]; then
-        socket_name="$app_name"
+if [[ "$(uname -a)" != *"Darwin"* ]]; then
+    pid="$(active_window_pid)"
+    full_name="$(wmctrl -lxp | grep "$pid" | awk -F ' ' '{ print $4 }')"
+    
+    
+    if [[ "$full_name" = *"URxvt" ]]; then
+        app_name="$(echo "$full_name" | sed 's/\..*//g')"
+    
+        if [[ "$app_name" != "urxvt" ]]; then
+            socket_name="$app_name"
+        fi
     fi
 fi
 

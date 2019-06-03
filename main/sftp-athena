@@ -1,4 +1,5 @@
 #!/bin/bash
 
-cd ~/Downloads || exit 1
-sftp -P 34857 bryan@athena-arch.ddns.net:/home/bryan/Downloads
+pushd ~/Downloads > /dev/null || exit 1
+sftp -P 34857 bryan@athena-arch.ddns.net:/home/bryan/"${1:-Downloads}"
+popd || exit 1

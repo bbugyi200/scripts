@@ -12,10 +12,28 @@ fi
 subject="$1"; shift
 body="$1"; shift
 
-sendmail -t <<EOF
+if [[ -f "${body}" ]]; then
+    fpath="${body}"
+    body=
+    while IFS='' read -r line || [[ -n "${line}" ]]; do
+        if [[ -z "${body}" ]]; then
+            body="$(printf "%s" "${line}")"
+            continue
+        fi
+
+        body="$(printf "%s<br />%s" "${body}" "${line}")"
+    done < "${fpath}"
+fi
+
+read -r -d '' email <<-EOM
 To: bryanbugyi34.c054be4@m.evernote.com 
 Subject: ${subject}
 Content-Type: text/html
+EOM
 
-${body}
-EOF
+email="$(printf "%s\n\n%s<br />" "${email}" "${body}")"
+
+fp_email=/tmp/email.txt
+printf "${email}\n" > "${fp_email}"
+
+sendmail -t < "${fp_email}"

@@ -1,6 +1,10 @@
 #!/bin/bash
 
 filename=$(rofi -p "Screenshot Filename?" -dmenu)
-scrot -s ~/Dropbox/var/notes/snapshots/"$filename".png
+fpath=/tmp/"$filename".png
+
+scrot -s "${fpath}"
+png2enote "${fpath}"
+
 notify-send -u low "Saved Receipt as: $filename.png"
 

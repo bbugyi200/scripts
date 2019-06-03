@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [[ "$1" == "-d" ]]; then
+    debug=true; shift
+fi
+
+subject="${1%.png}"
+subject="${subject//_/ }"
+subject="$(basename "${subject}")"
+
+if [[ "${debug}" = true ]]; then
+    printf "SUBJECT:: %s\n" "${subject}"
+    exit 0
+fi
+
+if echo "" | neomutt -a "$1" -s "${subject}" -- bryanbugyi34.c054be4@m.evernote.com; then
+    printf "Sent %s to Evernote.\n" "${subject}"
+    /usr/bin/safe-rm "$1"
+fi

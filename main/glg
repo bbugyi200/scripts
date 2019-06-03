@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+    git log --stat --max-count="$1" --color=always
+else
+    git log --oneline --decorate --graph --color=always | nl -s ':  ' -v 0
+fi | less "${LESS_OPTS}"

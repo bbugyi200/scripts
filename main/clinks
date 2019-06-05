@@ -27,7 +27,6 @@ function stow_it() {
     dir="${src%/*}"
     subdir="${src##*/}"
 
-    # So ~/.stow-global-ignore is used instead of /root/.stow-global-ignore.
     stow --dir="${dir}" --target="${target}" -"${FLAG}" "${subdir}"
 }
 

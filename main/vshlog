@@ -40,7 +40,7 @@ def main(args: argparse.Namespace) -> None:
     dp_results = fp_results.parent
     dp_results.mkdir(parents=True, exist_ok=True)
 
-    dp_hist = Path('/home/bryan/Dropbox/var/logs/shell-history')
+    dp_hist = Path('{}/Dropbox/var/logs/shell-history'.format(os.environ['HOME']))
     if not dp_hist.exists():
         raise RuntimeError('The directory {} does not exist.'.format(dp_hist))
 
@@ -95,7 +95,7 @@ def build_custom_log(dp_hist: Path, fp_results: Path, *,
                 f.writelines(log_lines)
 
             entry_count += len(log_lines)
-        except LogsNotFound as e:
+        except LogsNotFound:
             log.debug('No Log Files for {}-{} Exist.'.format(dt_tmp.month, dt_tmp.year))
         finally:
             dt_tmp = dt_tmp + relativedelta(months=1)

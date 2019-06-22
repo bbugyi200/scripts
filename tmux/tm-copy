@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ "$(uname -a)" == *"Darwin"* ]]; then
+    reattach-to-user-namespace pbcopy
+else
+    xclip -in -selection clipboard
+fi

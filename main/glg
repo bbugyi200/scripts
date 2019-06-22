@@ -1,7 +1,35 @@
 #!/bin/bash
 
+###################################################################
+#  Wrapper around `git log`                                       #
+###################################################################
+
+if [[ "${1}" == "-d" ]]; then
+    shift
+    PS4='$LINENO: '
+    set -x
+fi
+
+
+if [[ "$1" =~ ^[1-9][0-9]*p$ ]]; then
+    N="${1%p}"; shift
+
+    i=0
+    while [[ "${i}" -lt "${N}"  ]]; do
+        git log --graph --skip="${i}" --max-count=1 --stat -p --color=always | less
+        i="$((i + 1))"
+    done
+
+    exit 0
+fi
+
+# shellcheck disable=SC2086
 if [[ -n "$1" ]]; then
-    git log --stat --max-count="$1" --color=always
+    if [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
+        git log --graph --stat --max-count="$1" --color=always
+    else
+        git log --color=always "$@"
+    fi
 else
     git log --oneline --decorate --graph --color=always | nl -s ':  ' -v 0
-fi | less "${LESS_OPTS}"
+fi | less ${LESS_OPTS}

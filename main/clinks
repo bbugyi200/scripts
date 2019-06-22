@@ -145,3 +145,7 @@ stow_it "${projects_path}/bin/zathura" "$HOME/.local/bin"
 
 ##### DOTFILES
 stow_it "${projects_path}/home" "${HOME}"
+
+if [[ "${at_work}" = true ]]; then
+    rm ~/.xinitrc
+fi

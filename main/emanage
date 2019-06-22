@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """Interface for Gentoo System Maintenance Tasks"""
 
@@ -9,8 +9,8 @@ from pathlib import Path  # noqa: F401
 import signal
 import subprocess as sp  # noqa: F401
 import sys
-from typing import *  # noqa: F401
-from types import *  # noqa: F401
+from types import FrameType
+from typing import Any, Callable, Container, Dict, Generator, Iterable, Iterator, List, NoReturn, Optional, Sequence, Set, Tuple, Union  # noqa
 
 import gutils
 
@@ -33,26 +33,26 @@ def main(args: argparse.Namespace) -> None:
     cmd_opts = []
 
     if args.update:
-        cmd = 'eupdate'
+        escript = 'eupdate'
     elif args.cleanup:
-        cmd = 'ecleanup'
+        escript = 'ecleanup'
     elif args.maint_check:
-        cmd = 'emaint_check'
+        escript = 'emaint_check'
         cmd_opts.append(str(args.max_days))
     else:
         raise RuntimeError('No maintenance task specified.')
 
-    cmd_list.append(cmd)
+    cmd_list.append(escript)
     cmd_list.extend(cmd_opts)
 
     data_dir = gutils.xdg.init('data')
     local_hostname = os.uname().nodename
 
-    cmd_dir = '/{}/{}/{}'.format(data_dir, local_hostname, cmd)
+    cmd_dir = '/{}/{}/{}'.format(data_dir, local_hostname, escript)
     local_tsfile = Path('{}/timestamp'.format(cmd_dir))
 
     if args.pretend:
-        print(cmd)
+        print(escript)
         sys.exit(0)
     elif args.dsl:
         if args.dsl == 'local':
@@ -60,7 +60,7 @@ def main(args: argparse.Namespace) -> None:
             print(days)
         elif args.dsl == 'remote':
             remote_hostnames = [H for H in os.listdir(data_dir) if H != local_hostname]
-            remote_ts_files = [Path('{}/{}/{}/timestamp'.format(data_dir, H, cmd))
+            remote_ts_files = [Path('{}/{}/{}/timestamp'.format(data_dir, H, escript))
                                for H in remote_hostnames]
 
             for H, fp in zip(remote_hostnames, remote_ts_files):
@@ -82,7 +82,7 @@ def main(args: argparse.Namespace) -> None:
         if int(count) > 0:
             import textwrap
 
-            prompt = '>>> Would you like to resume `{}` where you left off (y), redo the last command (r), or start a new session (n)?: '.format(cmd)
+            prompt = '>>> Would you like to resume `{}` where you left off (y), redo the last command (r), or start a new session (n)?: '.format(escript)
             choice = gutils.io.getch('\n'.join(textwrap.wrap(prompt, 80)))
 
             if choice == 'y':
@@ -94,10 +94,11 @@ def main(args: argparse.Namespace) -> None:
 
     try:
         sp.check_call(cmd_list)
-    except sp.CalledProcessError:
+    except sp.CalledProcessError as e:
         # The 'confirm' script will exit with return code of 1 if key other
         # than 'y' or 'n' (like 'x') is pressed.
-        pass
+        if e.returncode != 1:
+            raise e
     else:
         write_timestamp(local_tsfile)
 

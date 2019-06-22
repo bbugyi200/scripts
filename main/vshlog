@@ -35,14 +35,14 @@ class LogsNotFound(Exception):
 
 
 def main(args: argparse.Namespace) -> None:
-    fp_results = Path('/tmp/{0}/{0}.log'.format(scriptname))
+    fp_results = Path(f'/tmp/{scriptname}/{scriptname}.log')
 
     dp_results = fp_results.parent
     dp_results.mkdir(parents=True, exist_ok=True)
 
-    dp_hist = Path('{}/Dropbox/var/logs/shell-history'.format(os.environ['HOME']))
+    dp_hist = Path(f"{os.environ['HOME']}/Dropbox/var/logs/shell-history")
     if not dp_hist.exists():
-        raise RuntimeError('The directory {} does not exist.'.format(dp_hist))
+        raise RuntimeError('The directory {dp_hist} does not exist.')
 
     build_custom_log(dp_hist, fp_results,
                      daterange=args.daterange,
@@ -73,12 +73,12 @@ def build_custom_log(dp_hist: Path, fp_results: Path, *,
     regexp = '.*' if regexp is None else regexp
 
     with fp_results.open('w') as f:
-        f.write('# vim: filetype={}\n\n'.format(scriptname))
+        f.write(f'# vim: filetype={scriptname}\n\n')
 
     dt_tmp = dt_start
     entry_count = 0
     while date_ym_value(dt_tmp) <= date_ym_value(dt_end):
-        fp_log = Path('{}/{}/{}/{:02}.log'.format(dp_hist, hostname, dt_tmp.year, dt_tmp.month))
+        fp_log = Path(f'{dp_hist}/{hostname}/{dt_tmp.year}/{str(dt_tmp.month).zfill(2)}.log')
 
         try:
             if hostname.lower() == 'all':
@@ -96,13 +96,12 @@ def build_custom_log(dp_hist: Path, fp_results: Path, *,
 
             entry_count += len(log_lines)
         except LogsNotFound:
-            log.debug('No Log Files for {}-{} Exist.'.format(dt_tmp.month, dt_tmp.year))
+            log.debug(f'No Log Files for {dt_tmp.month}-{dt_tmp.year} Exist.')
         finally:
             dt_tmp = dt_tmp + relativedelta(months=1)
 
     with fp_results.open('a+') as f:
-        fmt = '# Number of shell commands matched by {} query:  {}'
-        f.write(fmt.format(scriptname, entry_count))
+        f.write(f'# Number of shell commands matched by {scriptname} query:  {entry_count}')
 
 
 def date_ym_value(date: dt.datetime) -> int:
@@ -123,22 +122,21 @@ def merge_hosts(dp_hist: Path, year: int, month: int) -> Path:
         str: Filepath for new (temporary) log file that should be processed.
     """
     all_hostnames = [d for d in os.listdir(dp_hist)
-                     if os.path.isdir('{}/{}'.format(dp_hist, d))]
-    possible_log_files = ['{}/{}/{}/{:02}.log'.format(dp_hist, H, year, month)
+                     if os.path.isdir(f'{dp_hist}/{d}')]
+    possible_log_files = [f'{dp_hist}/{H}/{year}/{str(month).zfill(2)}.log'
                           for H in all_hostnames]
     all_log_files = list(filter(lambda x: os.path.exists(x), possible_log_files))
 
     if all_log_files == []:
         raise LogsNotFound()
 
-    fp_log = Path('/tmp/{}/{}/{:02}.log'.format(scriptname, year, month))
+    fp_log = Path(f'/tmp/{scriptname}/{year}/{str(month).zfill(2)}.log')
 
     fp_dir = fp_log.parent
     if not os.path.exists(fp_dir):
         os.makedirs(fp_dir)
 
-    cmd_fmt = 'cat {} | sort -t: -k 3n > {}'
-    gutils.shell(cmd_fmt.format(' '.join(all_log_files), fp_log))
+    gutils.shell(f"cat {' '.join(all_log_files)} | sort -t: -k 3n > {fp_log}")
 
     # Protects against possible race condition
     for i in [0.5, 1, 2]:
@@ -147,7 +145,7 @@ def merge_hosts(dp_hist: Path, year: int, month: int) -> Path:
         else:
             break
     else:
-        raise RuntimeError('Something went wrong. The {} file does not exist.'.format(fp_log))
+        raise RuntimeError(f'Something went wrong. The {fp_log} file does not exist.')
 
     return fp_log
 
@@ -222,8 +220,8 @@ def process_logfile(fp: Path, *,
 
 def build_log_entry(hostname: str, user: str, date: dt.datetime, wdir: Path, cmd: str) -> str:
     """Construct a Log Entry using the Final (prettified) Format"""
-    entry_fmt = '[{}] ({}@{}) {}\n\t{}\n'
-    return entry_fmt.format(date.strftime('%Y-%m-%d %H:%M:%S'), user, hostname, wdir, cmd)
+    return (f'[{date.strftime("%Y-%m-%d %H:%M:%S")}] ({user}@{hostname}) '
+            f'{wdir}\n\t{cmd}\n')
 
 
 def get_daterange(daterange: List[str]) -> Tuple[dt.datetime, dt.datetime]:
@@ -306,7 +304,7 @@ if __name__ == "__main__":
 
     default = 'y'
     parser.add_argument('--view-report', choices=('y', 'n'), default=default,
-                        help='View final report of matched shell commands. Defaults to \'{}\'.'.format(default))
+                        help=f"View final report of matched shell commands. Defaults to '{default}'.")
 
     parser.add_argument('-u', '--unique', action='store_true',
                         help='Filter out duplicate entries where two entries are considered '
@@ -321,7 +319,7 @@ if __name__ == "__main__":
     if args.daterange is not None and len(args.daterange) not in (1, 2):
         parser.error(
             'The -D option requires either 1 or 2 arguments, '
-            'but you have given {}.'.format(len(args.daterange))
+           f'but you have given {len(args.daterange)}.'
         )
 
     if args.daterange is not None:

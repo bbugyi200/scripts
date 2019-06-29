@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+    N="$1"; shift
+else
+    N="$(branch_commit_count)"
+fi
+
+git rebase -i HEAD~"${N}"

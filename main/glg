@@ -11,8 +11,12 @@ if [[ "${1}" == "-d" ]]; then
 fi
 
 
-if [[ "$1" =~ ^[1-9][0-9]*p$ ]]; then
-    N="${1%p}"; shift
+if [[ "$1" =~ ^[1-9][0-9]*p$ ]] || [[ "$1" == "p" ]]; then
+    if [[ "$1" == "p" ]]; then
+        N="$(branch_commit_count)"
+    else
+        N="${1%p}"; shift
+    fi
 
     i=0
     while [[ "${i}" -lt "${N}"  ]]; do
@@ -25,11 +29,17 @@ fi
 
 # shellcheck disable=SC2086
 if [[ -n "$1" ]]; then
-    if [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
-        git log --graph --stat --max-count="$1" --color=always
+    if [[ "$1" =~ ^([1-9][0-9]*|-)$ ]]; then
+        if [[ "$1" == "-" ]]; then
+            N="$(branch_commit_count)"
+        else
+            N="$1"
+        fi
+
+        git log --graph --stat --max-count="${N}" --color=always
     else
         git log --color=always "$@"
     fi
 else
-    git log --oneline --decorate --graph --color=always | nl -s ':  ' -v 0
+    git log --abbrev=4 --oneline --decorate --graph --color=always | nl -s ':  ' -v 1
 fi | less ${LESS_OPTS}

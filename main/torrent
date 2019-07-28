@@ -130,15 +130,14 @@ def main(args: argparse.Namespace) -> None:
 
     time.sleep(args.delay)
 
-    try:
-        setup_env(args.vpn, args.download_dir)
-    except sp.CalledProcessError:
-        raise RuntimeError(
-            "Failed to setup the proper environment for torrenting."
-        )
-    else:
-        new_torrent_worker(args)
-        join_workers()
+    setup_env(args.vpn, args.download_dir)
+
+    # Remove any torrents that might have been saved from your
+    # last P2P session.
+    kill_all_torrents()
+
+    new_torrent_worker(args)
+    join_workers()
 
 
 def register_handlers() -> None:
@@ -171,7 +170,12 @@ def setup_env(vpn: str, download_dir: str) -> None:
     log.info("Connecting to VPN and starting P2P client daemon...")
 
     def setup(*cmd: str) -> None:
-        sp.check_call(cmd)
+        try:
+            sp.check_call(cmd)
+        except sp.CalledProcessError:
+            raise RuntimeError(
+                "Failed to setup the proper environment for torrenting."
+            )
 
     def teardown(*cmd: str) -> None:
         atexit.register(lambda: sp.Popen(cmd))
@@ -193,10 +197,6 @@ def setup_env(vpn: str, download_dir: str) -> None:
 
     setup("sudo", "-E", "deluge-web", "--fork")
     teardown("sudo", "killall", "deluge-web")
-
-    # Remove any torrents that might have been saved from your
-    # last P2P session.
-    kill_all_torrents()
 
 
 def wait_for_first_magnet() -> None:

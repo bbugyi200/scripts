@@ -1,5 +1,4 @@
 import argparse
-import logging
 from pathlib import Path
 import re
 import subprocess as sp
@@ -24,12 +23,10 @@ from typing import (  # noqa
 )
 
 import gutils
+from loguru import logger as log
 
 import libtorrent as lib
 from libtorrent.tracker import MagnetTracker
-
-
-log = logging.getLogger(lib.LOGGER_NAME)
 
 
 def new_torrent_worker(args: argparse.Namespace) -> None:
@@ -52,7 +49,7 @@ def kill_all_workers() -> None:
     """Each torrent will be removed from the P2P client."""
     try:
         full_id_list = _parse_info("ID")
-        log.vdebug("full_id_list = %s", full_id_list)  # type: ignore
+        log.trace("full_id_list = %s", full_id_list)  # type: ignore
     except ValueError:
         return
 
@@ -78,7 +75,7 @@ def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:
     Returns:
         Return type is `str` when @ID is given and `List[str]` otherwise.
     """
-    log.vdebug("ID = %s", ID)  # type: ignore
+    log.trace(f"ID = {ID}")  # type: ignore
 
     cmd = (
         f"{' '.join(lib.DELUGE)} info --sort-reverse=time_added "
@@ -141,7 +138,7 @@ class _TorrentWorker:
 
             self._mt_key = self.magnet_tracker.new(id_list)
 
-        log.vdebug("mt_key = %s", self._mt_key)  # type: ignore
+        log.trace("mt_key = %s", self._mt_key)  # type: ignore
         return self._mt_key
 
     def download_torrent(self) -> None:

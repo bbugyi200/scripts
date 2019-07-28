@@ -22,7 +22,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 
 
 def main():
@@ -46,7 +46,7 @@ def main():
 def teelog(short_env_var):
     """Logs TWMAIL environment variable and returns it so it can be assigned to a variable"""
     env_var_val = os.environ['TWMAIL_{}'.format(short_env_var.upper())]
-    log.vdebug('%s: "%s"', short_env_var, env_var_val)
+    log.trace('%s: "%s"', short_env_var, env_var_val)
     return env_var_val
 
 
@@ -135,5 +135,5 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main()

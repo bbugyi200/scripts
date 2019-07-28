@@ -11,7 +11,7 @@ import videos
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 
 
 if __name__ == "__main__":
@@ -19,9 +19,9 @@ if __name__ == "__main__":
     parser.add_argument('--now', dest='castnow', action='store_true', help='Use castnow to cast.')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
-        video_file = videos.get('video')
-        opts = []
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    video_file = videos.get('video')
+    opts = []
 
         if args.castnow and video_file.endswith('.avi'):
             opts.extend(['--tomp4'])

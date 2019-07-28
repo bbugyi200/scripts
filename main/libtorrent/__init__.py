@@ -14,13 +14,12 @@ import queue
 import time
 
 import gutils
+from loguru import logger as log
 
 
 DELUGE = ["sudo", "-E", "deluge-console"]
 ARGS_FILE = gutils.xdg.init("data") / "args"
 LOGGER_NAME = "torrent"
-
-log = gutils.logging.getEasyLogger(LOGGER_NAME)
 
 magnet_queue: "queue.Queue[str]" = queue.Queue()
 

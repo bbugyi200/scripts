@@ -7,7 +7,7 @@ import sys
 
 import gutils
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 
 
 def main(args):
@@ -32,5 +32,5 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
-        main(args)
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main(args)

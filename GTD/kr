@@ -15,7 +15,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 data_dir = gutils.xdg.init('data')
 minutes_fp = data_dir / 'minutes'
 
@@ -62,7 +62,7 @@ def main(args: argparse.Namespace) -> None:
         with minutes_fp.open('w') as f:
             f.write(str(minutes))
 
-    log.vdebug('vargs: %s', repr(vargs))  # type: ignore
+    log.trace('vargs: %s', repr(vargs))  # type: ignore
 
     if event_name in [start_break, end_break]:
         sp.check_call(['kstop', '-n'])
@@ -100,5 +100,5 @@ if __name__ == "__main__":
                         help='Create a "START REVIEW" event for 5 minutes prior to main event.')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main(args)
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main(args)

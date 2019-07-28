@@ -10,7 +10,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 
 
 def main():
@@ -39,5 +39,5 @@ if __name__ == "__main__":
                           help="Print only the package's name (omit the install date).")
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main()

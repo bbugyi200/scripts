@@ -16,7 +16,7 @@ from typing import Any, Callable, Container, Dict, Generator, Iterable, Iterator
 import gutils
 
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 
 
 class PkgContainer:
@@ -110,7 +110,7 @@ def main(args: argparse.Namespace) -> None:
     # ebuilds in this list are of the form 'CATEGORY/PACKAGE-VERSION.ebuild'
     all_ebuilds = ['/'.join([ebuild_path_list[-3], ebuild_path_list[-1]])
                    for ebuild_path_list in [ebpath.split('/') for ebpath in all_ebuild_paths]]
-    log.vdebug('all_ebuilds: %s', all_ebuilds)  # type: ignore
+    log.trace('all_ebuilds: %s', all_ebuilds)  # type: ignore
 
     msg_fmt = 'Ebuild Version Check will be run for the following overlay: {}\n'
     if args.verbose:
@@ -143,7 +143,7 @@ def main(args: argparse.Namespace) -> None:
 
 def check_pkg(pkg: str, id_number: int, show_live_pkgs: bool = False,
               show_offline_pkgs: bool = False) -> None:
-    log.vdebug('pkg: %s', pkg)  # type: ignore
+    log.trace('pkg: %s', pkg)  # type: ignore
     pkg_queue.put(pkg)
 
     try:
@@ -172,11 +172,11 @@ def check_pkg(pkg: str, id_number: int, show_live_pkgs: bool = False,
         try:
             ps = sp.check_output(['euscan', pkg])
         except sp.CalledProcessError:
-            log.vdebug('Package: %s', pkg)  # type: ignore
+            log.trace('Package: %s', pkg)  # type: ignore
             raise
 
         out = ps.decode().strip()
-        log.vdebug('Euscan Output: %s', out)  # type: ignore
+        log.trace('Euscan Output: %s', out)  # type: ignore
 
         out_list = out.split('\n')
         fail_marker = 'Upstream Version: '
@@ -238,6 +238,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main(args)
+    main(args)

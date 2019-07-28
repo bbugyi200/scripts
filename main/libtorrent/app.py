@@ -1,7 +1,6 @@
 import argparse
 import atexit
 import getpass
-import logging
 import os
 from pathlib import Path
 import pickle
@@ -29,35 +28,34 @@ from typing import (  # noqa
 )
 
 import gutils
+from loguru import logger as log
 
 import libtorrent as lib
 import libtorrent.worker as worker
 
 
-log = logging.getLogger(lib.LOGGER_NAME)
-
-
+@log.catch
 def main() -> int:
     args = parse_cli_args()
+    gutils.logging.configure("torrent", debug=args.debug, verbose=args.verbose)
 
     lib.magnet_queue.maxsize = args.maxsize
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        register_handlers()
-        create_pidfile(args)
+    register_handlers()
+    create_pidfile(args)
 
-        time.sleep(args.delay)
+    time.sleep(args.delay)
 
-        setup_env(args.vpn, args.download_dir)
+    setup_env(args.vpn, args.download_dir)
 
-        # Remove any torrents that might have been saved from your
-        # last P2P session.
-        worker.kill_all_workers()
+    # Remove any torrents that might have been saved from your
+    # last P2P session.
+    worker.kill_all_workers()
 
-        worker.new_torrent_worker(args)
-        worker.join_workers()
+    worker.new_torrent_worker(args)
+    worker.join_workers()
 
-        return 0
+    return 0
 
 
 def parse_cli_args() -> argparse.Namespace:

@@ -1,4 +1,3 @@
-import logging
 import threading
 from typing import (  # noqa
     Any,
@@ -18,10 +17,7 @@ from typing import (  # noqa
     Union,
 )
 
-import libtorrent as lib
-
-
-log = logging.getLogger(lib.LOGGER_NAME)
+from loguru import logger as log
 
 
 class MagnetTracker:
@@ -57,7 +53,7 @@ class MagnetTracker:
             An integer key that can be used to retrieve the torrent's ID
             (by indexing into `self.ids`).
         """
-        log.vdebug("id_list = %s", id_list)  # type: ignore
+        log.trace("id_list = %s", id_list)  # type: ignore
         with self.lock:
             self.next_key += 1
             self.active_torrents += 1

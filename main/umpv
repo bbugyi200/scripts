@@ -47,7 +47,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 FIFO = "{}/fifo".format(gutils.xdg.init('runtime'))
 log.debug(FIFO)
 

@@ -10,7 +10,7 @@ import sys  # noqa: F401
 import gutils
 
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
@@ -43,5 +43,5 @@ if __name__ == "__main__":
                         help='Go to next or previous window?')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main(args)
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main(args)

@@ -17,7 +17,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 RUNTIME_DIR = gutils.xdg.init('runtime')
 PID_FILE = '{}/pid'.format(RUNTIME_DIR)
 FIFO_PATH = '{}/fifo'.format(RUNTIME_DIR)
@@ -217,5 +217,5 @@ if __name__ == "__main__":
     except sp.CalledProcessError:
         xmonad_is_running = False
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main()

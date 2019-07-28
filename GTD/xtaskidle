@@ -16,7 +16,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 
 NAME = os.path.basename(__file__)
 PIDFILE = "{}/pid".format(gutils.xdg.init('runtime'))
@@ -139,5 +139,5 @@ if __name__ == "__main__":
                         help='Multiplier (int) used to determine when to trim TimeWarrior time.')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main()

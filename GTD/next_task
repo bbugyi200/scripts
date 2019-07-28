@@ -11,7 +11,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 
 custom_columns = ['id', 'start.age', 'entry.age', 'depends', 'priority', 'project',
         'tags', 'recur', 'scheduled.countdown', 'due.relative', 'until.remaining',
@@ -27,9 +27,9 @@ if __name__ == "__main__":
                              'larger than the next most urgent task.')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug):
-        sp.call(['task', 'start.any:', 'done'])
-        ready_tasks = os.popen(ready_tasks_cmd)
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    sp.call(['task', 'start.any:', 'done'])
+    ready_tasks = os.popen(ready_tasks_cmd)
 
         first = ready_tasks.readline()
         first_urg = float(first.split()[-1])

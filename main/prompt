@@ -11,7 +11,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 
 
 def main():
@@ -40,5 +40,5 @@ if __name__ == "__main__":
     parser.add_argument('opts', nargs=argparse.REMAINDER, help='additional arguments to be passed to rofi')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main()
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main()

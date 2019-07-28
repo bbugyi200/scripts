@@ -14,7 +14,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 default_start = 'START BREAK'
 default_stop = 'END BREAK'
 
@@ -100,5 +100,5 @@ if __name__ == "__main__":
         parser.error('The argument provided to the --interval option MUST be of the form "W/B", '
                      'where "W" and "B" are integer values (e.g. 50/15).')
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main(args, work_duration, break_duration)
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main(args, work_duration, break_duration)

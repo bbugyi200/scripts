@@ -15,7 +15,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
@@ -26,7 +26,7 @@ def main(args):
     if event_dt < now:
         event_dt = event_dt.replace(year=event_dt.year + 1)
 
-    log.vdebug('event_dt: %s', event_dt)
+    log.trace('event_dt: %s', event_dt)
 
     cmd_list = ['khal', 'new', '-a', 'health', event_dt.strftime('%Y-%m-%d'), 'VBREAK']
     sp.check_call(cmd_list)
@@ -37,5 +37,5 @@ if __name__ == "__main__":
     parser.add_argument('date', help='Date to set event for (%m-%d).')
     args = parser.parse_args()
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main(args)
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main(args)

@@ -21,7 +21,7 @@ import gutils
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
 ############################################################################################
 
-log = gutils.logging.getEasyLogger(__name__)
+from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
@@ -57,8 +57,8 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
     """Construct the Contents of the Final Log File that the User Views"""
     dt_start, dt_end = get_daterange(args.daterange)
 
-    log.vdebug('dt_start: %s', dt_start)
-    log.vdebug('dt_end: %s', dt_end)
+    log.trace('dt_start: %s', dt_start)
+    log.trace('dt_end: %s', dt_end)
 
     hostname = os.uname().nodename if hostname is None else hostname
     regexp = '.*' if regexp is None else regexp
@@ -283,5 +283,5 @@ if __name__ == "__main__":
         error_fmt = 'The -D option requires either 1 or 2 arguments, but you have given {}.'
         parser.error(error_fmt.format(len(args.daterange)))
 
-    with gutils.logging.context(log, debug=args.debug, verbose=args.verbose):
-        main(args)
+    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    main(args)

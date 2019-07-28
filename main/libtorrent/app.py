@@ -72,7 +72,7 @@ def parse_cli_args() -> argparse.Namespace:
         default=default,
         help=(
             "The directory that the torrents will be downloaded to. "
-            "Defaults to {}.".format(default)
+            f"Defaults to {default}."
         ),
     )
 
@@ -84,7 +84,7 @@ def parse_cli_args() -> argparse.Namespace:
         default=default,
         help=(
             "Delay starting the script for DELAY seconds. "
-            "Defaults to {}.".format(default)
+            f"Defaults to {default}."
         ),
     )
 
@@ -97,7 +97,7 @@ def parse_cli_args() -> argparse.Namespace:
         help=(
             "Time (in hours) to attempt to complete download before timing "
             "out. If set to 0, this script will run forever without ever "
-            "timing out. Defaults to {}.".format(default)
+            f"timing out. Defaults to {default}."
         ),
     )
 
@@ -110,7 +110,7 @@ def parse_cli_args() -> argparse.Namespace:
         help=(
             "Max number of torrents allowed to download at one time "
             "(additional torrents will be enqueued and start when a space "
-            "opens up). Defaults to {}.".format(default)
+            f"opens up). Defaults to {default}."
         ),
     )
 
@@ -120,7 +120,7 @@ def parse_cli_args() -> argparse.Namespace:
         type=str,
         dest="vpn",
         default=default,
-        help="VPN to connect to. Defaults to {}.".format(default),
+        help=f"VPN to connect to. Defaults to {default}."
     )
 
     return parser.parse_args()
@@ -129,7 +129,7 @@ def parse_cli_args() -> argparse.Namespace:
 def register_handlers() -> None:
     def term_handler(signum: signal.Signals, frame: FrameType) -> None:
         log.debug(
-            "Terminated via {} signal.".format(signal.Signals(signum).name)
+            f"Terminated via {signal.Signals(signum).name} signal."
         )
         worker.kill_all_workers()
         sys.exit(128 + signum)
@@ -190,7 +190,7 @@ def create_pidfile(args: argparse.Namespace) -> None:
         with lib.ARGS_FILE.open("wb") as f:
             pickle.dump(args, f)
 
-        log.debug("Sending SIGUSR1 to {}.".format(e.pid))
+        log.debug(f"Sending SIGUSR1 to {e.pid}.")
         os.kill(e.pid, signal.SIGUSR1)
 
         # Exit without invoking exit handler.

@@ -23,6 +23,8 @@ from typing import (  # noqa
     Union,
 )
 
+import gutils
+
 import libtorrent as lib
 from libtorrent.tracker import MagnetTracker
 
@@ -49,7 +51,7 @@ def join_workers() -> None:
 def kill_all_workers() -> None:
     """Each torrent will be removed from the P2P client."""
     try:
-        full_id_list = lib.run_info_cmd("ID")
+        full_id_list = _parse_info("ID")
         log.vdebug("full_id_list = %s", full_id_list)  # type: ignore
     except ValueError:
         return
@@ -63,11 +65,36 @@ def _kill_worker(ID: str) -> None:
     """Remove torrent specified by @ID from the P2P client."""
     try:
         sp.check_call(lib.DELUGE + ["rm", ID])
-        log.debug("Removed magnet #{}.".format(ID))
+        log.debug(f"Removed magnet #{ID}.")
     except sp.CalledProcessError:
         log.debug(
-            "Attempted to remove magnet #{} but it is NOT active.".format(ID)
+            f"Attempted to remove magnet #{ID} but it is NOT active."
         )
+
+
+def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:
+    """Wrapper for the `deluge-console info` command.
+
+    Returns:
+        Return type is `str` when @ID is given and `List[str]` otherwise.
+    """
+    log.vdebug("ID = %s", ID)  # type: ignore
+
+    cmd = (
+        f"{' '.join(lib.DELUGE)} info --sort-reverse=time_added "
+        f"{'' if ID is None else ID} | awk -F: "
+        f"'{{{{if ($1==\"{field}\") print $0}}}}'"
+    )
+    out = gutils.shell(cmd)
+    ret = out.split("\n")
+
+    if ret[0] == "":
+        raise ValueError(
+            "Something went wrong with the `info` function. "
+            f"Local state:\n\n{locals()}"
+        )
+
+    return ret if ID is None else ret[0]
 
 
 class _TorrentWorker:
@@ -85,9 +112,8 @@ class _TorrentWorker:
             self.download_torrent()
         finally:
             self.magnet_tracker.done()
-
-            with lib.all_work_is_done:
-                _kill_worker(self.magnet_tracker[self.mkey])
+            with self.magnet_tracker.all_work_is_done:
+                _kill_worker(self.magnet_tracker[self.mt_key])
 
                 lib.magnet_queue.get()
                 lib.magnet_queue.task_done()
@@ -101,27 +127,24 @@ class _TorrentWorker:
             return "UNKNOWN TITLE"
 
     @property
-    def mkey(self) -> int:
-        """
+    def mt_key(self) -> int:
+        """Magnet Tracker Key
+
         A key which can be used to index into the magnet tracker in order to
         retrieve the Deluge ID corresponding to this worker's magnet.
         """
-        if getattr(self, '_mkey', None) is None:
+        if getattr(self, '_mt_key', None) is None:
             self._enqueue_download()
 
             id_list = [ID.split()[1]
-                       for ID in lib.run_info_cmd("ID")]
+                       for ID in _parse_info("ID")]
 
-            self._mkey = self.magnet_tracker.new(id_list)
+            self._mt_key = self.magnet_tracker.new(id_list)
 
-        log.vdebug("mkey = %s", self._mkey)  # type: ignore
-        return self._mkey
+        log.vdebug("mt_key = %s", self._mt_key)  # type: ignore
+        return self._mt_key
 
     def download_torrent(self) -> None:
-        """
-        Wait until the Deluge download corresponding to this magnet is
-        complete.
-        """
         download_started = False
 
         i = 0
@@ -132,18 +155,19 @@ class _TorrentWorker:
             if self.timeout:
                 SECONDS_IN_HOUR = 3600
                 if i > (self.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
-                    msg = (
-                        'Torrent is still attempting to download "{0}" '
-                        "after {1:.1f} hour(s) elapsed time. Shutting "
-                        "down early.".format(self.title, self.timeout)
+                    raise RuntimeError(
+                        f'Torrent is still attempting to download '
+                        f'"{self.title}" after {self.timeout:.1f} hour(s) '
+                        'elapsed time. Shutting down early.'
                     )
-                    raise RuntimeError(msg)
 
             time.sleep(SLEEP_TIME)
 
-            full_state = lib.run_info_cmd(
+            # Note that when the `self.mt_key` property is accessed,
+            # the Deluge download is automatically enqueued.
+            full_state = _parse_info(
                 "State",
-                ID=self.magnet_tracker[self.mkey],
+                ID=self.magnet_tracker[self.mt_key],
             )
 
             state = str(full_state).split()[1]

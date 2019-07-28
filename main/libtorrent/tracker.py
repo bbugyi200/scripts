@@ -34,20 +34,21 @@ class MagnetTracker:
         self.next_key = 0  # used to index into `self.ids`
         self.active_torrents = 0
 
-        lib.all_work_is_done.acquire()
+        # This threading lock is not released again
+        # until the last torrent worker is finished.
+        self.all_work_is_done = threading.Lock()
+        self.all_work_is_done.acquire()
 
     def __getitem__(self, i: int) -> str:
         return self.ids[i]
 
-    def done(self) -> int:
+    def done(self) -> None:
         """Called everytime a torrent finishes downloading."""
         with self.lock:
             self.active_torrents -= 1
 
             if self.active_torrents == 0:
-                lib.all_work_is_done.release()
-
-            return self.active_torrents
+                self.all_work_is_done.release()
 
     def new(self, id_list: List[str]) -> int:
         """Captures ID of new torrent.

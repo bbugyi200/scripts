@@ -11,25 +11,7 @@ new magnet file for download.
 """
 
 import queue
-import threading
 import time
-from typing import (  # noqa
-    Any,
-    Callable,
-    Container,
-    Dict,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
-    NoReturn,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-)
 
 import gutils
 
@@ -40,42 +22,12 @@ LOGGER_NAME = "torrent"
 
 log = gutils.logging.getEasyLogger(LOGGER_NAME)
 
-# This threading lock is acquired the moment the first
-# torrent worker starts working and is not released again
-# until the last torrent worker is finished.
-all_work_is_done = threading.Lock()
 magnet_queue: "queue.Queue[str]" = queue.Queue()
 
 
 def notify_and_log(msg: str) -> None:
     log.debug(msg)
     gutils.notify(msg, title=LOGGER_NAME)
-
-
-def run_info_cmd(field: str, ID: str = None) -> Union[str, List[str]]:
-    """Wrapper for the `deluge-console info` command.
-
-    Returns:
-        Return type is `str` when @ID is given and `List[str]` otherwise.
-    """
-    log.vdebug("ID = %s", ID)  # type: ignore
-
-    cmd = (
-        "{DELUGE} info --sort-reverse=time_added {ID} | "
-        "awk -F: '{{if ($1==\"{field}\") print $0}}'".format(
-            DELUGE=" ".join(DELUGE), field=field, ID=("" if ID is None else ID)
-        )
-    )
-    out = gutils.shell(cmd)
-    ret = out.split("\n")
-
-    if ret[0] == "":
-        raise ValueError(
-            "Something went wrong with the `info` function. "
-            "Local state:\n\n{}".format(locals())
-        )
-
-    return ret if ID is None else ret[0]
 
 
 def wait_for_first_magnet() -> None:

@@ -65,7 +65,8 @@ class MagnetTracker:
         self.next_key = 0  # used to index into `self.ids`
         self.active_torrents = 0
 
-        # I have trapped the plague in Pandora's Box. It is contained... for now.
+        # I have trapped the plague in Pandora's Box. It is contained... for
+        # now.
         the_plague.acquire()
 
     def __getitem__(self, i: int) -> str:
@@ -198,12 +199,6 @@ def setup_env(vpn: str, download_dir: str) -> None:
     kill_all_torrents()
 
 
-def join_workers() -> None:
-    wait_for_first_magnet()
-    magnet_queue.join()
-    notify_and_log("All torrents are complete.")
-
-
 def wait_for_first_magnet() -> None:
     while magnet_queue.empty():
         time.sleep(0.5)
@@ -238,6 +233,12 @@ def create_pidfile(args: argparse.Namespace) -> None:
 def new_torrent_worker(args: argparse.Namespace) -> None:
     thread = threading.Thread(target=torrent_worker, args=(args,), daemon=True)
     thread.start()
+
+
+def join_workers() -> None:
+    wait_for_first_magnet()
+    magnet_queue.join()
+    notify_and_log("All torrents are complete.")
 
 
 def torrent_worker(args: argparse.Namespace) -> None:
@@ -291,8 +292,9 @@ def torrent_worker(args: argparse.Namespace) -> None:
                         mkey = mtracker.new(id_list)
                     except ValueError:
                         raise RuntimeError(
-                            "Something is not right. The torrent has been added "
-                            "to the P2P client but `run_info_cmd(ID)` has somehow failed."
+                            "Something is not right. The torrent has been "
+                            "added to the P2P client but `run_info_cmd(ID)` "
+                            "has somehow failed."
                         )
 
                     if not MASTER_IS_ONLINE_FILE.exists():
@@ -309,10 +311,9 @@ def torrent_worker(args: argparse.Namespace) -> None:
                     SECONDS_IN_HOUR = 3600
                     if i > (args.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
                         msg = (
-                            'Torrent is still attempting to download "{0}" after {1:.1f} hour(s) '
-                            " elapsed time. Shutting down early.".format(
-                                pretty_magnet(), args.timeout
-                            )
+                            'Torrent is still attempting to download "{0}" '
+                            "after {1:.1f} hour(s) elapsed time. Shutting "
+                            "down early.".format(pretty_magnet(), args.timeout)
                         )
                         raise RuntimeError(msg)
 
@@ -412,8 +413,9 @@ if __name__ == "__main__":
         type=Path,
         dest="download_dir",
         default=default,
-        help="The directory that the torrents will be downloaded to. Defaults to {}.".format(
-            default
+        help=(
+            "The directory that the torrents will be downloaded to. "
+            "Defaults to {}.".format(default)
         ),
     )
 
@@ -423,8 +425,9 @@ if __name__ == "__main__":
         type=int,
         dest="delay",
         default=default,
-        help="Delay starting the script for DELAY seconds. Defaults to {}.".format(
-            default
+        help=(
+            "Delay starting the script for DELAY seconds. "
+            "Defaults to {}.".format(default)
         ),
     )
 
@@ -434,9 +437,10 @@ if __name__ == "__main__":
         type=float,
         dest="timeout",
         default=default,
-        help="Time (in hours) to attempt to complete download before timing out. If set to 0, this "
-        "script will run forever without ever timing out. Defaults to {}.".format(
-            default
+        help=(
+            "Time (in hours) to attempt to complete download before timing "
+            "out. If set to 0, this script will run forever without ever "
+            "timing out. Defaults to {}.".format(default)
         ),
     )
 
@@ -446,9 +450,10 @@ if __name__ == "__main__":
         type=int,
         dest="maxsize",
         default=default,
-        help="Max number of torrents allowed to download at one time (additional torrents will be "
-        "enqueued and start when a space opens up). Defaults to {}.".format(
-            default
+        help=(
+            "Max number of torrents allowed to download at one time "
+            "(additional torrents will be enqueued and start when a space "
+            "opens up). Defaults to {}.".format(default)
         ),
     )
 

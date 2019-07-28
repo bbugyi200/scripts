@@ -33,7 +33,7 @@ from typing import (  # noqa
 
 import gutils
 
-log = gutils.logging.getEasyLogger(__name__)
+log = gutils.logging.getEasyLogger("torrent")
 
 # This lock "protects" (i.e. blocks) the torrents from "catching the
 # Plague" (i.e. removing themselves from the BitTorrent client)

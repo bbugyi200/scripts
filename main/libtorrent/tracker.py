@@ -34,9 +34,7 @@ class MagnetTracker:
         self.next_key = 0  # used to index into `self.ids`
         self.active_torrents = 0
 
-        # I have trapped the plague in Pandora's Box. It is contained... for
-        # now.
-        lib.the_plague.acquire()
+        lib.all_work_is_done.acquire()
 
     def __getitem__(self, i: int) -> str:
         return self.ids[i]
@@ -47,9 +45,7 @@ class MagnetTracker:
             self.active_torrents -= 1
 
             if self.active_torrents == 0:
-                # Release the plague upon the world!
-                # May God have mercy on any torrent that still draws breath! ;(
-                lib.the_plague.release()
+                lib.all_work_is_done.release()
 
             return self.active_torrents
 

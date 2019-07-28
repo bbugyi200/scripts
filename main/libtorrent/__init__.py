@@ -40,12 +40,10 @@ LOGGER_NAME = "torrent"
 
 log = gutils.logging.getEasyLogger(LOGGER_NAME)
 
-# This lock "protects" (i.e. blocks) the torrents from "catching the
-# Plague" (i.e. removing themselves from the BitTorrent client)
-# immediately after download. Instead, they seed until the very last
-# torrent finishes downloading, at which point all torrents "become
-# infected" and die, one after the other.
-the_plague = threading.Lock()
+# This threading lock is acquired the moment the first
+# torrent worker starts working and is not released again
+# until the last torrent worker is finished.
+all_work_is_done = threading.Lock()
 magnet_queue: "queue.Queue[str]" = queue.Queue()
 
 

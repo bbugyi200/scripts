@@ -86,9 +86,7 @@ class _TorrentWorker:
         finally:
             self.magnet_tracker.done()
 
-            with lib.the_plague:
-                # The plague has been released!
-                # So be it! We shall all die together!
+            with lib.all_work_is_done:
                 _kill_worker(self.magnet_tracker[self.mkey])
 
                 lib.magnet_queue.get()
@@ -109,7 +107,7 @@ class _TorrentWorker:
         retrieve the Deluge ID corresponding to this worker's magnet.
         """
         if getattr(self, '_mkey', None) is None:
-            self.enqueue_download()
+            self._enqueue_download()
 
             id_list = [ID.split()[1]
                        for ID in lib.run_info_cmd("ID")]
@@ -118,36 +116,6 @@ class _TorrentWorker:
 
         log.vdebug("mkey = %s", self._mkey)  # type: ignore
         return self._mkey
-
-    def enqueue_download(self) -> None:
-        """Add magnet file to Deluge's download queue."""
-        for i in range(10):
-            time.sleep(1)
-
-            try:
-                sp.check_call(
-                    lib.DELUGE +
-                    ["add", "-p", str(self.download_dir), self.magnet]
-                )
-            except sp.CalledProcessError:
-                magnet_was_added = False
-            else:
-                magnet_was_added = True
-
-            if magnet_was_added:
-                log.debug(
-                    f'Added "{self.title}" to Deluge\'s '
-                    "download queue."
-                )
-
-                lib.magnet_queue.put(self.magnet)
-
-                break
-        else:
-            raise RuntimeError(
-                'Unable to add "{self.title}" to deluges\'s download '
-                'queue.'
-            )
 
     def download_torrent(self) -> None:
         """
@@ -186,3 +154,33 @@ class _TorrentWorker:
             ):
                 lib.notify_and_log(f'Finished Downloading "{self.title}".')
                 return
+
+    def _enqueue_download(self) -> None:
+        """Add magnet file to Deluge's download queue."""
+        for i in range(10):
+            time.sleep(1)
+
+            try:
+                sp.check_call(
+                    lib.DELUGE +
+                    ["add", "-p", str(self.download_dir), self.magnet]
+                )
+            except sp.CalledProcessError:
+                magnet_was_added = False
+            else:
+                magnet_was_added = True
+
+            if magnet_was_added:
+                log.debug(
+                    f'Added "{self.title}" to Deluge\'s '
+                    "download queue."
+                )
+
+                lib.magnet_queue.put(self.magnet)
+
+                break
+        else:
+            raise RuntimeError(
+                'Unable to add "{self.title}" to deluges\'s download '
+                'queue.'
+            )

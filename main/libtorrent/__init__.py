@@ -35,10 +35,7 @@ import gutils
 
 
 DELUGE = ["sudo", "-E", "deluge-console"]
-_XDG_DATA_DIR = gutils.xdg.init("data")
-ARGS_FILE = _XDG_DATA_DIR / "args"
-# Created after the first torrent is successfully added to P2P client.
-MASTER_IS_ONLINE_FILE = _XDG_DATA_DIR / "master_is_online"
+ARGS_FILE = gutils.xdg.init("data") / "args"
 LOGGER_NAME = "torrent"
 
 log = gutils.logging.getEasyLogger(LOGGER_NAME)

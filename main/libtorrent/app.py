@@ -127,10 +127,6 @@ def parse_cli_args() -> argparse.Namespace:
 
 
 def register_handlers() -> None:
-    def exit_handler() -> None:
-        if lib.MASTER_IS_ONLINE_FILE.exists():
-            lib.MASTER_IS_ONLINE_FILE.unlink()
-
     def term_handler(signum: signal.Signals, frame: FrameType) -> None:
         log.debug(
             "Terminated via {} signal.".format(signal.Signals(signum).name)
@@ -146,7 +142,6 @@ def register_handlers() -> None:
         lib.wait_for_first_magnet()
         worker.new_torrent_worker(child_args)
 
-    atexit.register(exit_handler)
     signal.signal(signal.SIGTERM, term_handler)
     signal.signal(signal.SIGINT, term_handler)
     signal.signal(signal.SIGUSR1, usr1_handler)
@@ -192,17 +187,6 @@ def create_pidfile(args: argparse.Namespace) -> None:
     try:
         gutils.create_pidfile()
     except gutils.StillAliveException as e:
-        if not lib.MASTER_IS_ONLINE_FILE.exists():
-            while not lib.MASTER_IS_ONLINE_FILE.exists():
-                log.debug(
-                    "{} does not exist yet. Waiting...".format(
-                        lib.MASTER_IS_ONLINE_FILE
-                    )
-                )
-                time.sleep(1)
-
-            time.sleep(1)
-
         with lib.ARGS_FILE.open("wb") as f:
             pickle.dump(args, f)
 

@@ -79,12 +79,10 @@ class _TorrentWorker:
         self.timeout = timeout
 
     def __call__(self):
-        lib.magnet_queue.put(self.magnet)
         log.debug(f'Added "{self.title}" to magnet queue.')
 
         try:
-            self.enqueue_download()
-            self.wait_until_completed()
+            self.download_torrent()
         finally:
             self.magnet_tracker.done()
 
@@ -111,6 +109,8 @@ class _TorrentWorker:
         retrieve the Deluge ID corresponding to this worker's magnet.
         """
         if getattr(self, '_mkey', None) is None:
+            self.enqueue_download()
+
             id_list = [ID.split()[1]
                        for ID in lib.run_info_cmd("ID")]
 
@@ -140,8 +140,7 @@ class _TorrentWorker:
                     "download queue."
                 )
 
-                if not lib.MASTER_IS_ONLINE_FILE.exists():
-                    lib.MASTER_IS_ONLINE_FILE.touch()
+                lib.magnet_queue.put(self.magnet)
 
                 break
         else:
@@ -150,7 +149,7 @@ class _TorrentWorker:
                 'queue.'
             )
 
-    def wait_until_completed(self) -> None:
+    def download_torrent(self) -> None:
         """
         Wait until the Deluge download corresponding to this magnet is
         complete.

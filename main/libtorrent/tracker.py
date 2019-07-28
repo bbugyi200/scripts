@@ -1,3 +1,4 @@
+import logging
 import threading
 from typing import (  # noqa
     Any,
@@ -18,7 +19,9 @@ from typing import (  # noqa
 )
 
 import libtorrent as lib
-from libtorrent import log
+
+
+log = logging.getLogger(lib.LOGGER_NAME)
 
 
 class MagnetTracker:

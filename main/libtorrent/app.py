@@ -1,6 +1,7 @@
 import argparse
 import atexit
 import getpass
+import logging
 import os
 from pathlib import Path
 import pickle
@@ -30,8 +31,10 @@ from typing import (  # noqa
 import gutils
 
 import libtorrent as lib
-from libtorrent import log
-import libtorrent.workers as workers
+import libtorrent.worker as worker
+
+
+log = logging.getLogger(lib.LOGGER_NAME)
 
 
 def main() -> int:
@@ -49,10 +52,10 @@ def main() -> int:
 
         # Remove any torrents that might have been saved from your
         # last P2P session.
-        workers.kill_all_workers()
+        worker.kill_all_workers()
 
-        workers.new_torrent_worker(args)
-        workers.join_workers()
+        worker.new_torrent_worker(args)
+        worker.join_workers()
 
         return 0
 
@@ -132,7 +135,7 @@ def register_handlers() -> None:
         log.debug(
             "Terminated via {} signal.".format(signal.Signals(signum).name)
         )
-        workers.kill_all_workers()
+        worker.kill_all_workers()
         sys.exit(128 + signum)
 
     def usr1_handler(signum: signal.Signals, frame: FrameType) -> None:
@@ -141,7 +144,7 @@ def register_handlers() -> None:
             child_args = pickle.load(f)
 
         lib.wait_for_first_magnet()
-        workers.new_torrent_worker(child_args)
+        worker.new_torrent_worker(child_args)
 
     atexit.register(exit_handler)
     signal.signal(signal.SIGTERM, term_handler)

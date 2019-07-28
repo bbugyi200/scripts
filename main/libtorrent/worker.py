@@ -1,5 +1,5 @@
 import argparse
-import contextlib
+import logging
 from pathlib import Path
 import re
 import subprocess as sp
@@ -24,8 +24,10 @@ from typing import (  # noqa
 )
 
 import libtorrent as lib
-from libtorrent import log
 from libtorrent.tracker import MagnetTracker
+
+
+log = logging.getLogger(lib.LOGGER_NAME)
 
 
 def new_torrent_worker(args: argparse.Namespace) -> None:
@@ -34,7 +36,7 @@ def new_torrent_worker(args: argparse.Namespace) -> None:
         download_dir=args.download_dir,
         timeout=args.timeout,
     )
-    thread = threading.Thread(target=torrent_worker.work, daemon=True)
+    thread = threading.Thread(target=torrent_worker, daemon=True)
     thread.start()
 
 
@@ -61,7 +63,7 @@ def _kill_worker(ID: str) -> None:
     """Remove torrent specified by @ID from the P2P client."""
     try:
         sp.check_call(lib.DELUGE + ["rm", ID])
-        log.debug("Successfully removed magnet #{}.".format(ID))
+        log.debug("Removed magnet #{}.".format(ID))
     except sp.CalledProcessError:
         log.debug(
             "Attempted to remove magnet #{} but it is NOT active.".format(ID)
@@ -76,13 +78,23 @@ class _TorrentWorker:
         self.download_dir = download_dir
         self.timeout = timeout
 
-    @contextlib.contextmanager
-    def notify_context(self) -> Generator:
+    def __call__(self):
+        lib.magnet_queue.put(self.magnet)
+        log.debug(f'Added "{self.title}" to magnet queue.')
+
         try:
-            yield
-        except RuntimeError as e:
-            lib.notify_and_log(str(e))
-            raise
+            self.enqueue_download()
+            self.wait_until_completed()
+        finally:
+            self.magnet_tracker.done()
+
+            with lib.the_plague:
+                # The plague has been released!
+                # So be it! We shall all die together!
+                _kill_worker(self.magnet_tracker[self.mkey])
+
+                lib.magnet_queue.get()
+                lib.magnet_queue.task_done()
 
     @property
     def title(self) -> str:
@@ -92,45 +104,57 @@ class _TorrentWorker:
         else:
             return "UNKNOWN TITLE"
 
-    def start_download(self) -> int:
-        i = 0
-        while True:
+    @property
+    def mkey(self) -> int:
+        """
+        A key which can be used to index into the magnet tracker in order to
+        retrieve the Deluge ID corresponding to this worker's magnet.
+        """
+        if getattr(self, '_mkey', None) is None:
+            id_list = [ID.split()[1]
+                       for ID in lib.run_info_cmd("ID")]
+
+            self._mkey = self.magnet_tracker.new(id_list)
+
+        log.vdebug("mkey = %s", self._mkey)  # type: ignore
+        return self._mkey
+
+    def enqueue_download(self) -> None:
+        """Add magnet file to Deluge's download queue."""
+        for i in range(10):
             time.sleep(1)
+
             try:
                 sp.check_call(
                     lib.DELUGE +
                     ["add", "-p", str(self.download_dir), self.magnet]
                 )
             except sp.CalledProcessError:
-                i += 1
-                if i <= 10:
-                    continue
-                else:
-                    raise RuntimeError(
-                        'Failed to start "{}".'.format(self.title)
-                    )
+                magnet_was_added = False
             else:
-                log.debug(
-                    'Successfully added "{}".'.format(self.title)
-                )
+                magnet_was_added = True
 
-                try:
-                    id_list = [ID.split()[1]
-                               for ID in lib.run_info_cmd("ID")]
-                    mkey = self.magnet_tracker.new(id_list)
-                except ValueError:
-                    raise RuntimeError(
-                        "Something is not right. The torrent has been "
-                        "added to the P2P client but `run_info_cmd(ID)` "
-                        "has somehow failed."
-                    )
+            if magnet_was_added:
+                log.debug(
+                    f'Added "{self.title}" to Deluge\'s '
+                    "download queue."
+                )
 
                 if not lib.MASTER_IS_ONLINE_FILE.exists():
                     lib.MASTER_IS_ONLINE_FILE.touch()
 
-                return mkey
+                break
+        else:
+            raise RuntimeError(
+                'Unable to add "{self.title}" to deluges\'s download '
+                'queue.'
+            )
 
-    def finish_download(self, mkey: int) -> None:
+    def wait_until_completed(self) -> None:
+        """
+        Wait until the Deluge download corresponding to this magnet is
+        complete.
+        """
         download_started = False
 
         i = 0
@@ -152,7 +176,7 @@ class _TorrentWorker:
 
             full_state = lib.run_info_cmd(
                 "State",
-                ID=self.magnet_tracker[mkey],
+                ID=self.magnet_tracker[self.mkey],
             )
 
             state = str(full_state).split()[1]
@@ -163,24 +187,3 @@ class _TorrentWorker:
             ):
                 lib.notify_and_log(f'Finished Downloading "{self.title}".')
                 return
-
-    def work(self):
-        """Downloads the torrent given by the @args.magnet string."""
-        log.debug(
-            'Adding "{}" to Magnet Queue...'.format(self.title)
-        )
-        lib.magnet_queue.put(self.magnet)
-
-        try:
-            mkey = self.start_download()
-            self.finish_download(mkey)
-        finally:
-            self.magnet_tracker.done()
-
-            with lib.the_plague:
-                # The plague has been released!
-                # So be it! We shall all die together!
-                _kill_worker(self.magnet_tracker[mkey])
-
-                lib.magnet_queue.get()
-                lib.magnet_queue.task_done()

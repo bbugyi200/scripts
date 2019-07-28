@@ -33,7 +33,15 @@ from typing import (  # noqa
 
 import gutils
 
-log = gutils.logging.getEasyLogger("torrent")
+
+DELUGE = ["sudo", "-E", "deluge-console"]
+_XDG_DATA_DIR = gutils.xdg.init("data")
+ARGS_FILE = _XDG_DATA_DIR / "args"
+# Created after the first torrent is successfully added to P2P client.
+MASTER_IS_ONLINE_FILE = _XDG_DATA_DIR / "master_is_online"
+LOGGER_NAME = "torrent"
+
+log = gutils.logging.getEasyLogger(LOGGER_NAME)
 
 # This lock "protects" (i.e. blocks) the torrents from "catching the
 # Plague" (i.e. removing themselves from the BitTorrent client)
@@ -43,16 +51,10 @@ log = gutils.logging.getEasyLogger("torrent")
 the_plague = threading.Lock()
 magnet_queue: "queue.Queue[str]" = queue.Queue()
 
-DELUGE = ["sudo", "-E", "deluge-console"]
-_XDG_DATA_DIR = gutils.xdg.init("data")
-ARGS_FILE = _XDG_DATA_DIR / "args"
-# Created after the first torrent is successfully added to P2P client.
-MASTER_IS_ONLINE_FILE = _XDG_DATA_DIR / "master_is_online"
 
-
-def notify_and_log(msg):
+def notify_and_log(msg: str) -> None:
     log.debug(msg)
-    gutils.notify(msg)
+    gutils.notify(msg, title=LOGGER_NAME)
 
 
 def run_info_cmd(field: str, ID: str = None) -> Union[str, List[str]]:

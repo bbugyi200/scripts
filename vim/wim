@@ -99,6 +99,5 @@ for cmd in "$@"; do
 done
 
 if [[ "${#all_scripts[@]}" -ne 0 ]]; then
-    cd "$HOME"/Dropbox/bin || exit 1
 	vim -c "silent! normal g;" "${all_scripts[@]}"
 fi

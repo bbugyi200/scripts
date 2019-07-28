@@ -53,7 +53,7 @@ def main(args):
 
             if args.name == line_name.strip():
                 gutils.io.emsg('{} is already defined.'.format(args.name))
-                sp.check_call(['wim', '-n', args.name])
+                sp.check_call(['wim', '-a', args.name])
                 sys.exit(0)
 
             tmp_line = tmp_line.lower()

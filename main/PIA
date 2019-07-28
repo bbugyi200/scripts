@@ -68,7 +68,6 @@ if [ "$action" == "start" ]; then
     fi
 
     lock_network
-
 elif [ "$action" == "stop" ]; then
     killall -9 openvpn
 

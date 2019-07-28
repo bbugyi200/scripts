@@ -25,6 +25,11 @@ function econfirm() {
     echo "${slave_count}" &> "${count_path}"
     slave_count=$((slave_count + 1))
 
+    if [[ "$1" == "-p" ]]; then
+        shift
+        local prompt="$1"; shift
+    fi
+
     cmd="$1"; shift
     if [[ "${master_count}" -lt "${slave_count}" ]]; then
         if [[ -n "$1" ]]; then
@@ -32,7 +37,13 @@ function econfirm() {
         fi
 
         master_count=$((master_count + 1))
-        confirm "${cmd}"
+
+        if [[ -n "${prompt}" ]]; then
+            confirm -p "${prompt}" "${cmd}"
+        else
+            confirm "${cmd}"
+        fi
+
         EC="$?"
         if [[ "${EC}" -ne 0 && "${EC}" -ne 3 ]]; then
             trap - EXIT

@@ -11,17 +11,18 @@ source /home/bryan/Dropbox/bin/main/emaint.sh
 if [[ "$(hostname)" == "athena" ]]; then
     econfirm "efixsets"
     econfirm "sudo eclean --deep distfiles"
+    econfirm -p "Review packages in @world" "vim /etc/portage/sets/shared /etc/portage/sets/*"
 fi
 
 D="/home/bryan/.local/share/Trash/files"
-econfirm "sudo rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
+econfirm -p "Delete all files in your Trash" "sudo rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 
 D="/root/.local/share/Trash/files"
-econfirm "sudo rm -rf $D && sudo mkdir $D" "sudo xprint -x 'ls -a $D'"
+econfirm -p "Delete all files in root's Trash" "sudo rm -rf $D && sudo mkdir $D" "sudo xprint -x 'ls -a $D'"
 
 D="/home/bryan/Downloads"
-econfirm "safe-rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
+econfirm -p "Delete all downloads" "safe-rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 
-econfirm "sudo safe-rm /var/tmp/*.log" "xprint -x 'ls -a /var/tmp/*.log'"
+econfirm -p "Delete all log files" "sudo safe-rm /var/tmp/*.log" "xprint -x 'ls -a /var/tmp/*.log'"
 
 econfirm "sudo updatedb &"

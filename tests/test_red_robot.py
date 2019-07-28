@@ -1,5 +1,3 @@
-"""Tests for red_robot Script"""
-
 import datetime as dt
 import importlib.util
 import importlib.machinery
@@ -54,7 +52,6 @@ def test_scan__PASS(remove_posts):
             f.write(post_contents[i])
 
     for _, D in enumerate(S.scan(dp_pending, dp_completed)):
-        i = ...
         for j, vals in enumerate(post_values):
             if post_values[j]['fname'] == D['fname']:
                 i = j

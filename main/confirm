@@ -4,30 +4,39 @@
 #  Confirm the Execution of a Shell Command  #
 ##############################################
 
-eval set -- "$(getopt -o 'd' -l 'debug,dmenu' -- "$@")"
+eval set -- "$(getopt -o 'dp:' -l 'debug,dmenu,prompt:' -- "$@")"
 
 action='read'
 while [[ -n "$1" ]]; do
 	case $1 in
-		'--dmenu' )
-			action='dmenu';;
-        '-d' | '--debug' )
+        -d|--debug )
             PS4='$LINENO: '
-            set -x;;
-		'--' )
+            set -x
+            ;;
+		--dmenu )
+			action='dmenu'
+            ;;
+        -p|--prompt )
+            shift
+            prompt="$1"
+            ;;
+		-- )
 			shift
-			break;;
+			break
+            ;;
 	esac	
 	shift
 done
 
-prompt="Do you really want to run \"$*\"? (y/n):"
+prompt="${prompt:-"Run \"$*\""}? (y/n):"
 
 case $action in
 	'dmenu' )
-		choice="$(echo | dmenu -p "$prompt")";;
+		choice="$(echo | dmenu -p "$prompt")"
+        ;;
 	'read' )
-		read -n 1 -p "$prompt " choice;;
+		read -n 1 -p "$prompt " choice
+        ;;
 esac
 
 echo

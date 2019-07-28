@@ -16,7 +16,7 @@ def get(opt):
 
 
 def _get_videos():
-    ps = sp.Popen(['find', '/media/bryan/hercules/media/Entertainment/Movies', '/media/bryan/hercules/media/Entertainment/TV', '(', '-name', '*.mp4', '-o', '-name', '*.mkv', '-o', '-name', '*.avi', ')', '-not', '-path', '*sample*'], stdout=sp.PIPE)
+    ps = sp.Popen(['find', '/media/bryan/zeus/media/Entertainment/Movies', '/media/bryan/zeus/media/Entertainment/TV', '(', '-name', '*.mp4', '-o', '-name', '*.mkv', '-o', '-name', '*.avi', ')', '-not', '-path', '*sample*'], stdout=sp.PIPE)
 
     try:
         out = sp.check_output(_rofi_cmd_fmt.format('Video File').split(), stdin=ps.stdout)
@@ -26,7 +26,7 @@ def _get_videos():
 
 
 def _get_subs():
-    ps = sp.Popen(['find', '/home/bryan/Downloads', '/media/bryan/hercules/media/Entertainment', '-name', '*.srt'], stdout=sp.PIPE)
+    ps = sp.Popen(['find', '/home/bryan/Downloads', '/media/bryan/zeus/media/Entertainment', '-name', '*.srt'], stdout=sp.PIPE)
 
     try:
         out = sp.check_output(_rofi_cmd_fmt.format('Subtitle File').split(), stdin=ps.stdout)

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """Zathura Helper Script. Used to Search for and then Open Documents in Zathura."""
 

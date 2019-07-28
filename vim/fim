@@ -1,0 +1,22 @@
+#!/bin/bash
+
+###################################################################
+# Open file in vim using fuzzy search over current project        #
+# directory.                                                      #
+#                                                                 #
+# If an argument is provided, select the first fuzzy match        #
+# automatically.                                                  #
+###################################################################
+
+if [[ -n "$1" ]]; then
+    F="$(rg --files --color=never | fzf --filter="$1" | head -n 1)"
+else
+    F="$(rg --files --color=never | fzf)"
+fi
+
+if [[ -n "${F}" ]]; then
+    echo "${F}"
+else
+    echo '[ERROR] No filename matched.'
+    exit 1
+fi

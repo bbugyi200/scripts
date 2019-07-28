@@ -1,0 +1,9 @@
+#!/bin/bash
+
+google-chrome "https://mail.google.com/mail/u/0/\#inbox" "https://calendar.google.com/calendar/r/month/2019/7/1"
+
+function xkey() { sleep 0.25 && xdotool key "$1"; }
+function pin-tab() { xkey "ctrl+shift+x"; }
+function next-tab() { xkey "ctrl+Tab"; }
+
+pin-tab; next-tab; pin-tab; next-tab

@@ -23,7 +23,7 @@ srt_file="$(atool -l "${zip_file}" | grep -e "\.\(srt\|sub\)$" | awk -F'   ' '{p
 
 temp_file="${srt_file%.srt}"
 while [[ -n "${temp_file}" && -z "${media_file}" ]]; do
-	media_file="$(find /media/bryan/hercules/media/Entertainment -type f | /home/bryan/.fzf/bin/fzf -i --filter="${temp_file}" | grep -e "\.\(mkv\|mp4\|avi\)$" | head -n 1)"
+	media_file="$(find /media/bryan/zeus/media/Entertainment -type f | /home/bryan/.fzf/bin/fzf -i --filter="${temp_file}" | grep -e "\.\(mkv\|mp4\|avi\)$" | head -n 1)"
 	temp_file="${temp_file:0:-1}"
 done
 

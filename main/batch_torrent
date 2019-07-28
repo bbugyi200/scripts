@@ -78,7 +78,7 @@ process_torrent_file() {
 			torrent_args="-dv"
 		fi
 
-        torrent ${torrent_args} -w /media/bryan/hercules/media/Entertainment/"${download_dir}" "${magnet}" &
+        torrent ${torrent_args} -w /media/bryan/zeus/media/Entertainment/"${download_dir}" "${magnet}" &
 
 		if [[ "${first_torrent}" == true ]]; then
 			sleep 60

@@ -26,7 +26,7 @@ xdg_data_dir = gutils.xdg.init('data')
 CACHE_FILE = xdg_data_dir / 'recently_opened_docs'
 FIND_CACHE_FILE = xdg_data_dir / 'all_docs'
 
-
+@gutils.catch
 def main(args: argparse.Namespace) -> None:
     doc_pttrn = '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'
 
@@ -57,7 +57,7 @@ def main(args: argparse.Namespace) -> None:
     # Append any docs found in the Downloads directory.
     out = sp.check_output(['find', '/home/bryan/Downloads', '-regex', doc_pttrn])
     all_docs = all_docs + '\n' + out.decode().strip()
-    log.trace('----- Downloads -----\n%s', out.decode().strip())  # type: ignore
+    log.trace('----- Downloads -----\n{}', out.decode().strip())  # type: ignore
 
     try:
         cmd = 'wmctrl -lx | grep "zathura\|okular" | tr -s " " | cut -d\' \' -f5- '\
@@ -187,5 +187,5 @@ if __name__ == "__main__":
                         help='Closes current Zathura instance and reopens same document.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

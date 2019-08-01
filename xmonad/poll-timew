@@ -19,7 +19,7 @@ import queue
 timew_queue = queue.Queue()
 tag_times = [None] * 4
 
-
+@gutils.catch
 def main():
     timew_tt_thread('Study', 'week', 0)
     timew_tt_thread('Dev', 'week', 1)

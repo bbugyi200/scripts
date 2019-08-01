@@ -28,7 +28,7 @@ class Action(enum.Enum):
 class PackageNotFound(RuntimeError):
     """Raised when <category>/<package> is not found in /etc/portage/package.use."""
 
-
+@gutils.catch
 def main() -> None:
     if args.category is None:
         out = sp.check_output(['ecat', args.package])
@@ -57,7 +57,7 @@ def enable_flag(uflag: str, category: str) -> None:
         current_uflags = []
 
     if uflag in current_uflags:
-        log.error('The %s USE flag is already set for %s/%s.',
+        log.error('The {} USE flag is already set for {}/{}.',
                   uflag, category, args.package)
         return
 
@@ -71,7 +71,7 @@ def enable_flag(uflag: str, category: str) -> None:
 
     _set_uflags(current_uflags + [uflag], category)
 
-    log.info('The %s USE flag has been enabled for %s/%s.',
+    log.info('The {} USE flag has been enabled for {}/{}.',
              uflag, category, args.package)
 
 
@@ -102,7 +102,7 @@ def prune_flag(uflag: str, category: str) -> None:
 
     _set_uflags(new_uflags, category)
 
-    log.info('The %s USE flag has been pruned from %s/%s.',
+    log.info('The {} USE flag has been pruned from {}/{}.',
              uflag, category, args.package)
 
 
@@ -150,7 +150,7 @@ def _get_reverse_uflag(uflag: str) -> str:
 
 
 def _log_uflag_not_set(uflag: str, category: str) -> None:
-    log.error('The %s USE flag is not currently set for %s/%s.',
+    log.error('The {} USE flag is not currently set for {}/{}.',
               uflag, category, args.package)
 
 
@@ -168,5 +168,5 @@ if __name__ == "__main__":
                               help='Prune any mention of <use_flags> from /etc/portage/package.use/<package>.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

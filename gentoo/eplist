@@ -12,7 +12,7 @@ import gutils
 
 from loguru import logger as log
 
-
+@gutils.catch
 def main():
     cmd_fmt = "eix --selected-file -I* --format '<installedversions:DATESORT>' | {}"
 
@@ -39,5 +39,5 @@ if __name__ == "__main__":
                           help="Print only the package's name (omit the install date).")
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

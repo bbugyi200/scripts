@@ -17,7 +17,7 @@ import gutils
 from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-
+@gutils.catch
 def main(args):
     marker = '# {} marker: {}'.format(scriptname, str.upper(args.marker))
     found_marker = False
@@ -49,7 +49,7 @@ def main(args):
 
             tmp_line = line.replace('alias ', '')
             line_name = re.split(r'[=(]', tmp_line)[0]
-            log.trace('line_name => %s', repr(line_name))  # type: ignore
+            log.trace('line_name => {}', repr(line_name))  # type: ignore
 
             if args.name == line_name.strip():
                 gutils.io.emsg('{} is already defined.'.format(args.name))
@@ -57,7 +57,7 @@ def main(args):
                 sys.exit(0)
 
             tmp_line = tmp_line.lower()
-            log.trace('tmp_line => %s', repr(tmp_line))  # type: ignore
+            log.trace('tmp_line => {}', repr(tmp_line))  # type: ignore
 
             if (args.name.lower() < tmp_line or not line.strip()) and not found_line:
                 new_lines.pop()
@@ -83,7 +83,7 @@ def main(args):
 
     cursor_call = 'call cursor({}, {})'.format(line_number, column_number)
     cmd_list = ['vim', '+startinsert', '-c', cursor_call, filename]
-    log.trace('cmd_list => %s', repr(cmd_list))  # type: ignore
+    log.trace('cmd_list => {}', repr(cmd_list))  # type: ignore
 
     sp.check_call(cmd_list)
 
@@ -99,5 +99,5 @@ if __name__ == "__main__":
     if args.name[0] == '/':
         parser.error("Must specify a name for the new alias.")
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

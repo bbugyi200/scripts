@@ -16,7 +16,7 @@ import gutils
 
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-
+@gutils.catch
 def main(args):
     sem = threading.BoundedSemaphore(3)
     threads = []

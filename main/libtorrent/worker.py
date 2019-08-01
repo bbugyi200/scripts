@@ -1,5 +1,5 @@
-import argparse
 from pathlib import Path
+import queue
 import re
 import subprocess as sp
 import threading
@@ -25,31 +25,38 @@ from typing import (  # noqa
 import gutils
 from loguru import logger as log
 
-import libtorrent as lib
 from libtorrent.tracker import MagnetTracker
 
 
-def new_torrent_worker(args: argparse.Namespace) -> None:
+_magnet_queue: "queue.Queue[str]" = queue.Queue()
+
+
+def new_torrent_worker(
+    magnet: str, download_dir: Path, timeout: float
+) -> None:
     torrent_worker = _TorrentWorker(
-        magnet=args.magnet,
-        download_dir=args.download_dir,
-        timeout=args.timeout,
+        magnet=magnet, download_dir=download_dir, timeout=timeout
     )
     thread = threading.Thread(target=torrent_worker, daemon=True)
     thread.start()
 
 
+def wait_for_first_magnet() -> None:
+    while _magnet_queue.empty():
+        time.sleep(0.5)
+
+
 def join_workers() -> None:
-    lib.wait_for_first_magnet()
-    lib.magnet_queue.join()
-    lib.notify_and_log("All torrents are complete.")
+    wait_for_first_magnet()
+    _magnet_queue.join()
+    gutils.notify("All torrents are complete.", title="torrent")
 
 
 def kill_all_workers() -> None:
     """Each torrent will be removed from the P2P client."""
     try:
         full_id_list = _parse_info("ID")
-        log.trace("full_id_list = %s", full_id_list)  # type: ignore
+        log.trace("full_id_list = {}", full_id_list)  # type: ignore
     except ValueError:
         return
 
@@ -61,12 +68,10 @@ def kill_all_workers() -> None:
 def _kill_worker(ID: str) -> None:
     """Remove torrent specified by @ID from the P2P client."""
     try:
-        sp.check_call(lib.DELUGE + ["rm", ID])
+        sp.check_call(["sudo", "-E", "deluge-console", "rm", ID])
         log.debug(f"Removed magnet #{ID}.")
     except sp.CalledProcessError:
-        log.debug(
-            f"Attempted to remove magnet #{ID} but it is NOT active."
-        )
+        log.debug(f"Attempted to remove magnet #{ID} but it is NOT active.")
 
 
 def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:
@@ -78,7 +83,7 @@ def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:
     log.trace(f"ID = {ID}")  # type: ignore
 
     cmd = (
-        f"{' '.join(lib.DELUGE)} info --sort-reverse=time_added "
+        f"sudo -E deluge-console info --sort-reverse=time_added "
         f"{'' if ID is None else ID} | awk -F: "
         f"'{{{{if ($1==\"{field}\") print $0}}}}'"
     )
@@ -112,8 +117,8 @@ class _TorrentWorker:
             with self.magnet_tracker.all_work_is_done:
                 _kill_worker(self.magnet_tracker[self.mt_key])
 
-                lib.magnet_queue.get()
-                lib.magnet_queue.task_done()
+                _magnet_queue.get()
+                _magnet_queue.task_done()
 
     @property
     def title(self) -> str:
@@ -130,15 +135,14 @@ class _TorrentWorker:
         A key which can be used to index into the magnet tracker in order to
         retrieve the Deluge ID corresponding to this worker's magnet.
         """
-        if getattr(self, '_mt_key', None) is None:
+        if getattr(self, "_mt_key", None) is None:
             self._enqueue_download()
 
-            id_list = [ID.split()[1]
-                       for ID in _parse_info("ID")]
+            id_list = [ID.split()[1] for ID in _parse_info("ID")]
 
             self._mt_key = self.magnet_tracker.new(id_list)
 
-        log.trace("mt_key = %s", self._mt_key)  # type: ignore
+        log.trace("mt_key = {mt_key}", mt_key=self._mt_key)  # type: ignore
         return self._mt_key
 
     def download_torrent(self) -> None:
@@ -153,9 +157,9 @@ class _TorrentWorker:
                 SECONDS_IN_HOUR = 3600
                 if i > (self.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
                     raise RuntimeError(
-                        f'Torrent is still attempting to download '
+                        f"Torrent is still attempting to download "
                         f'"{self.title}" after {self.timeout:.1f} hour(s) '
-                        'elapsed time. Shutting down early.'
+                        "elapsed time. Shutting down early."
                     )
 
             time.sleep(SLEEP_TIME)
@@ -163,8 +167,7 @@ class _TorrentWorker:
             # Note that when the `self.mt_key` property is accessed,
             # the Deluge download is automatically enqueued.
             full_state = _parse_info(
-                "State",
-                ID=self.magnet_tracker[self.mt_key],
+                "State", ID=self.magnet_tracker[self.mt_key]
             )
 
             state = str(full_state).split()[1]
@@ -173,7 +176,10 @@ class _TorrentWorker:
             elif state == "Seeding" or (
                 state == "Queued" and download_started
             ):
-                lib.notify_and_log(f'Finished Downloading "{self.title}".')
+                gutils.notify(
+                    f'Finished Downloading "{self.title}".',
+                    title="torrent",
+                )
                 return
 
     def _enqueue_download(self) -> None:
@@ -183,8 +189,15 @@ class _TorrentWorker:
 
             try:
                 sp.check_call(
-                    lib.DELUGE +
-                    ["add", "-p", str(self.download_dir), self.magnet]
+                    [
+                        "sudo",
+                        "-E",
+                        "deluge-console",
+                        "add",
+                        "-p",
+                        str(self.download_dir),
+                        self.magnet,
+                    ]
                 )
             except sp.CalledProcessError:
                 magnet_was_added = False
@@ -193,15 +206,15 @@ class _TorrentWorker:
 
             if magnet_was_added:
                 log.debug(
-                    f'Added "{self.title}" to Deluge\'s '
-                    "download queue."
+                    f'Enqueued "{self.title}" download.'
                 )
 
-                lib.magnet_queue.put(self.magnet)
+                # Careful where you put this line. It is responsible for
+                # preventing a race condition.
+                _magnet_queue.put(self.magnet)
 
                 break
         else:
             raise RuntimeError(
-                'Unable to add "{self.title}" to deluges\'s download '
-                'queue.'
+                'Unable to add "{self.title}" to deluges\'s download ' "queue."
             )

@@ -18,7 +18,7 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     video_file = videos.get('video')
 
     opts = [video_file]

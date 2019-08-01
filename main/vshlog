@@ -2,8 +2,8 @@
 
 """Filter, format, and view ZSH shell command history.
 
-This script is coupled with the 'log_shell_command' script which, in turn, should be integrated
-into your zshrc configuration file.
+This script is coupled with the 'log_shell_command' script which, in turn,
+should be integrated into your zshrc configuration file.
 """
 
 import argparse
@@ -14,19 +14,31 @@ import re
 import subprocess as sp  # noqa: F401
 import sys  # noqa: F401
 import time
-from typing import *  # noqa: F401
-from types import *  # noqa: F401
+from typing import (  # noqa: F401
+    Any,
+    Callable,
+    Container,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    NoReturn,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from dateutil.relativedelta import relativedelta
 from dateutil.parser import parse
 
 import gutils
-
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
 from loguru import logger as log
+
+
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
@@ -34,80 +46,102 @@ class LogsNotFound(Exception):
     """Raised when no Log Files can be Found."""
 
 
+@gutils.catch
 def main(args: argparse.Namespace) -> None:
-    fp_results = Path(f'/tmp/{scriptname}/{scriptname}.log')
+    fp_results = Path(f"/tmp/{scriptname}/{scriptname}.log")
 
     dp_results = fp_results.parent
     dp_results.mkdir(parents=True, exist_ok=True)
 
     dp_hist = Path(f"{os.environ['HOME']}/Dropbox/var/logs/shell-history")
     if not dp_hist.exists():
-        raise RuntimeError('The directory {dp_hist} does not exist.')
+        raise RuntimeError("The directory {dp_hist} does not exist.")
 
-    build_custom_log(dp_hist, fp_results,
-                     daterange=args.daterange,
-                     username=args.username,
-                     wdir=None if args.wdir is None else Path(args.wdir),
-                     hostname=args.hostname,
-                     regexp=args.regexp,
-                     unique=args.unique)
+    build_custom_log(
+        dp_hist,
+        fp_results,
+        daterange=args.daterange,
+        username=args.username,
+        wdir=None if args.wdir is None else Path(args.wdir),
+        hostname=args.hostname,
+        regexp=args.regexp,
+        unique=args.unique,
+    )
 
-    if args.view_report == 'y':
-        sp.check_call(['vim', '+', fp_results])
+    if args.view_report == "y":
+        sp.check_call(["vim", "+", fp_results])
 
 
-def build_custom_log(dp_hist: Path, fp_results: Path, *,
-                     daterange: List[str] = None,
-                     username: str = None,
-                     wdir: Path = None,
-                     hostname: str = None,
-                     regexp: str = None,
-                     unique: bool = False) -> None:
+def build_custom_log(
+    dp_hist: Path,
+    fp_results: Path,
+    *,
+    daterange: List[str] = None,
+    username: str = None,
+    wdir: Path = None,
+    hostname: str = None,
+    regexp: str = None,
+    unique: bool = False,
+) -> None:
     """Construct the Contents of the Final Log File that the User Views"""
     dt_start, dt_end = get_daterange(args.daterange)
 
-    log.trace('dt_start: %s', dt_start)  # type: ignore
-    log.trace('dt_end: %s', dt_end)  # type: ignore
+    log.trace("dt_start: {}", dt_start)  # type: ignore
+    log.trace("dt_end: {}", dt_end)  # type: ignore
 
     hostname = os.uname().nodename if hostname is None else hostname
-    regexp = '.*' if regexp is None else regexp
+    regexp = ".*" if regexp is None else regexp
 
-    with fp_results.open('w') as f:
-        f.write(f'# vim: filetype={scriptname}\n\n')
+    with fp_results.open("w") as f:
+        f.write(f"# vim: filetype={scriptname}\n\n")
 
     dt_tmp = dt_start
     entry_count = 0
     while date_ym_value(dt_tmp) <= date_ym_value(dt_end):
-        fp_log = Path(f'{dp_hist}/{hostname}/{dt_tmp.year}/{str(dt_tmp.month).zfill(2)}.log')
+        fp_log = Path(
+            f"{dp_hist}/{hostname}/{dt_tmp.year}/"
+            f"{str(dt_tmp.month).zfill(2)}.log"
+        )
 
         try:
-            if hostname.lower() == 'all':
+            if hostname.lower() == "all":
                 fp_log = merge_hosts(dp_hist, dt_tmp.year, dt_tmp.month)
 
-            skip_date_check = ((dt_tmp.month != dt_start.month or dt_tmp.year != dt_start.year) and
-                               (dt_tmp.month != dt_end.month or dt_tmp.year != dt_end.year))
+            skip_date_check = (
+                dt_tmp.month != dt_start.month or dt_tmp.year != dt_start.year
+            ) and (dt_tmp.month != dt_end.month or dt_tmp.year != dt_end.year)
 
-            log_lines = process_logfile(fp_log, dt_start=dt_start, dt_end=dt_end, regexp=regexp,
-                                        username=username, wdir=wdir, unique=unique,
-                                        skip_date_check=skip_date_check)
+            log_lines = process_logfile(
+                fp_log,
+                dt_start=dt_start,
+                dt_end=dt_end,
+                regexp=regexp,
+                username=username,
+                wdir=wdir,
+                unique=unique,
+                skip_date_check=skip_date_check,
+            )
 
-            with fp_results.open('a+') as f:
+            with fp_results.open("a+") as f:
                 f.writelines(log_lines)
 
             entry_count += len(log_lines)
         except LogsNotFound:
-            log.debug(f'No Log Files for {dt_tmp.month}-{dt_tmp.year} Exist.')
+            log.debug(f"No Log Files for {dt_tmp.month}-{dt_tmp.year} Exist.")
         finally:
             dt_tmp = dt_tmp + relativedelta(months=1)
 
-    with fp_results.open('a+') as f:
-        f.write(f'# Number of shell commands matched by {scriptname} query:  {entry_count}')
+    with fp_results.open("a+") as f:
+        f.write(
+            f"# Number of shell commands matched by {scriptname} query:  "
+            f"{entry_count}"
+        )
 
 
 def date_ym_value(date: dt.datetime) -> int:
     """
-    Returns value that can be used to compare datetime objects while only considering the date's
-    month and year.
+    Returns value that can be used to compare datetime objects while only
+    considering the date's month and year.
     """
     return (100 * date.year) + date.month
 
@@ -116,21 +150,27 @@ def merge_hosts(dp_hist: Path, year: int, month: int) -> Path:
     """Concatenates Logfiles from All Hostnames.
 
     Exceptions:
-        Raises LogsNotFound if no log files can be found for the given month and year.
+        Raises LogsNotFound if no log files can be found for the given month
+        and year.
 
     Returns:
         str: Filepath for new (temporary) log file that should be processed.
     """
-    all_hostnames = [d for d in os.listdir(dp_hist)
-                     if os.path.isdir(f'{dp_hist}/{d}')]
-    possible_log_files = [f'{dp_hist}/{H}/{year}/{str(month).zfill(2)}.log'
-                          for H in all_hostnames]
-    all_log_files = list(filter(lambda x: os.path.exists(x), possible_log_files))
+    all_hostnames = [
+        d for d in os.listdir(dp_hist) if os.path.isdir(f"{dp_hist}/{d}")
+    ]
+    possible_log_files = [
+        f"{dp_hist}/{H}/{year}/{str(month).zfill(2)}.log"
+        for H in all_hostnames
+    ]
+    all_log_files = list(
+        filter(lambda x: os.path.exists(x), possible_log_files)
+    )
 
     if all_log_files == []:
         raise LogsNotFound()
 
-    fp_log = Path(f'/tmp/{scriptname}/{year}/{str(month).zfill(2)}.log')
+    fp_log = Path(f"/tmp/{scriptname}/{year}/{str(month).zfill(2)}.log")
 
     fp_dir = fp_log.parent
     if not os.path.exists(fp_dir):
@@ -145,26 +185,33 @@ def merge_hosts(dp_hist: Path, year: int, month: int) -> Path:
         else:
             break
     else:
-        raise RuntimeError(f'Something went wrong. The {fp_log} file does not exist.')
+        raise RuntimeError(
+            f"Something went wrong. The {fp_log} file does not exist."
+        )
 
     return fp_log
 
 
-def process_logfile(fp: Path, *,
-                    dt_start: dt.datetime,
-                    dt_end: dt.datetime,
-                    regexp: str,
-                    username: str = None,
-                    wdir: Path = None,
-                    unique: bool = False,
-                    skip_date_check: bool = False) -> List[str]:
+def process_logfile(
+    fp: Path,
+    *,
+    dt_start: dt.datetime,
+    dt_end: dt.datetime,
+    regexp: str,
+    username: str = None,
+    wdir: Path = None,
+    unique: bool = False,
+    skip_date_check: bool = False,
+) -> List[str]:
     """Process a single shell command log file.
 
-    Each log file contains the shell command history for a specific month (e.g. 2018/10.log).
+    Each log file contains the shell command history for a specific month
+    (e.g. 2018/10.log).
 
-    NOTE: Parsing the date of each entry using `strptime` has proven to be a major performance
-          bottleneck. As a solution, @skip_date_check is set whenever parsing a log file in which
-          every entry is gaurenteed to fall in the correct date range.
+    NOTE: Parsing the date of each entry using `strptime` has proven to be a
+          major performance bottleneck. As a solution, @skip_date_check is set
+          whenever parsing a log file in which every entry is gaurenteed to
+          fall in the correct date range.
 
     Exceptions:
         Raises LogsNotFound if the log file does not exist.
@@ -177,19 +224,19 @@ def process_logfile(fp: Path, *,
     if not os.path.exists(fp):
         raise LogsNotFound()
 
-    if not hasattr(process_logfile, 'command_set'):
+    if not hasattr(process_logfile, "command_set"):
         # used to track unique commands
         process_logfile.command_set = set()  # type: ignore
 
-    strptime = lambda D: dt.datetime.strptime(D, '%Y%m%d%H%M%S')
+    strptime = lambda D: dt.datetime.strptime(D, "%Y%m%d%H%M%S")
 
-    for i, line in enumerate(open(fp, 'r')):
+    for i, line in enumerate(open(fp, "r")):
         try:
-            hostname, user, date_string, wd, cmd = line.split(':', maxsplit=4)
+            hostname, user, date_string, wd, cmd = line.split(":", maxsplit=4)
         except ValueError as e:
-            log.debug('i: %s', i)
-            log.debug('line: %s', line.rstrip())
-            log.debug("line.split(':'): %s", line.split(':'))
+            log.debug("i: {}", i)
+            log.debug("line: {}", line.rstrip())
+            log.debug("line.split(':'): {}", line.split(":"))
             raise e
 
         stripped_cmd = cmd.strip()
@@ -198,19 +245,19 @@ def process_logfile(fp: Path, *,
             username is None or user == username,
             wdir is None or wd == str(wdir),
             re.search(regexp, cmd) is not None,
-            not unique or stripped_cmd not in process_logfile.command_set,  # type: ignore
+            not unique
+            or stripped_cmd not in process_logfile.command_set,  # type: ignore
         ]
 
         if not skip_date_check:
             date = strptime(date_string)
-            conditions.extend([
-                date >= dt_start,
-                date <= dt_end
-            ])
+            conditions.extend([date >= dt_start, date <= dt_end])
 
         if all(conditions):
             date = date if not skip_date_check else strptime(date_string)
-            matched_lines.append(build_log_entry(hostname, user, date, Path(wd), cmd))
+            matched_lines.append(
+                build_log_entry(hostname, user, date, Path(wd), cmd)
+            )
 
         if unique:
             process_logfile.command_set.add(stripped_cmd)  # type: ignore
@@ -218,10 +265,14 @@ def process_logfile(fp: Path, *,
     return matched_lines
 
 
-def build_log_entry(hostname: str, user: str, date: dt.datetime, wdir: Path, cmd: str) -> str:
+def build_log_entry(
+    hostname: str, user: str, date: dt.datetime, wdir: Path, cmd: str
+) -> str:
     """Construct a Log Entry using the Final (prettified) Format"""
-    return (f'[{date.strftime("%Y-%m-%d %H:%M:%S")}] ({user}@{hostname}) '
-            f'{wdir}\n\t{cmd}\n')
+    return (
+        f'[{date.strftime("%Y-%m-%d %H:%M:%S")}] ({user}@{hostname}) '
+        f"{wdir}\n\t{cmd}\n"
+    )
 
 
 def get_daterange(daterange: List[str]) -> Tuple[dt.datetime, dt.datetime]:
@@ -252,28 +303,22 @@ def parse_date(date: Optional[str]) -> dt.datetime:
         D = date.lower()
 
     if D in ["bot", "eot"]:
-        D = {"bot": "20170101000000",
-             "eot": "now"}[D]
+        D = {"bot": "20170101000000", "eot": "now"}[D]
 
-    if re.match('^[0-9]+[dwmy]$', D):
+    if re.match("^[0-9]+[dwmy]$", D):
         N = int(D[:-1])
-        key = {
-            'd': 'days',
-            'w': 'weeks',
-            'm': 'months',
-            'y': 'years',
-        }[D[-1]]
+        key = {"d": "days", "w": "weeks", "m": "months", "y": "years"}[D[-1]]
 
         kwargs = {key: N}
         return dt.datetime.now() - relativedelta(**kwargs)  # type: ignore
 
-    if D == 'today':
+    if D == "today":
         return delta_today(0)
 
-    if D == 'yesterday':
+    if D == "yesterday":
         return delta_today(-1)
 
-    if D == 'now':
+    if D == "now":
         return dt.datetime.now()
 
     return parse(D)
@@ -287,39 +332,69 @@ def delta_today(N: int) -> dt.datetime:
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('-D', '--daterange', nargs='*', metavar=('START', 'END'),
-                        help='Filter logs by using a daterange. Defaults to parsing all logs '
-                             'less  than a year old. If only one argument is given, the end range '
-                             'is  automatically set to "EOT" (now). Accepts all standard date '
-                             'formats  and also the special values: "BOT", "EOT", "now", "today", '
-                             'and "yesterday". Furthermore, this option accepts values of the form: '
-                             '"Nd", "Nw", "Nm" or  "Ny". These are interpreted as datetimes '
-                             'corresponding to N days/weeks/months/years ago.')
-    parser.add_argument('-G', '--grep', dest='regexp', metavar='REGEXP',
-                        help='Filter logs by command string using a regular expression.')
-    parser.add_argument('-H', '--hostname',
-                        help='Filter logs by the machine\'s hostname. Defaults to hostname of '
-                             'current machine. Accepts special "ALL" value which results in logs '
-                             'from all known hostnames being processed.')
+    parser.add_argument(
+        "-D",
+        "--daterange",
+        nargs="*",
+        metavar=("START", "END"),
+        help="Filter logs by using a daterange. Defaults to parsing all logs "
+        "less  than a year old. If only one argument is given, the end range "
+        'is  automatically set to "EOT" (now). Accepts all standard date '
+        'formats  and also the special values: "BOT", "EOT", "now", "today", '
+        'and "yesterday". Furthermore, this option accepts values of the '
+        'form: "Nd", "Nw", "Nm" or  "Ny". These are interpreted as datetimes '
+        "corresponding to N days/weeks/months/years ago.",
+    )
+    parser.add_argument(
+        "-G",
+        "--grep",
+        dest="regexp",
+        metavar="REGEXP",
+        help="Filter logs by command string using a regular expression.",
+    )
+    parser.add_argument(
+        "-H",
+        "--hostname",
+        help="Filter logs by the machine's hostname. Defaults to hostname of "
+        'current machine. Accepts special "ALL" value which results in logs '
+        "from all known hostnames being processed.",
+    )
 
-    default = 'y'
-    parser.add_argument('--view-report', choices=('y', 'n'), default=default,
-                        help=f"View final report of matched shell commands. Defaults to '{default}'.")
+    default = "y"
+    parser.add_argument(
+        "--view-report",
+        choices=("y", "n"),
+        default=default,
+        help=(
+            "View final report of matched shell commands. Defaults to "
+            f"'{default}'."
+        ),
+    )
 
-    parser.add_argument('-u', '--unique', action='store_true',
-                        help='Filter out duplicate entries where two entries are considered '
-                             'to be duplicates if their command strings are the same.')
-    parser.add_argument('-U', '--username', help='Filter logs by username.')
-    parser.add_argument('-w', '--working-dir', dest='wdir', metavar='DIR',
-                        help='Filter logs by what directory the user was in when the command was '
-                             'run.')
+    parser.add_argument(
+        "-u",
+        "--unique",
+        action="store_true",
+        help="Filter out duplicate entries where two entries are considered "
+        "to be duplicates if their command strings are the same.",
+    )
+    parser.add_argument("-U", "--username", help="Filter logs by username.")
+    parser.add_argument(
+        "-w",
+        "--working-dir",
+        dest="wdir",
+        metavar="DIR",
+        help=(
+            "Filter logs by what directory the user was in when the command "
+            "was run."
+        ),
+    )
     args = parser.parse_args()
-
 
     if args.daterange is not None and len(args.daterange) not in (1, 2):
         parser.error(
-            'The -D option requires either 1 or 2 arguments, '
-           f'but you have given {len(args.daterange)}.'
+            "The -D option requires either 1 or 2 arguments, "
+            f"but you have given {len(args.daterange)}."
         )
 
     if args.daterange is not None:
@@ -327,15 +402,17 @@ if __name__ == "__main__":
             try:
                 parse(args.daterange[i])
             except ValueError:
-                if not re.match('^(BOT|EOT|now|today|[1-9][0-9]*(d|w|m|y))$', args.daterange[i]):
+                if not re.match(
+                    "^(BOT|EOT|now|today|[1-9][0-9]*(d|w|m|y))$",
+                    args.daterange[i],
+                ):
                     parser.error(
-                        'Unrecognized date string format.\n\n'
-                        'Supported date string formats include any format '
-                        'supported by the \'dateutil\' library or any of the '
-                        'following special values: BOT, EOT, now, today, Nd, '
-                        'Nw, Nm, or Ny (where N is an integer value).'
+                        "Unrecognized date string format.\n\n"
+                        "Supported date string formats include any format "
+                        "supported by the 'dateutil' library or any of the "
+                        "following special values: BOT, EOT, now, today, Nd, "
+                        "Nw, Nm, or Ny (where N is an integer value)."
                     )
 
-
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

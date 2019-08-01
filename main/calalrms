@@ -24,7 +24,7 @@ FIFO_PATH = '{}/fifo'.format(RUNTIME_DIR)
 TOMORROW_MARKER = '@'
 today = dt.date.today()
 
-
+@gutils.catch
 def main():
     if xmonad_is_running:
         gutils.mkfifo(FIFO_PATH)
@@ -73,7 +73,7 @@ def main():
                 fifo.write('"{}" at {}\n'.format(title, start))
 
         try:
-            log.debug('Command List: %s', cmd_list)
+            log.debug('Command List: {}', cmd_list)
             child_pid = os.fork()
             if child_pid == 0:
                 os.execl('{}/.local/bin/alarm'.format(os.environ['HOME']), *cmd_list)
@@ -217,5 +217,5 @@ if __name__ == "__main__":
     except sp.CalledProcessError:
         xmonad_is_running = False
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

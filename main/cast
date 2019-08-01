@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('--now', dest='castnow', action='store_true', help='Use castnow to cast.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     video_file = videos.get('video')
     opts = []
 

@@ -26,7 +26,7 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 data_dir = gutils.xdg.init('data')
 cache_fp = '{}/cache'.format(data_dir)
 
-
+@gutils.catch
 def main(args: argparse.Namespace) -> None:
     if args.cache or not os.path.exists(cache_fp):
         find_output = gutils.shell(
@@ -72,5 +72,5 @@ if __name__ == "__main__":
                         help='Generate cache for media files.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

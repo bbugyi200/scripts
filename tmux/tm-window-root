@@ -15,7 +15,7 @@ import gutils
 
 from loguru import logger as log
 
-
+@gutils.catch
 def main(args):
     mux_yaml_path = '{}/.config/tmuxinator/{}.yml'.format(os.environ['HOME'], args.session_name)
     all_windows = get_all_windows(mux_yaml_path, args.session_name)
@@ -86,5 +86,5 @@ if __name__ == "__main__":
                                             'Tmuxinator session.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

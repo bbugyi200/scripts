@@ -63,7 +63,7 @@ class MessageManager:
                 self.release(msg)
                 self.check_pending()
             else:
-                log.debug('Freezing package ID: #%d (last_id == #%d)', id_number, self.last_id)
+                log.debug('Freezing package ID: #{} (last_id == #{})', id_number, self.last_id)
                 self.pending[id_number] = msg
 
     def check_pending(self) -> None:
@@ -84,7 +84,7 @@ class MessageManager:
         else:
             status = 'skipped'
 
-        log.debug('Releasing package ID: %d (%s)', self.last_id, status)
+        log.debug('Releasing package ID: {} ({})', self.last_id, status)
 
     def noop(self, id_number: int) -> None:
         with self.lock:
@@ -97,7 +97,7 @@ message_manager = MessageManager()
 pkg_queue: 'queue.Queue[str]' = queue.Queue()
 threads: List[threading.Thread] = []
 
-
+@gutils.catch
 def main(args: argparse.Namespace) -> None:
     if args.color == 'n':
         for attr in dir(gutils.colorize):
@@ -110,7 +110,7 @@ def main(args: argparse.Namespace) -> None:
     # ebuilds in this list are of the form 'CATEGORY/PACKAGE-VERSION.ebuild'
     all_ebuilds = ['/'.join([ebuild_path_list[-3], ebuild_path_list[-1]])
                    for ebuild_path_list in [ebpath.split('/') for ebpath in all_ebuild_paths]]
-    log.trace('all_ebuilds: %s', all_ebuilds)  # type: ignore
+    log.trace('all_ebuilds: {}', all_ebuilds)  # type: ignore
 
     msg_fmt = 'Ebuild Version Check will be run for the following overlay: {}\n'
     if args.verbose:
@@ -125,7 +125,7 @@ def main(args: argparse.Namespace) -> None:
         except ValueError:
             continue
 
-        log.debug('ID: %d', id_number)
+        log.debug('ID: {}', id_number)
 
         if args.max_thread_count > 1:
             t = threading.Thread(target=check_pkg, args=(pkg, id_number, args.live, args.offline), daemon=True)
@@ -143,7 +143,7 @@ def main(args: argparse.Namespace) -> None:
 
 def check_pkg(pkg: str, id_number: int, show_live_pkgs: bool = False,
               show_offline_pkgs: bool = False) -> None:
-    log.trace('pkg: %s', pkg)  # type: ignore
+    log.trace('pkg: {}', pkg)  # type: ignore
     pkg_queue.put(pkg)
 
     try:
@@ -172,11 +172,11 @@ def check_pkg(pkg: str, id_number: int, show_live_pkgs: bool = False,
         try:
             ps = sp.check_output(['euscan', pkg])
         except sp.CalledProcessError:
-            log.trace('Package: %s', pkg)  # type: ignore
+            log.trace('Package: {}', pkg)  # type: ignore
             raise
 
         out = ps.decode().strip()
-        log.trace('Euscan Output: %s', out)  # type: ignore
+        log.trace('Euscan Output: {}', out)  # type: ignore
 
         out_list = out.split('\n')
         fail_marker = 'Upstream Version: '

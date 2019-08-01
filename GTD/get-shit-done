@@ -107,7 +107,7 @@ def play():
 
         rehash()
 
-
+@gutils.catch
 def main():
     if getpass.getuser() != 'root' and 'win32' not in sys.platform:
         exit_error('Please run script as root.')

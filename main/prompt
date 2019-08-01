@@ -13,7 +13,7 @@ import gutils
 
 from loguru import logger as log
 
-
+@gutils.catch
 def main():
     log.debug('Extra Rofi Options: {}'.format(args.opts))
 
@@ -40,5 +40,5 @@ if __name__ == "__main__":
     parser.add_argument('opts', nargs=argparse.REMAINDER, help='additional arguments to be passed to rofi')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

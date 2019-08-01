@@ -18,7 +18,7 @@ import gutils
 from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-
+@gutils.catch
 def main(args):
     fp_xmobar_template = '/home/bryan/Dropbox/var/templates/template.xmobarrc'
     fp_xmobar_config = '/home/bryan/.xmobarrc'
@@ -37,5 +37,5 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

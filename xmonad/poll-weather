@@ -10,7 +10,7 @@ import gutils
 
 from loguru import logger as log
 
-
+@gutils.catch
 def main():
     raw_output = run_weather_report(args.zipcode)
 
@@ -95,5 +95,5 @@ if __name__ == "__main__":
     parser.add_argument('zipcode', nargs='?', default='08060', help='zip code of location')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

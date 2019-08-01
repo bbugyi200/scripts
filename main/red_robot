@@ -33,7 +33,7 @@ dp_completed = '{}/completed'.format(gutils.xdg.init('data'))
 gutils.create_dir(dp_pending)
 gutils.create_dir(dp_completed)
 
-
+@gutils.catch
 def main(args):
     global error_flag
 
@@ -95,7 +95,7 @@ def scan(dp_new, dp_old):
         if 'start_on' in Y:
             if isinstance(Y['start_on'], list):
                 start_on = Y['start_on'][0]
-                if len(Y['start_on']) > 0:
+                if len(Y['start_on']) > 1:
                     multiple_dates = True
                     del Y['start_on'][0]
             else:
@@ -159,5 +159,5 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

@@ -15,7 +15,7 @@ import gutils
 
 from loguru import logger as log
 
-
+@gutils.catch
 def main(args):
     bed_dt = parse(args.bedtime)
     now_dt = dt.datetime.now()
@@ -24,7 +24,7 @@ def main(args):
     if tomorrow:
         bed_dt = bed_dt + dt.timedelta(days=1)
 
-    log.debug('bed_dt: %s', bed_dt)
+    log.debug('bed_dt: {}', bed_dt)
 
     eos_dt = bed_dt - dt.timedelta(hours=3)
     low_dt = bed_dt - dt.timedelta(hours=7)
@@ -52,5 +52,5 @@ if __name__ == "__main__":
                         help="Force BED event to be scheduled for tomorrow.")
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

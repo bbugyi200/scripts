@@ -16,7 +16,7 @@ import gutils
 
 from loguru import logger as log
 
-
+@gutils.catch
 def main(args):
     if not args.install:
         add_to_set(args.packages, local=args.local)
@@ -25,7 +25,7 @@ def main(args):
     ask = not args.force
     emerge_cmd = get_emerge_cmd_list(args.packages, ask=ask)
 
-    log.debug('Emerge Command: %s', emerge_cmd)
+    log.debug('Emerge Command: {}', emerge_cmd)
     rc = sp.call(emerge_cmd)
 
     if rc == 1:
@@ -93,7 +93,7 @@ def add_to_set(packages, *, local=False):
 
             full_package_name = '{}/{}'.format(category, package)
 
-        log.debug('Full Package Name: %s', full_package_name)
+        log.debug('Full Package Name: {}', full_package_name)
         portage_set = set_fpath.split('/')[-1]
 
         for entry in open(set_fpath, 'r'):
@@ -128,5 +128,5 @@ if __name__ == "__main__":
                         help='Add package(s) to @<hostname> set ONLY.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

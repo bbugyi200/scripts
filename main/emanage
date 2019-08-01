@@ -22,9 +22,9 @@ from loguru import logger as log
 SCRIPTNAME = os.path.basename(os.path.realpath(__file__))
 ts_fmt = '%Y%m%d%H%M%S'
 
-
+@gutils.catch
 def main(args: argparse.Namespace) -> None:
-    log.trace('args => %s', repr(args))  # type: ignore
+    log.trace('args => {}', repr(args))  # type: ignore
 
     signal.signal(signal.SIGINT, keyboard_interrupt_handler)
     signal.signal(signal.SIGQUIT, keyboard_interrupt_handler)
@@ -170,5 +170,5 @@ if __name__ == "__main__":
         )
 
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

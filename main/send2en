@@ -31,13 +31,13 @@ if [[ -f "${body}" ]]; then
     done < "${fpath}"
 fi
 
-read -r -d '' email <<-EOM
+read -r -d '' header <<-EOM
 To: bryanbugyi34.c054be4@m.evernote.com 
 Subject: ${subject}
 Content-Type: text/html
 EOM
 
-email="$(printf "%s\n\n%s<br />" "${email}" "${body}")"
+email="$(printf "%s\n\n%s<br />" "${header}" "${body}")"
 
 fp_email=/tmp/email.txt
 printf "${email}\n" > "${fp_email}"

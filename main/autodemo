@@ -34,7 +34,7 @@ import gutils
 from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-
+@gutils.catch
 def main(args):
     sp.check_call(['peek', '-s'])  # start all active 'peek' sessions
 
@@ -109,5 +109,5 @@ if __name__ == "__main__":
                         help='How many seconds to sleep after pressing Enter? Defaults to 1.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

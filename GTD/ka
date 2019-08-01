@@ -14,7 +14,7 @@ import gutils
 
 from loguru import logger as log
 
-
+@gutils.catch
 def main():
     if 'at' in args.date:
         start = parse(args.date)
@@ -44,5 +44,5 @@ if __name__ == "__main__":
     parser.add_argument('event_name', help='Name of khal event.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

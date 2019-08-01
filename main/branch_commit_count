@@ -1,3 +1,10 @@
 #!/bin/bash
 
-git log --oneline "${MASTER_BRANCH:-master}"..HEAD | wc -l | sed 's/ //g'
+_master="$(git branch | grep "master" | "${SED}" 's/^.*\s\+//g')"
+if [[ "$(git remote)" == *"upstream"* ]]; then
+    master=upstream/"${_master}"
+else
+    master="${_master}"
+fi
+
+git log --oneline "${master}"..HEAD | wc -l | sed 's/ //g'

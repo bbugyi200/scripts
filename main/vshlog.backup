@@ -24,7 +24,7 @@ import gutils
 from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-
+@gutils.catch
 def main(args):
     fp_results = '/tmp/{0}/{0}.log'.format(scriptname)
     fp_results_dir = os.path.dirname(fp_results)
@@ -57,8 +57,8 @@ def build_custom_log(logdir, fp_results, *, daterange=None, username=None,
     """Construct the Contents of the Final Log File that the User Views"""
     dt_start, dt_end = get_daterange(args.daterange)
 
-    log.trace('dt_start: %s', dt_start)
-    log.trace('dt_end: %s', dt_end)
+    log.trace('dt_start: {}', dt_start)
+    log.trace('dt_end: {}', dt_end)
 
     hostname = os.uname().nodename if hostname is None else hostname
     regexp = '.*' if regexp is None else regexp
@@ -161,9 +161,9 @@ def process_logfile(fp, *, dt_start, dt_end, regexp, username=None, wdir=None, u
         try:
             hostname, user, date_string, wd, cmd = line.split(':', maxsplit=4)
         except ValueError as e:
-            log.debug('i: %s', i)
-            log.debug('line: %s', line.rstrip())
-            log.debug("line.split(':'): %s", line.split(':'))
+            log.debug('i: {}', i)
+            log.debug('line: {}', line.rstrip())
+            log.debug("line.split(':'): {}", line.split(':'))
             raise e
 
         date = parse(date_string)
@@ -283,5 +283,5 @@ if __name__ == "__main__":
         error_fmt = 'The -D option requires either 1 or 2 arguments, but you have given {}.'
         parser.error(error_fmt.format(len(args.daterange)))
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

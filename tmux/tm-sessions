@@ -6,19 +6,15 @@ import subprocess as sp  # noqa: F401
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
 from loguru import logger as log
 
-
+@gutils.catch
 def main() -> None:
     ps = sp.check_output(['tmux', 'ls'])
     out = ps.decode().strip()
 
     _sessions = out.split('\n')
-    log.debug('_sessions: %s', _sessions)
+    log.debug('_sessions: {}', _sessions)
 
     sessions = []
     for S in _sessions:
@@ -44,5 +40,5 @@ if __name__ == "__main__":
                              'forces tmux to update the status-line properly.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

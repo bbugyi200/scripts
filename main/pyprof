@@ -1,51 +1,166 @@
 #!/bin/bash
 
-###################################################################################################
-#  Wrapper for Python line_profile (https://github.com/rkern/line_profiler)                       #
-#                                                                                                 #
-# 1) If the Python script does not exist in current directory, search the filesystem for it.      #
-# 2) Make copy of Python script (use this copy for the remaining steps).                          #
-# 3) Preface every function in Python script with @profile decorator.                             #
-# 4) Profile Python script with `kernprof` (save profiling statistics to a file).                 #
-# 5) Cleanup all temp files.                                                                      #
-# 6) Open profiling stats file in vim.                                                            #
-#                                                                                                 #
-# Once the profiling stats file is open, you may use the ']' and '[' keys to navigate to the      #
-# next and previous functions, respectively.                                                      #
-###################################################################################################
+read -r -d '' doc << EOM
+Wrapper for Python line_profile (https://github.com/rkern/line_profiler)
+
+1) If the Python script does not exist in current directory, search the filesystem for it.
+2) Make copy of Python script (use this copy for the remaining steps).
+3) Preface every function in Python script with @profile decorator.
+4) Profile Python script with 'kernprof' (save profiling statistics to a file).
+5) Cleanup all temp files.
+6) Open profiling stats file in vim.
+
+Once the profiling stats file is open, you may use the ']' and '[' keys to navigate to the
+next and previous functions, respectively.
+EOM
 
 # ---------- Modules ----------
 source gutils.sh
 
-# ---------- Global Variables ----------
-# shellcheck disable=SC2034
-SCRIPTNAME="$(basename "$0")"
-USAGE="usage: $(basename "$0") PYTHON_SCRIPT [OPTIONS]"
-XDG_RUNTIME=/tmp/"${SCRIPTNAME}"
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,l,p:,q,v" -l "debug,help,line,profile:,quiet,verbose" -- "$@")"
 
-[ -d "${XDG_RUNTIME}" ] || mkdir "${XDG_RUNTIME}"
+export USAGE_GRAMMAR=(
+    "[-d] [-l] [-p A.py [-p B.py [...]]] [-q] [-v] EXE.py"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+    -l | --line
+        Use line profiling.
+
+    -p FILE.py | --profile FILE.py
+        Decorate all functions in FILE.py with @profile before running line profiler.
+
+    -q | --quiet
+        Generate the profile report but don't open it automatically in an editor.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+files_to_profile=()
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -l|--line )
+           use_line_profiling=true
+           ;;
+       -p|--profile )
+           shift
+           files_to_profile+=("$1")
+           ;;
+       -q|--quiet )
+           quiet=true
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
 
 # ---------- Main ----------
-if [[ -z "$1" ]]; then
-    die "${USAGE}" 2
-fi
+main() {
+    if [[ -z "$1" ]]; then
+        die "${USAGE}" 2
+    fi
 
-pyscript="$1"
-if ! [[ -f "${pyscript}" ]]; then
-    old_pyscript="${pyscript}"
-    pyscript="$(command -v "${pyscript}")"
-    [[ -f "${pyscript}" ]] || die "Unable to find the Python script ${old_pyscript}."
-fi
+    exe="$1"; shift
+    if [[ "${#files_to_profile[@]}" -eq 0 ]]; then
+        files_to_profile+=("${exe}")
+    elif [[ "${use_line_profiling}" != true ]]; then
+        wmsg "The -p option has no effect unless run using the line profiler (enable with option -l)."
+    fi
 
-pyscript_filename="$(basename "${pyscript}")"
-pstats_file="${XDG_RUNTIME}"/"${pyscript_filename}".stats
-tmp_script="${XDG_RUNTIME}"/"${pyscript_filename}"
+    if ! [[ -f "${exe}" ]]; then
+        old_exe="${exe}"
+        exe="$(command -v "${exe}")"
+        [[ -f "${exe}" ]] || die "Unable to find the Python script ${old_exe}."
+    fi
 
-cp -f "${pyscript}" "${tmp_script}"
-sed -E -i '/^def .+\(/i@profile' "${tmp_script}"
+    if [[ "${use_line_profiling}" = true ]]; then
+        run_line_profile "$@"
+    else
+        run_cprofile "$@"
+    fi
 
-kernprof -v -l "${tmp_script}" "${@:2}" > "${pstats_file}"
+    if [[ "${quiet}" != true ]]; then
+        # shellcheck disable=SC2153
+        if [[ "${EDITOR}" == *"vim" ]]; then
+            editor="${vim:-vim}"
+        else
+            editor="${EDITOR}"
+        fi
 
-rm "${pyscript_filename}".lprof
+        eval "${editor}" "${report}"
+    fi
+}
+
+function run_line_profile() {
+    for f in "${files_to_profile[@]}"; do
+        ${SED} -E -i '/^def .*/i @profile' "${f}"
+        ${SED} -E -i '/^    def .*/i\ \ \ \ @profile' "${f}"
+        ${SED} -E -i '/^        def .*/i\ \ \ \ \ \ \ \ @profile' "${f}"
+    done
+
+    report=./line_profile_report.txt
+    kernprof -v -l "${exe}" "$@" > "${report}"
+
+    # Cleanup
+    rm "$(basename "${exe}")".lprof
+    for f in "${files_to_profile[@]}"; do
+        ${SED} -E -i '/^\s*@profile/d' "${f}"
+    done
  
-vim +1 -c 'nnoremap <nowait> ] /@profile<CR>' -c 'nnoremap <nowait> [ ?@profile<CR>' "${pstats_file}"
+    vim="vim +1 -c 'nnoremap <nowait> ] /@profile<CR>' -c 'nnoremap <nowait> [ ?@profile<CR>'"
+}
+
+function run_cprofile() {
+    pstats_file=./profile
+    pstats_python_code=$(cat <<END
+import pstats
+p = pstats.Stats('${pstats_file}')
+p.strip_dirs()
+p.sort_stats('tottime')
+p.print_stats()
+END
+)
+
+    python -m cProfile -o "${pstats_file}" "${exe}" "$@" &> /dev/null
+
+    report=./profile_report.txt
+    python -c "${pstats_python_code}" > "${report}"
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+	main "$@"
+fi

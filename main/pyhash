@@ -16,7 +16,7 @@ import gutils
 from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-
+@gutils.catch
 def main(args):
     hash_ = int(hashlib.sha1(args.target.encode()).hexdigest(), 16) % (10 ** args.digits)
     print(hash_)
@@ -29,5 +29,5 @@ if __name__ == "__main__":
                         help='Specifies the number of digits the final hash value with have.')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

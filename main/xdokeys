@@ -15,7 +15,7 @@ import gutils
 from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-
+@gutils.catch
 def main(args):
     for keys in args.keystrokes.split(args.marker):
         gutils.shell('xdotool type --delay {} "{}"'.format(args.delay, keys),
@@ -29,5 +29,5 @@ if __name__ == "__main__":
     parser.add_argument('-D', '--delay', default='12')
     args = parser.parse_args()
 
-    gutils.logging.configure(__name__, debug=args.debug, verbose=args.verbose)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main(args)

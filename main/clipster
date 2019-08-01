@@ -848,7 +848,7 @@ def find_config():
             return conf_dir, data_dir
     return "", data_dir
 
-
+@gutils.catch
 def main():
     """Start the application. Return an exit status (0 or 1)."""
 

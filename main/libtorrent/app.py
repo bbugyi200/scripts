@@ -20,28 +20,11 @@ import signal
 import subprocess as sp
 import sys
 import time
-from types import FrameType
-from typing import (  # noqa
-    Any,
-    Callable,
-    Container,
-    Dict,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
-    NoReturn,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-)
+import types
 
-import gutils
 from loguru import logger as log
 
+import gutils
 import libtorrent.worker as worker
 
 
@@ -120,14 +103,20 @@ def parse_cli_args() -> argparse.Namespace:
 
 
 def register_handlers() -> None:
-    def term_handler(signum: signal.Signals, frame: FrameType) -> None:
+    def term_handler(
+            signum: signal.Signals,
+            frame: types.FrameType  # pylint: disable=unused-argument
+    ) -> None:
         log.debug(
             f"Terminated via {signal.Signals(signum).name} signal."
         )
         worker.kill_all_workers()
         sys.exit(128 + signum)
 
-    def usr1_handler(signum: signal.Signals, frame: FrameType) -> None:
+    def usr1_handler(
+            signum: signal.Signals,  # pylint: disable=unused-argument
+            frame: types.FrameType  # pylint: disable=unused-argument
+    ) -> None:
         log.debug("SIGUSR1 signal received.")
         with ARGS_FILE.open("rb") as f:
             child_args = pickle.load(f)
@@ -185,4 +174,4 @@ def create_pidfile(args: argparse.Namespace) -> None:
         os.kill(e.pid, signal.SIGUSR1)
 
         # Exit without invoking exit handler.
-        os._exit(0)
+        os._exit(0)  # pylint: disable=protected-access

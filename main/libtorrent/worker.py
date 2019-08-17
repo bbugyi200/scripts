@@ -4,27 +4,11 @@ import re
 import subprocess as sp
 import threading
 import time
-from typing import (  # noqa
-    Any,
-    Callable,
-    Container,
-    Dict,
-    Generator,
-    Iterable,
-    Iterator,
-    List,
-    NoReturn,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-)
+import typing as Type  # pylint: disable=unused-import
 
-import gutils
 from loguru import logger as log
 
+import gutils
 from libtorrent.tracker import MagnetTracker
 
 
@@ -32,7 +16,7 @@ _magnet_queue: "queue.Queue[str]" = queue.Queue()
 
 
 def new_torrent_worker(
-    magnet: str, download_dir: Path, timeout: float
+        magnet: str, download_dir: Path, timeout: float
 ) -> None:
     torrent_worker = _TorrentWorker(
         magnet=magnet, download_dir=download_dir, timeout=timeout
@@ -74,7 +58,7 @@ def _kill_worker(ID: str) -> None:
         log.debug(f"Attempted to remove magnet #{ID} but it is NOT active.")
 
 
-def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:
+def _parse_info(field: str, ID: str = None) -> Type.Union[str, Type.List[str]]:
     """Wrapper for the `deluge-console info` command.
 
     Returns:
@@ -106,6 +90,7 @@ class _TorrentWorker:
         self.magnet = magnet
         self.download_dir = download_dir
         self.timeout = timeout
+        self._mt_key = -1
 
     def __call__(self):
         log.debug(f'Added "{self.title}" to magnet queue.')
@@ -174,7 +159,7 @@ class _TorrentWorker:
             if state == "Downloading":
                 download_started = True
             elif state == "Seeding" or (
-                state == "Queued" and download_started
+                state == "Queued" and download_started  # pylint: disable=bad-continuation
             ):
                 gutils.notify(
                     f'Finished Downloading "{self.title}".',
@@ -184,7 +169,7 @@ class _TorrentWorker:
 
     def _enqueue_download(self) -> None:
         """Add magnet file to Deluge's download queue."""
-        for i in range(10):
+        for _ in range(10):
             time.sleep(1)
 
             try:

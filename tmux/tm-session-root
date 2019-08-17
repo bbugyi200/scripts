@@ -2,9 +2,10 @@
 
 """Stores and Retrieves Default Directories for tmuxinator Sessions"""
 
-import sys
 import os
 import pickle
+import sys
+import typing as Type  # pylint: disable=unused-import
 
 import gutils
 
@@ -14,11 +15,41 @@ import gutils
 
 from loguru import logger as log
 
+
 @gutils.catch
 def main():
+    parser = gutils.ArgumentParser()
+    exgroup = parser.add_mutually_exclusive_group()
+    exgroup.add_argument(
+        '--get',
+        action='store_true',
+        help='Print the root directory of the tmux session to stdout.',
+    )
+    exgroup.add_argument(
+        '--put',
+        action='store_true',
+        help='Map SESSION to ROOT_DIR in the database.',
+    )
+    parser.add_argument(
+        'session_name',
+        metavar='SESSION',
+        type=str,
+        help='The name of the tmux session.',
+    )
+    parser.add_argument(
+        'root_dir',
+        metavar='ROOT_DIR',
+        type=str,
+        nargs='?',
+        help='The name of the directory to be mapped to the tmux session.',
+    )
+    args = parser.parse_args()
+
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
     fpath = '{}/default-dirs.pickle'.format(gutils.xdg.init('data'))
 
-    default_dirs = dict()
+    default_dirs: Type.Dict[str, str] = {}
     if not os.path.isfile(fpath):
         with open(fpath, 'wb+') as f:
             pickle.dump(default_dirs, f)
@@ -26,13 +57,12 @@ def main():
         with open(fpath, 'rb') as f:
             default_dirs = pickle.load(f)
 
-    action = sys.argv[1]
-    session_name = sys.argv[2]
-
-    if action == '--get':
-        print(default_dirs.get(session_name, '/home/bryan'), end='')
-    elif action == '--put':
-        default_dirs[session_name] = sys.argv[3]
+    if args.get:
+        _home = os.environ.get('HOME')
+        _root_dir = default_dirs.get(args.session_name, _home)
+        print(_root_dir.replace('/home/bryan', _home), end='')  # type: ignore
+    elif args.put:
+        default_dirs[args.session_name] = args.root_dir
         with open(fpath, 'wb') as f:
             pickle.dump(default_dirs, f)
 

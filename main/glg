@@ -4,6 +4,10 @@
 #  Wrapper around `git log`                                       #
 ###################################################################
 
+
+stat_opts="--stat --summary"
+
+
 if [[ "${1}" == "-d" ]]; then
     shift
     PS4='$LINENO: '
@@ -11,32 +15,28 @@ if [[ "${1}" == "-d" ]]; then
 fi
 
 
-if [[ "$1" =~ ^[1-9][0-9]*p$ ]] || [[ "$1" == "p" ]]; then
-    if [[ "$1" == "p" ]]; then
-        N="$(branch_commit_count)"
-    else
-        N="${1%p}"; shift
-    fi
-
-    i=0
-    while [[ "${i}" -lt "${N}"  ]]; do
-        git log --graph --skip="${i}" --max-count=1 --stat -p --color=always | less
-        i="$((i + 1))"
-    done
-
-    exit 0
-fi
-
 # shellcheck disable=SC2086
 if [[ -n "$1" ]]; then
-    if [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
-        N="$1"
-        git log --graph --stat --max-count="${N}" --color=always
+    if [[ "$1" =~ ^[1-9][0-9]*p$ ]] || [[ "$1" == "p" ]]; then
+        if [[ "$1" == "p" ]]; then
+            N="$(branch_commit_count)"
+        else
+            N="${1%p}"; shift
+        fi
+
+        i=0
+        while [[ "${i}" -lt "${N}"  ]]; do
+            git log --graph --skip="${i}" --max-count=1 ${stat_opts} -p --color=always | less
+            i="$((i + 1))"
+        done
+    elif [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
+        N="$1"; shift
+        git log --graph ${stat_opts} --max-count="${N}" --color=always | less ${LESS_OPTS}
     elif [[ "$1" == "-" ]]; then
-        git log --graph --stat --color=always master..HEAD
+        git log --graph ${stat_opts} --color=always "${MASTER_BRANCH:-master}"..HEAD | less ${LESS_OPTS}
     else
-        git log --color=always "$@"
+        git log --color=always "$@" | less ${LESS_OPTS}
     fi
 else
-    git log --abbrev=4 --oneline --decorate --graph --color=always | nl -s ':  ' -v 1
-fi | less ${LESS_OPTS}
+    git log --abbrev=4 --oneline --decorate --graph --color=always | nl -s ':  ' -v 0 | less ${LESS_OPTS}
+fi

@@ -1,17 +1,17 @@
 #!/bin/bash
 
 read -r -d '' doc << EOM
-Wrapper for Python line_profile (https://github.com/rkern/line_profiler)
+Wrapper for Python line_profile (https://github.com/rkern/line_profiler) and Python's
+built-in cProfile tool.
 
 1) If the Python script does not exist in current directory, search the filesystem for it.
-2) Make copy of Python script (use this copy for the remaining steps).
-3) Preface every function in Python script with @profile decorator.
-4) Profile Python script with 'kernprof' (save profiling statistics to a file).
-5) Cleanup all temp files.
-6) Open profiling stats file in vim.
-
-Once the profiling stats file is open, you may use the ']' and '[' keys to navigate to the
-next and previous functions, respectively.
+2) Preface every function in Python script with @profile decorator.
+3a) If using line_profile, profile Python script with 'kernprof' (save
+    profiling report to a file).
+3b) If using cProfile, profile Python script with 'python -m cProfile' (save
+    profile stats to a file).  Then use this file  to generate a profiling report
+    with Python's 'pstat' module.
+4) Open the profiling report in an editor for viewing.
 EOM
 
 # ---------- Modules ----------
@@ -21,7 +21,7 @@ source gutils.sh
 eval set -- "$(getopt -o "d,h,l,p:,q,v" -l "debug,help,line,profile:,quiet,verbose" -- "$@")"
 
 export USAGE_GRAMMAR=(
-    "[-d] [-l] [-p A.py [-p B.py [...]]] [-q] [-v] EXE.py"
+    "[-d] [-l] [-p A.py [-p B.py [...]]] [-q] [-v] MAIN.py"
     "-h"
 )
 
@@ -30,6 +30,9 @@ read -r -d '' help << EOM
 $(usage)
 
 ${doc}
+
+Positional Arguments:
+    MAIN.py     The script / entry-point to execute.
 
 Optional Arguments:
     -d | --debug
@@ -45,7 +48,7 @@ Optional Arguments:
         Decorate all functions in FILE.py with @profile before running line profiler.
 
     -q | --quiet
-        Generate the profile report but don't open it automatically in an editor.
+        Generate the profile report, but don't open it automatically in an editor.
 
     -v | --verbose
         Enable verbose output.
@@ -93,12 +96,12 @@ main() {
         die "${USAGE}" 2
     fi
 
-    exe="$1"; shift
-    if [[ "${#files_to_profile[@]}" -eq 0 ]]; then
-        files_to_profile+=("${exe}")
-    elif [[ "${use_line_profiling}" != true ]]; then
+    if [[ "${use_line_profiling}" != true ]] && [[ "${#files_to_profile[@]}" -ne 0 ]]; then
         wmsg "The -p option has no effect unless run using the line profiler (enable with option -l)."
     fi
+
+    exe="$1"; shift
+    files_to_profile+=("${exe}")
 
     if ! [[ -f "${exe}" ]]; then
         old_exe="${exe}"
@@ -120,7 +123,7 @@ main() {
             editor="${EDITOR}"
         fi
 
-        eval "${editor}" "${report}"
+        eval "${editor} ${report}"
     fi
 }
 

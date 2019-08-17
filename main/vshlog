@@ -234,10 +234,8 @@ def process_logfile(
         try:
             hostname, user, date_string, wd, cmd = line.split(":", maxsplit=4)
         except ValueError as e:
-            log.debug("i: {}", i)
-            log.debug("line: {}", line.rstrip())
-            log.debug("line.split(':'): {}", line.split(":"))
-            raise e
+            log.exception(str(e))
+            continue
 
         stripped_cmd = cmd.strip()
 

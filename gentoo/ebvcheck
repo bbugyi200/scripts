@@ -97,8 +97,14 @@ message_manager = MessageManager()
 pkg_queue: 'queue.Queue[str]' = queue.Queue()
 threads: List[threading.Thread] = []
 
+
 @gutils.catch
 def main(args: argparse.Namespace) -> None:
+    gutils.logging.configure(
+        __file__,
+        debug=args.debug,
+        verbose=args.verbose
+    )
     if args.color == 'n':
         for attr in dir(gutils.colorize):
             if not attr.startswith('_'):

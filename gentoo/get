@@ -16,6 +16,7 @@ import gutils
 
 from loguru import logger as log
 
+
 @gutils.catch
 def main(args):
     if not args.install:

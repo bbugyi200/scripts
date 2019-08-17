@@ -2,7 +2,6 @@
 
 """Add a New Alias to your bashrc / zshrc in Alphabetical Order"""
 
-import datetime as dt  # noqa: F401
 import os  # noqa: F401
 import re
 import subprocess as sp  # noqa: F401
@@ -10,12 +9,11 @@ import sys  # noqa: F401
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
-############################################################################################
-
 from loguru import logger as log
+
+
 scriptname = os.path.basename(os.path.realpath(__file__))
+
 
 @gutils.catch
 def main(args):

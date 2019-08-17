@@ -14,8 +14,8 @@ export USAGE_GRAMMAR=(
     "-h"
 )
 
-dropbox_dots_home=/home/bryan/Dropbox/home
-parent="${PWD#/home/bryan}"
+dropbox_dots_home="$HOME"/Dropbox/home
+parent="${PWD#$HOME}"
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,h,u,v" -l "debug,help,undo,verbose" -- "$@")"

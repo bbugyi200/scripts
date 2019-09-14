@@ -44,6 +44,9 @@ def main() -> None:
 
     urls = []
     for choice in choices.split():
+        if choice == "q":
+            break
+
         index = int(choice) - 1
         urls.append(top_N_articles[index].attrs["href"])
 

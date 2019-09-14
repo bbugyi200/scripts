@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+
+"""Open the top N Hacker News Articles (sorted by points)."""
+
+import argparse
+import subprocess as sp
+
+from bs4 import BeautifulSoup
+from loguru import logger as log  # pylint: disable=unused-import
+import requests
+
+import gutils
+
+
+@gutils.catch
+def main() -> None:
+    args = parse_cli_args()
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
+    html = requests.get('https://news.ycombinator.com/').text
+    soup = BeautifulSoup(html, 'html.parser')
+    storylinks = soup.find_all(attrs={'class': 'storylink'})
+    scores = soup.find_all(attrs={'class': 'score'})
+
+    N = args.N
+    top_N_articles = [
+        group[0].attrs['href']
+        for group in sorted(
+            zip(storylinks, scores),
+            key=lambda x: -int(x[1].text.split()[0])
+        )[:N]
+    ]; log.trace(f"top_N_articles = {top_N_articles}")
+
+    sp.call(["qutebrowser", *top_N_articles])
+
+
+def parse_cli_args() -> argparse.Namespace:
+    parser = gutils.ArgumentParser()
+    parser.add_argument(
+        "N",
+        type=int,
+        help="The number of HN news articles to open."
+    )
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    main()

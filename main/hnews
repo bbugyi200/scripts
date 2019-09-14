@@ -7,11 +7,13 @@ by points).
 """
 
 import argparse
+from collections import namedtuple
 import os
 import subprocess as sp
+from typing import List
 
-from bs4 import BeautifulSoup
-from loguru import logger as log  # pylint: disable=unused-import
+import bs4
+from loguru import logger as log
 import requests
 
 import gutils
@@ -20,52 +22,65 @@ import gutils
 @gutils.catch
 def main() -> None:
     args = parse_cli_args()
+
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
-    html = requests.get('https://news.ycombinator.com/').text
-    soup = BeautifulSoup(html, 'html.parser')
-    storylinks = soup.find_all(attrs={'class': 'storylink'})
-    scores = soup.find_all(attrs={'class': 'score'})
+    storylinks: List[bs4.element.Tag] = []
+    scores: List[bs4.element.Tag] = []
+    for page in range(1, args.pages + 1):
+        html = requests.get(f"https://news.ycombinator.com/news?p={page}").text
+        soup = bs4.BeautifulSoup(html, "html.parser")
+        storylinks.extend(soup.find_all(attrs={"class": "storylink"}))
+        scores.extend(soup.find_all(attrs={"class": "score"}))
 
-    N = args.N
-    top_N_articles = [
-        group[0]
-        for group in sorted(
-            zip(storylinks, scores),
-            key=lambda x: -int(x[1].text.split()[0]),
-        )[:N]
-    ]; log.trace(f"top_N_articles = {top_N_articles}")
+    Article = namedtuple("Article", "story score")
 
-    os.system("clear")
-    for i, article in enumerate(top_N_articles):
-        print(f"[{i+1}]: {article.text}")
+    top_N_articles = sorted(
+        [Article(story=A[0], score=A[1]) for A in zip(storylinks, scores)],
+        key=lambda x: -int(x.score.text.split()[0]),
+    )[:args.N]; log.trace(f"top_N_articles = {top_N_articles}")
 
-    choices = input("\n>>> ")
+    keep_alive = True
+    while keep_alive:
+        os.system("clear")
+        for i, article in enumerate(top_N_articles):
+            print(f"[{i+1}]: {article.story.text} ({article.score.text})")
 
-    urls = []
-    for choice in choices.split():
-        if choice == "q":
-            break
+        choices = input("\n>>> ")
 
-        index = int(choice) - 1
-        urls.append(top_N_articles[index].attrs["href"])
+        urls = []
+        for choice in choices.split():
+            if choice == "q":
+                keep_alive = False
+                continue
 
-    if urls:
-        sp.check_call(
-            [os.environ.get("BROWSER", "qutebrowser"), *urls],
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL,
-        )
+            index = int(choice) - 1
+            urls.append(top_N_articles[index].story.attrs["href"])
+
+        if urls:
+            sp.check_call(
+                [os.environ.get("BROWSER", "qutebrowser"), *urls],
+                stdout=sp.DEVNULL,
+                stderr=sp.DEVNULL,
+            )
 
 
 def parse_cli_args() -> argparse.Namespace:
     parser = gutils.ArgumentParser()
     parser.add_argument(
-        "N",
-        nargs="?",
+        "-n",
+        "--articles",
+        dest="N",
         default=10,
         type=int,
-        help="The number of Hacker News articles to open.",
+        help="The number of Hacker News articles to show.",
+    )
+    parser.add_argument(
+        "-p",
+        "--pages",
+        type=int,
+        default=1,
+        help="The number of Hacker News pages to scrape.",
     )
     return parser.parse_args()
 

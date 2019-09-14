@@ -1,5 +1,6 @@
 import threading
-import typing as Type  # pylint: disable=unused-import
+from typing import Dict
+from typing import List
 
 from loguru import logger as log
 
@@ -10,7 +11,7 @@ class MagnetTracker:
     def __init__(self):
         self.lock = threading.Lock()
 
-        self.ids: Type.Dict[int, str] = {}
+        self.ids: Dict[int, str] = {}
         self.next_key = 0  # used to index into `self.ids`
         self.active_torrents = 0
 
@@ -30,7 +31,7 @@ class MagnetTracker:
             if self.active_torrents == 0:
                 self.all_work_is_done.release()
 
-    def new(self, id_list: Type.List[str]) -> int:
+    def new(self, id_list: List[str]) -> int:
         """Captures ID of new torrent.
 
         Returns:

@@ -4,11 +4,13 @@ import re
 import subprocess as sp
 import threading
 import time
-import typing as Type  # pylint: disable=unused-import
+from typing import List
+from typing import Union
 
 from loguru import logger as log
 
 import gutils
+
 from libtorrent.tracker import MagnetTracker
 
 
@@ -16,13 +18,21 @@ _magnet_queue: "queue.Queue[str]" = queue.Queue()
 
 
 def new_torrent_worker(
-        magnet: str, download_dir: Path, timeout: float
+        magnet: str,
+        download_dir: Path,
+        timeout: float,
+        *,
+        use_threads: bool = True,
 ) -> None:
     torrent_worker = _TorrentWorker(
         magnet=magnet, download_dir=download_dir, timeout=timeout
     )
-    thread = threading.Thread(target=torrent_worker, daemon=True)
-    thread.start()
+
+    if use_threads:
+        thread = threading.Thread(target=torrent_worker, daemon=True)
+        thread.start()
+    else:
+        torrent_worker()
 
 
 def wait_for_first_magnet() -> None:
@@ -58,7 +68,7 @@ def _kill_worker(ID: str) -> None:
         log.debug(f"Attempted to remove magnet #{ID} but it is NOT active.")
 
 
-def _parse_info(field: str, ID: str = None) -> Type.Union[str, Type.List[str]]:
+def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:
     """Wrapper for the `deluge-console info` command.
 
     Returns:
@@ -85,12 +95,14 @@ def _parse_info(field: str, ID: str = None) -> Type.Union[str, Type.List[str]]:
 
 class _TorrentWorker:
     magnet_tracker = MagnetTracker()
+    INVALID_TRACKER_KEY = -1
 
     def __init__(self, magnet: str, download_dir: Path, timeout: float):
         self.magnet = magnet
         self.download_dir = download_dir
         self.timeout = timeout
-        self._mt_key = -1
+        self._mt_key = self.INVALID_TRACKER_KEY
+        self.is_enqueued = False
 
     def __call__(self):
         log.debug(f'Added "{self.title}" to magnet queue.')
@@ -120,11 +132,14 @@ class _TorrentWorker:
         A key which can be used to index into the magnet tracker in order to
         retrieve the Deluge ID corresponding to this worker's magnet.
         """
-        if getattr(self, "_mt_key", None) is None:
-            self._enqueue_download()
+        if not self.is_enqueued:
+            raise RuntimeError(
+                "Download must first be enqueued before attempting to access "
+                "the magnet tracker key."
+            )
 
+        if self._mt_key == self.INVALID_TRACKER_KEY:
             id_list = [ID.split()[1] for ID in _parse_info("ID")]
-
             self._mt_key = self.magnet_tracker.new(id_list)
 
         log.trace("mt_key = {mt_key}", mt_key=self._mt_key)  # type: ignore
@@ -149,8 +164,9 @@ class _TorrentWorker:
 
             time.sleep(SLEEP_TIME)
 
-            # Note that when the `self.mt_key` property is accessed,
-            # the Deluge download is automatically enqueued.
+            if not self.is_enqueued:
+                self._enqueue_download()
+
             full_state = _parse_info(
                 "State", ID=self.magnet_tracker[self.mt_key]
             )
@@ -169,6 +185,7 @@ class _TorrentWorker:
 
     def _enqueue_download(self) -> None:
         """Add magnet file to Deluge's download queue."""
+        self.is_enqueued = True
         for _ in range(10):
             time.sleep(1)
 

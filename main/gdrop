@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+    file="$1"; shift
+else
+    file="$(git -c color.status=false status | perl -lne 's/[a-z]+://; print if (/^\t/ && s/^\s+//)' | fzf)"
+    if [[ -z "${file}" ]]; then
+        2>&1 printf "[ERROR] No file choosen.\n"
+        exit 1
+    fi
+fi
+
+if ! git checkout -- "${file}" 2> /dev/null; then
+    safe-rm "${file}"
+fi

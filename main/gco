@@ -1,7 +1,12 @@
 #!/bin/bash
 
 if [[ -n "$1" ]]; then
-    git checkout "$@"
+    if [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
+        branch="$(git_find_branch "$1")"
+        git checkout "${branch}"
+    else
+        git checkout "$@"
+    fi
 else
     # shellcheck disable=SC1083
     git checkout @{-1}  # Last Branch (aka 'git checkout -')

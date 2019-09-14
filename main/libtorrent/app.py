@@ -25,6 +25,7 @@ import types
 from loguru import logger as log
 
 import gutils
+
 import libtorrent.worker as worker
 
 
@@ -43,7 +44,12 @@ def main() -> int:
 
     setup_env(args.vpn, args.download_dir)
 
-    worker.new_torrent_worker(args.magnet, args.download_dir, args.timeout)
+    worker.new_torrent_worker(
+        args.magnet,
+        args.download_dir,
+        args.timeout,
+        use_threads=(args.threading == "y"),
+    )
     worker.join_workers()
 
     return 0
@@ -88,6 +94,16 @@ def parse_cli_args() -> argparse.Namespace:
             "out. If set to 0, this script will run forever without ever "
             f"timing out. Defaults to {default}."
         ),
+    )
+
+    default = "y"
+    parser.add_argument(
+        "--threading",
+        choices=("y", "n"),
+        default=default,
+        help=(
+            "Enable multi-threading. Defaults to {}".format(default)
+        )
     )
 
     default = "nyc"
@@ -138,7 +154,7 @@ def setup_env(vpn: str, download_dir: str) -> None:
 
     def setup(cmd: str) -> None:
         try:
-            sp.check_call(cmd.split(' '))
+            sp.check_call(cmd, shell=True)
         except sp.CalledProcessError as e:
             log.error(
                 "Failed to setup the proper environment for torrenting."
@@ -146,7 +162,7 @@ def setup_env(vpn: str, download_dir: str) -> None:
             raise e
 
     def teardown(cmd: str) -> None:
-        atexit.register(lambda: sp.Popen(cmd.split(' ')))
+        atexit.register(lambda: sp.Popen(cmd, shell=True))
 
     setup(f"PIA start {vpn}")
     teardown("PIA stop")

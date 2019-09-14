@@ -93,7 +93,7 @@ fi
 # ---------- Main ----------
 main() {
     if [[ -z "$1" ]]; then
-        die "${USAGE}" 2
+        die "$(usage)" 2
     fi
 
     if [[ "${use_line_profiling}" != true ]] && [[ "${#files_to_profile[@]}" -ne 0 ]]; then
@@ -101,7 +101,10 @@ main() {
     fi
 
     exe="$1"; shift
-    files_to_profile+=("${exe}")
+
+    if [[ -f "${exe}" ]]; then
+        files_to_profile+=("${exe}")
+    fi
 
     if ! [[ -f "${exe}" ]]; then
         old_exe="${exe}"

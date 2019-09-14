@@ -5,26 +5,28 @@
 import argparse
 import datetime as dt
 import os
-from pathlib import Path  # noqa: F401
+from pathlib import Path
 import signal
-import subprocess as sp  # noqa: F401
+import subprocess as sp
 import sys
 from types import FrameType
-from typing import Any, Callable, Container, Dict, Generator, Iterable, Iterator, List, NoReturn, Optional, Sequence, Set, Tuple, Union  # noqa
+import typing as Type  # pylint: disable=unused-import
+
+from loguru import logger as log
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
-from loguru import logger as log
 SCRIPTNAME = os.path.basename(os.path.realpath(__file__))
-ts_fmt = '%Y%m%d%H%M%S'
+ts_fmt = "%Y%m%d%H%M%S"
+
 
 @gutils.catch
-def main(args: argparse.Namespace) -> None:
-    log.trace('args => {}', repr(args))  # type: ignore
+def main() -> None:
+    args = parse_cli_args()
+
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
+    log.trace("args => {}", repr(args))  # type: ignore
 
     signal.signal(signal.SIGINT, keyboard_interrupt_handler)
     signal.signal(signal.SIGQUIT, keyboard_interrupt_handler)
@@ -33,63 +35,73 @@ def main(args: argparse.Namespace) -> None:
     cmd_opts = []
 
     if args.update:
-        escript = 'eupdate'
+        escript = "eupdate"
     elif args.cleanup:
-        escript = 'ecleanup'
+        escript = "ecleanup"
     elif args.maint_check:
-        escript = 'emaint_check'
+        escript = "emaint_check"
         cmd_opts.append(str(args.max_days))
     else:
-        raise RuntimeError('No maintenance task specified.')
+        raise RuntimeError("No maintenance task specified.")
 
     cmd_list.append(escript)
     cmd_list.extend(cmd_opts)
 
-    data_dir = gutils.xdg.init('data')
+    data_dir = gutils.xdg.init("data")
     local_hostname = os.uname().nodename
 
-    cmd_dir = '/{}/{}/{}'.format(data_dir, local_hostname, escript)
-    local_tsfile = Path('{}/timestamp'.format(cmd_dir))
+    cmd_dir = "/{}/{}/{}".format(data_dir, local_hostname, escript)
+    local_tsfile = Path("{}/timestamp".format(cmd_dir))
 
     if args.pretend:
         print(escript)
         sys.exit(0)
     elif args.dsl:
-        if args.dsl == 'local':
+        if args.dsl == "local":
             days = days_since_last(local_tsfile)
             print(days)
-        elif args.dsl == 'remote':
-            remote_hostnames = [H for H in os.listdir(data_dir) if H != local_hostname]
-            remote_ts_files = [Path('{}/{}/{}/timestamp'.format(data_dir, H, escript))
-                               for H in remote_hostnames]
+        elif args.dsl == "remote":
+            remote_hostnames = [
+                H for H in os.listdir(data_dir) if H != local_hostname
+            ]
+            remote_ts_files = [
+                Path("{}/{}/{}/timestamp".format(data_dir, H, escript))
+                for H in remote_hostnames
+            ]
 
             for H, fp in zip(remote_hostnames, remote_ts_files):
                 days = days_since_last(fp)
-                print('{}:{}'.format(H, days))
+                print("{}:{}".format(H, days))
 
         sys.exit(0)
 
     # Just used to force myself to use emanage. :)
-    # Requires that the secret.sh file be sourced into every script that could be called here.
+    #
+    # Requires that the secret.sh file be sourced into every script that could
+    # be called here.
     secret = gutils.secret()
     cmd_list.extend([secret])
 
-    fp_count = '{}/count'.format(cmd_dir)
+    fp_count = "{}/count".format(cmd_dir)
     if os.path.exists(fp_count):
-        with open(fp_count, 'r') as f:
+        with open(fp_count, "r") as f:
             count = f.read().strip()
 
         if int(count) > 0:
             import textwrap
 
-            prompt = '>>> Would you like to resume `{}` where you left off (y), redo the last command (r), or start a new session (n)?: '.format(escript)
-            choice = gutils.io.getch('\n'.join(textwrap.wrap(prompt, 80)))
+            prompt = (
+                ">>> Would you like to resume `{}` where you left off (y), "
+                "redo the last command (r), or start a new session (n)?: "
+                .format(escript)
+            )
+            choice = gutils.io.getch("\n".join(textwrap.wrap(prompt, 80)))
 
-            if choice == 'y':
+            if choice == "y":
                 cmd_list.append(count)
-            elif choice == 'r':
+            elif choice == "r":
                 cmd_list.append(str(int(count) - 1))
-            elif choice != 'n':
+            elif choice != "n":
                 sys.exit(0)
 
     try:
@@ -103,19 +115,85 @@ def main(args: argparse.Namespace) -> None:
         write_timestamp(local_tsfile)
 
 
-def keyboard_interrupt_handler(signum: signal.Signals, frame: FrameType) -> None:
+def parse_cli_args() -> argparse.Namespace:
+    parser = gutils.ArgumentParser()
+
+    parser.add_argument(
+        "-M",
+        "--max-days",
+        type=int,
+        nargs="?",
+        help="Max number of days without update before complaining. This "
+        "option is only checked when used with the '--maint-check' option.",
+    )
+
+    g1 = parser.add_mutually_exclusive_group()
+    g1.add_argument(
+        "-u",
+        "--update",
+        dest="update",
+        action="store_true",
+        help="Update the machine.",
+    )
+    g1.add_argument(
+        "-c",
+        "--cleanup",
+        dest="cleanup",
+        action="store_true",
+        help="Run cleanup tasks.",
+    )
+    g1.add_argument(
+        "-m",
+        "--maint-check",
+        action="store_true",
+        help="Check if any maintenance is due.",
+    )
+
+    g2 = parser.add_mutually_exclusive_group()
+    g2.add_argument(
+        "-D",
+        "--days-since-last",
+        type=str,
+        dest="dsl",
+        choices=["local", "remote"],
+        help='Prints the number of days its been since the specified '
+             'maintenance task was last performed. This option takes an '
+             'argument indicating what machine(s) to check. "local" indicates '
+             'the local machine and "remote" indicates all remote machines.',
+    )
+    g2.add_argument(
+        "-P",
+        "--pretend",
+        dest="pretend",
+        action="store_true",
+        help="Prints the command list instead of executing it.",
+    )
+
+    args = parser.parse_args()
+
+    if args.maint_check and args.max_days is None:
+        parser.error(
+            "The --max-days option must be provided when --maint-check "
+            "is specified."
+        )
+
+    return args
+
+
+def keyboard_interrupt_handler(
+        signum: signal.Signals, frame: FrameType  # pylint: disable=unused-argument
+) -> None:
     """Signal handler for keyboard shortcuts that terminate the program."""
-    signame = {signal.SIGINT: 'SIGINT',
-               signal.SIGQUIT: 'SIGQUIT'}[signum]
+    signame = {signal.SIGINT: "SIGINT", signal.SIGQUIT: "SIGQUIT"}[signum]
 
     print()
-    gutils.io.imsg('{} signal detected. Terminating...'.format(signame))
+    gutils.io.imsg("{} signal detected. Terminating...".format(signame))
     sys.exit(128 + signum)
 
 
 def days_since_last(fp_timestamp: Path) -> int:
     try:
-        date_string = open(fp_timestamp, 'r').read().rstrip()
+        date_string = open(fp_timestamp, "r").read().rstrip()
         last_clean = dt.datetime.strptime(date_string, ts_fmt)
         delta = dt.datetime.today() - last_clean
         days = delta.days
@@ -131,44 +209,10 @@ def write_timestamp(fp: Path) -> None:
     if not os.path.exists(dp):
         os.makedirs(dp)
 
-    with open(fp, 'w') as f:
+    with open(fp, "w") as f:
         now = dt.datetime.now()
         f.write(now.strftime(ts_fmt))
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
-
-    parser.add_argument('-M', '--max-days', type=int, nargs='?',
-                        help="Max number of days without update before complaining. This option "
-                             "is only checked when used with the '--maint-check' option.")
-
-    g1 = parser.add_mutually_exclusive_group()
-    g1.add_argument('-u', '--update', dest='update', action='store_true',
-                    help='Update the machine.')
-    g1.add_argument('-c', '--cleanup', dest='cleanup', action='store_true',
-                    help='Run cleanup tasks.')
-    g1.add_argument('-m', '--maint-check', action='store_true',
-                    help='Check if any maintenance is due.')
-
-    g2 = parser.add_mutually_exclusive_group()
-    g2.add_argument('-D', '--days-since-last', type=str, dest='dsl', choices=['local', 'remote'],
-                    help='Prints the number of days its been since the specified maintenance '
-                    'task was last performed. This option takes an argument indicating '
-                    'what machine(s) to check. "local" indicates the local machine and '
-                    '"remote" indicates all remote machines.')
-    g2.add_argument('-P', '--pretend', dest='pretend', action='store_true',
-                    help='Prints the command list instead of executing it.')
-
-    args = parser.parse_args()
-
-
-    if args.maint_check and args.max_days is None:
-        parser.error(
-            'The --max-days option must be provided when --maint-check '
-            'is specified.'
-        )
-
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+    main()

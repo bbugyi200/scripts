@@ -46,5 +46,11 @@ function just_changed() {
 
 
 if [[ -z "$TESTING" ]]; then
+    if [[ "${1}" == "-d" ]]; then
+        shift
+        PS4='$LINENO: '
+        set -x
+    fi
+
     main "$@"
 fi

@@ -39,12 +39,13 @@ set_pane_title "vim"
 # If file is owned by root, open using `sudo`.
 if [[ -f "$1" ]] && [[ -z "$AT_WORK" ]]; then
     if [[ "$(stat --format '%U' "$1")" == "root" ]]; then
-        sudo -E "${editor}" "$@"
+        # shellcheck disable=SC2086
+        sudo -E ${editor} "$@"
     else
-        "${editor}" "$@"
+        ${editor} "$@"
     fi
 else
-    "${editor}" "$@"
+    ${editor} "$@"
 fi
 
 

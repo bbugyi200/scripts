@@ -25,20 +25,42 @@ def main() -> None:
 
     N = args.N
     top_N_articles = [
-        group[0].attrs['href']
+        group[0]
         for group in sorted(
             zip(storylinks, scores),
             key=lambda x: -int(x[1].text.split()[0]),
         )[:N]
     ]; log.trace(f"top_N_articles = {top_N_articles}")
 
-    sp.check_call([os.environ.get("BROWSER", "qutebrowser"), *top_N_articles])
+    while True:
+        os.system("clear")
+        for i, article in enumerate(top_N_articles):
+            print(f"[{i+1}]: {article.text}")
+
+        choices = input("\n>>> ")
+
+        urls = []
+        break_loop = False
+        for choice in choices.split():
+            if choice == "q":
+                break_loop = True
+                continue
+
+            index = int(choice) - 1
+            urls.append(top_N_articles[index].attrs["href"])
+
+        sp.check_call([os.environ.get("BROWSER", "qutebrowser"), *urls])
+
+        if break_loop:
+            break
 
 
 def parse_cli_args() -> argparse.Namespace:
     parser = gutils.ArgumentParser()
     parser.add_argument(
         "N",
+        nargs="?",
+        default=10,
         type=int,
         help="The number of HN news articles to open.",
     )

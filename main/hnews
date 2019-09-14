@@ -36,29 +36,23 @@ def main() -> None:
         )[:N]
     ]; log.trace(f"top_N_articles = {top_N_articles}")
 
-    keep_alive = True
-    while keep_alive:
-        os.system("clear")
-        for i, article in enumerate(top_N_articles):
-            print(f"[{i+1}]: {article.text}")
+    os.system("clear")
+    for i, article in enumerate(top_N_articles):
+        print(f"[{i+1}]: {article.text}")
 
-        choices = input("\n>>> ")
+    choices = input("\n>>> ")
 
-        urls = []
-        for choice in choices.split():
-            if choice == "q":
-                keep_alive = False
-                continue
+    urls = []
+    for choice in choices.split():
+        index = int(choice) - 1
+        urls.append(top_N_articles[index].attrs["href"])
 
-            index = int(choice) - 1
-            urls.append(top_N_articles[index].attrs["href"])
-
-        if urls:
-            sp.check_call(
-                [os.environ.get("BROWSER", "qutebrowser"), *urls],
-                stdout=sp.DEVNULL,
-                stderr=sp.DEVNULL,
-            )
+    if urls:
+        sp.check_call(
+            [os.environ.get("BROWSER", "qutebrowser"), *urls],
+            stdout=sp.DEVNULL,
+            stderr=sp.DEVNULL,
+        )
 
 
 def parse_cli_args() -> argparse.Namespace:

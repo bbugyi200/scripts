@@ -94,7 +94,7 @@ abbrv=$(echo $base | sed -e 's/\([A-Z]\)[A-Z]*/\1/g; s/[a-z \.\_-]//g; s/(.*)//g
 
 
 # Full path to text file that stores my notes for this book
-fpath="/home/bryan/Dropbox/var/notes/Study/${subdir}/${base}.txt"
+fpath="/home/bryan/Sync/var/notes/Study/${subdir}/${base}.txt"
 
 # Escaped file path (for use on command line)
 esc_fpath=$(printf "%q" $fpath)

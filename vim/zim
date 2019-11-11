@@ -15,12 +15,12 @@ function main() {
     vicmd="$1"; shift
     start_time="$(date +%s)"
 
-    if "$HOME"/.local/bin/"${vicmd}" "$@"; then
-        last_file="$(tail -n 1 "${RECENTLY_EDITED_FILES_LOG}")"
-        if [[ "${last_file}" =~ ~/Dropbox/home/\.config/[^/]*\.sh ]] || [[ "${last_file}" == ~/Dropbox/home/.zshrc ]]; then
-            if just_changed "${start_time}" "${last_file}"; then
-                exit 3
-            fi
+   if "$HOME"/.local/bin/"${vicmd}" "$@"; then
+       last_file="$(tail -n 1 "${RECENTLY_EDITED_FILES_LOG}")"
+       if [[ "${last_file}" =~ ~/Sync/home/\.config/[^/]*\.sh ]] || [[ "${last_file}" == ~/Sync/home/.zshrc ]]; then
+           if just_changed "${start_time}" "${last_file}"; then
+               exit 3
+           fi
         fi
     else
         exit "$?"

@@ -18,16 +18,16 @@ SAFE_RM=/usr/bin/safe-rm
 "${SAFE_RM}" -rf /home/bryan/main* &> /dev/null
 for f in "core" "gccdump.s" "databases-incognito"; do
 	"${RM}" -rf /home/bryan/"${f}" &> /dev/null
-done
+one
 
-# >>> DROPBOX
-DROPBOX_TMP=/home/bryan/Dropbox/tmp
-"${SAFE_RM}" -rf "${DROPBOX_TMP}"
-mkdir "${DROPBOX_TMP}"
+ >>> DROPBOX
+ROPBOX_TMP=/home/bryan/Sync/tmp
+${SAFE_RM}" -rf "${DROPBOX_TMP}"
+kdir "${DROPBOX_TMP}"
 
-find /home/bryan/Dropbox \( -name "gccdump.s" \
-    -o -name "core" \
-    -o -name "*'s conflicted copy*" \
-    \) -delete
+ind /home/bryan/Sync \( -name "gccdump.s" \
+   -o -name "core" \
+   -o -name "*'s conflicted copy*" \
+   \) -delete
 
-chown -R bryan:bryan /home/bryan/Dropbox
+hown -R bryan:bryan /home/bryan/Sync

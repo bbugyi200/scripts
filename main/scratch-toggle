@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function init_scratchpad() {
-    termite --class="scratchpad" --title="scratchpad" -d /home/bryan/Dropbox/var/notes -e $SHELL &
+    termite --class="scratchpad" --title="scratchpad" -d /home/bryan/Sync/var/notes -e $SHELL &
 }
 
 id=$(wmctrl -l | grep scratchpad | tr -s ' ' | cut -d ' ' -f1)

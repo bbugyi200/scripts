@@ -395,7 +395,7 @@ else
 	die "Failed to set WORK_DIR variable."
 fi
 
-cp /home/bryan/Dropbox/var/templates/localalias.epatch "${TMP_WORK_DIR}"/.localalias
+cp /home/bryan/Sync/var/templates/localalias.epatch "${TMP_WORK_DIR}"/.localalias
 
 cd "${TMP_WORK_DIR}" || exit 1
 ctags -Rf .tags .

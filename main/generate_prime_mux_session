@@ -20,7 +20,7 @@ scriptname = os.path.basename(os.path.realpath(__file__))
 
 @gutils.catch
 def main(args):
-    fp_template = '{}/Dropbox/var/templates/template.tmuxinator'.format(os.environ['HOME'])
+    fp_template = '{}/Sync/var/templates/template.tmuxinator'.format(os.environ['HOME'])
     dp_mux_config = '{}/.config/tmuxinator'.format(os.environ['HOME'])
 
     with open(fp_template, 'r') as f:

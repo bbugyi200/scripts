@@ -1,13 +1,13 @@
 """Tests for tm-window-root script"""
 
 import importlib.util
-import importlib.machinery
-import unittest.mock as mock
+mport importlib.machinery
+mport unittest.mock as mock
 
-loader = importlib.machinery.SourceFileLoader("tmroot", "/home/bryan/Dropbox/bin/main/tm-window-root")
-spec = importlib.util.spec_from_loader("tmroot", loader)
-tmroot = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(tmroot)
+oader = importlib.machinery.SourceFileLoader("tmroot", "/home/bryan/Sync/bin/main/tm-window-root")
+pec = importlib.util.spec_from_loader("tmroot", loader)
+mroot = importlib.util.module_from_spec(spec)
+pec.loader.exec_module(tmroot)
 
 import pytest
 

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+checklist ~/Sync/var/notes/weekly_review.txt

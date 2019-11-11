@@ -2,10 +2,10 @@
 
 ######################################################################
 #  Runs periodic maintenance tasks meant to cleanup the filesystem.  #
-######################################################################
+#####################################################################
 
 source gutils.sh
-source /home/bryan/Dropbox/bin/main/emaint.sh
+source /home/bryan/Sync/bin/main/emaint.sh
 
 # ---------- Main Logic ----------
 if [[ "$(hostname)" == "athena" ]]; then

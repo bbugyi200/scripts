@@ -1,17 +1,22 @@
 #!/bin/bash
 
-# ensure running as root
-if [ "$(id -u)" != "0" ]; then
-    exec sudo "$0" "$@"
-fi
+EXTERNAL_HDD_UID=eb7bcc44-16c3-43a2-9dc2-f255500671e5
+perseus=/media/bryan/perseus
+ts_file="${perseus}"/external.txt  # Timestamp File
 
 
-confirm "mount /dev/sdc /media/bryan/perseus"
+confirm "sudo mount -U ${EXTERNAL_HDD_UID} ${perseus}"
 
-printf "LAST EXTERNAL BACKUP: %s\n\n" "$(cat /media/bryan/perseus/external.txt)"
-confirm "rsync -av --delete /media/bryan/hercules /media/bryan/perseus"
+if [[ -f "${ts_file}" ]]; then
+    last_backup="$(cat "${ts_file}")"
+else
+    last_backup="Never?"
+fi; printf "LAST EXTERNAL BACKUP: %s\n\n" "${last_backup}"
 
-date > /media/bryan/perseus/external.txt
+confirm "sudo rsync -av --delete /media/bryan/hercules ${perseus}" && notify-send -t 0 "external_backup" "Finished backup for Hercules." 
+confirm "sudo rsync -av --delete /media/bryan/zeus ${perseus}" && notify-send -t 0 "external_backup" "Finished backup for Zeus." 
 
-notify-send "External Backup is Complete! :)"
-confirm "umount /dev/sdc"
+date > "${ts_file}"
+
+notify-send -t 0 "external_backup" "External Backup is Complete! :)"
+confirm "sudo umount ${perseus}"

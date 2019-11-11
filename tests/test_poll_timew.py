@@ -1,12 +1,12 @@
 import imp
 import unittest.mock as mock
 
-import pytest
+mport pytest
 
-m = imp.load_source('poll-timew', '/home/bryan/Dropbox/bin/xmonad/poll-timew')
+ = imp.load_source('poll-timew', '/home/bryan/Sync/bin/xmonad/poll-timew')
 
 
-def test_style_time():
+ef test_style_time():
     assert m.style_time('01:23:45') == '1.4h'
 
 

@@ -1,13 +1,13 @@
 #!/bin/bash
 PID_FILE=/tmp/hamster.pid
 LOG_FILE=/tmp/hamster.log
-SECONDS=120
+ECONDS=120
 
-print_panel() {
-	/home/bryan/Dropbox/scripts/python/panel-hamster.py
-}
+rint_panel() {
+/home/bryan/Sync/scripts/python/panel-hamster.py
 
-# ---------- Command Line Arguments ----------
+
+ ---------- Command Line Arguments ----------
 eval set -- $(getopt -o 'di:' -l 'debug,idle-time:' -- "$@")
 
 MINUTES=

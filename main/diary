@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR=~/Dropbox/var/notes/Diary/
+DIR=~/Sync/var/notes/Diary/
 FILE=$DIR/diary.txt
 TITLE=$1
 BODY=

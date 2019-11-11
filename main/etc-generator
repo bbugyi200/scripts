@@ -1,13 +1,13 @@
 #!/bin/bash
 
 #####################################################################
-#  Generate System /etc Configuration Files                         #
-#####################################################################
+  Generate System /etc Configuration Files                         #
+####################################################################
 
-my_etc=/home/bryan/Dropbox/etc
+y_etc=/home/bryan/Sync/etc
 
-# >>> /etc/profile.d
-sudo cp -f "${my_etc}"/profile.d/* /etc/profile.d/
+ >>> /etc/profile.d
+udo cp -f "${my_etc}"/profile.d/* /etc/profile.d/
 sudo chown -R root:root /etc/profile.d
 
 # >>> /etc/environment

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# dropbox backup
-DROPBOX=/media/bryan/hercules/backup/dropbox/weekly
-[ -d $DROPBOX ] || mkdir -p $DROPBOX
-rsync -av --delete /home/bryan/Dropbox/ $DROPBOX
-date > $DROPBOX/backup.txt
+# syncthing backup
+SYNC=/media/bryan/hercules/backup/Sync/weekly
+[ -d $SYNC ] || mkdir -p $SYNC
+rsync -av --delete /home/bryan/Sync/ $SYNC
+date > $SYNC/backup.txt
 
 # etc backup
 ETC='/media/bryan/hercules/backup/etc/weekly'

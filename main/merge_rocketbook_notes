@@ -32,7 +32,7 @@ function merge_pdfs() {
 }
 
 
-for D in /home/bryan/Dropbox/var/notes/Rocketbook/*; do
+for D in /home/bryan/Sync/var/notes/Rocketbook/*; do
     if [[ -d "${D}" ]]; then
         course_name="$(basename "${D}")"
 

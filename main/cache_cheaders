@@ -11,7 +11,7 @@ source gutils.sh
 
 # ---------- Main ----------
 
-cheaders_file=/home/bryan/Dropbox/var/cheaders.txt
+cheaders_file=/home/bryan/Sync/var/cheaders.txt
 
 std_idir="$(gcc -v 2>&1 | grep -o -- "--with-gxx-include-dir=[^ ]*" | awk -F'=' '{print $2}')"
 include_dirs=( "${std_idir}" )

@@ -31,18 +31,22 @@ def calc_thanksgiving(year):
 now = datetime.now().date()
 # now = parse('11/25').date()
 
-short = [('pigday', '03/01', 0),
-         ('stpatricks', '03/17', 3),
-         ('valentines', '02/14', 2),
-         ('newyears', '01/01/{}'.format((now + timedelta(2)).year), 1),
-         ('aprilfools', '04/01', 0)]
+short = [
+    ('pigday', '03/01', 0),
+    ('stpatricks', '03/17', 3),
+    ('valentines', '02/14', 2),
+    ('newyears', '01/01/{}'.format((now + timedelta(2)).year), 1),
+    ('aprilfools', '04/01', 0),
+]
 
-main = [('christmas', '12/25', 15),
-        ('halloween', '10/31'),
-        ('thanksgiving', calc_thanksgiving(now.year)),
-        ('easter', calc_easter(now.year)),
-        ('birthday', '03/04'),
-        ('fourth', '07/04', 3)]
+main = [
+    ('christmas', '12/25', 15),
+    ('halloween', '10/31'),
+    ('thanksgiving', calc_thanksgiving(now.year)),
+    ('easter', calc_easter(now.year)),
+    ('birthday', '03/04'),
+    ('fourth', '07/04', 3),
+]
 
 holidays = short + main
 
@@ -63,13 +67,15 @@ for H in holidays:
     else:
         delta = hdate - now
 
-    if delta.days <= MAX:
-        path = '/home/bryan/Dropbox/var/photos/backgrounds/holidays/{}.jpg'.format(H[0])
-        if os.path.exists(path):
-            with open('/tmp/current_bg.txt', 'w') as F:
-                F.write(path)
+if delta.days <= MAX:
+    path = '/home/bryan/Sync/var/photos/backgrounds/holidays/{}.jpg'.format(
+        H[0]
+    )
+    if os.path.exists(path):
+        with open('/tmp/current_bg.txt', 'w') as F:
+            F.write(path)
 
-            os.system('feh --bg-center {}'.format(path))
-            sys.exit(0)
+    os.system('feh --bg-center {}'.format(path))
+    sys.exit(0)
 
 sys.exit(1)

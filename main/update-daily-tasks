@@ -1,0 +1,23 @@
+#!/bin/bash
+
+ts_file=~/.update-daily-tasks-ts.txt
+daily_tasks="$HOME"/Sync/var/notes/daily_tasks.txt
+
+if [[ "${1}" == "-d" ]]; then
+   shift
+    PS4='$LINENO: '
+    set -x
+fi
+
+days_till_weekly_review="$(perl -nE 'exit 1 if /Weekly Review: 0/; print $1 if /(?<=Weekly Review: )(\d+)/' "${daily_tasks}")"
+if [[ -z "${days_till_weekly_review}" ]]; then
+    date +%Y-%m-%d > "${ts_file}"
+    echo "[WARNING]: Weekly Review is Due Today!!!"
+    exit 1
+fi
+
+if [[ "$(cat "${ts_file}" 2> /dev/null)" != "$(date +%Y-%m-%d)" ]]; then
+    date +%Y-%m-%d > "${ts_file}"
+    perl -i.bak -E 'use List::Util qw(max); while(<>) { s/(?<=Weekly Review: )(\d+)/max(0,$1-1)/ge; print; }' "${daily_tasks}"
+    echo "[INFO]: Decremented Days Until Weekly Review"
+fi

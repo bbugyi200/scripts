@@ -1,10 +1,10 @@
-#!/bin/bash
+!/bin/bash
 
-######################################################
-#  Checks if Dropbox is Running... Starts it if Not  #
-######################################################
+#####################################################
+  Checks if Sync is Running... Starts it if Not  #
+#####################################################
 
-if ! pgrep dropbox &> /dev/null; then
-    sudo rc-service dropbox start
-    notify-send -u critical "$(basename "$0")" "Dropbox Crashed! Trying to restart..."
-fi
+f ! pgrep dropbox &> /dev/null; then
+   sudo rc-service dropbox start
+   notify-send -u critical "$(basename "$0")" "Sync Crashed! Trying to restart..."
+i

@@ -1,11 +1,11 @@
 import imp
 import unittest.mock  # noqa: F401
 
-import pytest  # noqa: F401
+mport pytest  # noqa: F401
 
-m = imp.load_source('poll-weather', '/home/bryan/Dropbox/bin/xmonad/poll-weather')
+ = imp.load_source('poll-weather', '/home/bryan/Sync/bin/xmonad/poll-weather')
 
-report = m.run_weather_report('08060')
+eport = m.run_weather_report('08060')
 
 
 @pytest.mark.skip

@@ -1,10 +1,10 @@
-#!/bin/bash
+!/bin/bash
 
-###############################################################################
-#  Display the dates of the last daily / weekly / monthly Dropbox Backups     #
-###############################################################################
+##############################################################################
+  Display the dates of the last daily / weekly / monthly Sync Backups     #
+##############################################################################
 
-function show() {
+unction show() {
     directory="$1"; shift
     update_date="$(cat /media/bryan/hercules/backup/dropbox/"${directory}"/backup.txt)"
     printf "%s\n%s\n\n" "---------- ${directory^^} ----------" "${update_date}"

@@ -10,13 +10,13 @@ import gutils
 
 ############################################################################################
 #  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
+###########################################################################################
 
-from loguru import logger as log
-DAYPLAN_FILE = '/home/bryan/Dropbox/var/notes/dayplan.txt'
-TIMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.init('data'))
-DATE_FMT = '%Y-%m-%d'
-MAX_DAYS = 1
+rom loguru import logger as log
+AYPLAN_FILE = '/home/bryan/Sync/var/notes/dayplan.txt'
+IMESTAMP_FILE = '{}/timestamp'.format(gutils.xdg.init('data'))
+ATE_FMT = '%Y-%m-%d'
+AX_DAYS = 1
 
 TEMPLATE = """===== STUDY SESSIONS =====
 [1]

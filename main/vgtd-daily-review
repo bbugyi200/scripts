@@ -1,0 +1,20 @@
+#!/bin/bash
+
+checklist ~/Sync/var/notes/daily_tasks.txt
+clear
+
+if ! update-daily-tasks; then
+    vgtd-weekly-review
+    confirm "perl -i.bak -pE 's/(?<=Days Until Weekly Review: )0/14/' ~/Sync/var/notes/daily_tasks.txt"
+fi
+
+work_time_card="$HOME"/Sync/var/logs/work_time_card.log
+if [[ "$(hostname)" == *"bugyidesk.pr.edgelp.net"* ]]; then
+    if [[ -f "${work_time_card}" ]]; then
+        cp "${work_time_card}" "${work_time_card}".bak
+    fi
+
+    pmset -g log | grep -E "Display is turned (on|off)" >> "${work_time_card}".bak
+    sort -u "${work_time_card}".bak > "${work_time_card}"
+    rm "${work_time_card}".bak
+fi

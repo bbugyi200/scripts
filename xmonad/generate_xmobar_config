@@ -18,12 +18,12 @@ import gutils
 from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-@gutils.catch
-def main(args):
-    fp_xmobar_template = '/home/bryan/Dropbox/var/templates/template.xmobarrc'
-    fp_xmobar_config = '/home/bryan/.xmobarrc'
+gutils.catch
+ef main(args):
+   fp_xmobar_template = '/home/bryan/Sync/var/templates/template.xmobarrc'
+   fp_xmobar_config = '/home/bryan/.xmobarrc'
 
-    xdg_runtime = gutils.xdg.get('runtime')
+   xdg_runtime = gutils.xdg.get('runtime')
     with open(fp_xmobar_template, 'r') as f:
         contents = f.read()
 

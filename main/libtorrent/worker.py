@@ -218,5 +218,5 @@ class _TorrentWorker:
                 break
         else:
             raise RuntimeError(
-                'Unable to add "{self.title}" to deluges\'s download ' "queue."
+                f'Unable to add "{self.title}" to deluges\'s download queue.'
             )

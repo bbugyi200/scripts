@@ -12,7 +12,7 @@ source gutils.sh
 # ---------- Global Variables ----------
 # shellcheck disable=SC2154,SC2034
 USAGE="usage: ${SCRIPTNAME} "
-D="/home/bryan/Dropbox/var"
+D="/home/bryan/Sync/var"
 fp_sunrise="${D}"/sunrise
 fp_sunset="${D}"/sunset
 

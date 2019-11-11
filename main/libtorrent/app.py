@@ -21,6 +21,7 @@ import subprocess as sp
 import sys
 import time
 import types
+from typing import List  # pylint: disable=unused-import
 
 from loguru import logger as log
 
@@ -33,8 +34,11 @@ ARGS_FILE = gutils.xdg.init("data") / "args"
 
 
 @gutils.catch
-def main() -> int:
-    args = parse_cli_args()
+def main(argv: List[str] = None) -> None:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
     gutils.logging.configure("torrent", debug=args.debug, verbose=args.verbose)
 
     register_handlers()
@@ -52,10 +56,8 @@ def main() -> int:
     )
     worker.join_workers()
 
-    return 0
 
-
-def parse_cli_args() -> argparse.Namespace:
+def parse_cli_args(argv: List[str]) -> argparse.Namespace:
     parser = gutils.ArgumentParser(description=__doc__)
     parser.add_argument("magnet", help="The torrent magnet file.")
 
@@ -115,7 +117,7 @@ def parse_cli_args() -> argparse.Namespace:
         help=f"VPN to connect to. Defaults to {default}."
     )
 
-    return parser.parse_args()
+    return parser.parse_args(argv[1:])
 
 
 def register_handlers() -> None:
@@ -149,35 +151,6 @@ def register_handlers() -> None:
     signal.signal(signal.SIGUSR1, usr1_handler)
 
 
-def setup_env(vpn: str, download_dir: str) -> None:
-    log.info("Connecting to VPN and starting P2P client daemon...")
-
-    def setup(cmd: str) -> None:
-        try:
-            sp.check_call(cmd, shell=True)
-        except sp.CalledProcessError as e:
-            log.error(
-                "Failed to setup the proper environment for torrenting."
-            )
-            raise e
-
-    def teardown(cmd: str) -> None:
-        atexit.register(lambda: sp.Popen(cmd, shell=True))
-
-    setup(f"PIA start {vpn}")
-    teardown("PIA stop")
-
-    _user = getpass.getuser()
-    setup(f"sudo chown -R {_user}:{_user} {download_dir}")
-    teardown(f"sudo chown -R plex:plex {download_dir}")
-
-    setup("sudo -E deluged")
-    teardown("sudo killall deluged")
-
-    setup("sudo -E deluge-web --fork")
-    teardown("sudo killall deluge-web")
-
-
 def create_pidfile(args: argparse.Namespace) -> None:
     """Duplicate Process Management"""
     try:
@@ -191,3 +164,33 @@ def create_pidfile(args: argparse.Namespace) -> None:
 
         # Exit without invoking exit handler.
         os._exit(0)  # pylint: disable=protected-access
+
+
+def setup_env(vpn: str, download_dir: str) -> None:
+    log.info("Connecting to VPN and starting P2P client daemon...")
+
+    def setup(cmd: str) -> None:
+        try:
+            sp.check_call(cmd, shell=True)
+        except sp.CalledProcessError as e:
+            log.error(
+                "Failed to setup the proper environment for torrenting.\n\n"
+                f"The following command failed: '{cmd}'"
+            )
+            raise e
+
+    def teardown(cmd: str) -> None:
+        atexit.register(lambda: sp.Popen(cmd, shell=True))
+
+    setup(f"PIA start {vpn}")
+    teardown("PIA stop")
+
+    USER = getpass.getuser()
+    setup(f"sudo chown -R {USER}:{USER} {download_dir}")
+    teardown(f"sudo chown -R plex:plex {download_dir}")
+
+    setup("sudo -E deluged")
+    teardown("sudo killall deluged")
+
+    setup("sudo -E deluge-web --fork")
+    teardown("sudo killall deluge-web")

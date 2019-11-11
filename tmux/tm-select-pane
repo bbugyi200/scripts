@@ -1,0 +1,139 @@
+#!/bin/bash
+
+read -r -d '' doc << EOM
+Wrapper for 'tmux select-pane' command.
+EOM
+
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,f,h,v,L,R,U,D" -l "debug,force,help,verbose" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-v] -L"
+    "[-d] [-v] -R"
+    "[-d] [-v] -U"
+    "[-d] [-v] -D"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -f | --force
+        Force "tmux select-pane" command even when inside a vim window.
+
+    -h | --help
+        View this help message.
+
+    -v | --verbose
+        Enable verbose output.
+
+    -L | -R | -U | -D
+        Specify the relative direction of the pane you want to select.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -f|--force )
+           force=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -L )
+           dir="-L"
+           keys="C-h"
+           ;;
+       -R )
+           dir="-R"
+           keys="C-l"
+           ;;
+       -U )
+           dir="-U"
+           keys="C-k"
+           ;;
+       -D )
+           dir="-D"
+           keys="C-j"
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+if [[ -z "${keys}" || -z "${dir}" ]]; then
+    die "$(usage)" 2
+fi
+
+
+function is_vim() {
+    if tmux display-message -p '#{pane_title}' | grep -iq vim; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function fix_vim_layout() {
+    tmux send-keys ",="
+}
+
+function select_pane() {
+    if [[ "$(tmux list-panes -F '#F')" == *"Z"* ]]; then
+        was_zoomed=true
+    fi
+
+    tmux select-pane "${dir}"
+
+    if [[ "${was_zoomed}" = true ]]; then
+        tmux resize-pane -Z
+    fi
+
+    if is_vim; then
+        fix_vim_layout
+    fi
+}
+
+
+function main() {
+    if [[ "${force}" = true ]]; then
+        select_pane
+        exit 0
+    fi
+    
+    if is_vim; then
+        fix_vim_layout
+        tmux send-keys "${keys}"
+    else
+        select_pane
+    fi
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+	main "$@"
+fi

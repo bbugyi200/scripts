@@ -1,0 +1,15 @@
+#!/bin/bash
+
+function is_vim() {
+    if tmux display-message -p '#{pane_title}' | grep -iq vim; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+tmux resize-pane -Z
+
+if is_vim; then
+    tmux send-keys ",="
+fi

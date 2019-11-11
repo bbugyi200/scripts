@@ -5,7 +5,7 @@
 ######################################
 
 source gutils.sh
-source /home/bryan/Dropbox/bin/main/emaint.sh
+source /home/bryan/Sync/bin/main/emaint.sh
 
 # ---------- Main Logic ----------
 _uname_output="$(uname -a)"
@@ -14,6 +14,7 @@ sys_info="${_uname_output,,}"
 # >>> GENTOO
 if [[ "${sys_info}" == *"gentoo"* ]]; then
     econfirm "sudo emerge --sync" && notify "Portage Package Database Sync is Complete."
+    econfirm "tmux splitw -p20 watch -c -n 3 genlop -c && tmux select-pane -l"
     econfirm "sudo emerge --ask --update --deep --newuse --keep-going @world" && notify "Portage Package Updates are Complete."
     econfirm "sudo emerge --ask --depclean"
     econfirm "sudo revdep-rebuild"
@@ -32,6 +33,7 @@ fi
 
 # >>> ALL
 econfirm "sudo npm update -g"
+econfirm "rustup update"
 econfirm "sudo updatedb &"
 
 exit 0  # Fixes issue caused by nonzero return status from last econfirm

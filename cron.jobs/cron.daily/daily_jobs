@@ -5,4 +5,6 @@
 /home/bryan/.local/bin/clean_filesystem
 /home/bryan/.local/bin/zopen -C -q
 /home/bryan/.local/bin/mopen -C
-/home/bryan/.local/bin/merge_rocketbook_notes
+
+# zopen and mopen create log files owned by root.
+chown bryan:bryan /var/tmp/*.log

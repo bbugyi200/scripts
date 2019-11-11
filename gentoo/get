@@ -5,20 +5,24 @@
 import argparse
 import os
 import re
-import subprocess as sp  # noqa: F401
+import subprocess as sp
 import sys
-
-import gutils
-
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
+from typing import List
 
 from loguru import logger as log
 
+import gutils
+
 
 @gutils.catch
-def main(args):
+def main(argv: List[str] = None):
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
     if not args.install:
         add_to_set(args.packages, local=args.local)
         sys.exit(0)
@@ -31,7 +35,9 @@ def main(args):
 
     if rc == 1:
         log.debug('Checking for meta diff config files.')
-        out = sp.check_output('find /etc/portage -name "._cfg0000*"', shell=True)
+        out = sp.check_output(
+            'find /etc/portage -name "._cfg0000*"', shell=True
+        )
         cfg_fnames = out.decode().strip()
 
         if cfg_fnames != '':
@@ -40,17 +46,45 @@ def main(args):
                 cmd_fmt = 'sudo -E dispatch-conf && clear && {}'
                 emerge_cmd = get_emerge_cmd_list(args.packages, ask=False)
                 emerge_cmd_string = ' '.join(emerge_cmd)
-                rc = sp.check_call(cmd_fmt.format(emerge_cmd_string), shell=True)
+                rc = sp.check_call(
+                    cmd_fmt.format(emerge_cmd_string), shell=True
+                )
             except sp.CalledProcessError:
                 pass
 
     if rc == 0:
-        gutils.io.imsg("Running 'updatedb' to update the database used by 'locate'.")
+        gutils.io.imsg(
+            "Running 'updatedb' to update the database used by 'locate'."
+        )
         sp.Popen(['updatedb'])
         if not args.oneshot:
             add_to_set(args.packages, local=args.local)
 
     sys.exit(rc)
+
+
+def parse_cli_args(argv: List[str]) -> argparse.Namespace:
+    parser = gutils.ArgumentParser()
+    parser.add_argument(
+        'packages', nargs=argparse.REMAINDER, help='Package(s) to install.'
+    )
+    parser.add_argument(
+        '-1', '--oneshot', action='store_true',
+        help='Do NOT add package to any set (@shared, @world, ...).'
+    )
+    parser.add_argument(
+        '-f', '--force', action='store_true',
+        help='Install package(s) without using the --ask option.'
+    )
+    parser.add_argument(
+        '-n', '--no-install', dest='install', action='store_false',
+        help='Do not install package(s). Only add them to @shared or (if -L '
+             'option is given) @<hostname> set.'
+    )
+    parser.add_argument('-L', '--local-only', dest='local', action='store_true',
+                        help='Add package(s) to @<hostname> set ONLY.')
+
+    return parser.parse_args(argv[1:])
 
 
 def get_emerge_cmd_list(packages, *, ask=True):
@@ -87,8 +121,8 @@ def add_to_set(packages, *, local=False):
             category = out.decode().strip()
 
             try:
-                assert len(category) > 0, "Package category cannot be blank."
-                assert len(package) > 0, "Package cannot be blank."
+                assert category, "Package category cannot be blank."
+                assert package, "Package cannot be blank."
             except AssertionError as e:
                 raise ValueError(str(e))
 
@@ -99,35 +133,28 @@ def add_to_set(packages, *, local=False):
 
         for entry in open(set_fpath, 'r'):
             if full_package_name == entry.strip():
-                msg_fmt = "The following package entry already exists in the @%s set:\n\t%s"
+                msg_fmt = (
+                    "The following package entry already exists in the @%s "
+                    "set:\n\t%s"
+                )
                 log.debug(msg_fmt, portage_set, entry.strip())
                 break
         else:
-            gutils.io.imsg('Adding {} to @{}.'.format(full_package_name, portage_set))
+            gutils.io.imsg(
+                'Adding {} to @{}.'.format(full_package_name, portage_set)
+            )
             lines.append(full_package_name + '\n')
 
-            # Remove the package name from the world file to ensure that packages are never listed in
-            # both @shared and the world file.
+            # Remove the package name from the world file to ensure that
+            # packages are never listed in both @shared and the world file.
             cmd_fmt = r'sed -i "\|{}|d" {}'
-            sp.check_call(cmd_fmt.format(full_package_name, bad_set_fpath), shell=True)
+            sp.check_call(
+                cmd_fmt.format(full_package_name, bad_set_fpath), shell=True
+            )
 
     with open(set_fpath, 'w') as f:
         f.writelines(sorted(set(lines)))
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
-    parser.add_argument('packages', nargs=argparse.REMAINDER, help='Package(s) to install.')
-    parser.add_argument('-1', '--oneshot', action='store_true',
-                        help='Do NOT add package to any set (@shared, @world, ...).')
-    parser.add_argument('-f', '--force', action='store_true',
-                        help='Install package(s) without using the --ask option.')
-    parser.add_argument('-n', '--no-install', dest='install', action='store_false',
-                        help='Do not install package(s). Only add them to @shared or (if -L '
-                             'option is given) @<hostname> set.')
-    parser.add_argument('-L', '--local-only', dest='local', action='store_true',
-                        help='Add package(s) to @<hostname> set ONLY.')
-    args = parser.parse_args()
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+    main()

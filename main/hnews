@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Hacker News Script.
+"""Hacker News command-line utility.
 
 Interactively select articles to open from top N Hacker News articles (sorted
 by points).
@@ -10,6 +10,7 @@ import argparse
 from collections import namedtuple
 import os
 import subprocess as sp
+import sys
 from typing import List
 
 import bs4
@@ -20,8 +21,11 @@ import gutils
 
 
 @gutils.catch
-def main() -> None:
-    args = parse_cli_args()
+def main(argv: List[str] = None) -> None:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
 
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
@@ -30,21 +34,46 @@ def main() -> None:
     for page in range(1, args.pages + 1):
         html = requests.get(f"https://news.ycombinator.com/news?p={page}").text
         soup = bs4.BeautifulSoup(html, "html.parser")
-        storylinks.extend(soup.find_all(attrs={"class": "storylink"}))
-        scores.extend(soup.find_all(attrs={"class": "score"}))
 
-    Article = namedtuple("Article", "story score")
+        votearrows = soup.find_all(attrs={"class": "votearrow"})
+        page_storylinks = [
+            v.find_next(attrs={"class": "storylink"}) for v in votearrows
+        ]
+        page_scores = [
+            v.find_next(attrs={"class": "score"}) for v in votearrows
+        ]
 
-    top_N_articles = sorted(
-        [Article(story=A[0], score=A[1]) for A in zip(storylinks, scores)],
+        if not 20 <= len(page_storylinks) <= 40:
+            raise RuntimeError(
+                "Each Hacker News page should include ~30 stories. "
+                f"{len(page_storylinks)} !~ 30 on page #{page}."
+            )
+
+        if len(page_storylinks) != len(page_scores):
+            raise RuntimeError(
+                "There should be an equal number of storylinks and scores on "
+                f"each page. {len(page_storylinks)} != {len(page_scores)} "
+                f"on page #{page}."
+            )
+
+        storylinks.extend(page_storylinks)
+        scores.extend(page_scores)
+
+    Story = namedtuple("Story", "link score")
+    top_N_stories = sorted(
+        [Story(link=A[0], score=A[1]) for A in zip(storylinks, scores)],
         key=lambda x: -int(x.score.text.split()[0]),
-    )[:args.N]; log.trace(f"top_N_articles = {top_N_articles}")
+    )[:args.N]; log.trace(f"top_N_stories = {top_N_stories}")
 
     keep_alive = True
     while keep_alive:
         os.system("clear")
-        for i, article in enumerate(top_N_articles):
-            print(f"[{i+1}]: {article.story.text} ({article.score.text})")
+
+        # TODO(bugyi): Read list of user-specified keywords from a file and
+        # highlight those keywords (using a unique color for each keyword) in
+        # the option menu.
+        for i, article in enumerate(top_N_stories):
+            print(f"[{i+1}]: {article.link.text} ({article.score.text})")
 
         choices = input("\n>>> ")
 
@@ -55,34 +84,45 @@ def main() -> None:
                 continue
 
             index = int(choice) - 1
-            urls.append(top_N_articles[index].story.attrs["href"])
+            urls.append(top_N_stories[index].link.attrs["href"])
 
+        # TODO(bugyi):
+        #   * Open up Hacker News comment page that corresponds with
+        #     the story link.
+        #   * Upvote selected stories.
         if urls:
             sp.check_call(
-                [os.environ.get("BROWSER", "qutebrowser"), *urls],
+                [os.getenv("BROWSER", "qutebrowser"), *urls],
                 stdout=sp.DEVNULL,
                 stderr=sp.DEVNULL,
             )
 
 
-def parse_cli_args() -> argparse.Namespace:
+def parse_cli_args(argv: List[str]) -> argparse.Namespace:
     parser = gutils.ArgumentParser()
+
+    default = 15
     parser.add_argument(
         "-n",
         "--articles",
         dest="N",
-        default=10,
+        default=default,
         type=int,
-        help="The number of Hacker News articles to show.",
+        help="The number of Hacker News articles to show. Defaults to "
+             f"{default}.",
     )
+
+    default = 3
     parser.add_argument(
         "-p",
         "--pages",
         type=int,
-        default=1,
-        help="The number of Hacker News pages to scrape.",
+        default=default,
+        help="The number of Hacker News pages to scrape. Defaults to "
+             f"{default}.",
     )
-    return parser.parse_args()
+
+    return parser.parse_args(argv[1:])
 
 
 if __name__ == "__main__":

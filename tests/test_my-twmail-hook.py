@@ -3,13 +3,13 @@
 import datetime as dt
 import importlib.util
 import importlib.machinery
-import os
-import unittest.mock as mock
+mport os
+mport unittest.mock as mock
 
-loader = importlib.machinery.SourceFileLoader("twmail", "/home/bryan/Dropbox/bin/main/my-twmail-hook")
-spec = importlib.util.spec_from_loader("twmail", loader)
-twmail = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(twmail)
+oader = importlib.machinery.SourceFileLoader("twmail", "/home/bryan/Sync/bin/main/my-twmail-hook")
+pec = importlib.util.spec_from_loader("twmail", loader)
+wmail = importlib.util.module_from_spec(spec)
+pec.loader.exec_module(twmail)
 
 import pytest  # noqa
 

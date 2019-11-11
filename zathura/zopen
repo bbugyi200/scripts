@@ -32,13 +32,13 @@ def main(args: argparse.Namespace) -> None:
 
     all_docs = None
     if args.generate_cache or not os.path.isfile(FIND_CACHE_FILE):
-        directory_list = ['/home/bryan/Dropbox', '/home/bryan/projects']
+        directory_list = ['/home/bryan/Sync', '/home/bryan/projects']
         if socket.gethostname() == 'athena':
-            directory_list.append('/media/bryan/hercules/archive/home/bryan/Dropbox')
+            directory_list.append('/media/bryan/hercules/archive/home/bryan/Sync')
 
         cmd_list = ['find']
         cmd_list.extend(directory_list)
-        cmd_list.extend(['-path', '/home/bryan/Dropbox/.dropbox.cache', '-prune', '-o'])
+        cmd_list.extend(['-path', '/home/bryan/Sync/.dropbox.cache', '-prune', '-o'])
         cmd_list.extend(['-regex', doc_pttrn])
 
         out = sp.check_output(cmd_list)
@@ -78,7 +78,7 @@ def main(args: argparse.Namespace) -> None:
     if open_docs:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
-    pretty_docs = [re.sub('^/home/bryan/Dropbox/var/books/', '', str(doc)) for doc in ordered_docs]
+    pretty_docs = [re.sub('^/home/bryan/Sync/var/books/', '', str(doc)) for doc in ordered_docs]
 
     if args.refresh:
         doc = ordered_docs[-1]
@@ -92,7 +92,7 @@ def main(args: argparse.Namespace) -> None:
         if output.startswith('/'):
             doc = output
         else:
-            doc = Path('/home/bryan/Dropbox/var/books/{}'.format(output))
+            doc = Path('/home/bryan/Sync/var/books/{}'.format(output))
 
     add_to_cache(doc)
 

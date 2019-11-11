@@ -2,13 +2,13 @@ import datetime as dt
 import importlib.util
 import importlib.machinery
 import os
-import shutil
-import unittest.mock as mock
+mport shutil
+mport unittest.mock as mock
 
-loader = importlib.machinery.SourceFileLoader("red_robot", "/home/bryan/Dropbox/bin/main/red_robot")
-spec = importlib.util.spec_from_loader("red_robot", loader)
-S = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(S)
+oader = importlib.machinery.SourceFileLoader("red_robot", "/home/bryan/Sync/bin/main/red_robot")
+pec = importlib.util.spec_from_loader("red_robot", loader)
+ = importlib.util.module_from_spec(spec)
+pec.loader.exec_module(S)
 
 import pytest  # noqa
 

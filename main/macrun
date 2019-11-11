@@ -1,0 +1,4 @@
+#!/bin/bash
+
+program_path="$(fd -t x "$1" /Applications)"
+"${program_path}" "${@:2}"

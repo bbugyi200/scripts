@@ -17,7 +17,7 @@ else
     getopt=/usr/bin/getopt
 fi
 
-dropbox_path="${HOME}"/Dropbox
+dropbox_path="${HOME}"/Sync
 
 # ---------- Function Definitions ----------
 function stow_it() {
@@ -27,7 +27,7 @@ function stow_it() {
     dir="${src%/*}"
     subdir="${src##*/}"
 
-    stow --dir="${dir}" --target="${target}" -"${FLAG}" "${subdir}"
+    sudo stow --dir="${dir}" --target="${target}" -"${FLAG}" "${subdir}"
 }
 
 # ---------- Parse Command-line Arguments ----------

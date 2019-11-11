@@ -9,6 +9,7 @@ from pathlib import Path
 import signal
 import subprocess as sp
 import sys
+import textwrap
 from types import FrameType
 import typing as Type  # pylint: disable=unused-import
 
@@ -88,8 +89,6 @@ def main() -> None:
             count = f.read().strip()
 
         if int(count) > 0:
-            import textwrap
-
             prompt = (
                 ">>> Would you like to resume `{}` where you left off (y), "
                 "redo the last command (r), or start a new session (n)?: "

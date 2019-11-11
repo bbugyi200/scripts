@@ -2,7 +2,7 @@
 
 # ensure running as root
 if [ "$(id -u)" != "0" ]; then
-  exec sudo "$0" "$@"
+  exec sudo -E "$0" "$@"
 fi
 
 cd /home/bryan/projects/portage-overlay || exit 1
@@ -12,5 +12,5 @@ layman -s bbugyi200
 
 if [[ -n "$1" ]]; then
 	pkg="$1"; shift
-	get "${pkg}"
+	sudo_get "${pkg}"
 fi

@@ -7,9 +7,9 @@ import re
 import subprocess as sp  # noqa: F401
 import sys  # noqa: F401
 
-import gutils
-
 from loguru import logger as log
+
+import gutils
 
 
 scriptname = os.path.basename(os.path.realpath(__file__))

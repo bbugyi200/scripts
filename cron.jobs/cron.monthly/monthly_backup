@@ -1,24 +1,28 @@
 #!/bin/bash
 
-# dropbox backup
-DROPBOX=/media/bryan/hercules/backup/dropbox
-[ -d $DROPBOX/monthly ] || mkdir -p $DROPBOX/monthly
-[ -d $DROPBOX/2months ] || mkdir -p $DROPBOX/2months
-[ -d $DROPBOX/3months ] || mkdir -p $DROPBOX/3months
-[ -d $DROPBOX/4months ] || mkdir -p $DROPBOX/4months
-rm -rf $DROPBOX/4months && \
-    mv $DROPBOX/3months $DROPBOX/4months && \
-    mv $DROPBOX/2months $DROPBOX/3months && \
-    cp -r $DROPBOX/monthly $DROPBOX/2months
-rsync -av --delete /home/bryan/Dropbox/ $DROPBOX/monthly/
-date > $DROPBOX/monthly/backup.txt
+# syncthing backup
+SYNC=/media/bryan/hercules/backup/Sync
+[ -d $SYNC/monthly ] || mkdir -p $SYNC/monthly
+[ -d $SYNC/2months ] || mkdir -p $SYNC/2months
+[ -d $SYNC/3months ] || mkdir -p $SYNC/3months
+[ -d $SYNC/4months ] || mkdir -p $SYNC/4months
+rm -rf $SYNC/4months && \
+    mv $SYNC/3months $SYNC/4months && \
+    mv $SYNC/2months $SYNC/3months && \
+    cp -p -r $SYNC/monthly $SYNC/2months
+rsync -av --delete /home/bryan/Sync/ $SYNC/monthly/
+date > $SYNC/monthly/backup.txt
 
 # etc backup
 ETC='/media/bryan/hercules/backup/etc'
 [ -d $ETC/monthly ] || mkdir -p $ETC/monthly
 [ -d $ETC/2months ] || mkdir -p $ETC/2months
 [ -d $ETC/3months ] || mkdir -p $ETC/3months
-rm -rf $ETC/3months && mv $ETC/2months $ETC/3months && cp -r $ETC/monthly $ETC/2months
+[ -d $ETC/4months ] || mkdir -p $ETC/4months
+rm -rf $ETC/4months && \
+    mv $ETC/3months $ETC/4months && \
+    mv $ETC/2months $ETC/3months && \
+    cp -p -r $ETC/monthly $ETC/2months
 rsync -av --delete /etc/ $ETC/monthly/
 date > $ETC/monthly/backup.txt
 
@@ -27,6 +31,10 @@ VAR='/media/bryan/hercules/backup/var'
 [ -d $VAR/monthly ] || mkdir -p $VAR/monthly
 [ -d $VAR/2months ] || mkdir -p $VAR/2months
 [ -d $VAR/3months ] || mkdir -p $VAR/3months
-rm -rf $VAR/3months && mv $VAR/2months $VAR/3months && cp -r $VAR/monthly $VAR/2months
+[ -d $VAR/4months ] || mkdir -p $VAR/4months
+rm -rf $VAR/4months && \
+    mv $VAR/3months $VAR/4months && \
+    mv $VAR/2months $VAR/3months && \
+    cp -p -r $VAR/monthly $VAR/2months
 rsync -av --delete /var/ $VAR/monthly/
 date > $VAR/monthly/backup.txt

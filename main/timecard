@@ -1,0 +1,9 @@
+#!/bin/bash
+
+work_time_card="$HOME"/Sync/var/logs/work_time_card.log
+
+if [[ -n "$1" ]]; then
+   grep "$1" "${work_time_card}" | bat --theme="GitHub" --style=grid,numbers
+else
+    bat --theme="GitHub" "${work_time_card}"
+fi

@@ -34,7 +34,7 @@ fi
 # ---------- DESKTOP ----------
 [ -d "$TMP" ] || mkdir "$TMP"
 
-find /home/bryan/Downloads /home/bryan/Dropbox "$TMP" \
+find /home/bryan/Downloads /home/bryan/Sync "$TMP" \
     -type f \
     -regex ".*\.$EXTS" \
     -execdir unoconv -f pdf {} ";" \

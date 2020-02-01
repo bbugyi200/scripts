@@ -53,11 +53,11 @@ source secret.sh
 # ---------- Functions ----------
 function warn_user() {
     action="$1"; shift
-    hostname="$1"; shift
-    days="$1"; shift
+    actual_days="$1"; shift
+    max_days="$1"; shift
 
-    notify-send -u critical -t 0 "Maintenance Overdue!" "You should ${action} ${hostname}.\n\n \
-        It has been ${days} days since the 'emanage --${action}' command was last run."
+    notify-send -u critical -t 0 "Maintenance Overdue!" "You should ${action} this machine.\n\n \
+        It has been ${actual_days} (>=${max_days}) days since the 'emanage --${action}' command was last run."
 }
 
 function get_max_days() {
@@ -80,6 +80,6 @@ for action in "update" "cleanup"; do
     days=$(emanage --days-since-last local --"${action}")
     max_days="$(get_max_days "${action}")"
     if [[ ${days} -ge "${max_days}" ]]; then
-        warn_user "${action}" "this machine" "${days}"
+        warn_user "${action}" "${days}" "${max_days}"
     fi
 done

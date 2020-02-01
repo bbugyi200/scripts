@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [[ "$(uname -a)" == *"Darwin"* ]]; then
+    MKTEMP="gmktemp"
+else
+    MKTEMP="mktemp"
+fi
+
+variable="$1"; shift
+module="$(echo "${variable}" | cut -f1 -d.)"
+temp_file="$(${MKTEMP} --suffix ".py")"
+
+printf "import ${module}; reveal_type(${variable});" > "${temp_file}"
+type="$(mypy "${temp_file}" | perl -nE 'print s/^.*Revealed type is //r')"
+
+printf "reveal_type(%s): %s\n" "${variable}" "${type}"
+
+exit 0

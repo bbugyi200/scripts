@@ -1,0 +1,10 @@
+#!/bin/bash
+
+log_file=/var/tmp/start_sync.log
+
+if pgrep syncthing &> /dev/null; then
+    printf "[%s]: syncthing is already running.\n" "$(date)" | tee "${log_file}"
+else
+    /usr/bin/syncthing -no-browser -home="/home/bryan/.config/syncthing"
+    printf "[%s]: syncthing has been started.\n" "$(date)" | tee "${log_file}"
+fi

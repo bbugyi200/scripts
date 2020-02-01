@@ -9,6 +9,9 @@
 # ---------- Modules ----------
 source gutils.sh
 
+# ---------- CLI Arguments ----------
+socket_name="$1"; shift
+
 # ---------- Global Variables ----------
 # shellcheck disable=SC2154,SC2034
 USAGE="usage: ${SCRIPTNAME} "
@@ -16,6 +19,6 @@ USAGE="usage: ${SCRIPTNAME} "
 session_name="$(tm-session-name default)"
 
 # ---------- Main ----------
-henerate_prime_mux_session "${session_name}"
+generate_prime_mux_session "${session_name}" "${socket_name}"
 tm-session-root --put "${session_name}\`" "$(tm-session-root --get "${session_name}")"
 tm "${session_name}\`"

@@ -4,7 +4,7 @@ read -r -d '' doc << EOM
 If COMMAND is a script, finds script's location and opens it in vim.
 Otherwise, assumes COMMAND is an alias or function definition and
 searches dotfiles for it. Once found it opens that dotfile in vim and
-jumps to the line number of the correpsonding alias/function definition.
+jumps to the line number of the corresponding alias/function definition.
 EOM
 
 # ---------- Modules ----------
@@ -77,13 +77,13 @@ fi
 # ---------- Main ----------
 all_scripts=( )
 for cmd in "$@"; do
-script_path="$(find "$HOME"/Sync/bin -type f -name "${cmd}" | head -n 1)"
+    script_path="$(find "$HOME"/Sync/bin -type f -name "${cmd}" | head -n 1)"
 
-if [[ -z "${script_path}" ]] || [[ "${force_dotfile}" == true ]]; then
-    def_vim_args="$(ag -s "(^(alias|function)[ ]+|^)${cmd}( \(\)|\(\)| {|=)" "$HOME"/Sync/home/.config | awk -F: '{ print "+" $2 " " $1 }' | head -n 1)"
+    if [[ -z "${script_path}" ]] || [[ "${force_dotfile}" == true ]]; then
+        def_vim_args="$(ag -s "(^(alias|function)[ ]+|^)${cmd}( \(\)|\(\)| {|=)" "$HOME"/Sync/home/.config | awk -F: '{ print "+" $2 " " $1 }' | head -n 1)"
 
-    if [[ -n "${def_vim_args}" ]]; then
-		# def_vim_args is now a string of the form "+<N> <path>"
+        if [[ -n "${def_vim_args}" ]]; then
+            # def_vim_args is now a string of the form "+<N> <path>"
 			eval "vim ${def_vim_args}"
 			continue
 		elif [[ "${force_dotfile}" == true ]]; then

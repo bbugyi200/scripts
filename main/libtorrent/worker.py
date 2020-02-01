@@ -104,7 +104,7 @@ class _TorrentWorker:
         self._mt_key = self.INVALID_TRACKER_KEY
         self.is_enqueued = False
 
-    def __call__(self):
+    def __call__(self) -> None:
         log.debug(f'Added "{self.title}" to magnet queue.')
 
         try:

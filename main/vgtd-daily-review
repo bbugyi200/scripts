@@ -3,10 +3,10 @@
 checklist ~/Sync/var/notes/daily_tasks.txt
 clear
 
-if ! update-daily-tasks; then
-    vgtd-weekly-review
-    confirm "perl -i.bak -pE 's/(?<=Days Until Weekly Review: )0/14/' ~/Sync/var/notes/daily_tasks.txt"
-fi
+# if ! update-daily-tasks; then
+#     vgtd-weekly-review
+#     confirm "perl -i.bak -pE 's/(?<=Days Until Weekly Review: )0/14/' ~/Sync/var/notes/daily_tasks.txt"
+# fi
 
 work_time_card="$HOME"/Sync/var/logs/work_time_card.log
 if [[ "$(hostname)" == *"bugyidesk.pr.edgelp.net"* ]]; then
@@ -17,4 +17,6 @@ if [[ "$(hostname)" == *"bugyidesk.pr.edgelp.net"* ]]; then
     pmset -g log | grep -E "Display is turned (on|off)" >> "${work_time_card}".bak
     sort -u "${work_time_card}".bak > "${work_time_card}"
     rm "${work_time_card}".bak
+
+    scp -r "gitlab-ci:/prod/home/bbugyi/shell-history/*" ~/Sync/var/logs/shell-history/ &> /dev/null
 fi

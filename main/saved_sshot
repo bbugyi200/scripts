@@ -7,4 +7,3 @@ scrot -s "${fpath}"
 png2enote "${fpath}"
 
 notify-send -u low "Saved Receipt as: $filename.png"
-

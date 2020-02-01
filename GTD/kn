@@ -2,21 +2,18 @@
 
 """Create a New Khal Event"""
 
-import datetime as dt  # noqa: F401
-import os  # noqa: F401
-import subprocess as sp  # noqa: F401
-import sys  # noqa: F401
+import datetime as dt
+import os
+import subprocess as sp
 
 from dateutil.parser import parse
+from loguru import logger as log  # pylint: disable=unused-import
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
 
-from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
+
 
 @gutils.catch
 def main(args):
@@ -26,8 +23,14 @@ def main(args):
     if start_dt < now or args.tomorrow:
         start_dt = start_dt.replace(day=start_dt.day + 1)
 
-    cmd_list = ['khal', 'new', '-a', 'daily', start_dt.strftime('%Y-%m-%dT%H:%M'),
-                ' '.join(args.event_name)]
+    cmd_list = [
+        'khal',
+        'new',
+        '-a',
+        'daily',
+        start_dt.strftime('%Y-%m-%dT%H:%M'),
+        ' '.join(args.event_name),
+    ]
 
     sp.check_call(cmd_list)
     sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
@@ -37,8 +40,12 @@ if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('start_time', help='Start-time of event.')
     parser.add_argument('event_name', nargs='*', help='Event name.')
-    parser.add_argument('-T', '--tomorrow', action='store_true',
-                        help="Create event for tomorrow instead of today.")
+    parser.add_argument(
+        '-T',
+        '--tomorrow',
+        action='store_true',
+        help="Create event for tomorrow instead of today.",
+    )
     args = parser.parse_args()
 
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)

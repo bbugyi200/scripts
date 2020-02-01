@@ -10,7 +10,4 @@ repoman manifest
 gpup
 layman -s bbugyi200
 
-if [[ -n "$1" ]]; then
-	pkg="$1"; shift
-	sudo_get "${pkg}"
-fi
+sudo_get "$@"

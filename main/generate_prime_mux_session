@@ -1,26 +1,45 @@
 #!/usr/bin/env python3
 
-"""Generates a Prime (secondary) Tmuxinator Session Configuration File using Jinja2"""
+"""
+Generates a Prime (secondary) Tmuxinator Session Configuration File using
+Jinja2
+"""
 
-import datetime as dt  # noqa: F401
-import os  # noqa: F401
-import subprocess as sp  # noqa: F401
-import sys  # noqa: F401
-
-import jinja2
+import argparse
+import os
+import sys
+from typing import List
 
 import gutils
+import jinja2
+from loguru import logger as log  # pylint: disable=unused-import
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
-from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
+
+def parse_cli_args(argv: List[str]) -> argparse.Namespace:
+    parser = gutils.ArgumentParser()
+    parser.add_argument(
+        'session_name', help='Tmuxinator session name to emulate.'
+    )
+    parser.add_argument(
+        "socket_name",
+        help="The name of the new tmuxinator socket (e.g. tmux_prime).",
+    )
+    return parser.parse_args(argv[1:])
+
+
 @gutils.catch
-def main(args):
-    fp_template = '{}/Sync/var/templates/template.tmuxinator'.format(os.environ['HOME'])
+def main(argv: List[str] = None) -> None:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
+    fp_template = '{}/Sync/var/templates/template.tmuxinator'.format(
+        os.environ['HOME']
+    )
     dp_mux_config = '{}/.config/tmuxinator'.format(os.environ['HOME'])
 
     with open(fp_template, 'r') as f:
@@ -40,8 +59,11 @@ def main(args):
             options_list.append(line)
 
     T = jinja2.Template(contents)
-    new_contents = T.render(session_name=prime_session_name,
-                            options=''.join(options_list))
+    new_contents = T.render(
+        session_name=prime_session_name,
+        socket_name=args.socket_name,
+        options=''.join(options_list),
+    )
 
     fp_prime_config = '{}/{}.yml'.format(dp_mux_config, prime_session_name)
     with open(fp_prime_config, 'w') as f:
@@ -49,9 +71,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
-    parser.add_argument('session_name', help='Tmuxinator session name to emulate.')
-    args = parser.parse_args()
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+    main()

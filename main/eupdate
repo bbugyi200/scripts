@@ -34,6 +34,7 @@ fi
 # >>> ALL
 econfirm "sudo npm update -g"
 econfirm "rustup update"
+econfirm "pipx upgrade-all"
 econfirm "sudo updatedb &"
 
 exit 0  # Fixes issue caused by nonzero return status from last econfirm

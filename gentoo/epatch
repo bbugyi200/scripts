@@ -1,7 +1,7 @@
 #!/bin/bash
 
 read -r -d '' doc <<-EOM
-This script aids in the creation and maintainance of  user patches on Gentoo.
+This script aids in the creation and maintainance of user patches on Gentoo.
 
 Steps to create an ebuild patch:
 
@@ -85,6 +85,7 @@ function make_real_paths() {
 export USAGE_GRAMMAR=(
     "[-d] -a PATCH"
     "[-d] -c"
+    "[-d] --init"
     "[-d] [-V] -i PATCH"
     "[-d] [-V] -I [PATCH]"
     "[-d] -l [PATCH]"
@@ -129,6 +130,9 @@ Action Specifiers:
     -c | --clean
         Restore temp git repository to initial state (before changes were made).
 
+    --init
+        Initialize the epatch.info file.
+
     -i PATCH | --install-patch PATCH
         Use the temp repository's current working directory contents to
         generate a patch. Then install the patch to /etc/portage/patches/PATCH.patch.
@@ -151,7 +155,7 @@ Action Specifiers:
 EOM
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "a:,c,d,h,I,i:,l,o:,r:,s:,V,u:" -l "apply:,clean,debug,help,install-pkg,install-patch:,list,overlay:,remove:,stash:,use-version-specifier,user:" -- "$@")"
+eval set -- "$(getopt -o "a:,c,d,h,I,i:,l,o:,r:,s:,V,u:" -l "apply:,clean,debug,help,init,install-pkg,install-patch:,list,overlay:,remove:,stash:,use-version-specifier,user:" -- "$@")"
 
 while [[ -n "$1" ]]; do
     case $1 in
@@ -169,6 +173,15 @@ while [[ -n "$1" ]]; do
            ;;
        -h|--help )
            echo "${HELP}"
+           exit 0
+           ;;
+       --init )
+           if [[ -f epatch.info ]]; then
+               die "The epatch.info file already exists!"
+           else
+               printf "category/package\nmaster\n" > epatch.info
+               "${EDITOR:-vim}" epatch.info
+           fi
            exit 0
            ;;
        -I|--install-pkg )

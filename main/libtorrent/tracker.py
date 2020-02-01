@@ -8,7 +8,7 @@ from loguru import logger as log
 class MagnetTracker:
     """Thread-Safe Counter of Magnet Files"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.lock = threading.Lock()
 
         self.ids: Dict[int, str] = {}

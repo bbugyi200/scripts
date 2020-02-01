@@ -51,9 +51,9 @@ def main(argv: List[str] = None) -> None:
 
         if len(page_storylinks) != len(page_scores):
             raise RuntimeError(
-                "There should be an equal number of storylinks and scores on "
-                f"each page. {len(page_storylinks)} != {len(page_scores)} "
-                f"on page #{page}."
+                "There should be an equal number of storylinks and scores on"
+                f" each page. {len(page_storylinks)} != {len(page_scores)} on"
+                f" page #{page}."
             )
 
         storylinks.extend(page_storylinks)
@@ -63,7 +63,8 @@ def main(argv: List[str] = None) -> None:
     top_N_stories = sorted(
         [Story(link=A[0], score=A[1]) for A in zip(storylinks, scores)],
         key=lambda x: -int(x.score.text.split()[0]),
-    )[:args.N]; log.trace(f"top_N_stories = {top_N_stories}")
+    )[: args.N]
+    log.trace(f"top_N_stories = {top_N_stories}")
 
     keep_alive = True
     while keep_alive:
@@ -108,8 +109,10 @@ def parse_cli_args(argv: List[str]) -> argparse.Namespace:
         dest="N",
         default=default,
         type=int,
-        help="The number of Hacker News articles to show. Defaults to "
-             f"{default}.",
+        help=(
+            "The number of Hacker News articles to show. Defaults to "
+            f"{default}."
+        ),
     )
 
     default = 3
@@ -118,8 +121,10 @@ def parse_cli_args(argv: List[str]) -> argparse.Namespace:
         "--pages",
         type=int,
         default=default,
-        help="The number of Hacker News pages to scrape. Defaults to "
-             f"{default}.",
+        help=(
+            "The number of Hacker News pages to scrape. Defaults to "
+            f"{default}."
+        ),
     )
 
     return parser.parse_args(argv[1:])

@@ -17,6 +17,5 @@ fi
 if [[ -n "${F}" ]]; then
     echo "${F}"
 else
-    echo '[ERROR] No filename matched.'
     exit 1
 fi

@@ -32,10 +32,13 @@ if [[ -n "$1" ]]; then
     elif [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
         N="$1"; shift
         git log ${stat_opts} --max-count="${N}" --color=always | less ${LESS_OPTS}
-    elif [[ "$1" == "+" ]]; then
-        git log ${stat_opts} --color=always "${MASTER_BRANCH:-master}"..HEAD | less ${LESS_OPTS}
+    elif [[ "$1" == "+" ]] || [[ "$1" == "++" ]]; then
+        if [[ "$1" == "++" ]]; then
+            p_opt="-p"
+        fi
+        git log ${stat_opts} ${p_opt} --color=always "${MASTER_BRANCH:-master}"..HEAD | less ${LESS_OPTS}
     elif [[ "$1" == "-" ]]; then
-        git log --abbrev=4 --oneline --decorate --color=always "${MASTER_BRANCH:-master}"..HEAD | nl -s ':  ' -v 0
+        git log --abbrev=4 --oneline --decorate --graph --color=always "${MASTER_BRANCH:-master}"..HEAD | nl -s ':  ' -v 0
     else
         git log --color=always "$@" | less ${LESS_OPTS}
     fi

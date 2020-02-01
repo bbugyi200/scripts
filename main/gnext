@@ -1,6 +1,6 @@
 #!/bin/bash
 
-branch="${1:-master}"; shift
+branch="$(cat /tmp/gnext-branch.txt)"; shift
 
 next_commit="$(git rev-list --topo-order HEAD.."${branch}" | tail -1)"
 if [[ -z "${next_commit}" ]]; then

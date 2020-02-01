@@ -1,0 +1,118 @@
+#!/bin/bash
+
+read -r -d '' doc << EOM
+Helper Script for birdseye (see https://github.com/alexmojaki/birdseye)
+
+By default, 'eye PYFILE' decorates every function in PYFILE with @eye.
+EOM
+
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,f:,h,i,p,v" -l "debug,func:,help,import-eye,purge-eye,verbose" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-f FUNC] [-i] [-v] PYFILE"
+    "[-d] [-p] [-v] PYFILE"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    PYFILE: A python source file path.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -f FUNC | --func FUNC
+        Only decorate FUNC with @eye.
+
+    -h | --help
+        View this help message.
+
+    -i | --import-eye
+        Insert 'from birdseye import eye' into PYFILE.
+
+    -p | --purge-eye
+        Purge all @eye decorators and 'birdseye' imports from PYFILE.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -f|--func )
+           shift
+           func="$1"
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -i|--import-eye )
+           add_import=true
+           ;;
+       -p|--purge-eye )
+           purge_eye=true
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true && "${verbose}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+if [[ -n "$1" ]]; then
+    file="$1"; shift
+else
+    die "$(usage)" 2
+fi
+
+# ---------- Main ----------
+main() {
+    if [[ "${purge_eye}" = true ]]; then
+        perl -nE 'print unless /^ *\@eye$|^from birdseye import eye$/' -i.bak "${file}"
+        printf ">>> Purged @eye decorator from %s.\n" "${file}"
+    else
+        if [[ "${add_import}" = true ]]; then
+            perl -nE 'if ($found != 1 && /^(from|import).*$/ && not /__future__/) { $found=1; printf "from birdseye import eye\n$_"; } else { print; }' -i "${file}"
+        fi
+
+        if [[ -n "${func}" ]]; then
+            perl -nE "if (/^( *)def ${func}\(.*$/) { printf \"\$1\@eye\n\$_\"; } else { print; };" -i.bak "${file}"
+            if ! perl -nE "if (\$found=1) { \$found=0; if (/^ *def ${func}\(.*$/) { exit 1; }; } else { if (/^ *\\@eye$/) { \$found=1 }; }" "${file}"; then
+                printf ">>> Added @eye decorator to '${func}(...)' in %s.\n" "${file}"
+            else
+                printf ">>> Could not find '${func}(...)' in ${file}.\n"
+            fi
+        else
+            perl -nE 'if (/^( *)def (?!.*# birdseye: disable$)/) { printf "$1\@eye\n$_"; } else { print; };' -i.bak "${file}"
+            printf ">>> Added @eye decorator to every function/method in %s.\n" "${file}"
+        fi
+    fi
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+	main "$@"
+fi

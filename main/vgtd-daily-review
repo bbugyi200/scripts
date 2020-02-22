@@ -18,5 +18,5 @@ if [[ "$(hostname)" == *"bugyidesk.pr.edgelp.net"* ]]; then
     sort -u "${work_time_card}".bak > "${work_time_card}"
     rm "${work_time_card}".bak
 
-    scp -r "gitlab-ci:/prod/home/bbugyi/shell-history/*" ~/Sync/var/logs/shell-history/ &> /dev/null
+    scp -r "gitlab-ci.pr.edgelp.net:/prod/home/bbugyi/shell-history/*" ~/Sync/var/logs/shell-history/ &> /dev/null
 fi

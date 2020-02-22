@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tmux splitw -p20 watch -c -n 3 genlop -c && tmux select-pane -l

@@ -99,7 +99,7 @@ function is_vim() {
 }
 
 function fix_vim_layout() {
-    tmux send-keys ",="
+    tmux send-keys C-E
 }
 
 function select_pane() {
@@ -127,10 +127,9 @@ function main() {
     
     if is_vim; then
         fix_vim_layout
-        tmux send-keys "${keys}"
-    else
-        select_pane
     fi
+
+    select_pane
 }
 
 

@@ -29,18 +29,26 @@ if [[ -n "$1" ]]; then
             git log --skip="${i}" --max-count=1 ${stat_opts} -p --color=always | less
             i="$((i + 1))"
         done
-    elif [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
-        N="$1"; shift
-        git log ${stat_opts} --max-count="${N}" --color=always | less ${LESS_OPTS}
-    elif [[ "$1" == "+" ]] || [[ "$1" == "++" ]]; then
-        if [[ "$1" == "++" ]]; then
-            p_opt="-p"
-        fi
-        git log ${stat_opts} ${p_opt} --color=always "${MASTER_BRANCH:-master}"..HEAD | less ${LESS_OPTS}
-    elif [[ "$1" == "-" ]]; then
-        git log --abbrev=4 --oneline --decorate --graph --color=always "${MASTER_BRANCH:-master}"..HEAD | nl -s ':  ' -v 0
     else
-        git log --color=always "$@" | less ${LESS_OPTS}
+        if [[ "$(git rev-parse P.master)" == "$(git rev-parse HEAD)" ]]; then
+            target_branch=HEAD
+        else
+            target_branch="${MASTER_BRANCH:-master}"..HEAD
+        fi
+
+        if [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
+            N="$1"; shift
+            git log ${stat_opts} --max-count="${N}" --color=always | less ${LESS_OPTS}
+        elif [[ "$1" == "+" ]] || [[ "$1" == "++" ]]; then
+            if [[ "$1" == "++" ]]; then
+                p_opt="-p"
+            fi
+            git log ${stat_opts} ${p_opt} --color=always "${target_branch}" | less ${LESS_OPTS}
+        elif [[ "$1" == "-" ]]; then
+            git log --abbrev=4 --oneline --decorate --graph --color=always "${target_branch}" | nl -s ':  ' -v 0
+        else
+            git log --color=always "$@" | less ${LESS_OPTS}
+        fi
     fi
 else
     git log --abbrev=4 --oneline --decorate --color=always | nl -s ':  ' -v 0 | less ${LESS_OPTS}

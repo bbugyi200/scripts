@@ -10,7 +10,6 @@ this script is running, the primary instance will be signaled to enqueue the
 new magnet file for download.
 """
 
-import argparse
 import atexit
 import getpass
 import os
@@ -21,16 +20,29 @@ import subprocess as sp
 import sys
 import time
 import types
-from typing import List  # pylint: disable=unused-import
-
-from loguru import logger as log
+from typing import List, NamedTuple
 
 import gutils
-
 import libtorrent.worker as worker
-
+from loguru import logger as log
 
 ARGS_FILE = gutils.xdg.init("data") / "args"
+
+
+Arguments = NamedTuple(
+    "Arguments",
+    [
+        ("magnet", str),
+        ("debug", bool),
+        ("verbose", bool),
+        ("download_dir", Path),
+        ("delay", int),
+        ("timeout", float),
+        ("pudb", bool),
+        ("threading", str),
+        ("vpn", str),
+    ],
+)
 
 
 @gutils.catch
@@ -40,6 +52,11 @@ def main(argv: List[str] = None) -> None:
 
     args = parse_cli_args(argv)
     gutils.logging.configure("torrent", debug=args.debug, verbose=args.verbose)
+
+    if args.pudb:
+        import pudb
+
+        pudb.set_trace()
 
     register_handlers()
     create_pidfile(args)
@@ -57,83 +74,75 @@ def main(argv: List[str] = None) -> None:
     worker.join_workers()
 
 
-def parse_cli_args(argv: List[str]) -> argparse.Namespace:
+def parse_cli_args(argv: List[str]) -> Arguments:
     parser = gutils.ArgumentParser(description=__doc__)
     parser.add_argument("magnet", help="The torrent magnet file.")
-
-    default = "/media/bryan/zeus/media/Entertainment/Movies"
     parser.add_argument(
         "-w",
         type=Path,
         dest="download_dir",
-        default=default,
+        default="/media/bryan/zeus/media/Entertainment/Movies",
         help=(
-            "The directory that the torrents will be downloaded to. "
-            f"Defaults to {default}."
+            "The directory that the torrents will be downloaded to."
+            " Defaults to %(default)s."
         ),
     )
-
-    default = 0
     parser.add_argument(
         "-D",
         type=int,
         dest="delay",
-        default=default,
+        default=0,
         help=(
-            "Delay starting the script for DELAY seconds. "
-            f"Defaults to {default}."
+            "Delay starting the script for DELAY seconds."
+            " Defaults to %(default)s."
         ),
     )
-
-    default = 0
     parser.add_argument(
         "-t",
         type=float,
         dest="timeout",
-        default=default,
+        default=0,
         help=(
-            "Time (in hours) to attempt to complete download before timing "
-            "out. If set to 0, this script will run forever without ever "
-            f"timing out. Defaults to {default}."
+            "Time (in hours) to attempt to complete download before timing"
+            " out. If set to 0, this script will run forever without ever"
+            " timing out. Defaults to %(default)s."
         ),
     )
-
-    default = "y"
+    parser.add_argument(
+        "--pudb",
+        action='store_true',
+        help="Run `pudb.set_trace()` on startup.",
+    )
     parser.add_argument(
         "--threading",
         choices=("y", "n"),
-        default=default,
-        help=(
-            "Enable multi-threading. Defaults to {}".format(default)
-        )
+        default="y",
+        help="Enable multi-threading. Defaults to '%(default)s'.",
     )
-
-    default = "nyc"
     parser.add_argument(
         "--vpn",
         type=str,
         dest="vpn",
-        default=default,
-        help=f"VPN to connect to. Defaults to {default}."
+        default="nyc",
+        help="VPN to connect to. Defaults to '%(default)s'.",
     )
 
-    return parser.parse_args(argv[1:])
+    args = parser.parse_args(argv[1:])
+    return Arguments(**dict(args._get_kwargs()))
 
 
 def register_handlers() -> None:
     def term_handler(
-            signum: signal.Signals,
-            frame: types.FrameType  # pylint: disable=unused-argument
+        signum: signal.Signals,
+        frame: types.FrameType,  # pylint: disable=unused-argument
     ) -> None:
-        log.debug(
-            f"Terminated via {signal.Signals(signum).name} signal."
-        )
+        log.debug(f"Terminated via {signal.Signals(signum).name} signal.")
         worker.kill_all_workers()
         sys.exit(128 + signum)
 
     def usr1_handler(
-            signum: signal.Signals,  # pylint: disable=unused-argument
-            frame: types.FrameType  # pylint: disable=unused-argument
+        signum: signal.Signals,  # pylint: disable=unused-argument
+        frame: types.FrameType,  # pylint: disable=unused-argument
     ) -> None:
         log.debug("SIGUSR1 signal received.")
         with ARGS_FILE.open("rb") as f:
@@ -141,9 +150,7 @@ def register_handlers() -> None:
 
         worker.wait_for_first_magnet()
         worker.new_torrent_worker(
-            child_args.magnet,
-            child_args.download_dir,
-            child_args.timeout,
+            child_args.magnet, child_args.download_dir, child_args.timeout,
         )
 
     signal.signal(signal.SIGTERM, term_handler)
@@ -151,7 +158,7 @@ def register_handlers() -> None:
     signal.signal(signal.SIGUSR1, usr1_handler)
 
 
-def create_pidfile(args: argparse.Namespace) -> None:
+def create_pidfile(args: Arguments) -> None:
     """Duplicate Process Management"""
     try:
         gutils.create_pidfile()
@@ -166,7 +173,7 @@ def create_pidfile(args: argparse.Namespace) -> None:
         os._exit(0)  # pylint: disable=protected-access
 
 
-def setup_env(vpn: str, download_dir: str) -> None:
+def setup_env(vpn: str, download_dir: Path) -> None:
     log.info("Connecting to VPN and starting P2P client daemon...")
 
     def setup(cmd: str) -> None:

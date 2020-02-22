@@ -4,8 +4,7 @@ import re
 import subprocess as sp
 import threading
 import time
-from typing import List
-from typing import Union
+from typing import List, Union
 
 from loguru import logger as log
 
@@ -18,11 +17,11 @@ _magnet_queue: "queue.Queue[str]" = queue.Queue()
 
 
 def new_torrent_worker(
-        magnet: str,
-        download_dir: Path,
-        timeout: float,
-        *,
-        use_threads: bool = True,
+    magnet: str,
+    download_dir: Path,
+    timeout: float,
+    *,
+    use_threads: bool = True,
 ) -> None:
     torrent_worker = _TorrentWorker(
         magnet=magnet, download_dir=download_dir, timeout=timeout
@@ -50,7 +49,7 @@ def kill_all_workers() -> None:
     """Each torrent will be removed from the P2P client."""
     try:
         full_id_list = _parse_info("ID")
-        log.trace("full_id_list = {}", full_id_list)  # type: ignore
+        log.trace("full_id_list = {}", full_id_list)
     except ValueError:
         return
 
@@ -62,7 +61,7 @@ def kill_all_workers() -> None:
 def _kill_worker(ID: str) -> None:
     """Remove torrent specified by @ID from the P2P client."""
     try:
-        sp.check_call(["sudo", "-E", "deluge-console", "rm", ID])
+        sp.check_call(["sudo", "-E", "deluge-console", "rm", "--confirm", ID])
         log.debug(f"Removed magnet #{ID}.")
     except sp.CalledProcessError:
         log.debug(f"Attempted to remove magnet #{ID} but it is NOT active.")
@@ -74,12 +73,11 @@ def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:
     Returns:
         Return type is `str` when @ID is given and `List[str]` otherwise.
     """
-    log.trace(f"ID = {ID}")  # type: ignore
+    log.trace(f"ID = {ID}")
 
     cmd = (
-        f"sudo -E deluge-console info --sort-reverse=time_added "
-        f"{'' if ID is None else ID} | awk -F: "
-        f"'{{{{if ($1==\"{field}\") print $0}}}}'"
+        "sudo -E deluge-console info --detailed --sort-reverse=time_added"
+        f" {'' if ID is None else ID} | perl -nE 'print if /^{field}:/'"
     )
     out = gutils.shell(cmd)
     ret = out.split("\n")
@@ -142,7 +140,7 @@ class _TorrentWorker:
             id_list = [ID.split()[1] for ID in _parse_info("ID")]
             self._mt_key = self.magnet_tracker.new(id_list)
 
-        log.trace("mt_key = {mt_key}", mt_key=self._mt_key)  # type: ignore
+        log.trace("mt_key = {mt_key}", mt_key=self._mt_key)
         return self._mt_key
 
     def download_torrent(self) -> None:
@@ -157,8 +155,8 @@ class _TorrentWorker:
                 SECONDS_IN_HOUR = 3600
                 if i > (self.timeout * SECONDS_IN_HOUR / SLEEP_TIME):
                     raise RuntimeError(
-                        f"Torrent is still attempting to download "
-                        f'"{self.title}" after {self.timeout:.1f} hour(s) '
+                        "Torrent is still attempting to download "
+                        f"\"{self.title}\" after {self.timeout:.1f} hour(s) "
                         "elapsed time. Shutting down early."
                     )
 
@@ -175,11 +173,10 @@ class _TorrentWorker:
             if state == "Downloading":
                 download_started = True
             elif state == "Seeding" or (
-                state == "Queued" and download_started  # pylint: disable=bad-continuation
+                state == "Queued" and download_started
             ):
                 gutils.notify(
-                    f'Finished Downloading "{self.title}".',
-                    title="torrent",
+                    f'Finished Downloading "{self.title}".', title="torrent",
                 )
                 return
 
@@ -196,7 +193,7 @@ class _TorrentWorker:
                         "-E",
                         "deluge-console",
                         "add",
-                        "-p",
+                        "--path",
                         str(self.download_dir),
                         self.magnet,
                     ]
@@ -207,9 +204,7 @@ class _TorrentWorker:
                 magnet_was_added = True
 
             if magnet_was_added:
-                log.debug(
-                    f'Enqueued "{self.title}" download.'
-                )
+                log.debug(f'Enqueued "{self.title}" download.')
 
                 # Careful where you put this line. It is responsible for
                 # preventing a race condition.

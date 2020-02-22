@@ -102,10 +102,6 @@ main() {
 
     exe="$1"; shift
 
-    if [[ -f "${exe}" ]]; then
-        files_to_profile+=("${exe}")
-    fi
-
     if ! [[ -f "${exe}" ]]; then
         old_exe="${exe}"
         exe="$(command -v "${exe}")"

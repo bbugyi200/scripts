@@ -168,6 +168,64 @@ def main(argv: List[str] = None) -> None:
         )
 
 
+def parse_cli_args(argv: List[str]) -> argparse.Namespace:
+    parser = gutils.ArgumentParser()
+
+    default: Any = '/var/lib/layman/bbugyi200'
+    parser.add_argument(
+        '-D',
+        dest='overlay_dir',
+        default=default,
+        help=(
+            'Location (directory path) of the portage overlay. Defaults to {}.'
+            .format(default)
+        ),
+    )
+
+    default = 8
+    parser.add_argument(
+        '-T',
+        '--max-thread-count',
+        type=int,
+        default=default,
+        help='Max number of threads to start. Defaults to {}.'.format(default),
+    )
+
+    default = 'y'
+    parser.add_argument(
+        '--color',
+        choices=('y', 'n'),
+        default=default,
+        help='Colorize output? Defaults to \'{}\'.'.format(default),
+    )
+
+    default = 'n'
+    parser.add_argument(
+        '--live-builds',
+        dest='live',
+        action='store',
+        choices=('y', 'n'),
+        default=default,
+        help=(
+            'Print status for live ebuilds (ebuilds with version 9999).'
+            ' Defaults to \'{}\'.'.format(default)
+        ),
+    )
+
+    default = 'n'
+    parser.add_argument(
+        '--offline',
+        choices=('y', 'n'),
+        default=default,
+        help=(
+            'Print status for packages that are not installed on this machine.'
+            ' Defaults to \'{}\'.'.format(default)
+        ),
+    )
+
+    return parser.parse_args(argv[1:])
+
+
 def check_pkg(  # noqa: C901
     pkg: str,
     id_number: int,
@@ -266,64 +324,6 @@ def get_all_files(directory: str) -> List[str]:
         for name in files:
             F.append(os.path.join(root, name))
     return F
-
-
-def parse_cli_args(argv: List[str]) -> argparse.Namespace:
-    parser = gutils.ArgumentParser()
-
-    default: Any = '/var/lib/layman/bbugyi200'
-    parser.add_argument(
-        '-D',
-        dest='overlay_dir',
-        default=default,
-        help=(
-            'Location (directory path) of the portage overlay. Defaults to {}.'
-            .format(default)
-        ),
-    )
-
-    default = 8
-    parser.add_argument(
-        '-T',
-        '--max-thread-count',
-        type=int,
-        default=default,
-        help='Max number of threads to start. Defaults to {}.'.format(default),
-    )
-
-    default = 'y'
-    parser.add_argument(
-        '--color',
-        choices=('y', 'n'),
-        default=default,
-        help='Colorize output? Defaults to \'{}\'.'.format(default),
-    )
-
-    default = 'n'
-    parser.add_argument(
-        '--live-builds',
-        dest='live',
-        action='store',
-        choices=('y', 'n'),
-        default=default,
-        help=(
-            'Print status for live ebuilds (ebuilds with version 9999).'
-            ' Defaults to \'{}\'.'.format(default)
-        ),
-    )
-
-    default = 'n'
-    parser.add_argument(
-        '--offline',
-        choices=('y', 'n'),
-        default=default,
-        help=(
-            'Print status for packages that are not installed on this machine.'
-            ' Defaults to \'{}\'.'.format(default)
-        ),
-    )
-
-    return parser.parse_args(argv[1:])
 
 
 if __name__ == "__main__":

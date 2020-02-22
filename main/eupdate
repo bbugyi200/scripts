@@ -14,7 +14,7 @@ sys_info="${_uname_output,,}"
 # >>> GENTOO
 if [[ "${sys_info}" == *"gentoo"* ]]; then
     econfirm "sudo emerge --sync" && notify "Portage Package Database Sync is Complete."
-    econfirm "tmux splitw -p20 watch -c -n 3 genlop -c && tmux select-pane -l"
+    econfirm "ewatch"
     econfirm "sudo emerge --ask --update --deep --newuse --keep-going @world" && notify "Portage Package Updates are Complete."
     econfirm "sudo emerge --ask --depclean"
     econfirm "sudo revdep-rebuild"
@@ -32,9 +32,13 @@ if [[ "${sys_info}" == *"debian"* ]]; then
 fi
 
 # >>> ALL
-econfirm "sudo npm update -g"
+econfirm "sudo npm update --force -g"
 econfirm "rustup update"
 econfirm "pipx upgrade-all"
 econfirm "sudo updatedb &"
+
+if [[ "${sys_info}" == *"gentoo"* ]]; then
+    echeck_kernel_version || notify "The sys-kernel/gentoo-sources package was upgraded, so the linux kernel needs to be rebuilt and reinstalled!"
+fi
 
 exit 0  # Fixes issue caused by nonzero return status from last econfirm

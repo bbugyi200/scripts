@@ -1,0 +1,8 @@
+#!/bin/bash
+
+expected_version="$(equery list "*" | grep "gentoo-sources" | tail -n 1 | perl -pE 's/.*-([1-9]+\.[1-9][0-9]*\.[1-9][0-9]*)$/\1/')"
+actual_version="$(uname -a | perl -pE 's/.*?([1-9]+\.[1-9][0-9]*\.[1-9][0-9]*)-gentoo.*$/\1/')"
+
+if [[ "${expected_version}" != "${actual_version}" ]]; then
+    exit 1
+fi

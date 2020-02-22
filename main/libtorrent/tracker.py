@@ -38,7 +38,7 @@ class MagnetTracker:
             An integer key that can be used to retrieve the torrent's ID
             (by indexing into `self.ids`).
         """
-        log.trace("id_list = {}", id_list)  # type: ignore
+        log.trace("id_list = {}", id_list)
         with self.lock:
             self.next_key += 1
             self.active_torrents += 1
@@ -46,9 +46,9 @@ class MagnetTracker:
             for ID in id_list:
                 if ID in self.ids.values():
                     continue
-                else:
-                    self.ids[self.next_key] = ID
-                    break
+
+                self.ids[self.next_key] = ID
+                break
             else:
                 raise RuntimeError(
                     "Something has gone wrong. "

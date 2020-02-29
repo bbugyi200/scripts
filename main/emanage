@@ -3,6 +3,7 @@
 """Interface for Gentoo System Maintenance Tasks"""
 
 import datetime as dt
+import enum
 import os
 from pathlib import Path
 import signal
@@ -10,14 +11,19 @@ import subprocess as sp
 import sys
 import textwrap
 from types import FrameType
-from typing import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-from loguru import logger as log  # pylint: disable=unused-import
+from typing import List, NamedTuple
 
 import gutils
+from loguru import logger as log  # pylint: disable=unused-import
 
 SCRIPTNAME = os.path.basename(os.path.realpath(__file__))
 ts_fmt = "%Y%m%d%H%M%S"
+
+
+class Action(enum.Enum):
+    UPDATE = enum.auto()
+    CLEANUP = enum.auto()
+    MAINT_CHECK = enum.auto()
 
 
 Arguments = NamedTuple(
@@ -26,9 +32,7 @@ Arguments = NamedTuple(
         ("debug", bool),
         ("verbose", bool),
         ("max_days", str),
-        ("update", bool),
-        ("cleanup", bool),
-        ("maint_check", bool),
+        ("action", Action),
         ("dsl", str),
         ("pretend", bool),
     ],
@@ -53,21 +57,25 @@ def parse_cli_args(argv: List[str]) -> Arguments:
     g1.add_argument(
         "-u",
         "--update",
-        dest="update",
-        action="store_true",
+        dest="action",
+        action="store_const",
+        const=Action.UPDATE,
         help="Update the machine.",
     )
     g1.add_argument(
         "-c",
         "--cleanup",
-        dest="cleanup",
-        action="store_true",
+        dest="action",
+        action="store_const",
+        const=Action.CLEANUP,
         help="Run cleanup tasks.",
     )
     g1.add_argument(
         "-m",
         "--maint-check",
-        action="store_true",
+        dest="action",
+        action="store_const",
+        const=Action.MAINT_CHECK,
         help="Check if any maintenance is due.",
     )
 
@@ -95,7 +103,7 @@ def parse_cli_args(argv: List[str]) -> Arguments:
 
     args = parser.parse_args(argv[1:])
 
-    if args.maint_check and args.max_days is None:
+    if args.action == Action.MAINT_CHECK and args.max_days is None:
         parser.error(
             "The --max-days option must be provided when --maint-check "
             "is specified."
@@ -119,11 +127,11 @@ def main(argv: List[str] = None) -> None:
     cmd_list = []
     cmd_opts = []
 
-    if args.update:
+    if args.action == Action.UPDATE:
         escript = "eupdate"
-    elif args.cleanup:
+    elif args.action == Action.CLEANUP:
         escript = "ecleanup"
-    elif args.maint_check:
+    elif args.action == Action.MAINT_CHECK:
         escript = "emaint_check"
         cmd_opts.append(str(args.max_days))
     else:

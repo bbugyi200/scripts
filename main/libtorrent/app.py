@@ -20,33 +20,31 @@ import subprocess as sp
 import sys
 import time
 import types
-from typing import List, NamedTuple
+from typing import NamedTuple, Sequence
 
 import gutils
-import libtorrent.worker as worker
 from loguru import logger as log
+
+from . import worker
+
 
 ARGS_FILE = gutils.xdg.init("data") / "args"
 
 
-Arguments = NamedTuple(
-    "Arguments",
-    [
-        ("magnet", str),
-        ("debug", bool),
-        ("verbose", bool),
-        ("download_dir", Path),
-        ("delay", int),
-        ("timeout", float),
-        ("pudb", bool),
-        ("threading", str),
-        ("vpn", str),
-    ],
-)
+class Arguments(NamedTuple):
+    magnet: str
+    debug: bool
+    verbose: bool
+    download_dir: Path
+    delay: int
+    timeout: float
+    pudb: bool
+    threading: str
+    vpn: str
 
 
 @gutils.catch
-def main(argv: List[str] = None) -> None:
+def main(argv: Sequence[str] = None) -> None:
     if argv is None:
         argv = sys.argv
 
@@ -74,7 +72,7 @@ def main(argv: List[str] = None) -> None:
     worker.join_workers()
 
 
-def parse_cli_args(argv: List[str]) -> Arguments:
+def parse_cli_args(argv: Sequence[str]) -> Arguments:
     parser = gutils.ArgumentParser(description=__doc__)
     parser.add_argument("magnet", help="The torrent magnet file.")
     parser.add_argument(

@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+
+"""
+Outputs the version numbers (MAJOR.MINOR) of all python executables that are
+installed on this machine. Version numbers are seperated by newlines.
+"""
+
+import os
+import re
+import sys
+from typing import Iterable, Iterator, NamedTuple, Sequence, Tuple
+
+import gutils
+from loguru import logger as log  # pylint: disable=unused-import
+
+
+Arguments = NamedTuple(
+    "Arguments", [("bindir", str), ("debug", bool), ("verbose", bool)]
+)
+
+
+@gutils.catch
+def main(argv: Sequence[str] = None) -> int:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
+    bin_files = os.listdir(args.bindir)
+    for (major, minor) in python_versions(bin_files):
+        print(f"{major}.{minor}")
+
+    return 0
+
+
+def python_versions(bin_files: Iterable[str]) -> Iterator[Tuple[int, int]]:
+    version_pttrn = re.compile(r"^[1-9]\.[0-9]$")
+    for f in bin_files:
+        if not f.startswith("python"):
+            continue
+
+        version = f[len("python") :]
+        if not version_pttrn.match(version):
+            continue
+
+        (major, minor) = version.split(".")
+        yield (int(major), int(minor))
+
+
+def parse_cli_args(argv: Sequence[str]) -> Arguments:
+    parser = gutils.ArgumentParser()
+    parser.add_argument(
+        "-b",
+        "--bindir",
+        default="/usr/bin",
+        help="The bin directory to search for python executables in.",
+    )
+
+    args = parser.parse_args(argv[1:])
+
+    return Arguments(**dict(args._get_kwargs()))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

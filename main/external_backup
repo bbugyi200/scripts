@@ -1,22 +1,26 @@
 #!/bin/bash
 
-EXTERNAL_HDD_UID=eb7bcc44-16c3-43a2-9dc2-f255500671e5
 perseus=/media/bryan/perseus
 ts_file="${perseus}"/external.txt  # Timestamp File
 
 
-confirm "sudo mount -U ${EXTERNAL_HDD_UID} ${perseus}"
+if ! mount | grep -q "${perseus}"; then
+    confirm "sudo mount -L PERSEUS ${perseus}"
+    
+    if [[ -f "${ts_file}" ]]; then
+        last_backup="$(cat "${ts_file}")"
+    else
+        last_backup="Never?"
+    fi
 
-if [[ -f "${ts_file}" ]]; then
-    last_backup="$(cat "${ts_file}")"
+    printf "LAST EXTERNAL BACKUP: %s\n\n" "${last_backup}"
 else
-    last_backup="Never?"
-fi; printf "LAST EXTERNAL BACKUP: %s\n\n" "${last_backup}"
+    printf ">>> ${perseus} is already mounted.\n"
+fi
 
-confirm "sudo rsync -av --delete /media/bryan/hercules ${perseus}" && notify-send -t 0 "external_backup" "Finished backup for Hercules." 
-confirm "sudo rsync -av --delete /media/bryan/zeus ${perseus}" && notify-send -t 0 "external_backup" "Finished backup for Zeus." 
+do_external_backup ${perseus}
 
-date > "${ts_file}"
-
-notify-send -t 0 "external_backup" "External Backup is Complete! :)"
-confirm "sudo umount ${perseus}"
+if confirm "# External Backup is Finished"; then
+    confirm "date > ${ts_file}"
+    confirm "sudo umount ${perseus}"
+fi

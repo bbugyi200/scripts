@@ -11,13 +11,14 @@ import subprocess as sp
 import sys
 import textwrap
 from types import FrameType
-from typing import List, NamedTuple
+from typing import MutableSequence, NamedTuple, Sequence
 
 import gutils
 from loguru import logger as log  # pylint: disable=unused-import
+from typing_extensions import Final
 
-SCRIPTNAME = os.path.basename(os.path.realpath(__file__))
-ts_fmt = "%Y%m%d%H%M%S"
+
+TS_FMT: Final = "%Y%m%d%H%M%S"
 
 
 class Action(enum.Enum):
@@ -39,13 +40,12 @@ Arguments = NamedTuple(
 )
 
 
-def parse_cli_args(argv: List[str]) -> Arguments:
+def parse_cli_args(argv: Sequence[str]) -> Arguments:
     parser = gutils.ArgumentParser()
 
     parser.add_argument(
         "-M",
         "--max-days",
-        type=int,
         nargs="?",
         help=(
             "Max number of days without update before complaining. This "
@@ -83,7 +83,6 @@ def parse_cli_args(argv: List[str]) -> Arguments:
     g2.add_argument(
         "-D",
         "--days-since-last",
-        type=str,
         dest="dsl",
         choices=["local", "remote"],
         help=(
@@ -103,17 +102,23 @@ def parse_cli_args(argv: List[str]) -> Arguments:
 
     args = parser.parse_args(argv[1:])
 
+    if args.action is None:
+        parser.error(
+            "Exactly one of the following options MUST be specified:"
+            " [-u | -c | -m]"
+        )
+
     if args.action == Action.MAINT_CHECK and args.max_days is None:
         parser.error(
-            "The --max-days option must be provided when --maint-check "
-            "is specified."
+            "The -M|--max-days option MUST be provided when -m|--maint-check"
+            " is specified."
         )
 
     return Arguments(**dict(args._get_kwargs()))
 
 
 @gutils.catch
-def main(argv: List[str] = None) -> None:
+def main(argv: Sequence[str] = None) -> None:
     if argv is None:
         argv = sys.argv
 
@@ -133,7 +138,7 @@ def main(argv: List[str] = None) -> None:
         escript = "ecleanup"
     elif args.action == Action.MAINT_CHECK:
         escript = "emaint_check"
-        cmd_opts.append(str(args.max_days))
+        cmd_opts.append(args.max_days)
     else:
         raise RuntimeError("No maintenance task specified.")
 
@@ -199,7 +204,7 @@ def process_dsl(
 
 
 def append_count_to_cmd_list(
-    fp_count: str, escript: str, cmd_list: List[str]
+    fp_count: str, escript: str, cmd_list: MutableSequence[str]
 ) -> None:
     if os.path.exists(fp_count):
         with open(fp_count, "r") as f:
@@ -236,7 +241,7 @@ def keyboard_interrupt_handler(
 def days_since_last(fp_timestamp: Path) -> int:
     try:
         date_string = open(fp_timestamp, "r").read().rstrip()
-        last_clean = dt.datetime.strptime(date_string, ts_fmt)
+        last_clean = dt.datetime.strptime(date_string, TS_FMT)
         delta = dt.datetime.today() - last_clean
         days = delta.days
     except FileNotFoundError:
@@ -253,7 +258,7 @@ def write_timestamp(fp: Path) -> None:
 
     with open(fp, "w") as f:
         now = dt.datetime.now()
-        f.write(now.strftime(ts_fmt))
+        f.write(now.strftime(TS_FMT))
 
 
 if __name__ == "__main__":

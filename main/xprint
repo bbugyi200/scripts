@@ -2,20 +2,14 @@
 
 """Type out command on screen and then (optionally) execute it."""
 
-import time
+import argparse
 import subprocess as sp  # noqa: F401
 import sys
+import time
 
-import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
-from loguru import logger as log
-
-@gutils.catch
 def main():
+    # type: () -> None
     cmd = args.expression
 
     if args.execute:
@@ -33,6 +27,7 @@ def main():
 
 
 def delay_print(s):
+    # type: (str) -> None
     for c in s:
         sys.stdout.write(c)
         sys.stdout.flush()
@@ -40,11 +35,21 @@ def delay_print(s):
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument('expression', help='Expression to type to STDOUT.')
-    parser.add_argument('-x', dest='execute', action='store_true', help='Execute expression as shell command.')
-    parser.add_argument('-D', dest='delay', type=int, default=5, help='Delay (in milliseconds) when typing to STDOUT.')
+    parser.add_argument(
+        '-x',
+        dest='execute',
+        action='store_true',
+        help='Execute expression as shell command.',
+    )
+    parser.add_argument(
+        '-D',
+        dest='delay',
+        type=int,
+        default=5,
+        help='Delay (in milliseconds) when typing to STDOUT.',
+    )
     args = parser.parse_args()
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

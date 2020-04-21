@@ -3,20 +3,14 @@
 # syncthing backup
 SYNC=/media/bryan/hercules/backup/Sync/weekly
 [ -d $SYNC ] || mkdir -p $SYNC
-rsync -av --delete /home/bryan/Sync/ $SYNC
+rsync -av --delete --exclude 'var/projects/edgelp' /home/bryan/Sync/ $SYNC
 date > $SYNC/backup.txt
 
 # etc backup
-ETC='/media/bryan/hercules/backup/etc/weekly'
+ETC=/media/bryan/hercules/backup/etc/weekly
 [ -d $ETC ] || mkdir -p $ETC
 rsync -av --delete /etc/ $ETC
 date > $ETC/backup.txt
-
-# var backup
-VAR='/media/bryan/hercules/backup/var/weekly'
-[ -d $VAR ] || mkdir -p $VAR
-rsync -av --delete /var/ $VAR
-date > $VAR/backup.txt
 
 # kernel config backup
 cp /usr/src/linux/.config /media/bryan/hercules/backup/kernel-config-"$(uname -r)"

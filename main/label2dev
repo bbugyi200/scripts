@@ -1,0 +1,4 @@
+#!/bin/bash
+
+label="$1"; shift
+sudo blkid | sort | perl -nE "print s/:.*//gr if /LABEL=\"${label}\"/"

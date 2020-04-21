@@ -1,0 +1,4 @@
+#!/bin/bash
+
+encfs -i 15 -o allow_root ~/Sync/var/projects/.edgelp ~/Sync/var/projects/edgelp
+tm es-prod

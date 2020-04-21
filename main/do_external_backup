@@ -1,0 +1,141 @@
+#!/bin/bash
+
+function notify() {
+    msg="$1"; shift
+    notify-send -t 0 "external_backup" "${msg}"
+}
+
+
+function clear_last_notify() {
+    xdotool key ctrl+space
+}
+
+
+function _run_rsync() {
+    D="$1"; shift
+
+    backup_dir="${perseus}"/gentoo/"${D}"
+    [[ -d "${backup_dir}" ]] || sudo mkdir -p "${backup_dir}"
+
+    if sudo rsync -av --delete "${D}"/ "${backup_dir}"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
+function run_rsync() {
+    D="$1"; shift
+
+    clear_last_notify
+
+    if _run_rsync "${D}"; then
+        notify "${D}: ok"
+    else
+        notify "${D}: FAIL"
+    fi
+}
+
+
+function confirm_run_sync() {
+    D="$1"; shift
+    if confirm "# Sync ${D}"; then
+        run_rsync "${D}"
+    fi
+}
+
+
+function dir_is_empty() {
+    D="$1"; shift
+    if sudo find "${D}" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+
+function main() {
+    set -e
+
+    if [[ -z "$1" ]]; then
+        1>&2 printf "usage: do_external_backup <external-drive-path>"
+        exit 2
+    fi
+
+    perseus="$1"; shift
+
+    easy_group=()
+    excluded_root_subdirs=(/dev /lost+found /proc /run /sys /tmp)
+    for D in /*; do
+        exclude=0
+        for X in "${excluded_root_subdirs[@]}"; do
+            if [[ "${D}" == "${X}" ]]; then
+                exclude=1
+            fi
+        done
+
+        if [[ "${exclude}" -eq 1 ]]; then
+            continue
+        fi
+
+        if dir_is_empty "${D}" || test -L "${D}"; then
+            easy_group+=("${D}")
+            continue
+        fi
+    
+        if [[ "${D}" == /media ]]; then
+            for media_user in /media/*; do
+                for DD in "${media_user}"/*; do
+                    if [[ "${DD}" == "${perseus}" ]]; then
+                        continue
+                    fi
+
+                    if [[ ! -d "${DD}" ]] || dir_is_empty "${DD}"; then
+                        easy_group+=("${DD}")
+                        continue
+                    fi
+
+                    confirm_run_sync "${DD}"
+                done
+            done
+    
+            continue
+        fi
+    
+        confirm_run_sync "${D}"
+    done
+    
+    if confirm "# Backup Files/Dirs in Easy Group"; then
+        nmsg=""
+        for D in "${easy_group[@]}"; do
+            if [[ -n "${nmsg}" ]]; then
+                nmsg+="\n"
+            fi
+        
+            if _run_rsync "${D}"; then
+                nmsg+="${D}: ok"
+            else
+                nmsg+="${D}: FAIL"
+            fi
+        done
+        
+        if [[ -n "${nmsg}" ]]; then
+            notify "${nmsg}"
+        fi
+    fi
+    
+    if confirm "# Clone the HADES PC game partition"; then
+        dev="$(label2dev HADES)"
+        hades_desc="[${dev}|HADES => hades.img]"
+        if sudo ntfsclone "${dev}" -o "${perseus}"/hades.img; then
+            notify "${hades_desc}: ok"
+        else
+            notify "${hades_desc}: FAIL"
+        fi
+    fi
+}
+
+
+main "$@"

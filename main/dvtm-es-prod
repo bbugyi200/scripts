@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+if ! mount | grep -q "encfs.*edgelp"; then
+    encfs -o allow_root ~/Sync/var/projects/.edgelp ~/Sync/var/projects/edgelp
+fi
+
+dvtm-wrapper "es-prod" "$HOME/projects/edgelp/prod"
+
+fusermount -u /home/bryan/Sync/var/projects/edgelp

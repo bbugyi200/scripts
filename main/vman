@@ -71,12 +71,13 @@ tmp_dir=/tmp/vman; [ -d "${tmp_dir}" ] || mkdir -p "${tmp_dir}"
 section=
 
 for page in "$@"; do
-    tmp_file="${tmp_dir}"/"${page}".man
-    truncate "${tmp_file}"
     if [[ "${page}" =~ ^[0-9]p?$ ]]; then
         section="${page}"
         continue
     fi
+
+    tmp_file="${tmp_dir}"/"${page}".man
+    truncate "${tmp_file}"
 
     # shellcheck disable=SC2086
     if man ${section} "${page}" &> /dev/null; then

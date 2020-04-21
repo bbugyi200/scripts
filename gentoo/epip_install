@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+
+"""
+Installs provided python packages if they do not already exist.
+"""
+
+import argparse
+from shutil import which
+from subprocess import PIPE, Popen
+import sys
+from typing import NamedTuple, Sequence
+
+
+Arguments = NamedTuple(
+    "Arguments",
+    [("python_packages", Sequence[str]), ("python_versions", Sequence[float])],
+)
+
+
+def install_pypacks(pypacks: Sequence[str], pyver: float) -> None:
+    python = f"python{pyver}"
+    ps = Popen(
+        [python, "-m", "pip", "list", "--format", "freeze"], stdout=PIPE,
+    )
+    (stdout, _stderr) = ps.communicate()
+    pypacks_installed = [
+        pypack.split("=", 1)[0].strip() for pypack in stdout.decode().split()
+    ]
+
+    # Normalize both lists of Python packages.
+    pypacks = [p.lower() for p in pypacks]
+    pypacks_installed = [p.lower() for p in pypacks_installed]
+
+    for pypack in pypacks:
+        if pypack in pypacks_installed:
+            print(f">>> {pypack}: ok")
+        else:
+            print(f">>> {pypack}: FAILED")
+            ps = Popen([python, "-m", "pip", "install", "--user", pypack])
+            ps.communicate()
+
+
+def python_version_exists(pyver: float) -> bool:
+    if which(f"python{pyver}") is None:
+        return False
+    return True
+
+
+def parse_cli_args(argv: Sequence[str]) -> Arguments:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "-v",
+        action="append",
+        dest="python_versions",
+        metavar="MAJOR.MINOR",
+        type=float,
+        help=(
+            "A valid python version number (e.g. 2.7, 3.6, 3.7, etc....). This"
+            " option can be provided more than once."
+        ),
+    )
+    parser.add_argument(
+        "python_packages",
+        metavar="PYPACK",
+        nargs="+",
+        type=str,
+        help="Python packages to install (if not already installed).",
+    )
+
+    args = parser.parse_args(argv[1:])
+
+    if args.python_versions is None:
+        parser.error(
+            "At least one python version number must be provided (using the -v"
+            " option)."
+        )
+
+    return Arguments(**dict(args._get_kwargs()))
+
+
+def main(argv: Sequence[str] = None) -> int:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+
+    is_first_pyver = True
+    for pyver in args.python_versions:
+        if not python_version_exists(pyver):
+            raise SystemExit(f"[ERROR]: python{pyver} is not installed.")
+
+        if is_first_pyver:
+            is_first_pyver = False
+        else:
+            print()
+
+        print(f"===== Python {pyver} =====")
+        install_pypacks(args.python_packages, pyver)
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

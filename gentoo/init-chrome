@@ -6,4 +6,5 @@ function xkey() { sleep 0.25 && xdotool key "$1"; }
 function pin-tab() { xkey "ctrl+shift+x"; }
 function next-tab() { xkey "ctrl+Tab"; }
 
+xkey Escape
 pin-tab; next-tab; pin-tab; next-tab; pin-tab; next-tab

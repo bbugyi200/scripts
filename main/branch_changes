@@ -1,0 +1,10 @@
+#!/bin/bash
+
+function get_files() {
+    common_ancestor="$(git merge-base "${MASTER_BRANCH:-master}" HEAD)"
+    git diff-tree -r --name-status "${common_ancestor}" HEAD | perl -nE 'print s/.\s+//r if not m{^D}'
+    git -c color.status="" status | perl -nE 'print s/[ \t]+|modified://gr if /modified:/'
+    git -c color.status="" status | perl -nE 'if ($found == 1) { print s/^\s*//gr if /^\s+[A-Za-z]/; exit if /^$/ } else { $found=1 if /^Untracked files:/; }'
+}
+
+get_files | sort -u

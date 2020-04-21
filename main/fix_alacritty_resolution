@@ -1,0 +1,14 @@
+#!/bin/bash
+
+xrandr --output HDMI-A-0 --mode 1920x1080
+sleep 3
+
+xdotool key ctrl+a q
+sleep 0.5
+xdotool type y
+
+sleep 1
+xdotool key super+x
+sleep 1
+
+xrandr --output HDMI-A-0 --mode 3840x2160

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+active_window_info | perl -nE 'print s/^WM_NAME\(STRING\) = "(.*)"/\1/gr if /^WM_NAME\(STRING\)/'

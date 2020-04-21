@@ -5,7 +5,11 @@ This script aids in the creation and maintainance of user patches on Gentoo.
 
 Steps to create an ebuild patch:
 
-1) Run \`cd "\$(epatch PACKAGE)"\` (will cd to temp git repository).
+1A) Run \`cd "\$(epatch PACKAGE)"\` (will cd to temp git repository).
+1B) Add a file named 'epatch.info' to the top-level of the project. This file
+should contain two lines:
+   (i) The Gentoo package to patch (i.e. <category>/<package>)
+   (ii) The branch to diff against (e.g. origin/master) 
 2) Make your code changes.
 3) Run \`epatch -i PATCH\` (while still in the temp git repository) to install PATCH.patch.
 EOM
@@ -14,7 +18,7 @@ source gutils.sh
 
 # ensure running as root
 if [ "$(id -u)" != "0" ]; then
-  exec sudo "$0" -u "${USER}" "$@"
+  exec sudo -E "$0" -u "${USER}" "$@"
 fi
 
 # ---------- Functions ----------

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if mount | grep -q "encfs.*edgelp"; then
+    nohup sh -c "sleep 3 && fusermount -u /home/bryan/Sync/var/projects/edgelp" & disown
+    echo "The edgelp directory has been unmounted."
+else
+    echo "The edgelp directory is NOT currently mounted."
+fi

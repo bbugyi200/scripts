@@ -4,7 +4,7 @@ WNAME="$(xdotool getwindowfocus getwindowname)"
 if wmctrl -c :ACTIVE:; then
     removeEmptyWorkspace "${WNAME}"
 else
-    if [[ "$(wmctrl -d | wc -l)" -le 4 ]] && [[ "$(x11screens)" -ge 3 ]]; then
+    if [[ "$(wmctrl -d | wc -l)" -le 3 ]] && [[ "$(x11screens)" -ge 3 ]]; then
         xdotool key super+bracketright
     else
         removeWorkspace

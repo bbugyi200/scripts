@@ -1,0 +1,3 @@
+#!/bin/bash
+
+tmux splitw -h -p35 'while true; do; epacks_left | less; done' && tmux select-pane -l

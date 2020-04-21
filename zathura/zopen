@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-"""Zathura Helper Script. Used to Search for and then Open Documents in Zathura."""
+"""
+Zathura Helper Script. Used to Search for and then Open Documents in Zathura.
+"""
 
 import argparse
 import os
@@ -9,36 +11,78 @@ import re
 import signal
 import socket
 import subprocess as sp
-import sys  # noqa: F401
+import sys
 import time
-from typing import *  # noqa: F401
-from types import *  # noqa: F401
+from typing import List, Sequence
 
 import gutils
-
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
 from loguru import logger as log
+
 
 xdg_data_dir = gutils.xdg.init('data')
 CACHE_FILE = xdg_data_dir / 'recently_opened_docs'
 FIND_CACHE_FILE = xdg_data_dir / 'all_docs'
 
+
+def parse_cli_args(argv: Sequence[str]) -> argparse.Namespace:
+    parser = gutils.ArgumentParser()
+    parser.add_argument(
+        '-C',
+        dest='generate_cache',
+        action='store_true',
+        help='Re-generate the document cache (aka the "find command cache").',
+    )
+    parser.add_argument(
+        '-q',
+        '--quiet',
+        dest='quiet',
+        action='store_true',
+        help=(
+            'Do not prompt the user to choose a document. Use with -C to '
+            'silently re-generate the document cache (aka the "find command  '
+            'cache").'
+        ),
+    )
+    parser.add_argument(
+        '-x',
+        dest='overwrite',
+        action='store_true',
+        help='Close current Zathura instance before opening new one.',
+    )
+    parser.add_argument(
+        '-R',
+        dest='refresh',
+        action='store_true',
+        help='Closes current Zathura instance and reopens same document.',
+    )
+    args = parser.parse_args(argv[1:])
+    return args
+
+
 @gutils.catch
-def main(args: argparse.Namespace) -> None:
-    doc_pttrn = '.*\.\(pdf\|epub\|djvu\|ps\|okular\)'
+def main(argv: Sequence[str] = None) -> None:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
+    doc_pttrn = r'.*\.\(pdf\|epub\|djvu\|ps\|okular\)'
 
     all_docs = None
     if args.generate_cache or not os.path.isfile(FIND_CACHE_FILE):
         directory_list = ['/home/bryan/Sync', '/home/bryan/projects']
         if socket.gethostname() == 'athena':
-            directory_list.append('/media/bryan/hercules/archive/home/bryan/Sync')
+            directory_list.append(
+                '/media/bryan/hercules/archive/home/bryan/Sync'
+            )
 
         cmd_list = ['find']
         cmd_list.extend(directory_list)
-        cmd_list.extend(['-path', '/home/bryan/Sync/.dropbox.cache', '-prune', '-o'])
+        cmd_list.extend(
+            ['-path', '/home/bryan/Sync/.dropbox.cache', '-prune', '-o']
+        )
         cmd_list.extend(['-regex', doc_pttrn])
 
         out = sp.check_output(cmd_list)
@@ -55,13 +99,17 @@ def main(args: argparse.Namespace) -> None:
         all_docs = out.decode().strip()
 
     # Append any docs found in the Downloads directory.
-    out = sp.check_output(['find', '/home/bryan/Downloads', '-regex', doc_pttrn])
+    out = sp.check_output(
+        ['find', '/home/bryan/Downloads', '-regex', doc_pttrn]
+    )
     all_docs = all_docs + '\n' + out.decode().strip()
-    log.trace('----- Downloads -----\n{}', out.decode().strip())  # type: ignore
+    log.trace('----- Downloads -----\n{}', out.decode().strip())
 
     try:
-        cmd = 'wmctrl -lx | grep "zathura\|okular" | tr -s " " | cut -d\' \' -f5- '\
-              '| grep -o ".*\\.\\(pdf\\|djvu\\|epub\\|okular\\)"'
+        cmd = (
+            'wmctrl -lx | grep -E "zathura|okular" | tr -s " " | cut -d\' \''
+            ' -f5- | grep -o ".*\\.\\(pdf\\|djvu\\|epub\\|okular\\)"'
+        )
         decoded = gutils.shell(cmd)
 
         open_docs = [Path(x) for x in decoded.split('\n')]
@@ -73,24 +121,34 @@ def main(args: argparse.Namespace) -> None:
     with open(CACHE_FILE, 'r') as f:
         cached_docs = [Path(x.strip()) for x in f.readlines()]
 
-    ordered_docs = promote_cached_docs([Path(doc) for doc in all_docs.split('\n')], cached_docs)
+    ordered_docs = promote_cached_docs(
+        [Path(doc) for doc in all_docs.split('\n')], cached_docs
+    )
 
     if open_docs:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
-    pretty_docs = [re.sub('^/home/bryan/Sync/var/books/', '', str(doc)) for doc in ordered_docs]
+    pretty_docs = [
+        re.sub('^/home/bryan/Sync/var/books/', '', str(doc))
+        for doc in ordered_docs
+    ]
 
     if args.refresh:
         doc = ordered_docs[-1]
     else:
-        ps = sp.Popen(['printf', '{}'.format('\n'.join(pretty_docs))], stdout=sp.PIPE)
-        out = sp.check_output(['rofi', '-p', 'Document', '-m', '-4', '-dmenu', '-i'], stdin=ps.stdout)
+        ps = sp.Popen(
+            ['printf', '{}'.format('\n'.join(pretty_docs))], stdout=sp.PIPE
+        )
+        out = sp.check_output(
+            ['rofi', '-p', 'Document', '-m', '-4', '-dmenu', '-i'],
+            stdin=ps.stdout,
+        )
         ps.wait()
 
         output = out.decode().strip()
 
         if output.startswith('/'):
-            doc = output
+            doc = Path(output)
         else:
             doc = Path('/home/bryan/Sync/var/books/{}'.format(output))
 
@@ -109,7 +167,9 @@ def main(args: argparse.Namespace) -> None:
     sp.check_call(['fullscreen'])
 
 
-def open_document(cmd: str, doc: Path, *, opts: List[str] = None, replace: bool = False) -> None:
+def open_document(
+    cmd: str, doc: Path, *, opts: List[str] = None, replace: bool = False
+) -> None:
     if opts is None:
         opts = []
 
@@ -126,7 +186,9 @@ def open_document(cmd: str, doc: Path, *, opts: List[str] = None, replace: bool 
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
-def promote_cached_docs(docs: List[Path], cached_docs: List[Path]) -> List[Path]:
+def promote_cached_docs(
+    docs: List[Path], cached_docs: List[Path]
+) -> List[Path]:
     """Docs in Cache File are Brought to the Top of the List of Options"""
     D = docs[:]
     for c in list(reversed(cached_docs)):
@@ -147,8 +209,9 @@ def demote_open_docs(docs: List[Path], open_docs: List[Path]) -> List[Path]:
                     D.remove(doc)
                     E.append(doc)
                 except ValueError:
-                    # Protects against multiple attempts to remove the same doc which happens when
-                    # the same doc is opened up in multiple different instances.
+                    # Protects against multiple attempts to remove the same doc
+                    # which happens when the same doc is opened up in multiple
+                    # different instances.
                     pass
     D.extend(E)
     return D
@@ -174,18 +237,4 @@ def add_to_cache(doc: Path) -> None:
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
-    parser.add_argument('-C', dest='generate_cache', action='store_true',
-                        help='Re-generate the document cache (aka the "find command cache").')
-    parser.add_argument('-q', '--quiet', dest='quiet', action='store_true',
-                        help='Do not prompt the user to choose a document. Use with -C to '
-                             'silently re-generate the document cache (aka the "find command  '
-                             'cache").')
-    parser.add_argument('-x', dest='overwrite', action='store_true',
-                        help='Close current Zathura instance before opening new one.')
-    parser.add_argument('-R', dest='refresh', action='store_true',
-                        help='Closes current Zathura instance and reopens same document.')
-    args = parser.parse_args()
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+    main()

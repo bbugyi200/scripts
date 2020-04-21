@@ -5,7 +5,7 @@
 ###############################################################################
 
 if [[ "$(wmctrl -lx | awk '{print $3}')" != *".mpv"* ]]; then
-    xdotool key super+bracketright
+    xdotool key super+l
     xspawn -w mpv umpv "$@"
 else
     umpv "$@"

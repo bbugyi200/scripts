@@ -1,0 +1,3 @@
+#!/bin/bash
+
+emerge --resume --pretend --color=y 2>&1 | grep "^\["

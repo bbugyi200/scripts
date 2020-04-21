@@ -2,21 +2,71 @@
 
 """Add a New Alias to your bashrc / zshrc in Alphabetical Order"""
 
-import os  # noqa: F401
+import os
 import re
-import subprocess as sp  # noqa: F401
-import sys  # noqa: F401
-
-from loguru import logger as log
+import subprocess as sp
+import sys
+from typing import List, NamedTuple, Sequence
 
 import gutils
+from loguru import logger as log
 
 
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
+class Arguments(NamedTuple):
+    alias: bool
+    debug: bool
+    marker: str
+    name: str
+    file_list: List[str]
+    verbose: bool
+
+
+def parse_cli_args(argv: Sequence[str]) -> Arguments:
+    parser = gutils.ArgumentParser()
+    parser.add_argument(
+        'name', metavar='alias_name', help='Name of the new alias.'
+    )
+    parser.add_argument(
+        '-a',
+        '--alias',
+        action='store_true',
+        help='Define alias instead of function.',
+    )
+    parser.add_argument(
+        '-m',
+        '--marker',
+        default='DEFAULT',
+        help='Marks the start line. Defaults to %(default)s.',
+    )
+    parser.add_argument(
+        "-F",
+        "--bash-file",
+        action="append",
+        dest='file_list',
+        metavar='FILE',
+        help=(
+            'File to search when determining where to add new alias'
+            ' definition. This option can be given multiple times.'
+        ),
+    )
+
+    args = parser.parse_args(argv[1:])
+
+    return Arguments(**dict(args._get_kwargs()))
+
+
 @gutils.catch
-def main(args):
+def main(argv: Sequence[str] = None) -> None:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
     marker = '# {} marker: {}'.format(scriptname, str.upper(args.marker))
     found_marker = False
 
@@ -25,6 +75,7 @@ def main(args):
     else:
         new_definition = "{}() {{ :; }}\n".format(args.name)
 
+    filename = None
     for filename in args.file_list:
         line_number = 0
         new_lines = []
@@ -47,7 +98,7 @@ def main(args):
 
             tmp_line = line.replace('alias ', '')
             line_name = re.split(r'[=(]', tmp_line)[0]
-            log.trace('line_name => {}', repr(line_name))  # type: ignore
+            log.trace('line_name => {}', repr(line_name))
 
             if args.name == line_name.strip():
                 gutils.io.emsg('{} is already defined.'.format(args.name))
@@ -55,9 +106,11 @@ def main(args):
                 sys.exit(0)
 
             tmp_line = tmp_line.lower()
-            log.trace('tmp_line => {}', repr(tmp_line))  # type: ignore
+            log.trace('tmp_line => {}', repr(tmp_line))
 
-            if (args.name.lower() < tmp_line or not line.strip()) and not found_line:
+            if (
+                args.name.lower() < tmp_line or not line.strip()
+            ) and not found_line:
                 new_lines.pop()
                 new_lines.append(new_definition)
                 new_lines.append(line)
@@ -68,11 +121,14 @@ def main(args):
                 new_lines.append(new_definition)
                 line_number += 1
             break
-    else:
-        raise RuntimeError('Lexical position for new alias could not be found.')
+
+    if filename is None:
+        raise RuntimeError(
+            'Lexical position for new alias could not be found.'
+        )
 
     with open(filename, 'w') as f:
-            f.writelines(new_lines)
+        f.writelines(new_lines)
 
     if args.alias:
         column_number = 9 + len(args.name)
@@ -81,21 +137,10 @@ def main(args):
 
     cursor_call = 'call cursor({}, {})'.format(line_number, column_number)
     cmd_list = ['vim', '+startinsert', '-c', cursor_call, filename]
-    log.trace('cmd_list => {}', repr(cmd_list))  # type: ignore
+    log.trace('cmd_list => {}', repr(cmd_list))
 
     sp.check_call(cmd_list)
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
-    parser.add_argument('name', metavar='alias_name', help='Name of the new alias.')
-    parser.add_argument('-a', '--alias', action='store_true', help='Define alias instead of function.')
-    parser.add_argument('-m', '--marker', default='DEFAULT', help='Marks the start line.')
-    parser.add_argument('file_list', nargs='+', metavar='file', help='File to search when determining where to add new alias definition.')
-    args = parser.parse_args()
-
-    if args.name[0] == '/':
-        parser.error("Must specify a name for the new alias.")
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+    main()

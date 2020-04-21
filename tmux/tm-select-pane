@@ -115,6 +115,7 @@ function select_pane() {
 
     if is_vim; then
         fix_vim_layout
+        tmux send-keys [ "or"
     fi
 }
 
@@ -127,6 +128,7 @@ function main() {
     
     if is_vim; then
         fix_vim_layout
+        tmux send-keys ] "or"
     fi
 
     select_pane

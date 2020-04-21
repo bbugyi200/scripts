@@ -6,12 +6,10 @@ import threading
 import time
 from typing import List, Union
 
+import gutils
 from loguru import logger as log
 
-import gutils
-
-from libtorrent.tracker import MagnetTracker
-
+from .tracker import MagnetTracker
 
 _magnet_queue: "queue.Queue[str]" = queue.Queue()
 
@@ -99,6 +97,7 @@ class _TorrentWorker:
         self.magnet = magnet
         self.download_dir = download_dir
         self.timeout = timeout
+
         self._mt_key = self.INVALID_TRACKER_KEY
         self.is_enqueued = False
 

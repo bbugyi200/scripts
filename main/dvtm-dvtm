@@ -1,0 +1,3 @@
+#!/bin/bash
+
+dvtm-wrapper "dvtm" "$HOME/projects/dvtm"

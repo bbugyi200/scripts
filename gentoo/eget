@@ -8,6 +8,6 @@ fi
 cd /home/bryan/projects/portage-overlay || exit 1
 repoman manifest
 gpup
-layman -s bbugyi200
+sudo emerge --sync bbugyi200
 
-sudo_get "$@"
+sudo_get -1 "$@"

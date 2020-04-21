@@ -11,11 +11,9 @@ fi
 
 
 RM=/bin/rm
-SAFE_RM=/usr/bin/safe-rm
 
 
 # >>> HOME
-"${SAFE_RM}" -rf /home/bryan/main* &> /dev/null
 for f in "core" "gccdump.s" "databases-incognito"; do
 	"${RM}" -rf /home/bryan/"${f}" &> /dev/null
 done

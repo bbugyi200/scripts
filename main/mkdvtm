@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [[ $# -ne 1 ]]; then
+    >&2 printf "usage: $(basename "$0") SESSION_NAME\n"
+    exit 2
+fi
+
+session_name="$1"; shift
+dvtm_script="dvtm-${session_name,,}"
+
+if ! command -v "${dvtm_script}" &> /dev/null; then
+    >&2 printf "[ERROR]: Could not find a script with the name '${dvtm_script}'.\n"
+    exit 1
+fi
+
+nohup alacritty -e "${dvtm_script}" &> /dev/null & disown

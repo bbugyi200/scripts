@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+
+"""Script used to send an email from the command-line."""
+
+import argparse
+import sys
+from typing import Sequence
+
+import rfclient
+
+
+def parse_cli_args(argv: Sequence[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "-2", "--to", required=True, help="The recipient of the email."
+    )
+    parser.add_argument(
+        "-s", "--subject", default=None, help="The subject ot the email."
+    )
+    parser.add_argument(
+        "-b", "--body", nargs="+", default=None, help="The body of the email.",
+    )
+
+    args = parser.parse_args(argv[1:])
+    return args
+
+
+def main(argv: Sequence[str] = None) -> int:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+
+    subject = args.subject or ""
+    body = args.body or []
+
+    resp = rfclient.post("sendmail", to=args.to, subject=subject, body=body)
+
+    if resp.status_code == 200:
+        return 0
+    else:
+        print(f"[{resp.status_code}] {resp.text}", file=sys.stderr)
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

@@ -1,20 +1,34 @@
 #!/bin/bash
 
-EPIP_PACKAGES=(
+EPIP_PY2_PACKAGES=(
+    ipython
+)
+
+EPIP_PY3_PACKAGES=(
     ipython
     loguru  # my personal scripts use loguru
     pandas
     pudb
     pygobject  # clipster dependency
+    requests
     tldextract  # qute-pass dependency
     typing-extensions
 )
 
-for pyver in $(python_versions | grep -v "^2" | sort -u); do
-    epip_install -v "${pyver}" "${EPIP_PACKAGES[@]}"
+function run() {
+    pyver="$1"; shift
+    packages=("$@"); shift
+
+    epip_install -v "${pyver}" "${packages[@]}"
 
     printf -- "--- Updating Python ${pyver} Packages ---\n"
     epip_update "${pyver}"
 
     printf "\n"
+}
+
+run 2.7 "${EPIP_PY2_PACKAGES[@]}"
+
+for pyver in $(python_versions | grep -v "^2" | sort -u); do
+    run "${pyver}" "${EPIP_PY3_PACKAGES[@]}"
 done

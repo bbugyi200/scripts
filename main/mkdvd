@@ -1,0 +1,24 @@
+#!/bin/bash
+
+export VIDEO_FORMAT=NTSC
+
+if [[ $# -ne 2 ]]; then
+    2>&1 printf "usage: $(basename "$0") TITLE VIDEO_FILE\n"
+    exit 2
+fi
+
+title="$1"; shift
+video_file="$1"; shift
+
+DVD=/media/bryan/zeus/media/DVD
+dvd_title="${DVD}"/"${title}"
+[[ -d "${dvd_title}" ]] || mkdir "${dvd_title}"
+
+mpg_file="${video_file%.*}".mpg
+iso_file="${DVD}"/"${title,,}".iso
+
+confirm "sudo ffmpeg -i \"${video_file}\" -target ntsc-dvd -aspect 16:9 \"${mpg_file}\""
+confirm "dvdauthor -o ${dvd_title} -t \"${mpg_file}\""
+confirm "dvdauthor -o ${dvd_title} -T"
+confirm "mkisofs -dvd-video -V ${title^^} -o ${iso_file} ${dvd_title}"
+confirm "su -c \"growisofs -dvd-compat -Z /dev/sr0=${iso_file}\""

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+package="$1"; shift
+version="$1"; shift
+
+latest_ebuild="$(find /home/bryan/projects/portage-overlay -type f -name "$package*ebuild" | sort -u | tail -n 1)"
+new_ebuild="$(dirname "${latest_ebuild}")"/"${package}"-"${version}".ebuild
+
+printf ">>> Copying %s to %s\n" "${latest_ebuild}" "${new_ebuild}"
+cp "${latest_ebuild}" "${new_ebuild}"

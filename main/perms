@@ -1,0 +1,205 @@
+#!/bin/bash
+
+read -r -d '' doc << EOM
+This script can be used to produce a report that describes the permissions of
+the specified files/directories.
+EOM
+
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "d,h,H,R,v" -l "debug,help,hidden,recursive,verbose" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-H] [-R] [-v] [FARG [...]]"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    FARG
+        A relative file/directory path. If no files/directories are provided,
+        the default action is to describe the permissions of the current
+        working directory.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -H | --hidden
+        Show hidden files/directories.
+
+    -h | --help
+        View this help message.
+
+    -R | --recursive
+        Recurse over directory contents.
+
+    -v | --verbose
+        Enable verbose output.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+       -d|--debug )
+           debug=true
+           ;;
+       -h|--help )
+           echo "${help}"
+           exit 0
+           ;;
+       -H|--hidden )
+           show_hidden=true
+           ;;
+       -R|--recursive )
+           recursive=true
+           ;;
+       -v|--verbose )
+           verbose=true
+           ;;
+       -- )
+           shift
+           break
+           ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
+fi
+
+# ---------- Functions ----------
+function is_non_empty_dir() {
+    local D="$1"; shift
+
+    if ! [[ -d "${D}" ]]; then
+        return 1
+    fi
+
+    if find "${D}" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function set_fargs() {
+    local D="$1"; shift
+    FARGS=()
+    if [[ "${show_hidden}" = true ]]; then
+        FARGS+=("${D}"/.*)
+    fi
+    FARGS+=("${D}"/*)
+}
+
+function max_field() {
+    local fnum="$1"; shift
+    local file="$1"; shift
+    printf "%d" $(($(cut -d'|' -f"${fnum}" "${file}" | perl -nE 'printf "%d\n", length($_)' | sort -u -n | tail -n 1) - 1))
+}
+
+function print_perms() {
+    PREFIX_CHAR="-"
+
+    local level=0
+    local indent=0
+    local prefix=""
+
+    if [[ "$1" =~ ^[1-9][0-9]* ]]; then
+        level="$1"; shift
+        indent=$((level * 4))
+
+        local i=0
+        while [[ "${i}" -lt "${indent}" ]]; do
+            prefix="${prefix}${PREFIX_CHAR}"
+            i=$((i + 1))
+        done
+    fi
+
+    local perms_file=/tmp/perms"${level}".txt
+
+    if [[ "${verbose}" = true ]]; then
+        stat_fmt='%n|%F|%U(%u):%G(%g)|%A (%a)'
+    else
+        stat_fmt='%n|%F|%U:%G|%a'
+    fi
+
+    if [[ "$(uname -a)" == *"Darwin"* ]]; then
+        STAT=gstat
+    else
+        STAT=stat
+    fi
+
+    "${STAT}" -c  "${stat_fmt}" "$@" > "${perms_file}"
+
+    local max_fname_size="$(max_field 1 "${perms_file}")"
+    local max_ftype_size="$(max_field 2 "${perms_file}")"
+    local max_owner_size="$(max_field 3 "${perms_file}")"
+    local max_perms_size="$(max_field 4 "${perms_file}")"
+
+    while IFS='' read -r line || [[ -n "${line}" ]]; do
+        local fname="${line%%|*}"
+        # Do NOT report on the special '.' and '..' directories unless they are
+        # at the top-level.
+        if [[ "${fname}" == *"." ]] && [[ -n "${prefix}" ]]; then
+            continue
+        fi
+
+        line="${line#*|}"
+        local ftype="${line%%|*}"
+        if [[ "${verbose}" != true ]]; then
+            max_ftype_size=1
+            ftype="${ftype:0:1}"
+        fi
+
+        line="${line#*|}"
+        local owner="${line%%|*}"
+
+        line="${line#*|}"
+        local perms="${line%%|*}"
+
+        printf -- \
+            "${prefix}%-${max_fname_size}s | %-${max_ftype_size}s | %-${max_owner_size}s | %-${max_perms_size}s\n" \
+            "${fname}" \
+            "${ftype}" \
+            "${owner}" \
+            "${perms}"
+
+        # If the -R option was used and this is a non-empty directory, we
+        # recurse on this directory's contents.
+        if [[ "${recursive}" = true ]] && is_non_empty_dir "${fname}"; then
+            set_fargs "${fname}"
+            print_perms $((level + 1)) "${FARGS[@]}"
+        fi
+    done < "${perms_file}"
+}
+
+main() {
+    # Deafult to the current working directory (i.e. '.').
+    if [[ "$#" -eq 0 ]]; then
+        set -- "."
+    fi
+
+    print_perms "$@"
+
+    # If only a single directory argument is provided, show the perms of that
+    # directory AND its immediate children (we skip this if -R was specified
+    # since it would be redundant).
+    if [[ $# -eq 1 ]] && [[ "${recursive}" != true ]] && is_non_empty_dir "$1"; then
+        set_fargs "$1"
+        print_perms 1 "${FARGS[@]}"
+    fi
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+	main "$@"
+fi

@@ -18,7 +18,7 @@ def default_token() -> str:
 
 
 def default_hostname() -> str:
-    return os.environ["ATHENAS_DDNS_HOSTNAME"]
+    return os.environ["RFSERVER_HOSTNAME"]
 
 
 def post(handler_name: str, **kwargs: Any) -> Response:

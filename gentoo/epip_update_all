@@ -8,9 +8,11 @@ EPIP_PY3_PACKAGES=(
     ipython
     loguru  # my personal scripts use loguru
     pandas
+    parameterized
     pudb
     pygobject  # clipster dependency
     requests
+    selenium
     tldextract  # qute-pass dependency
     typing-extensions
 )
@@ -21,7 +23,7 @@ function run() {
 
     epip_install -v "${pyver}" "${packages[@]}"
 
-    printf -- "--- Updating Python ${pyver} Packages ---\n"
+    printf -- "----- Updating Python ${pyver} Packages -----\n"
     epip_update "${pyver}"
 
     printf "\n"

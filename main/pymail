@@ -6,7 +6,7 @@ import argparse
 import sys
 from typing import Sequence
 
-import rfclient
+from rfuncs import client as rfclient
 
 
 def parse_cli_args(argv: Sequence[str]) -> argparse.Namespace:

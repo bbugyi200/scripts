@@ -14,7 +14,7 @@ sys_info="${_uname_output,,}"
 # >>> GENTOO
 if [[ "${sys_info}" == *"gentoo"* ]]; then
     econfirm "sudo emerge --sync" && notify "Portage Package Database Sync is Complete."
-    econfirm "ewatch && ewatch_packs_left"
+    econfirm "ewatch"
     econfirm "sudo emerge --ask --update --deep --newuse --keep-going --verbose-conflicts --backtrack=50 @world" && notify "Portage Package Updates are Complete."
     econfirm "sudo emerge --ask --depclean"
     econfirm "sudo revdep-rebuild"

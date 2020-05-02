@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+
+from fileinput import input as finput
+
+
+with open("/tmp/mymail.txt", "w") as f:
+    for line in finput():
+        print(line, file=f)

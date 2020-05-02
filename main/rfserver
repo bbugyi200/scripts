@@ -2,7 +2,7 @@
 
 import sys
 
-import rfserver
+from rfuncs import server as rfserver
 
 
 if __name__ == '__main__':

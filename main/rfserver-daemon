@@ -1,3 +1,3 @@
 #!/bin/bash
 
-nohup /home/bryan/.local/bin/rfserver &> /dev/null & disown
+nohup /home/bryan/.local/bin/rfserver "$@" &> /dev/null & disown

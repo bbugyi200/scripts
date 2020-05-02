@@ -106,7 +106,7 @@ main() {
 
         set_overlay_dir
 
-        pkg_path="$(find "$overlay_dir" -type f -name "$package*ebuild" | head -n 1)"
+        pkg_path="$(find "$overlay_dir" -type f -name "$package*ebuild" | sort -u | tail -n 1)"
         if [[ -z "${pkg_path}" ]]; then
             die "Failed to find a package that matches '${package}'."
         fi

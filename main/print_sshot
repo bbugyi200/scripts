@@ -1,0 +1,24 @@
+#!/bin/bash
+
+SCRIPTNAME="$(basename "$0")"
+
+fout="$(mktemp /tmp/"${SCRIPTNAME}".XXX.out)"
+ferr="$(mktemp /tmp/"${SCRIPTNAME}".XXX.err)"
+trap 'rm -rf ${fout} ${ferr}' EXIT
+
+if _print_sshot "$@" 2> "${ferr}" 1> "${fout}"; then
+    EC=0
+
+    npriority=low
+    ntimeout=3000
+    fout_or_err="${fout}"
+else
+    EC=$?
+
+    npriority=critical
+    ntimeout=0
+    fout_or_err="${ferr}"
+fi
+
+notify-send -u "${npriority}" -t "${ntimeout}" "${SCRIPTNAME}" "$(cat "${fout_or_err}")"
+exit "${EC}"

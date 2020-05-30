@@ -1,15 +1,85 @@
 #!/bin/bash
 
-###############################################################################
-#  Set window title using xdotool                                             #
-###############################################################################
+read -r -d '' doc << EOM
+Set window title using xdotool. If no argument is given, print the current
+window title.
+EOM
 
-if [[ -z "$1" ]]; then
-    echo "usage: $(basename "$0") TITLE"
-    exit 2
+# ---------- Modules ----------
+source gutils.sh
+
+# ---------- Command-line Arguments ----------
+eval set -- "$(getopt -o "a,d,h" -l "all,debug,help" -- "$@")"
+
+export USAGE_GRAMMAR=(
+    "[-d] [-a]"
+    "[-d] TITLE"
+    "-h"
+)
+
+# shellcheck disable=SC2154
+read -r -d '' help << EOM
+$(usage)
+
+${doc}
+
+Positional Arguments:
+    TITLE
+        The new window title.
+
+Optional Arguments:
+    -a | --all
+        Print all windows titles.
+
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+EOM
+
+while [[ -n "$1" ]]; do
+    case $1 in
+        -a|--all )
+            all=true
+            ;;
+        -d|--debug )
+            debug=true
+            ;;
+        -h|--help )
+            echo "${help}"
+            exit 0
+            ;;
+        -- )
+            shift
+            break
+            ;;
+    esac
+    shift
+done
+
+if [[ "${debug}" = true ]]; then
+    PS4='$LINENO: '
+    set -x
 fi
 
-title=("$@")
+# ---------- Main ----------
+main() {
+    if [[ -z "$1" ]]; then
+        if [[ "${all}" = true ]]; then
+            wmctrl -lx | tr -s " " | cut -d" " -f5-
+        else
+            active_window_title
+        fi
+    else
+        title=("$@")
 
-sleep 0.1
-xdotool getactivewindow set_window --name "${title[*]}"
+        sleep 0.1
+        xdotool getactivewindow set_window --name "${title[*]}"
+    fi
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+	main "$@"
+fi

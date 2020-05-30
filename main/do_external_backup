@@ -73,6 +73,7 @@ function main() {
         for X in "${excluded_root_subdirs[@]}"; do
             if [[ "${D}" == "${X}" ]]; then
                 exclude=1
+                break
             fi
         done
 

@@ -1,11 +1,11 @@
 #!/bin/bash
 
 EPIP_PY2_PACKAGES=(
-    ipython
+    IPython
 )
 
 EPIP_PY3_PACKAGES=(
-    ipython
+    IPython
     loguru  # my personal scripts use loguru
     pandas
     parameterized
@@ -15,6 +15,8 @@ EPIP_PY3_PACKAGES=(
     selenium
     tldextract  # qute-pass dependency
     typing-extensions
+    redis
+    pymongo
 )
 
 function run() {
@@ -22,9 +24,6 @@ function run() {
     packages=("$@"); shift
 
     epip_install -v "${pyver}" "${packages[@]}"
-
-    printf -- "----- Updating Python ${pyver} Packages -----\n"
-    epip_update "${pyver}"
 
     printf "\n"
 }

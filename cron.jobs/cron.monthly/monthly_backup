@@ -1,27 +1,21 @@
 #!/bin/bash
 
-# syncthing backup
-SYNC=/media/bryan/hercules/backup/Sync
-[ -d $SYNC/monthly ] || mkdir -p $SYNC/monthly
-[ -d $SYNC/2months ] || mkdir -p $SYNC/2months
-[ -d $SYNC/3months ] || mkdir -p $SYNC/3months
-[ -d $SYNC/4months ] || mkdir -p $SYNC/4months
-rm -rf $SYNC/4months && \
-    mv $SYNC/3months $SYNC/4months && \
-    mv $SYNC/2months $SYNC/3months && \
-    cp -p -r $SYNC/monthly $SYNC/2months
-rsync -av --delete --exclude 'var/projects/edgelp' /home/bryan/Sync/ $SYNC/monthly/
-date > $SYNC/monthly/backup.txt
+source /home/bryan/Sync/bin/cron.jobs/backup.sh
 
-# etc backup
-ETC=/media/bryan/hercules/backup/etc
-[ -d $ETC/monthly ] || mkdir -p $ETC/monthly
-[ -d $ETC/2months ] || mkdir -p $ETC/2months
-[ -d $ETC/3months ] || mkdir -p $ETC/3months
-[ -d $ETC/4months ] || mkdir -p $ETC/4months
-rm -rf $ETC/4months && \
-    mv $ETC/3months $ETC/4months && \
-    mv $ETC/2months $ETC/3months && \
-    cp -p -r $ETC/monthly $ETC/2months
-rsync -av --delete /etc/ $ETC/monthly/
-date > $ETC/monthly/backup.txt
+ETBB=$((60 * 60 * 24 * 30))  # seconds in a month
+
+backup /boot boot/monthly "${DEFAULT_R}"
+backup /etc etc/monthly "${DEFAULT_R}"
+backup_home monthly "${DEFAULT_R}"
+
+# Yearly Backup
+if [[ "$(date +%m)" -eq 1 ]]; then
+    ETBB=$((60 * 60 * 24 * 365))  # seconds in a year
+
+    backup /etc etc/yearly "${DEFAULT_R}"
+    backup_home yearly "${DEFAULT_R}"
+fi
+
+backup_kernel_config monthly
+
+post_backup_hook

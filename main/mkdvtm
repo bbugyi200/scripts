@@ -6,8 +6,13 @@ if [[ $# -ne 1 ]]; then
 fi
 
 session_name="$1"; shift
-dvtm_script="dvtm-${session_name,,}"
 
+if [[ "$(wtitle -a)" == *"${session_name^^}"* ]]; then
+    wmctrl -a "${session_name^^}"
+    exit 0
+fi
+
+dvtm_script="dvtm-${session_name,,}"
 if ! command -v "${dvtm_script}" &> /dev/null; then
     >&2 printf "[ERROR]: Could not find a script with the name '${dvtm_script}'.\n"
     exit 1

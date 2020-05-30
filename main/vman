@@ -67,16 +67,21 @@ fi
 
 # ---------- Main ----------
 all_files=( )
-tmp_dir=/tmp/vman; [ -d "${tmp_dir}" ] || mkdir -p "${tmp_dir}"
+tmp_dir="$(mktemp -d /tmp/vman-XXXXX)"; trap 'rm -rf "${tmp_dir}"' EXIT
 section=
 
 for page in "$@"; do
-    if [[ "${page}" =~ ^[0-9]p?$ ]]; then
+    if [[ "${page}" =~ ^[0-8]p?$ ]]; then
         section="${page}"
         continue
     fi
 
-    tmp_file="${tmp_dir}"/"${page}".man
+    section_fname_part=
+    if [[ -n "${section}" ]]; then
+        section_fname_part="-${section}"
+    fi
+
+    tmp_file="${tmp_dir}"/"${page}""${section_fname_part}".man
     truncate "${tmp_file}"
 
     # shellcheck disable=SC2086
@@ -88,21 +93,20 @@ for page in "$@"; do
             section=
         fi
     else
+        err_msg="No manual entry for ${page}."
         if command -v cppman &> /dev/null; then
-            cppman_out="$(cppman "${page}")"
-            if [[ "${cppman_out}" != *"No manual"* ]]; then
-                cppman "${page}"
-                exit 0
+            cppman_output="$(cppman -f "${page}")"
+            if [[ "${cppman_output}" != "error: "* ]]; then
+                err_msg="${err_msg}\n\n===== CPPMAN OUTPUT =====\n${cppman_output}"
             fi
         fi
 
-        err_msg="No manual entry for ${page}."
         apropos_output="$(2>&1 apropos "$1")"; EC=$?
         if [[ "${EC}" -eq 0 ]]; then
-            die "${err_msg}\n\n===== APROPOS OUTPUT =====\n${apropos_output}"
-        else
-            die "${err_msg}"
+            err_msg="${err_msg}\n\n===== APROPOS OUTPUT =====\n${apropos_output}"
         fi
+
+        die "${err_msg}"
     fi
 
     all_files+=( "${tmp_file}" )
@@ -113,5 +117,3 @@ if [[ -z "${EDITOR}" ]]; then
 fi
 
 "${EDITOR}" "${all_files[@]}"
-
-rm -rf "${tmp_dir}"

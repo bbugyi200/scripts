@@ -1,9 +1,8 @@
 #!/bin/bash
 
 filename=$(rofi -p "Screenshot Filename?" -dmenu)
-fpath=/tmp/"$filename".png
+fpath=/home/bryan/Sync/var/receipts/"$filename".png
 
+release_mod_keys
 scrot -s "${fpath}"
-png2enote "${fpath}"
-
-notify-send -u low "Saved Receipt as: $filename.png"
+notify-send -u low "Saved receipt to: ${fpath}"

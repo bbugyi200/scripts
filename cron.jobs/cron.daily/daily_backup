@@ -1,13 +1,20 @@
 #!/bin/bash
 
-# syncthing backup
-SYNC=/media/bryan/hercules/backup/Sync/daily
-[ -d $SYNC ] || mkdir -p $SYNC
-rsync -av --delete --exclude 'var/projects/edgelp' /home/bryan/Sync/ $SYNC
-date > $SYNC/backup.txt
+source /home/bryan/Sync/bin/cron.jobs/backup.sh
 
-# etc backup
-ETC=/media/bryan/hercules/backup/etc/daily
-[ -d $ETC ] || mkdir -p $ETC
-rsync -av --delete /etc/ $ETC
-date > $ETC/backup.txt
+ETBB=$((60 * 60 * 24))  # seconds in a day
+
+backup /bin bin/daily "${DEFAULT_R}"
+backup /boot boot/daily "${DEFAULT_R}"
+backup /etc etc/daily "${DEFAULT_R}"
+backup_home daily 3
+backup /lib32 lib32/daily 1
+backup /lib64 lib64/daily 1
+backup /opt opt/daily 1
+backup /sbin sbin/daily "${DEFAULT_R}"
+backup /usr usr/daily 1
+backup /var var/daily 1
+
+backup_kernel_config daily
+
+post_backup_hook

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+notify-send -t 0 "$(basename "$0")" "Starting..."
+
+i=0
+while [[ "${i}" -lt 600 ]]; do
+    echo "${i}" >> "${HOME}"/.sleep_cron_job
+    sleep 1
+    i=$((i + 1))
+done

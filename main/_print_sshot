@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [[ "$1" == "--dry" ]]; then
+    dry_run=true
+    shift
+fi
+
+sshot_file=/tmp/shot.png
+
+scrot_err="$(mktemp /tmp/scrot.XXX.err)"
+trap 'rm -rf ${scrot_err}' EXIT
+
+release_mod_keys
+if ! scrot -s "${sshot_file}" 2> "${scrot_err}"; then
+    1>&2 printf \
+        "[ERROR]: Failed to take a screenshot with 'scrot'.\n\n%s\n" \
+        "$(cat "${scrot_err}")"
+    exit 1
+fi
+
+if [[ "${dry_run}" != true ]]; then
+    lpr "${sshot_file}"
+fi
+printf "Printing screenshot...\n"

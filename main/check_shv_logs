@@ -1,0 +1,34 @@
+#!/bin/bash
+
+###############################################################################
+#  So I am quickly made aware if my SHV logs start deleting for some reason   #
+#  again.                                                                     #
+###############################################################################
+
+F="${HOME}"/."$(basename "$0")"
+
+shv_log_files=()
+for D in "${SHV_SHELL_HISTORY_ROOT}"/*; do
+    if [[ "${D}" == *"/ALL" ]] || ! [[ -d "${D}" ]]; then
+        continue
+    fi
+
+    shv_log_files+=("${D}"/*/*.log)
+done
+
+read -d '' error_msg_fmt << EOF
+[ERROR]: This system's SHV logs may be corrupt!
+
+The last time this check was run, there were %s commands logged by SHV, but today there are only %s!
+EOF
+
+num_of_cmds="$(cat "${shv_log_files[@]}" | wc -l)"
+if [[ -f "${F}" ]]; then
+    old_num_of_cmds="$(cat "${F}")"
+    if [[ "${old_num_of_cmds}" -gt "${num_of_cmds}" ]]; then
+        1>&2 printf "${error_msg_fmt}\n" "${old_num_of_cmds}" "${num_of_cmds}"
+        exit 1
+    fi
+fi
+
+echo "${num_of_cmds}" | tee "${F}"

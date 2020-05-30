@@ -1,0 +1,44 @@
+#!/bin/bash
+
+###############################################################################
+#  List the timestamps of all of the daily/weekly/monthly backups in a given  #
+#  directory.                                                                 #
+###############################################################################
+
+pushd /media/bryan/hercules/backup &> /dev/null || exit 1
+    if [[ -z "$1" ]]; then
+        set -- ./*
+    fi
+
+    first_dir=true
+    for d in "$@"; do
+        d="$(basename "${d}")"
+        D="${PWD}"/"${d}"
+
+        output_lines=()
+
+        first_subdir=true
+        for DD in "${D}"/*; do
+            timestamp_file="${DD}"/backup.txt
+            if [[ -f "${timestamp_file}" ]]; then
+                if [[ "${first_subdir}" = true ]]; then
+                    first_subdir=false
+
+                    if [[ "${first_dir}" = true ]]; then
+                        first_dir=false
+                    else
+                        echo
+                    fi
+
+                    printf -- "----- /%s\n" "${d}"
+                fi
+
+                output_lines+=("$(printf "%-9s %s\n" "$(basename "${DD}")" "$(date --date=@"$(cat "${timestamp_file}")" +"%Y-%m-%d %H:%M:%S %Z")")")
+            fi
+        done
+
+        for oline in "${output_lines[@]}"; do
+            echo "${oline}"
+        done | sort -k 2br,2br -k 3b,3b
+    done
+popd &> /dev/null || exit 1

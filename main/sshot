@@ -1,2 +1,4 @@
 #!/bin/bash
+
+release_mod_keys
 scrot -s /tmp/shot.png && xclip -selection 'clipboard' -t image/png /tmp/shot.png

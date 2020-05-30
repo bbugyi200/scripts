@@ -1,7 +1,7 @@
 #!/bin/bash
 
 perseus=/media/bryan/perseus
-ts_file="${perseus}"/external.txt  # Timestamp File
+ts_file="${perseus}"/external_backup.txt  # Timestamp File
 
 
 if ! mount | grep -q "${perseus}"; then

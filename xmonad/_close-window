@@ -1,0 +1,21 @@
+#!/bin/bash
+
+###############################################################################
+#  NOTE: Careful when using `xdotool key` in this script, since it is called  #
+#  when super+w is pressed (i.e. super will still likely be pressed down).    #
+###############################################################################
+
+wname="$(active_window_name)"
+
+EC=0
+case "${wname}" in
+     "nixnote2" )
+        pkill "${wname}"
+        ;;
+    * )
+        wmctrl -c :ACTIVE:
+        EC=$?
+        ;;
+esac
+
+exit $EC

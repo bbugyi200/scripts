@@ -26,6 +26,23 @@ while [[ -n "$1" ]]; do
     shift
 done
 
+function purge_world() {
+    all_sets=( "shared" "$(hostname)" )
+    for pkg in "$@"; do
+        for set in "${all_sets[@]}"; do
+            filename=/etc/portage/sets/"${set}"
+            if grep "${pkg}" "${filename}" &> /dev/null; then
+                full_pkg="$(ecat "${pkg}")"/"${pkg}"
+                pkg_pttrn="^${full_pkg}([ #].*)?$"
+                if grep -q -P "${pkg_pttrn}" "${filename}"; then
+                    imsg "Purging ${full_pkg} from @${set}."
+                    perl -n -i -E "print unless m{${pkg_pttrn}}" "${filename}"
+                fi
+            fi
+        done
+    done
+}
+
 # ---------- Main ----------
 if [[ "$depclean" = true ]]; then
     OPTS=("--depclean" "--verbose")
@@ -37,23 +54,12 @@ if sudo emerge --ask "${OPTS[@]}" "$@"; then
     if [[ "${oneshot}" = true ]]; then
         imsg "Using --oneshot option. Package sets will not be altered."
     else
-        all_sets=( "shared" "$(hostname)" )
-        for pkg in "$@"; do
-            for set in "${all_sets[@]}"; do
-                filename=/etc/portage/sets/"${set}"
-                if grep "${pkg}" "${filename}" &> /dev/null; then
-                    full_pkg="$(ecat "${pkg}")"/"${pkg}"
-                    if grep -q "${full_pkg}\$" "${filename}"; then
-                        imsg "Purging ${full_pkg} from @${set}."
-                        sed -i "\|${full_pkg}\$|d" "${filename}"
-                    fi
-                fi
-            done
-        done
+        purge_world "$@"
     fi
         
     imsg "Calling updatedb to update its databases."
     updatedb &
 else
+    purge_world "$@"
     exit "$?"
 fi

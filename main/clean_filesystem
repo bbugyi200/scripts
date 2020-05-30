@@ -9,16 +9,16 @@ if [ "$(id -u)" != "0" ]; then
 	exec sudo "$0" "$@"
 fi
 
+set -e
 
 RM=/bin/rm
-
 
 # >>> HOME
 for f in "core" "gccdump.s" "databases-incognito"; do
 	"${RM}" -rf /home/bryan/"${f}" &> /dev/null
 done
 
-find /home/bryan/Sync \( -name "gccdump.s" \
+find /home/bryan/Sync -type f \( -name "gccdump.s" \
    -o -name "core" \
    -o -name "*'s conflicted copy*" \
    \) -delete

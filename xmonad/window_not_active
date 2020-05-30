@@ -1,0 +1,11 @@
+#!/bin/bash
+
+window_name="$1"; shift
+
+if [[ "$(active_window_name)" =~ ${window_name} ]]; then
+    exit 1
+fi
+
+if [[ "$(active_window_title)" =~ ${window_name} ]]; then
+    exit 1
+fi

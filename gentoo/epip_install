@@ -6,7 +6,7 @@ Installs provided python packages if they do not already exist.
 
 import argparse
 from shutil import which
-from subprocess import PIPE, Popen
+from subprocess import Popen
 import sys
 from typing import NamedTuple, Sequence
 
@@ -19,25 +19,11 @@ Arguments = NamedTuple(
 
 def install_pypacks(pypacks: Sequence[str], pyver: float) -> None:
     python = f"python{pyver}"
-    ps = Popen(
-        [python, "-m", "pip", "list", "--format", "freeze"], stdout=PIPE,
-    )
-    (stdout, _stderr) = ps.communicate()
-    pypacks_installed = [
-        pypack.split("=", 1)[0].strip() for pypack in stdout.decode().split()
-    ]
-
-    # Normalize both lists of Python packages.
-    pypacks = [p.lower() for p in pypacks]
-    pypacks_installed = [p.lower() for p in pypacks_installed]
 
     for pypack in pypacks:
-        if pypack in pypacks_installed:
-            print(f">>> {pypack}: ok")
-        else:
-            print(f">>> {pypack}: FAILED")
-            ps = Popen([python, "-m", "pip", "install", "--user", pypack])
-            ps.communicate()
+        print(f"----- Upgrading {pypack}...")
+        ps = Popen([python, "-m", "pip", "install", "--user", "-U", pypack])
+        ps.communicate()
 
 
 def python_version_exists(pyver: float) -> bool:

@@ -2,20 +2,19 @@
 
 """Wrapper for 'emerge' that Installs Package(s)"""
 
-import argparse
+import datetime as dt
 import os
 import re
 import subprocess as sp
 import sys
-from typing import List
-
-from loguru import logger as log
+from typing import List, NamedTuple, Optional, Sequence
 
 import gutils
+from loguru import logger as log
 
 
 @gutils.catch
-def main(argv: List[str] = None):
+def main(argv: Sequence[str] = None) -> None:
     if argv is None:
         argv = sys.argv
 
@@ -23,29 +22,32 @@ def main(argv: List[str] = None):
 
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
+    def do_add_to_set() -> None:
+        add_to_set(args.packages, args.local_only, args.message)
+
     if not args.install:
-        add_to_set(args.packages, local=args.local)
+        do_add_to_set()
         sys.exit(0)
 
     ask = not args.force
     emerge_cmd = get_emerge_cmd_list(args.packages, ask=ask)
 
-    log.debug('Emerge Command: {}', emerge_cmd)
+    log.debug("Emerge Command: {}", emerge_cmd)
     rc = sp.call(emerge_cmd)
 
     if rc == 1:
-        log.debug('Checking for meta diff config files.')
+        log.debug("Checking for meta diff config files.")
         out = sp.check_output(
             'find /etc/portage -name "._cfg0000*"', shell=True
         )
         cfg_fnames = out.decode().strip()
 
-        if cfg_fnames != '':
-            log.debug('Merging config files.')
+        if cfg_fnames != "":
+            log.debug("Merging config files.")
             try:
-                cmd_fmt = 'sudo -E dispatch-conf && clear && {}'
+                cmd_fmt = "sudo -E dispatch-conf && clear && {}"
                 emerge_cmd = get_emerge_cmd_list(args.packages, ask=False)
-                emerge_cmd_string = ' '.join(emerge_cmd)
+                emerge_cmd_string = " ".join(emerge_cmd)
                 rc = sp.check_call(
                     cmd_fmt.format(emerge_cmd_string), shell=True
                 )
@@ -56,68 +58,114 @@ def main(argv: List[str] = None):
         gutils.io.imsg(
             "Running 'updatedb' to update the database used by 'locate'."
         )
-        sp.Popen(['updatedb'])
+        sp.Popen(["updatedb"])
         if not args.oneshot:
-            add_to_set(args.packages, local=args.local)
+            do_add_to_set()
 
     sys.exit(rc)
 
 
-def parse_cli_args(argv: List[str]) -> argparse.Namespace:
+class Arguments(NamedTuple):
+    debug: bool
+    verbose: bool
+    packages: Sequence[str]
+    oneshot: bool
+    force: bool
+    message: Optional[str]
+    install: bool
+    local_only: bool
+
+
+def parse_cli_args(argv: Sequence[str]) -> Arguments:
     parser = gutils.ArgumentParser()
+    parser.add_argument("packages", nargs="+", help="Package(s) to install.")
     parser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help='Package(s) to install.'
+        "-1",
+        "--oneshot",
+        action="store_true",
+        help="Do NOT add package to any set (@shared, @world, ...).",
     )
     parser.add_argument(
-        '-1', '--oneshot', action='store_true',
-        help='Do NOT add package to any set (@shared, @world, ...).'
+        "-f",
+        "--force",
+        action="store_true",
+        help="Install package(s) without using the --ask option.",
     )
     parser.add_argument(
-        '-f', '--force', action='store_true',
-        help='Install package(s) without using the --ask option.'
+        "-m",
+        "--message",
+        help="Message describing why you are installing this package.",
     )
     parser.add_argument(
-        '-n', '--no-install', dest='install', action='store_false',
-        help='Do not install package(s). Only add them to @shared or (if -L '
-             'option is given) @<hostname> set.'
+        "-n",
+        "--no-install",
+        dest="install",
+        action="store_false",
+        help=(
+            "Do not install package(s). Only add them to @shared or (if -L"
+            " option is given) @<hostname> set."
+        ),
     )
-    parser.add_argument('-L', '--local-only', dest='local', action='store_true',
-                        help='Add package(s) to @<hostname> set ONLY.')
+    parser.add_argument(
+        "-L",
+        "--local-only",
+        action="store_true",
+        help="Add package(s) to @<hostname> set ONLY.",
+    )
 
-    return parser.parse_args(argv[1:])
+    args = parser.parse_args(argv[1:])
+
+    return Arguments(**dict(args._get_kwargs()))
 
 
-def get_emerge_cmd_list(packages, *, ask=True):
-    cmd_list = ['sudo', 'emerge']
+def get_emerge_cmd_list(packages: Sequence[str], ask: bool) -> List[str]:
+    cmd_list = ["sudo", "-E", "emerge"]
 
-    opts = ['--oneshot']
+    opts = ["-1"]
     if ask:
-        opts.append('--ask')
+        opts.append("-a")
 
     cmd_list.extend(opts)
     cmd_list.extend(packages)
     return cmd_list
 
 
-def add_to_set(packages, *, local=False):
+def add_to_set(
+    packages: Sequence[str], local_only: bool, message_spec: Optional[str]
+) -> None:
     hostname = os.uname().nodename
 
-    set_folder = '/etc/portage/sets'
-    set_fpath = '{}/{}'.format(set_folder, hostname if local else 'shared')
-    bad_set_fpath = '{}/{}'.format(set_folder, 'shared' if local else hostname)
+    set_folder = "/etc/portage/sets"
+    set_fpath = "{}/{}".format(
+        set_folder, hostname if local_only else "shared"
+    )
+    bad_set_fpath = "{}/{}".format(
+        set_folder, "shared" if local_only else hostname
+    )
 
-    with open(set_fpath, 'r') as f:
+    with open(set_fpath, "r") as f:
         lines = f.readlines()
 
-    for package in packages:
-        if '/' in package:
+    today = dt.date.today()
+    install_date = today.strftime("%Y-%m-%d")
+
+    messages = (
+        message_spec.split(":") if message_spec else ["" * len(packages)]
+    )
+    assert len(messages) == len(packages), (
+        "When the -m option is used, there must be exactly one message for"
+        " each package provided. Seperate messages using colons (':')."
+    )
+
+    for (message, package) in zip(messages, packages):
+        if "/" in package:
             full_package_name = package
         else:
-            match = re.search('=(.*)-[0-9.]+', package)
+            match = re.search("=(.*)-[0-9.]+", package)
             if match:
                 package = match.groups()[0]
 
-            out = sp.check_output(['ecat', package])
+            out = sp.check_output(["ecat", package])
             category = out.decode().strip()
 
             try:
@@ -126,33 +174,66 @@ def add_to_set(packages, *, local=False):
             except AssertionError as e:
                 raise ValueError(str(e))
 
-            full_package_name = '{}/{}'.format(category, package)
+            full_package_name = "{}/{}".format(category, package)
 
-        log.debug('Full Package Name: {}', full_package_name)
-        portage_set = set_fpath.split('/')[-1]
+        log.debug("Full Package Name: {}", full_package_name)
+        portage_set = set_fpath.split("/")[-1]
 
-        for entry in open(set_fpath, 'r'):
-            if full_package_name == entry.strip():
+        for (i, line) in enumerate(lines[:]):
+            line = line.strip()
+
+            if line.startswith(full_package_name) and (
+                len(full_package_name) == len(line)
+                or line[len(full_package_name)] == " "
+            ):
                 msg_fmt = (
-                    "The following package entry already exists in the @%s "
-                    "set:\n\t%s"
+                    "The following package entry already exists in the @%s"
+                    " set:\n\t%s"
                 )
-                log.debug(msg_fmt, portage_set, entry.strip())
+                log.debug(msg_fmt, portage_set, line.strip())
+
+                match = re.match(
+                    "^.*# ([1-9][0-9]{3}-[0-9]{2}-[0-9]{2})?(?:: )?(.*?)$",
+                    line,
+                )
+                if match:
+                    groups = match.groups()
+                    log.debug(f"groups = {groups}")
+                    (_inst_dt, msg) = groups
+
+                    msg = msg.strip()
+                    if msg and message:
+                        ch = gutils.io.getch(
+                            f"[{full_package_name}] Overwrite existing message"
+                            f" - \"{msg}\" (y/n)?: "
+                        )
+                        print()
+                        if ch.lower() != "y":
+                            message = msg
+                    else:
+                        message = msg or message
+
+                lines.pop(i)
                 break
-        else:
-            gutils.io.imsg(
-                'Adding {} to @{}.'.format(full_package_name, portage_set)
-            )
-            lines.append(full_package_name + '\n')
 
-            # Remove the package name from the world file to ensure that
-            # packages are never listed in both @shared and the world file.
-            cmd_fmt = r'sed -i "\|{}|d" {}'
-            sp.check_call(
-                cmd_fmt.format(full_package_name, bad_set_fpath), shell=True
-            )
+        gutils.io.imsg(
+            "Adding {} to @{}.".format(full_package_name, portage_set)
+        )
 
-    with open(set_fpath, 'w') as f:
+        new_line = f"{full_package_name}  # {install_date}"
+        if message:
+            new_line += f": {message}"
+
+        lines.append(new_line + "\n")
+
+        # Remove the package name from the world file to ensure that
+        # packages are never listed in both @shared and the world file.
+        cmd_fmt = r'sed -i "\|{}|d" {}'
+        sp.check_call(
+            cmd_fmt.format(full_package_name, bad_set_fpath), shell=True
+        )
+
+    with open(set_fpath, "w") as f:
         f.writelines(sorted(set(lines)))
 
 

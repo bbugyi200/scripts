@@ -1,5 +1,5 @@
 #!/bin/bash
 
-windows_title="$(grep -i "windows" /boot/grub/grub.cfg  | perl -nE "print s/.*?'([^']+)'.*/\1/gr")"
+windows_title="$(grep -i "windows" /boot/grub/grub.cfg | perl -nE "print s/.*?'([^']+)'.*/\1/gr")"
 sudo grub-reboot "${windows_title}"
 sudo reboot

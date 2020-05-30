@@ -6,7 +6,7 @@ from typing import Any
 try:
     from requests import Response
 except ImportError:
-    pass
+    Response = object  # type: ignore
 
 
 def default_port() -> int:

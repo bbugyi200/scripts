@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ######################################
-#  Runs System Maintenance Commands  #
+#  Runs System Update Commands       #
 ######################################
 
 source gutils.sh
@@ -13,13 +13,25 @@ sys_info="${_uname_output,,}"
 
 # >>> GENTOO
 if [[ "${sys_info}" == *"gentoo"* ]]; then
-    econfirm "sudo emerge --sync" && notify "Portage Package Database Sync is Complete."
-    econfirm "ewatch"
-    econfirm "sudo emerge --ask --update --deep --newuse --keep-going --verbose-conflicts --backtrack=50 @world" && notify "Portage Package Updates are Complete."
-    econfirm "sudo emerge --ask --depclean"
-    econfirm "sudo revdep-rebuild"
+    new_msg_count="$(eselect news count new)"
+    if [[ "${new_msg_count}" -gt 0 ]]; then
+        printf ">>> You have ${new_msg_count} unread Gentoo news items.\n"
+        eselect news list
+        econfirm "eselect news read new"
+    fi
+
+    econfirm "sudo emerge -A --sync" && printf '\a'
+
+    ewatch_proc_count="$(pgrep -f 'watch.*genlop' -c)"
+    if [[ "${ewatch_proc_count}" -eq 0 ]]; then
+        econfirm "ewatch"
+    fi
+
+    econfirm "sudo emerge -ADuUv --keep-going --verbose-conflicts --backtrack=50 @world" && printf '\a'
     econfirm "sudo smart-live-rebuild"
     econfirm "ebvcheck -v"
+    econfirm "sudo emerge -a --depclean"
+    econfirm "sudo revdep-rebuild"
     econfirm "elogv"
     econfirm "sudo dispatch-conf"
 fi
@@ -39,7 +51,7 @@ econfirm "pipx upgrade-all"
 econfirm "sudo updatedb &"
 
 if [[ "${sys_info}" == *"gentoo"* ]]; then
-    echeck_kernel_version || notify "The sys-kernel/gentoo-sources package was upgraded, so the linux kernel needs to be rebuilt and reinstalled!"
+    echeck_kernel_version || printf ">>> The sys-kernel/gentoo-sources package was upgraded, so the linux kernel needs to be rebuilt and reinstalled!\n"
 fi
 
 exit 0  # Fixes issue caused by nonzero return status from last econfirm

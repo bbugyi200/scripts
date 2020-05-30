@@ -1,0 +1,46 @@
+#!/bin/bash
+
+###############################################################################
+#  Print all the things... related to filesystems.                            #
+###############################################################################
+
+function bar() {
+    local N="$1"; shift
+    i=0
+    while [[ ${i} -lt ${N}  ]]; do
+        printf "#"
+        i=$((i + 1))
+    done
+    printf "\n"
+}
+
+function _show() {
+    local cmd="$1"; shift
+
+    header="#       ${cmd}       #"
+
+    bar ${#header}
+    echo "${header}"
+    bar ${#header}
+
+    ${cmd}
+}
+
+function show() {
+    _show "$@"
+    echo
+}
+
+tmp_file="$(mktemp /tmp/fsinfo-XXXXX.txt)"; trap 'rm ${tmp_file}' EXIT
+
+{
+    show 'sudo fdisk -l'
+    _show 'sudo parted -l'
+    show 'lsblk'
+    show 'lsblk -ft'
+    show 'df -h'
+    show 'cat /etc/fstab'
+} > "${tmp_file}"
+
+less "${tmp_file}"
+cat "${tmp_file}"

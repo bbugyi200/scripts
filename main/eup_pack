@@ -1,9 +1,21 @@
 #!/bin/bash
 
+###############################################################################
+# Updates a custom ebuild package by copying the old ebuild into a new        #
+# ebuild file that's named using the new version number.                      #
+#                                                                             #
+# Examples:                                                                   #
+#     ```                                                                     #
+#     eup_pack tmuxinator 1.5.1`                                              #
+#     eup_pack requests-file 2.0.1                                            #
+#     eget tmuxinator requests-file                                           #
+#     ```                                                                     #
+###############################################################################
+
 package="$1"; shift
 version="$1"; shift
 
-latest_ebuild="$(find /home/bryan/projects/portage-overlay -type f -name "$package*ebuild" | sort -u | tail -n 1)"
+latest_ebuild="$(find /home/bryan/projects/portage-overlay -type f -name "$package*ebuild" | sort -u | perl -nE 'print unless /9999/' | tail -n 1)"
 new_ebuild="$(dirname "${latest_ebuild}")"/"${package}"-"${version}".ebuild
 
 printf ">>> Copying %s to %s\n" "${latest_ebuild}" "${new_ebuild}"

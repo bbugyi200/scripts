@@ -1,0 +1,14 @@
+#!/bin/bash
+
+###################################################################
+# A wrapper around ipython which makes it easier to select        #
+# which Python version you would like to use.                     #
+###################################################################
+
+version="$1"; shift
+
+if [[ -z "${version}" ]]; then
+    version="$(python_versions | sort -u | tail -n 1)"
+fi
+
+python"${version}" -m IPython "$@"

@@ -1,7 +1,8 @@
 #!/bin/bash
 
-/home/bryan/.local/bin/textme "cron.weekly/weekly_jobs: This weekly test message is necessary in order to ensure this phone number stays active."
-/home/bryan/.local/bin/sort_qb_quickmarks
-/home/bryan/.local/bin/clean_recent_file_log
-/home/bryan/.local/bin/clean_mpv_history
-/home/bryan/.local/bin/cache_cheaders
+set -e
+
+sort_qb_quickmarks
+clean_recent_file_log
+clean_mpv_history
+cache_cheaders

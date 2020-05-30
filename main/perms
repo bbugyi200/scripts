@@ -76,6 +76,10 @@ if [[ "${debug}" = true ]]; then
     set -x
 fi
 
+# ---------- Globals ----------
+PERMS_DIR=/tmp/perms
+TEMP_FILES=()
+
 # ---------- Functions ----------
 function is_non_empty_dir() {
     local D="$1"; shift
@@ -88,6 +92,14 @@ function is_non_empty_dir() {
         return 0
     else
         return 1
+    fi
+}
+
+function exit_handler() {
+    if [[ "${debug}" != true ]]; then
+        for f in "${TEMP_FILES[@]}"; do
+            rm -rf "${f}"
+        done
     fi
 }
 
@@ -124,7 +136,7 @@ function print_perms() {
         done
     fi
 
-    local perms_file=/tmp/perms"${level}".txt
+    local perms_file="$(mktemp ${PERMS_DIR}/perms"${level}"-XXXXX.txt)"
 
     if [[ "${verbose}" = true ]]; then
         stat_fmt='%n|%F|%U(%u):%G(%g)|%A (%a)'
@@ -187,6 +199,11 @@ main() {
     if [[ "$#" -eq 0 ]]; then
         set -- "."
     fi
+
+    trap 'exit_handler' EXIT
+
+    [[ -d "${PERMS_DIR}" ]] || mkdir -p "${PERMS_DIR}"
+    TEMP_FILES+=("${PERMS_DIR}")
 
     print_perms "$@"
 

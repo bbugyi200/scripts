@@ -1,0 +1,31 @@
+#!/bin/bash
+
+name="$1"; shift
+
+if [[ "${name}" =~ ^[1-9][0-9]*$ ]]; then
+    pid="${name}"
+else
+    # shellcheck disable=SC2009
+    readarray -t all_choices < <(ps -ax | grep "${name}" | grep -vE "grep|psinfo")
+
+    if [[ "${#all_choices[@]}" -eq 0 ]]; then
+        2>&1 printf "[ERROR] No running process matches '${name}'.\n"
+        exit 1
+    fi
+    
+    if [[ ${#all_choices[@]} -gt 1 ]]; then
+        select C in "${all_choices[@]}"; do
+            choice="${C}"
+            clear
+            break
+        done
+    else
+        choice="${all_choices[0]}"
+    fi
+
+    pid="$(echo "${choice}" | perl -nE 'print s/^[  ]*([^ ]+)[ ]+.*/\1/gr')"
+fi
+
+sudo cat /proc/"${pid}"/cmdline | tr "\000" " "
+printf "\n\n"
+sudo cat /proc/"${pid}"/status | tr "\000" "\n"

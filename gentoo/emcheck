@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [[ -z "$DISPLAY" ]]; then
+    printf "[ERROR]: No X11 session appears to be available.\n"
+    exit 3
+fi
+
+now="$(date +%s)"
+tsfile=/home/bryan/.emcheck
+secs_in_a_day=86400
+min_diff="$((secs_in_a_day - 900))"
+
+function pdate() {
+    date --date="$1" +"%Y-%m-%d %H:%M:%S"
+}
+
+if [[ -f "${tsfile}" ]]; then
+    diff=$(("${now}" - "$(cat "${tsfile}")"))
+    printf ">>> This script was last run on $(pdate "${diff} seconds ago").\n"
+    if [[ "${diff}" -lt "${min_diff}" ]]; then
+        printf "[ERROR]: Too early! Must wait until atleast $(pdate "$((min_diff - diff)) seconds") before running another maintenance check.\n"
+        exit 1
+    fi
+fi
+
+echo "${now}" > "${tsfile}"
+printf ">>> Running maintenance check...\n"
+emanage -m -M "${1:-15}"

@@ -8,5 +8,8 @@ zopen -C -q
 mopen -C
 check_shv_logs
 
+# Generate daily summary of process accounting (needed for `sar`).
+/usr/lib64/sa/sa2 -A &
+
 # zopen and mopen create log files owned by root.
 chown bryan:bryan /var/tmp/*.log

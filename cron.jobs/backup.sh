@@ -6,9 +6,10 @@
 
 set -e
 
+export DEFAULT_R=4
+
 BACKUP_DIR=/media/bryan/hercules/backup
 KCONF_DIR="${BACKUP_DIR}"/kernel_configs
-DEFAULT_R=4
 MAX_R=10
 
 # The maximum amount of time (in milliseconds) for a set of operations to take
@@ -19,6 +20,7 @@ EC=0
 TOO_SOON_ERROR=1
 NO_ERROR=2
 NOT_ATOMIC_ERROR=4
+NO_ETBB_ERROR=8
 
 ERR_MSGS=()
 
@@ -43,6 +45,9 @@ function backup() {
     [[ -d "${to}" ]] || mkdir -p "${to}"
 
     if [[ -z "${ETBB}" ]]; then
+        EC=$((EC | NO_ETBB_ERROR))
+        ERR_MSGS+=("The ETBB environment variable was NOT defined while running a $(basename "${to}") backup of ${from%/*}.")
+
         ETBB=$((60 * 60 * 24 * 365 * 10))  # seconds in 10 years
     fi
 
@@ -51,11 +56,10 @@ function backup() {
         local last_backup="$(cat "${to}"/backup.txt)"
         local diff=$((now - last_backup))
 
-        local min_tbb=$((ETBB - ETBB / 4))
-
         # If it has been less than 3/4 the expected time since the last backup
         # was run, something is wrong here. To keep moving forward now would be
         # to risk overwriting older backup rotatons.
+        local min_tbb=$((ETBB - ETBB / 4))
         if [[ "${diff}" -lt "${min_tbb}" ]]; then
             EC=$((EC | TOO_SOON_ERROR))
             ERR_MSGS+=("It has only been ${diff}s since the last time a $(basename "${to}") backup was run for ${from%/*}.")
@@ -98,9 +102,6 @@ function _backup() {
     done
 
     # Remove any backups that have been rotated more than R times.
-    #
-    # This can be slow but that's OK as long as we don't expect the commands
-    # included in or above this block to be atomic.
     r=$((R + 1))
     while [[ "${r}" -le "${MAX_R}" ]]; do
         D="${to}"-"${r}"
@@ -125,11 +126,11 @@ function _backup() {
 
     # The main backup is now performed by rsync. Note that the system MAY
     # reboot while this command is running. This is not desirable, but should
-    # not be catastrophic either (i.e. it should not curropt this backup).
+    # not be catastrophic either (i.e. it should not corrupt this backup).
     rsync -av --delete --delete-excluded "${@}" "${from}" "${_to}"  # SLOW
     date +%s > "${_to}"/backup.txt
 
-    local DIRS_AND_FILES_TO_RM=()
+    local DIRS_TO_DELETE_LATER=()
 
     # ----- START of Atomic Block
     #
@@ -138,37 +139,43 @@ function _backup() {
     #
     # Everything in this block should be as fast as possible so we minimize
     # the chance of an unexpected reboot corrupting this backup.
-
     start_atomic_time="$(_time)"
-        if [[ "${R}" -eq 1 ]]; then
-            mv "${to}" "${tmp_to_dir}"
-            mv "${_to}" "${to}"
-        elif [[ "${R}" -gt 1 ]]; then
-            mv "${to}"-"${R}" "${tmp_to_dir}"
-            
-            r="${R}"
-            while [[ "${r}" -gt 2 ]]; do
-                mv "${to}"-$((r - 1)) "${to}"-"${r}"
-                r=$((r - 1))
-            done
-            
-            mv "${to}" "${to}"-2
-            mv "${_to}" "${to}"
-        else
-            # This should never happen, right?
-            return 3
-        fi
-    end_atomic_time="$(_time)"
+    if [[ "${R}" -eq 1 ]]; then
+        local tmp_dir="${_to}".tmp
+        DIRS_TO_DELETE_LATER+=("${tmp_dir}")
 
+        mv "${to}" "${tmp_dir}"
+        mv "${_to}" "${to}"
+    elif [[ "${R}" -gt 1 ]]; then
+        local tmp_dir="${_to}"-"${R}"
+        DIRS_TO_DELETE_LATER+=("${tmp_dir}")
+
+        mv "${to}"-"${R}" "${tmp_dir}"
+        
+        r="${R}"
+        while [[ "${r}" -gt 2 ]]; do
+            mv "${to}"-$((r - 1)) "${to}"-"${r}"
+            r=$((r - 1))
+        done
+        
+        mv "${to}" "${to}"-2
+        mv "${_to}" "${to}"
+    else
+        # This should never happen, right?
+        return 3
+    fi
+    end_atomic_time="$(_time)"
     # ----- END of Atomic Block
 
-    atomic_diff=$((end_atomic_time - start_atomic_time))
-    if [[ "${atomic_diff}" -gt "${MAX_ATOMIC_TIME}" ]]; then
+    time_spent_in_atomic_block=$((end_atomic_time - start_atomic_time))
+    if [[ "${time_spent_in_atomic_block}" -gt "${MAX_ATOMIC_TIME}" ]]; then
         EC=$((EC | NOT_ATOMIC_ERROR))
-        ERR_MSGS+=("While running a $(basename ${to}) backup of ${from%/*}, we took ${atomic_diff}ms to run all commands in an atomic block. This is NOT atomic!")
+        ERR_MSGS+=("While running a $(basename "${to}") backup of ${from%/*}, we took ${time_spent_in_atomic_block}ms to run all commands in an atomic block. This is NOT atomic!")
     fi
 
-    rm -rf "${tmp_to_dir}"  # SLOW
+    for f in "${DIRS_TO_DELETE_LATER[@]}"; do
+        rm -rf "${f}"  # SLOW
+    done
 }
 
 function _time() {
@@ -183,9 +190,14 @@ function backup_kernel_config() {
     /bin/cp -f /usr/src/linux/.config "${KCONF_DIR}"/"${P}"-"$(date +%Y%m%d%H%M%S)"-"$(uname -r)".config
 
     KMAX=5
-    if [[ "$(find "${KCONF_DIR}" -type f -name "${P}*" | wc -l)" -gt "${KMAX}" ]]; then
-        find "${KCONF_DIR}" -type f -name "${P}*" | sort -u | head -n -"${KMAX}" | xargs /bin/rm
+    if [[ "$(_find_kconfigs "${P}" | wc -l)" -gt "${KMAX}" ]]; then
+        _find_kconfigs "${P}" | sort -u | head -n -"${KMAX}" | xargs /bin/rm
     fi
+}
+
+function _find_kconfigs() {
+    local P="$1"; shift
+    find "${KCONF_DIR}" -type f -name "${P}*"
 }
 
 function post_backup_hook() {

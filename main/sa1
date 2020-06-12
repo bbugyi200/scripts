@@ -1,0 +1,3 @@
+#!/bin/bash
+
+nohup /usr/lib64/sa/sa1 "$@" &> /dev/null & disown

@@ -44,6 +44,7 @@ if [[ "${sys_info}" == *"debian"* ]]; then
 fi
 
 # >>> ALL
+econfirm "vim +PluginUpdate"
 econfirm "sudo npm update --force -g"
 econfirm "rustup update"
 econfirm "epip_update_all"

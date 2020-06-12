@@ -4,23 +4,20 @@
 
 Intended to serve as a replacement for XMonad.Prompt.Shell.shellPrompt.
 
-Any command starting with an uppercase letter will be run inside of a new urxvt instance. Any
-command starting with '@' will also be piped to less.
+Any command starting with an uppercase letter will be run inside of a new urxvt
+instance. Any command starting with '@' will also be piped to less.
 """
 
 import subprocess as sp  # noqa: F401
 import sys
+from typing import List
 
 import gutils
-
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
 from loguru import logger as log
 
+
 @gutils.catch
-def main():
+def main() -> None:
     prompt_cmd = ['prompt', '@'] if args.less else 'prompt'
     ps = sp.Popen(prompt_cmd, stdout=sp.PIPE)
     cmd = ps.communicate()[0].decode().strip()
@@ -32,7 +29,7 @@ def main():
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
-def shell_cmd(cmd):
+def shell_cmd(cmd: str) -> List[str]:
     """ Returns Shell Command List """
     cmd_list = []
 
@@ -55,8 +52,12 @@ def shell_cmd(cmd):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('-L', dest='less', action='store_true',
-                        help='Pipe output of command to `less`.')
+    parser.add_argument(
+        '-L',
+        dest='less',
+        action='store_true',
+        help='Pipe output of command to `less`.',
+    )
     args = parser.parse_args()
 
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)

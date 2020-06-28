@@ -8,7 +8,7 @@ fi
 now="$(date +%s)"
 tsfile=/home/bryan/.emcheck
 secs_in_a_day=86400
-min_diff="$((secs_in_a_day - 900))"
+min_diff="$((secs_in_a_day - secs_in_a_day / 4))"
 
 function pdate() {
     date --date="$1" +"%Y-%m-%d %H:%M:%S"
@@ -25,4 +25,4 @@ fi
 
 echo "${now}" > "${tsfile}"
 printf ">>> Running maintenance check...\n"
-emanage -m -M "${1:-15}"
+emanage -m -M "${1:-7}"

@@ -150,7 +150,7 @@ def add_to_set(
     install_date = today.strftime("%Y-%m-%d")
 
     messages = (
-        message_spec.split(":") if message_spec else ["" * len(packages)]
+        message_spec.split(":") if message_spec else [""] * len(packages)
     )
     assert len(messages) == len(packages), (
         "When the -m option is used, there must be exactly one message for"

@@ -1,13 +1,4 @@
 #!/bin/bash
 
-# ensure running as root
-if [ "$(id -u)" != "0" ]; then
-  exec sudo -E "$0" "$@"
-fi
-
-cd /home/bryan/projects/portage-overlay || exit 1
-repoman manifest
-gpup
-sudo emerge --sync bbugyi200
-
+_eget
 sudo_get -1 "$@"

@@ -11,6 +11,7 @@ export DEFAULT_R=4
 BACKUP_DIR=/media/bryan/hercules/backup
 KCONF_DIR="${BACKUP_DIR}"/kernel_configs
 MAX_R=10
+RM=/bin/rm
 
 # The maximum amount of time (in milliseconds) for a set of operations to take
 # for me to consider it "atomic".
@@ -21,6 +22,7 @@ TOO_SOON_ERROR=1
 NO_ERROR=2
 NOT_ATOMIC_ERROR=4
 NO_ETBB_ERROR=8
+RSYNC_ERROR=16
 
 ERR_MSGS=()
 
@@ -105,7 +107,7 @@ function _backup() {
     r=$((R + 1))
     while [[ "${r}" -le "${MAX_R}" ]]; do
         D="${to}"-"${r}"
-        [[ -d "${D}" ]] && rm -rf "${D}"  # SLOW
+        [[ -d "${D}" ]] && "${RM}" -rf "${D}"  # SLOW
         r=$((r + 1))
     done
 
@@ -116,7 +118,7 @@ function _backup() {
     # will occur if, for example, the machine reboots while the
     # `rm -rf ${to}-${R}` command is being run (see the bottom of this
     # function).
-    find "$(dirname "${_to}")" -maxdepth 1 -type d -name "$(basename "${_to}")*" -exec rm -rf {} \;  # SLOW
+    find "$(dirname "${_to}")" -maxdepth 1 -type d -name "$(basename "${_to}")*" -exec "${RM}" -rf {} \;  # SLOW
 
     # Since `cp` commands are much slower than `mv` commands, we copy this
     # directory here--with the full expectation that the system MAY reboot
@@ -124,13 +126,26 @@ function _backup() {
     # command in the atomic block below (which should run much faster).
     cp -p -r -f "${to}" "${_to}"  # SLOW
 
+    # All files/directories added to this array will be deleted at the end of
+    # this function.
+    local DELETE_LATER=()
+
     # The main backup is now performed by rsync. Note that the system MAY
     # reboot while this command is running. This is not desirable, but should
     # not be catastrophic either (i.e. it should not corrupt this backup).
-    rsync -av --delete --delete-excluded "${@}" "${from}" "${_to}"  # SLOW
-    date +%s > "${_to}"/backup.txt
+    f_rsync_stderr="$(mktemp /tmp/rsync-XXX.err)"
+    if rsync -av --delete --delete-excluded "${@}" "${from}" "${_to}" 2> "${f_rsync_stderr}"; then  # SLOW
+        DELETE_LATER+=("${f_rsync_stderr}")
+        date +%s > "${_to}"/backup.txt
+    else
+        EC=$((EC | RSYNC_ERROR))
+        ERR_MSGS+=("While running a $(basename "${to}") backup of ${from%/*}, rsync failed with the following error(s):\n$(cat "${f_rsync_stderr}")")
 
-    local DIRS_TO_DELETE_LATER=()
+        "${RM}" -rf "${_to}"
+        "${RM}" -rf "${f_rsync_stderr}"
+
+        return 0
+    fi
 
     # ----- START of Atomic Block
     #
@@ -142,13 +157,13 @@ function _backup() {
     start_atomic_time="$(_time)"
     if [[ "${R}" -eq 1 ]]; then
         local tmp_dir="${_to}".tmp
-        DIRS_TO_DELETE_LATER+=("${tmp_dir}")
+        DELETE_LATER+=("${tmp_dir}")
 
         mv "${to}" "${tmp_dir}"
         mv "${_to}" "${to}"
     elif [[ "${R}" -gt 1 ]]; then
         local tmp_dir="${_to}"-"${R}"
-        DIRS_TO_DELETE_LATER+=("${tmp_dir}")
+        DELETE_LATER+=("${tmp_dir}")
 
         mv "${to}"-"${R}" "${tmp_dir}"
         
@@ -173,8 +188,8 @@ function _backup() {
         ERR_MSGS+=("While running a $(basename "${to}") backup of ${from%/*}, we took ${time_spent_in_atomic_block}ms to run all commands in an atomic block. This is NOT atomic!")
     fi
 
-    for f in "${DIRS_TO_DELETE_LATER[@]}"; do
-        rm -rf "${f}"  # SLOW
+    for f in "${DELETE_LATER[@]}"; do
+        "${RM}" -rf "${f}"  # SLOW
     done
 }
 
@@ -191,7 +206,7 @@ function backup_kernel_config() {
 
     KMAX=5
     if [[ "$(_find_kconfigs "${P}" | wc -l)" -gt "${KMAX}" ]]; then
-        _find_kconfigs "${P}" | sort -u | head -n -"${KMAX}" | xargs /bin/rm
+        _find_kconfigs "${P}" | sort -u | head -n -"${KMAX}" | xargs "${RM}"
     fi
 }
 

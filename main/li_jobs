@@ -3,25 +3,35 @@
 DB="${HOME}"/projects/spider/linkedin/linkedin_jobs.db 
 CONF=/tmp/li_litecli.conf
 
-if [[ "$1" == "-u" ]]; then
-    shift
-    ~/projects/spider/crawl_linkedin -f -u bryanbugyi34@gmail.com
+if [[ -n "$1" ]]; then
+    crawl_linkedin "$@" -u bryanbugyi34@gmail.com
     clear
 fi
 
+read -r -d '' ss_fmt <<-EOM
+select id as ID,
+       round(score, 2) as Score,
+       search_location as Location,
+       title as Title,
+       company as Company,
+       post_date as 'Post Date',
+       %s
+from jobs
+where score >= \$1
+order by %s
+EOM
+
+ss_fmt="$(echo "${ss_fmt}" | tr '\n' ' ' | perl -nE 'print s/[ ]+/ /gr')"
+
 function ss() {
-    printf "\
-select id as ID, round(score, 2) as Score, search_location as Location, title as Title, company as Company, post_date as 'Post Date', $1 \
-from jobs where score >= \$1 \
-order by $2\
-        " 
+    printf "${ss_fmt}" "$@"
 }
 
 cp "${HOME}"/.config/litecli/config "${CONF}"
 cat >>"${CONF}" <<EOF
 c = "$(ss url company)"
 count = "select count(*) from jobs where score >= \$1"
-cd = "$(ss 'creation_date as \"Creation Date\"' 'creation_date desc, post_date desc')"
+cd = "$(ss 'creation_date as "Creation Date"' 'creation_date desc, post_date desc')"
 d = "$(ss 'url as URL' 'post_date desc')"
 s = "$(ss 'url as URL' score)"
 t = "$(ss 'tags as Tags' score)"

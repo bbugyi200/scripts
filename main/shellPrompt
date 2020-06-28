@@ -18,7 +18,7 @@ from loguru import logger as log
 
 
 @gutils.catch
-def main(argv: Sequence[str] = None) -> None:
+def main(argv: Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv
 
@@ -34,6 +34,8 @@ def main(argv: Sequence[str] = None) -> None:
 
     cmd_list = shell_cmd(cmd, args.less)
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+    return 0
 
 
 def parse_cli_args(argv: Sequence[str]) -> argparse.Namespace:

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+sudo emerge -ADuUv --keep-going --verbose-conflicts --backtrack=50 --autounmask=n "$@" @world

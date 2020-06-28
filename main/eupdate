@@ -13,6 +13,21 @@ sys_info="${_uname_output,,}"
 
 # >>> GENTOO
 if [[ "${sys_info}" == *"gentoo"* ]]; then
+    now="$(date +%s)"
+    last_sync_f="${MY_XDG_DATA}"/last_sync
+    if [[ -f "${last_sync_f}" ]]; then
+        last_sync="$(cat "${last_sync_f}")"
+        time_since_last_sync=$((now - "${last_sync}"))
+    else
+        time_since_last_sync=999999999
+    fi
+    if [[ "${time_since_last_sync}" -gt $((60 * 60 * 24)) ]]; then
+        if econfirm "sudo emerge -A --sync"; then
+            printf '\a'
+            echo "${now}" > "${last_sync_f}"
+        fi
+    fi
+
     new_msg_count="$(eselect news count new)"
     if [[ "${new_msg_count}" -gt 0 ]]; then
         printf ">>> You have ${new_msg_count} unread Gentoo news items.\n"
@@ -20,14 +35,12 @@ if [[ "${sys_info}" == *"gentoo"* ]]; then
         econfirm "eselect news read new"
     fi
 
-    econfirm "sudo emerge -A --sync" && printf '\a'
-
     ewatch_proc_count="$(pgrep -f 'watch.*genlop' -c)"
     if [[ "${ewatch_proc_count}" -eq 0 ]]; then
         econfirm "ewatch"
     fi
 
-    econfirm "sudo emerge -ADuUv --keep-going --verbose-conflicts --backtrack=50 @world" && printf '\a'
+    econfirm "erun_world_update" && printf '\a'
     econfirm "sudo smart-live-rebuild"
     econfirm "ebvcheck -v"
     econfirm "sudo emerge -a --depclean"
@@ -44,9 +57,9 @@ if [[ "${sys_info}" == *"debian"* ]]; then
 fi
 
 # >>> ALL
-econfirm "vim +PluginUpdate"
 econfirm "sudo npm update --force -g"
 econfirm "rustup update"
+econfirm "vim +PluginUpdate +qall"
 econfirm "epip_update_all"
 econfirm "pipx upgrade-all"
 econfirm "sudo updatedb &"

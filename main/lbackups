@@ -41,21 +41,23 @@ function main() {
             local first_subdir=true
             for DD in "${D}"/*; do
                 local timestamp_file="${DD}"/backup.txt
-                if [[ -f "${timestamp_file}" ]]; then
-                    if [[ "${first_subdir}" = true ]]; then
-                        first_subdir=false
-    
-                        if [[ "${first_dir}" = true ]]; then
-                            first_dir=false
-                        else
-                            echo
-                        fi
-    
-                        printf -- "----- /%s\n" "${d}"
-                    fi
-    
-                    output_lines+=("$(printf "%-9s %s\n" "$(basename "${DD}")" "$(date --date=@"$(cat "${timestamp_file}")" +"%Y-%m-%d %H:%M:%S %Z")")")
+                if ! [[ -f "${timestamp_file}" ]]; then
+                    continue
                 fi
+
+                if [[ "${first_subdir}" = true ]]; then
+                    first_subdir=false
+
+                    if [[ "${first_dir}" = true ]]; then
+                        first_dir=false
+                    else
+                        echo
+                    fi
+
+                    printf -- "----- /%s\n" "${d}"
+                fi
+
+                output_lines+=("$(printf "%-9s %s\n" "$(basename "${DD}")" "$(date --date=@"$(cat "${timestamp_file}")" +"%Y-%m-%d %H:%M:%S %Z")")")
             done
     
             print_backups "daily" "${output_lines[@]}"

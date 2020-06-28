@@ -14,9 +14,10 @@ import gutils
 from loguru import logger as log  # pylint: disable=unused-import
 
 
-Arguments = NamedTuple(
-    "Arguments", [("bindir", str), ("debug", bool), ("verbose", bool)]
-)
+class Arguments(NamedTuple):
+    bindir: str
+    debug: bool
+    verbose: bool
 
 
 @gutils.catch

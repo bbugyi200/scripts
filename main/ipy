@@ -7,7 +7,9 @@
 
 version="$1"; shift
 
-if [[ -z "${version}" ]]; then
+if [[ -n "${version}" ]]; then
+    version="$(echo "${version}" | perl -nE 'print s/^([1-9])([1-9])$/\1.\2/gr')"
+else
     version="$(python_versions | sort -u | tail -n 1)"
 fi
 

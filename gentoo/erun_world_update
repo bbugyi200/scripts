@@ -1,3 +1,13 @@
 #!/bin/bash
 
-sudo emerge -ADuUv --keep-going --verbose-conflicts --backtrack=50 --autounmask=n "$@" @world
+sudo emerge \
+    --alert \
+    --autounmask=n \
+    --backtrack=50 \
+    --deep \
+    --keep-going \
+    --newuse \
+    --update \
+    --verbose \
+    --verbose-conflicts \
+    "$@" @world

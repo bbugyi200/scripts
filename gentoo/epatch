@@ -4,14 +4,13 @@ read -r -d '' doc <<-EOM
 This script aids in the creation and maintainance of user patches on Gentoo.
 
 Steps to create an ebuild patch:
-
-1A) Run \`cd "\$(epatch PACKAGE)"\` (will cd to temp git repository).
-1B) Add a file named 'epatch.info' to the top-level of the project. This file
-should contain two lines:
-   (i) The Gentoo package to patch (i.e. <category>/<package>)
-   (ii) The branch to diff against (e.g. origin/master) 
-2) Make your code changes.
-3) Run \`epatch -i PATCH\` (while still in the temp git repository) to install PATCH.patch.
+    1A) Run \`cd "\$(epatch PACKAGE)"\` (will cd to temp git repository).
+    1B) Add a file named 'epatch.info' to the top-level of the project. This file
+    should contain two lines:
+        (i) The Gentoo package to patch (i.e. <category>/<package>)
+        (ii) The branch to diff against (e.g. origin/master) 
+    2) Make your code changes.
+    3) Run \`epatch -i PATCH\` (while still in the temp git repository) to install PATCH.patch.
 EOM
 
 source gutils.sh
@@ -302,7 +301,7 @@ if [[ "${list}" = true ]]; then
         check_path_exists
         make_real_paths
 
-        pygmentize -g "${REAL_PATH}"
+        cat "${REAL_PATH}"
     else
         find "${PATCH_DIR}" "${PATCH_NOVERSION_DIR}" -name "*.patch" -o -name "*.stash" 2> /dev/null | sort -u
     fi

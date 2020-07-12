@@ -12,7 +12,7 @@ video_file="$1"; shift
 
 DVD=/media/bryan/zeus/media/DVD
 dvd_title="${DVD}"/"${title}"
-[[ -d "${dvd_title}" ]] || mkdir "${dvd_title}"
+[[ -d "${dvd_title}" ]] || sudo mkdir "${dvd_title}"
 
 mpg_file="${video_file%.*}".mpg
 iso_file="${DVD}"/"${title,,}".iso

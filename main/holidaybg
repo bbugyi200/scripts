@@ -68,14 +68,14 @@ for H in holidays:
         delta = hdate - now
 
 if delta.days <= MAX:
-    path = '/home/bryan/Sync/var/photos/backgrounds/holidays/{}.jpg'.format(
+    path = '/home/bryan/Sync/var/photos/backgrounds/Holidays/{}.jpg'.format(
         H[0]
     )
     if os.path.exists(path):
         with open('/tmp/current_bg.txt', 'w') as F:
             F.write(path)
 
-    os.system('feh --bg-center {}'.format(path))
+    os.system('feh --bg-fill {}'.format(path))
     sys.exit(0)
 
 sys.exit(1)

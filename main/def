@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """Add a New Alias to your bashrc / zshrc in Alphabetical Order"""
 
@@ -6,7 +6,7 @@ import os
 import re
 import subprocess as sp
 import sys
-from typing import List, NamedTuple, Sequence
+from typing import List, NamedTuple, Optional, Sequence
 
 import gutils
 from loguru import logger as log
@@ -55,46 +55,42 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
     args = parser.parse_args(argv[1:])
 
-    return Arguments(**dict(args._get_kwargs()))
+    kwargs = dict(args._get_kwargs())
+    return Arguments(**kwargs)
 
 
-@gutils.catch
-def main(argv: Sequence[str] = None) -> None:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
+def run(args: Arguments) -> int:
     marker = '# {} marker: {}'.format(scriptname, str.upper(args.marker))
-    found_marker = False
 
     if args.alias:
-        new_definition = "alias {}=''\n".format(args.name)
+        new_definition = f"alias {args.name}=''\n"
     else:
-        new_definition = "{}() {{ :; }}\n".format(args.name)
+        new_definition = f"{args.name}() {{ :; }}\n"
 
-    filename = None
+    m_filename = None
+    m_new_lines = []
+    line_number: Optional[int] = None
+    marker_idx: Optional[int] = None
     for filename in args.file_list:
-        line_number = 0
-        new_lines = []
+        new_lines: List[str] = []
+        marker_lines: List[str] = []
+        line_list = new_lines
+        found_marker = False
 
-        found_line = False
-        for line in open(filename, 'r'):
-            new_lines.append(line)
+        for (i, line) in enumerate(open(filename, 'r')):
+            line_list.append(line)
 
-            if not found_line:
-                line_number += 1
-
-            if not found_marker:
+            if found_marker:
+                if not line.strip():
+                    line_list.pop()
+                    line_list = new_lines
+                    line_list.append(line)
+            else:
                 if line.strip() == marker:
                     found_marker = True
-
-                continue
-
-            if line[0] == '#':
-                continue
+                    m_filename = filename
+                    marker_idx = i + 1
+                    line_list = marker_lines
 
             tmp_line = line.replace('alias ', '')
             line_name = re.split(r'[=(]', tmp_line)[0]
@@ -105,30 +101,27 @@ def main(argv: Sequence[str] = None) -> None:
                 sp.check_call(['wim', '-a', args.name])
                 sys.exit(0)
 
-            tmp_line = tmp_line.lower()
-            log.trace('tmp_line => {}', repr(tmp_line))
-
-            if (
-                args.name.lower() < tmp_line or not line.strip()
-            ) and not found_line:
-                new_lines.pop()
-                new_lines.append(new_definition)
-                new_lines.append(line)
-                found_line = True
-
         if found_marker:
-            if not found_line:
-                new_lines.append(new_definition)
-                line_number += 1
-            break
+            marker_lines.append(new_definition)
+            marker_lines = sorted(
+                marker_lines,
+                key=lambda D: D.replace("alias ", "").lstrip("_").lower(),
+            )
+            def_idx = marker_lines.index(new_definition)
+            assert marker_idx
+            line_number = marker_idx + def_idx + 1
+            new_lines = (
+                new_lines[:marker_idx] + marker_lines + new_lines[marker_idx:]
+            )
+            m_new_lines = new_lines
 
-    if filename is None:
+    if m_filename is None:
         raise RuntimeError(
             'Lexical position for new alias could not be found.'
         )
 
-    with open(filename, 'w') as f:
-        f.writelines(new_lines)
+    with open(m_filename, 'w') as f:
+        f.writelines(m_new_lines)
 
     if args.alias:
         column_number = 9 + len(args.name)
@@ -136,10 +129,24 @@ def main(argv: Sequence[str] = None) -> None:
         column_number = 7 + len(args.name)
 
     cursor_call = 'call cursor({}, {})'.format(line_number, column_number)
-    cmd_list = ['vim', '+startinsert', '-c', cursor_call, filename]
+    cmd_list = ['vim', '+startinsert', '-c', cursor_call, m_filename]
     log.trace('cmd_list => {}', repr(cmd_list))
 
     sp.check_call(cmd_list)
+
+    return 0
+
+
+@gutils.catch
+def main(argv: Sequence[str] = None) -> int:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
+    return run(args)
 
 
 if __name__ == "__main__":

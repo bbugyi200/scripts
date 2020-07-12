@@ -18,7 +18,7 @@ EPIP_PY3_PACKAGES=(
     redis
     pymongo
 )
-EPIP_PY36_PACKAGES=(
+EPIP_PY37_PACKAGES=(
     scalene  # CPU/Memory CLI profiling tool
 )
 
@@ -34,8 +34,8 @@ function run() {
 function single_version_packs() {
     local pyver="$1"; shift
 
-    if [[ "${pyver}" == 3.6 ]]; then
-        echo "${EPIP_PY36_PACKAGES[@]}"
+    if [[ "${pyver}" == 3.7 ]]; then
+        echo "${EPIP_PY37_PACKAGES[@]}"
     fi
 }
 

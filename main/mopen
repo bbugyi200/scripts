@@ -45,10 +45,11 @@ def main(argv: List[str] = None) -> None:
         find_output = gutils.shell(
             'find /media/bryan/zeus/media/Entertainment /home/bryan/Downloads '
                 '-name "*.avi" -o '
-                '-name "*.mkv" -o '
-                '-name "*.mp4" -o '
                 '-name "*.m4v" -o '
-                '-name "*.mov"'
+                '-name "*.mkv" -o '
+                '-name "*.mov" -o '
+                '-name "*.mp4" -o '
+                '-name "*.mpg"'
         )
 
         options = {}

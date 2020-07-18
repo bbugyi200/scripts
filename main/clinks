@@ -27,7 +27,8 @@ function stow_it() {
     dir="${src%/*}"
     subdir="${src##*/}"
 
-    sudo stow --dir="${dir}" --target="${target}" -"${FLAG}" "${subdir}"
+    # We use perl to filter out spurious warning output (see https://github.com/aspiers/stow/issues/65).
+    2>&1 sudo stow --dir="${dir}" --target="${target}" -"${FLAG}" "${subdir}" | perl -nE 'print unless /BUG in find_stowed_path\?/'
 }
 
 # ---------- Parse Command-line Arguments ----------

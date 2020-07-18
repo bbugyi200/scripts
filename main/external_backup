@@ -2,6 +2,7 @@
 
 perseus=/media/bryan/perseus
 ts_file="${perseus}"/external_backup.txt  # Timestamp File
+ts_file_array=("${ts_file}" "${HOME}"/.external_backup.txt)
 
 
 if ! mount | grep -q "${perseus}"; then
@@ -21,6 +22,6 @@ fi
 do_external_backup ${perseus}
 
 if confirm "# External Backup is Finished"; then
-    confirm "date > ${ts_file}"
+    confirm "date | tee ${ts_file_array[*]} > /dev/null"
     confirm "sudo umount ${perseus}"
 fi

@@ -126,16 +126,6 @@ function main() {
             notify "${nmsg}"
         fi
     fi
-    
-    if confirm "# Clone the HADES PC game partition"; then
-        dev="$(label2dev HADES)"
-        hades_desc="[${dev}|HADES => hades.img]"
-        if sudo ntfsclone "${dev}" -o "${perseus}"/hades.img; then
-            notify "${hades_desc}: ok"
-        else
-            notify "${hades_desc}: FAIL"
-        fi
-    fi
 }
 
 

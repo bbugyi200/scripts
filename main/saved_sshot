@@ -1,7 +1,7 @@
 #!/bin/bash
 
 filename=$(rofi -p "Screenshot Filename?" -dmenu)
-fpath=/home/bryan/Sync/var/receipts/"$filename".png
+fpath=/home/bryan/Sync/var/screenshots/"$filename".png
 
 release_mod_keys
 scrot -s "${fpath}"

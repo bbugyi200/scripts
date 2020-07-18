@@ -134,7 +134,7 @@ function run_line_profile() {
     done
 
     report=./line_profile_report.txt
-    kernprof -v -l "${exe}" "$@" > "${report}"
+    kernprof -v -l "${exe}" "$@" | filter_kern_prof > "${report}"
 
     # Cleanup
     rm "$(basename "${exe}")".lprof

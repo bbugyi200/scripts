@@ -1,6 +1,7 @@
-"""Add a New Alias to your bashrc / zshrc in Alphabetical Order"""
+"""Add a New Function / Alias to your bashrc / zshrc in Alphabetical Order"""
 
 import os
+from os.path import splitext
 import re
 import subprocess as sp
 import sys
@@ -11,6 +12,18 @@ from loguru import logger as log
 
 
 scriptname = os.path.basename(os.path.realpath(__file__))
+
+
+@gutils.catch
+def main(argv: Sequence[str] = None) -> int:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
+    return run(args)
 
 
 class Arguments(NamedTuple):
@@ -58,7 +71,10 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def run(args: Arguments) -> int:
-    marker = '# def marker: {}'.format(str.upper(args.marker))
+    marker = str.upper(args.marker)
+    full_marker = '# {} marker: {}'.format(
+        splitext(scriptname)[0].rstrip("_"), marker
+    )
 
     if args.alias:
         new_def = f"alias {args.name}=''\n"
@@ -85,12 +101,11 @@ def run(args: Arguments) -> int:
                     line_list.pop()
                     line_list = new_lines
                     line_list.append(line)
-            else:
-                if line.strip() == marker:
-                    found_marker = True
-                    m_filename = filename
-                    marker_idx = i + 1
-                    line_list = marker_lines
+            elif line.strip() == full_marker:
+                found_marker = True
+                m_filename = filename
+                marker_idx = i + 1
+                line_list = marker_lines
 
             tmp_line = line.replace('alias ', '')
             line_name = re.split(r'[=(]', tmp_line)[0]
@@ -99,7 +114,7 @@ def run(args: Arguments) -> int:
             if args.name == line_name.strip():
                 gutils.io.emsg('{} is already defined.'.format(args.name))
                 sp.check_call(['wim', '-a', args.name])
-                sys.exit(0)
+                return 0
 
         if found_marker:
             marker_lines.append(new_def)
@@ -117,31 +132,20 @@ def run(args: Arguments) -> int:
 
     if m_filename is None:
         raise RuntimeError(
-            'Lexical position for new alias could not be found.'
+            "No alias/function section could be found with the following"
+            f" marker:  {marker}"
         )
 
     with open(m_filename, 'w') as f:
         f.writelines(m_new_lines)
 
-    cursor_call = 'call cursor({}, {})'.format(line_number, column_number)
+    cursor_call = f"call cursor({line_number}, {column_number})"
     cmd_list = ['vim', '+startinsert', '-c', cursor_call, m_filename]
     log.trace('cmd_list => {}', repr(cmd_list))
 
     sp.check_call(cmd_list)
 
     return 0
-
-
-@gutils.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    return run(args)
 
 
 if __name__ == "__main__":

@@ -90,6 +90,10 @@ if [[ "${debug}" = true && "${verbose}" = true ]]; then
     set -x
 fi
 
+
+FILES_TO_RM=()
+
+
 # ---------- Main ----------
 main() {
     if [[ -z "$1" ]]; then
@@ -101,6 +105,10 @@ main() {
     fi
 
     exe="$1"; shift
+
+    TMP_DIR="$(mktemp -d /tmp/pyprof-XXX)"; FILES_TO_RM+=("${TMP_DIR}")
+
+    trap 'exit_handler' EXIT
 
     if ! [[ -f "${exe}" ]]; then
         old_exe="${exe}"
@@ -116,14 +124,18 @@ main() {
 
     if [[ "${quiet}" != true ]]; then
         # shellcheck disable=SC2153
-        if [[ "${EDITOR}" == *"vim" ]]; then
-            editor="${vim:-vim}"
-        else
-            editor="${EDITOR}"
+        if [[ -z "${EDITOR}" ]]; then
+            EDITOR="$(command -v vim)"
         fi
 
-        eval "${editor} ${report}"
+        eval "${EDITOR} ${report}"
     fi
+}
+
+function exit_handler() {
+    for f in "${FILES_TO_RM[@]}"; do
+        /bin/rm -rf "${f}"
+    done
 }
 
 function run_line_profile() {
@@ -133,20 +145,20 @@ function run_line_profile() {
         ${SED} -E -i '/^        def .*/i\ \ \ \ \ \ \ \ @profile' "${f}"
     done
 
-    report=./line_profile_report.txt
+    report="${TMP_DIR}"/line_profile_report.txt
     kernprof -v -l "${exe}" "$@" | filter_kern_prof > "${report}"
 
     # Cleanup
-    rm "$(basename "${exe}")".lprof
+    FILES_TO_RM+=("$(basename "${exe}")".lprof)
     for f in "${files_to_profile[@]}"; do
         ${SED} -E -i '/^\s*@profile/d' "${f}"
     done
  
-    vim="vim +1 -c 'nnoremap <nowait> ] /@profile<CR>' -c 'nnoremap <nowait> [ ?@profile<CR>'"
+    EDITOR="vim +1 -c 'nnoremap <nowait> <buffer> ] /@profile<CR>' -c 'nnoremap <nowait> <buffer> [ ?@profile<CR>' -c 'ALEDisable'"
 }
 
 function run_cprofile() {
-    pstats_file=./profile
+    pstats_file="${TMP_DIR}"/profile
     pstats_python_code=$(cat <<END
 import pstats
 p = pstats.Stats('${pstats_file}')
@@ -158,7 +170,7 @@ END
 
     python -m cProfile -o "${pstats_file}" "${exe}" "$@" &> /dev/null
 
-    report=./profile_report.txt
+    report="${TMP_DIR}"/profile_report.txt
     python -c "${pstats_python_code}" > "${report}"
 }
 

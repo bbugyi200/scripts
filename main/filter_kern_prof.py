@@ -37,31 +37,35 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def _function_line_list_key(function_lines: Sequence[str]) -> float:
-    match = re.match(r"Total time: ([0-9\.]+) s", function_lines[0])
+    match = re.match(r"(?:# )?Total time: ([0-9\.]+) s", function_lines[0])
     if match:
         return -float(match.group(1))
     else:
-        raise RuntimeError(f"Bad first line:  {function_lines[0]:!r}")
+        raise RuntimeError(f"Bad first line:  {function_lines[0]}")
 
 
 def run(_args: Arguments) -> int:
-    in_uncalled_function = False
+    in_uncalled_function = found_first_line = False
     new_lines: List[str] = []
     function_line_lists: List[List[str]] = []
     line_list = new_lines
     for line in fileinput.input():
-        if line.strip() == "Total time: 0 s":
-            in_uncalled_function = True
+        if not found_first_line and not line.strip().startswith(
+            "Wrote profile results to"
+        ):
             continue
 
-        if in_uncalled_function and not line.strip().startswith("Total time:"):
-            continue
+        found_first_line = True
 
         if line.strip().startswith("Total time:"):
+            in_uncalled_function = bool(line.strip() == "Total time: 0 s")
             function_line_lists.append([])
             line_list = function_line_lists[-1]
 
-        in_uncalled_function = False
+        line = line.replace("Line #", "Line  ")
+        if in_uncalled_function:
+            line = f"# {line}"
+
         line_list.append(line)
 
     for function_lines in sorted(
@@ -69,6 +73,7 @@ def run(_args: Arguments) -> int:
     ):
         new_lines.extend(function_lines)
 
+    new_lines.append("# vim: set ft=python:\n")
     for line in new_lines:
         print(line, end="")
 

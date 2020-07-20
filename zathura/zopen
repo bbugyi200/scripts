@@ -152,7 +152,7 @@ def main(argv: Sequence[str] = None) -> None:
         else:
             doc = Path('/home/bryan/Sync/var/books/{}'.format(output))
 
-    add_to_cache(doc, open_docs)
+    add_to_cache(doc, [] if args.overwrite else open_docs)
 
     active_window_class = gutils.shell('active_window_class')
     replace = args.overwrite or args.refresh

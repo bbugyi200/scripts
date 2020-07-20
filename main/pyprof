@@ -21,7 +21,8 @@ source gutils.sh
 eval set -- "$(getopt -o "d,h,l,p:,q,v" -l "debug,help,line,profile:,quiet,verbose" -- "$@")"
 
 export USAGE_GRAMMAR=(
-    "[-d] [-l] [-p A.py [-p B.py [...]]] [-q] [-v] MAIN.py"
+    "[-d] [-q] [-v] MAIN.py"
+    "[-d] -l [-p A.py [-p B.py [...]]] [-q] [-v] MAIN.py"
     "-h"
 )
 
@@ -106,7 +107,8 @@ main() {
 
     exe="$1"; shift
 
-    TMP_DIR="$(mktemp -d /tmp/pyprof-XXX)"; FILES_TO_RM+=("${TMP_DIR}")
+    TMP_DIR="$(mktemp -d /tmp/pyprof-XXX)"
+    FILES_TO_RM+=("${TMP_DIR}")
 
     trap 'exit_handler' EXIT
 

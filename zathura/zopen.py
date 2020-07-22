@@ -17,8 +17,15 @@ from loguru import logger as log
 
 
 xdg_data_dir = gutils.xdg.init('data')
-CACHE_FILE = xdg_data_dir / 'recently_opened_docs'
-FIND_CACHE_FILE = xdg_data_dir / 'all_docs'
+
+ALL_DOCS_CACHE_FILE = xdg_data_dir / 'all_docs'
+BOOKS_DIR = "/home/bryan/Sync/var/books"
+MAX_MOST_RECENT_DOCS = 100
+MOST_RECENT_CACHE_FILE = xdg_data_dir / 'recently_opened_docs'
+
+_DOC_FILE_EXTS = ("pdf", "epub", "djvu", "ps", "okular")
+_DOC_FILE_EXT_GROUP = r"\({}\)".format(r"\|".join(_DOC_FILE_EXTS))
+DOC_PTTRN = rf'.*\.{_DOC_FILE_EXT_GROUP}'
 
 
 @gutils.catch
@@ -81,10 +88,8 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def run(args: Arguments) -> int:
-    doc_pttrn = r'.*\.\(pdf\|epub\|djvu\|ps\|okular\)'
-
     all_docs = None
-    if args.generate_cache or not os.path.isfile(FIND_CACHE_FILE):
+    if args.generate_cache or not os.path.isfile(ALL_DOCS_CACHE_FILE):
         directory_list = ['/home/bryan/Sync', '/home/bryan/projects']
         if socket.gethostname() == 'athena':
             directory_list.append(
@@ -96,24 +101,24 @@ def run(args: Arguments) -> int:
         cmd_list.extend(
             ['-path', '/home/bryan/Sync/.dropbox.cache', '-prune', '-o']
         )
-        cmd_list.extend(['-regex', doc_pttrn])
+        cmd_list.extend(['-regex', DOC_PTTRN])
 
         out = sp.check_output(cmd_list)
         all_docs = out.decode().strip()
 
-        with open(FIND_CACHE_FILE, 'w') as f:
+        with open(ALL_DOCS_CACHE_FILE, 'w') as f:
             f.write(all_docs)
 
     if args.quiet:
         sys.exit(0)
 
     if all_docs is None:
-        out = sp.check_output(['cat', FIND_CACHE_FILE])
+        out = sp.check_output(['cat', ALL_DOCS_CACHE_FILE])
         all_docs = out.decode().strip()
 
     # Append any docs found in the Downloads directory.
     out = sp.check_output(
-        ['find', '/home/bryan/Downloads', '-regex', doc_pttrn]
+        ['find', '/home/bryan/Downloads', '-regex', DOC_PTTRN]
     )
     all_docs = all_docs + '\n' + out.decode().strip()
     log.trace('----- Downloads -----\n{}', out.decode().strip())
@@ -121,29 +126,29 @@ def run(args: Arguments) -> int:
     try:
         cmd = (
             'wmctrl -lx | grep -E "zathura|okular" | tr -s " " | cut -d\' \''
-            ' -f5- | grep -o ".*\\.\\(pdf\\|djvu\\|epub\\|okular\\)"'
+            f' -f5- | grep -o "{DOC_PTTRN}"'
         )
-        decoded = gutils.shell(cmd)
 
-        open_docs = [Path(x) for x in decoded.split('\n')]
+        open_docs_string = gutils.shell(cmd)
+        open_docs = [Path(x) for x in open_docs_string.split('\n')]
+
         log.debug('Open Docs: {}'.format(open_docs))
     except sp.CalledProcessError:
         open_docs = []
         log.debug('No documents are currently open in zathura.')
 
-    with open(CACHE_FILE, 'r') as f:
-        cached_docs = [Path(x.strip()) for x in f.readlines()]
+    with open(MOST_RECENT_CACHE_FILE, 'r') as f:
+        most_recent_docs = [Path(x.strip()) for x in f.readlines()]
 
-    ordered_docs = promote_cached_docs(
-        [Path(doc) for doc in all_docs.split('\n')], cached_docs
+    ordered_docs = promote_most_recent_docs(
+        [Path(doc) for doc in all_docs.split('\n')], most_recent_docs
     )
 
     if open_docs:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
     pretty_docs = [
-        re.sub('^/home/bryan/Sync/var/books/', '', str(doc))
-        for doc in ordered_docs
+        re.sub(f'^{BOOKS_DIR}/', '', str(doc)) for doc in ordered_docs
     ]
 
     if args.refresh:
@@ -163,7 +168,7 @@ def run(args: Arguments) -> int:
         if output.startswith('/'):
             doc = Path(output)
         else:
-            doc = Path('/home/bryan/Sync/var/books/{}'.format(output))
+            doc = Path(f'{BOOKS_DIR}/{output}')
 
     add_to_cache(doc, [] if args.overwrite else open_docs)
 
@@ -178,6 +183,8 @@ def run(args: Arguments) -> int:
 
     time.sleep(0.2)
     sp.check_call(['fullscreen'])
+
+    return 0
 
 
 def open_document(
@@ -199,12 +206,12 @@ def open_document(
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
-def promote_cached_docs(
-    docs: Sequence[Path], cached_docs: Sequence[Path]
+def promote_most_recent_docs(
+    docs: Sequence[Path], most_recent_docs: Sequence[Path]
 ) -> List[Path]:
     """Docs in Cache File are Brought to the Top of the List of Options"""
-    D = docs[:]
-    for c in list(reversed(cached_docs)):
+    D = list(docs)
+    for c in list(reversed(most_recent_docs)):
         if c in D:
             D.remove(c)
             D.insert(0, c)
@@ -215,7 +222,7 @@ def demote_open_docs(
     docs: Sequence[Path], open_docs: Iterable[Path]
 ) -> List[Path]:
     """Open Docs are Moved to the Bottom of the List of Options"""
-    D = docs[:]
+    D = list(docs)
     E = []
     for odoc in open_docs:
         for doc in docs:
@@ -235,28 +242,28 @@ def demote_open_docs(
 def add_to_cache(doc: Path, open_docs: Sequence[Path]) -> None:
     """Adds/moves doc to the Top of the Cache File"""
     log.debug('Adding {} to cache file...'.format(doc))
-    if os.path.isfile(CACHE_FILE):
-        with open(CACHE_FILE, 'r') as f:
-            cached_docs = f.read().strip().split('\n')
+    if os.path.isfile(MOST_RECENT_CACHE_FILE):
+        with open(MOST_RECENT_CACHE_FILE, 'r') as f:
+            most_recent_docs = f.read().strip().split('\n')
 
-        if doc in cached_docs:
-            cached_docs.remove(str(doc))
+        if doc in most_recent_docs:
+            most_recent_docs.remove(str(doc))
 
         idx = 0
-        for cdoc in cached_docs:
-            if any(str(odoc) in str(cdoc) for odoc in open_docs):
+        for mr_doc in most_recent_docs:
+            if any(str(odoc) in str(mr_doc) for odoc in open_docs):
                 idx += 1
             else:
                 break
 
-        cached_docs.insert(idx, str(doc))
+        most_recent_docs.insert(idx, str(doc))
 
-        with open(CACHE_FILE, 'w') as f:
-            f.write('\n'.join(cached_docs[:100]))
+        with open(MOST_RECENT_CACHE_FILE, 'w') as f:
+            f.write('\n'.join(most_recent_docs[:MAX_MOST_RECENT_DOCS]))
     else:
-        with open(CACHE_FILE, 'w') as f:
+        with open(MOST_RECENT_CACHE_FILE, 'w') as f:
             f.write(str(doc))
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

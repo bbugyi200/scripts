@@ -151,8 +151,9 @@ def run(args: Arguments) -> int:
         re.sub(f'^{BOOKS_DIR}/', '', str(doc)) for doc in ordered_docs
     ]
 
+    current_doc = ordered_docs[-1]
     if args.refresh:
-        doc = ordered_docs[-1]
+        doc = current_doc
     else:
         ps = sp.Popen(
             ['printf', '{}'.format('\n'.join(pretty_docs))], stdout=sp.PIPE
@@ -170,7 +171,14 @@ def run(args: Arguments) -> int:
         else:
             doc = Path(f'{BOOKS_DIR}/{output}')
 
-    add_to_cache(doc, [] if args.overwrite else open_docs)
+    if args.overwrite:
+        senior_docs = [
+            odoc for odoc in open_docs if str(odoc) not in str(current_doc)
+        ]
+    else:
+        senior_docs = open_docs
+
+    add_to_cache(doc, senior_docs)
 
     active_window_class = gutils.shell('active_window_class')
     replace = args.overwrite or args.refresh
@@ -180,9 +188,6 @@ def run(args: Arguments) -> int:
         open_document('okular', doc, opts=['--unique'], replace=replace)
     else:
         open_document('okular', doc, replace=replace)
-
-    time.sleep(0.2)
-    sp.check_call(['fullscreen'])
 
     return 0
 
@@ -239,7 +244,7 @@ def demote_open_docs(
     return D
 
 
-def add_to_cache(doc: Path, open_docs: Sequence[Path]) -> None:
+def add_to_cache(doc: Path, senior_docs: Sequence[Path]) -> None:
     """Adds/moves doc to the Top of the Cache File"""
     log.debug('Adding {} to cache file...'.format(doc))
     if os.path.isfile(MOST_RECENT_CACHE_FILE):
@@ -251,7 +256,7 @@ def add_to_cache(doc: Path, open_docs: Sequence[Path]) -> None:
 
         idx = 0
         for mr_doc in most_recent_docs:
-            if any(str(odoc) in str(mr_doc) for odoc in open_docs):
+            if any(str(odoc) in str(mr_doc) for odoc in senior_docs):
                 idx += 1
             else:
                 break

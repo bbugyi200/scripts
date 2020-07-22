@@ -1,0 +1,3 @@
+#!/bin/bash
+
+poetry show -v | perl -nE 'print s/Using virtualenv:\s*//gr if /Using virtualenv:/'

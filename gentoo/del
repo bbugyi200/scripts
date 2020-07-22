@@ -28,19 +28,31 @@ done
 
 function purge_world() {
     all_sets=( "shared" "$(hostname)" )
+    found=false
     for pkg in "$@"; do
+        category="$(ecat "${pkg}")"
+        if [[ -z "${category}" ]]; then
+            emsg "Unable to determine the category for the this package:  ${pkg}"
+            continue
+        fi
+
+        full_pkg="${category}"/"${pkg}"
         for set in "${all_sets[@]}"; do
             filename=/etc/portage/sets/"${set}"
             if grep "${pkg}" "${filename}" &> /dev/null; then
-                full_pkg="$(ecat "${pkg}")"/"${pkg}"
                 pkg_pttrn="^${full_pkg}([ #].*)?$"
                 if grep -q -P "${pkg_pttrn}" "${filename}"; then
+                    found=true
                     imsg "Purging ${full_pkg} from @${set}."
                     perl -n -i -E "print unless m{${pkg_pttrn}}" "${filename}"
                 fi
             fi
         done
     done
+
+    if [[ "${found}" != true ]] && [[ -n "${full_pkg}" ]]; then
+        wmsg "The package was not found in any @world sets:  ${full_pkg}"
+    fi
 }
 
 # ---------- Main ----------

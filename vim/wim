@@ -76,7 +76,9 @@ fi
 
 # ---------- Main ----------
 all_scripts=( )
-for cmd in "$@"; do
+
+while [[ -n "$1" ]] && [[ "$1" != "-"* ]]; do
+    cmd="$1"; shift
     script_path="$(find "$HOME"/Sync/bin -type f -name "${cmd}" | head -n 1)"
 
     if [[ -z "${script_path}" ]] || [[ "${force_dotfile}" == true ]]; then
@@ -98,6 +100,12 @@ for cmd in "$@"; do
 	all_scripts+=( "${script_path}" )
 done
 
+if [[ $# -gt 0 ]]; then
+    VIM_ARGS=("$@")
+else
+    VIM_ARGS=(-c "silent! normal g;")
+fi
+
 if [[ "${#all_scripts[@]}" -ne 0 ]]; then
-	vim -c "silent! normal g;" "${all_scripts[@]}"
+	vim "${VIM_ARGS[@]}" "${all_scripts[@]}"
 fi

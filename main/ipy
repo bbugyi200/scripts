@@ -9,10 +9,9 @@ version="$1"; shift
 
 if [[ -n "${version}" ]]; then
     version="$(echo "${version}" | perl -nE 'print s/^([1-9])([1-9])$/\1.\2/gr')"
-elif command -v eselect &> /dev/null; then
-    version="$(eselect python show | perl -nE 'print s/python//gr')"
+    python=python"${version}"
 else
-    version="$(python_versions | sort -u | tail -n 1)"
+    python="$(command -v python)"
 fi
 
-python"${version}" -m IPython "$@"
+"${python}" -m IPython "$@"

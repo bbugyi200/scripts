@@ -18,11 +18,8 @@ import sys
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
 from loguru import logger as log
+
 
 @gutils.catch
 def main():
@@ -38,7 +35,7 @@ def main():
         sys.exit(0)
 
     twargs, description = parse_body(body)
-    notify(twargs, description)
+    # notify(twargs, description)
     add_task(twargs, description)
     maybe_correct_date(twargs, date)
 

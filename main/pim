@@ -1,0 +1,6 @@
+#!/bin/bash
+
+name="${1/.py/}"; shift
+
+pyfile="$(find ~/Sync/bin -name "${name}".py)"
+tmux send-keys "clear && pushd ~/Sync/bin &> /dev/null && vim ${pyfile} ~/Sync/bin/tests/test_${name}.py && popd &> /dev/null && clear" "Enter"

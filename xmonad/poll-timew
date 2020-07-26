@@ -15,9 +15,12 @@ import threading
 import re
 import queue
 
+import gutils
+
 
 timew_queue = queue.Queue()
 tag_times = [None] * 4
+
 
 @gutils.catch
 def main():
@@ -34,7 +37,15 @@ def main():
         fmt = 'Study: ({} / {})   Dev: ({} / {})   [{}]'
 
         totaltime = get_totaltime()
-        print(fmt.format(tag_times[2], tag_times[0], tag_times[3], tag_times[1], totaltime))
+        print(
+            fmt.format(
+                tag_times[2],
+                tag_times[0],
+                tag_times[3],
+                tag_times[1],
+                totaltime,
+            )
+        )
     else:
         project, tag, currtime = parse_status(output)
 
@@ -51,17 +62,22 @@ def main():
 
         fmt = '"{project}"'
 
-        format_opts = {'project': project,
-                       'tag': parent_tag,
-                       'currtime': currtime,
-                       'totaltime': totaltime}
+        format_opts = {
+            'project': project,
+            'tag': parent_tag,
+            'currtime': currtime,
+            'totaltime': totaltime,
+        }
 
         if parent_tag != '':
             format_opts['pdaytime'] = tag_times[2]
             format_opts['ptotaltime'] = tag_times[3]
 
-            fmt = fmt + ('   '
-                         '({tag}: {currtime} / {pdaytime} / {ptotaltime})   [{totaltime}]')
+            fmt = (
+                fmt
+                + '   ({tag}: {currtime} / {pdaytime} / {ptotaltime})  '
+                ' [{totaltime}]'
+            )
 
         print(fmt.format(**format_opts))
 
@@ -73,7 +89,9 @@ def get_totaltime():
 
 def timew_tt_thread(tag, interval, index):
     """Timew Tag Time Thread"""
-    t = threading.Thread(target=insert_tag_time, args=(tag, interval, index), daemon=True)
+    t = threading.Thread(
+        target=insert_tag_time, args=(tag, interval, index), daemon=True
+    )
     t.start()
 
 
@@ -96,7 +114,7 @@ def _style_time(time_str):
     col = time_str.find(':')
 
     hours = int(time_str[:col])
-    minutes = int(time_str[col + 1:col + 3])
+    minutes = int(time_str[col + 1 : col + 3])
 
     styled = hours
     styled += minutes / 60
@@ -105,7 +123,9 @@ def _style_time(time_str):
 
 def _get_tag_time(tag, interval):
     try:
-        assert interval == 'day' or interval == 'week', 'Interval must be in {day,week}'
+        assert (
+            interval == 'day' or interval == 'week'
+        ), 'Interval must be in {day,week}'
     except AssertionError as e:
         raise ValueError(str(e))
 
@@ -117,8 +137,13 @@ def _get_tag_time(tag, interval):
     elif interval == 'day':
         date = today
 
-    start = '{0}-{1:02d}-{2:02d}T00:00:00'.format(date.year, date.month, date.day)
-    child = sp.Popen(['timew', 'summary', 'from', start, 'to', 'tomorrow', tag], stdout=sp.PIPE)
+    start = '{0}-{1:02d}-{2:02d}T00:00:00'.format(
+        date.year, date.month, date.day
+    )
+    child = sp.Popen(
+        ['timew', 'summary', 'from', start, 'to', 'tomorrow', tag],
+        stdout=sp.PIPE,
+    )
     output = child.communicate()[0].decode()
 
     if output.startswith('No'):

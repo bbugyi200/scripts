@@ -1,12 +1,14 @@
 import imp
-import unittest.mock as mock
 
-mport pytest
-
- = imp.load_source('poll-timew', '/home/bryan/Sync/bin/xmonad/poll-timew')
+import pytest
 
 
-ef test_style_time():
+pytestmark = pytest.mark.skip("The 'praw' module is not installed.")
+
+m = imp.load_source('poll-timew', '/home/bryan/Sync/bin/xmonad/poll-timew')
+
+
+def test_style_time():
     assert m.style_time('01:23:45') == '1.4h'
 
 
@@ -15,12 +17,25 @@ def test_get_tag_time():
     assert m.get_tag_time('blahsdfsfds', 'week') == '0:00:00'
 
 
-outputs = ['Tracking Dev Dev.Test "Testing Stuff"\nStarted sdflkdsjflskdfj\nCurrent sdfkds slksjdfl\nTotal          1:51:28', 'Tracking "Project: ProjectA" Tag Tag.Sub.AndMore\nStarted klsjdflskjfsdf\nCurrent sdlkfjsdklfjsd\nTotal          2:19:02', 'Tracking "Migrate from watson to timew" Meta\nsdflkjsldfklj\n sdfljksdlkfj  00:30:57\n\n']
+outputs = [
+    'Tracking Dev Dev.Test "Testing Stuff"\nStarted sdflkdsjflskdfj\nCurrent'
+    ' sdfkds slksjdfl\nTotal          1:51:28',
+    'Tracking "Project: ProjectA" Tag Tag.Sub.AndMore\nStarted'
+    ' klsjdflskjfsdf\nCurrent sdlkfjsdklfjsd\nTotal          2:19:02',
+    'Tracking "Migrate from watson to timew" Meta\nsdflkjsldfklj\n'
+    ' sdfljksdlkfj  00:30:57\n\n',
+]
 
-expected_values = [('Testing Stuff', 'Dev', '1.9h'), ('ProjectA', 'Tag', '2.3h'), ('Migrate from watson to timew', 'Meta', '0.5h')]
+expected_values = [
+    ('Testing Stuff', 'Dev', '1.9h'),
+    ('ProjectA', 'Tag', '2.3h'),
+    ('Migrate from watson to timew', 'Meta', '0.5h'),
+]
 
 
-@pytest.mark.parametrize('output, expected', list(zip(outputs, expected_values)))
+@pytest.mark.parametrize(
+    'output, expected', list(zip(outputs, expected_values))
+)
 def test_parse_status(output, expected):
     project, tag, currtime = m.parse_status(output)
 

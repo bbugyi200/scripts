@@ -8,21 +8,16 @@ cron job) using post specifications found from scanning directory.
 import datetime as dt  # noqa: F401
 import os  # noqa: F401
 import shutil
-import subprocess as sp  # noqa: F401
 import sys  # noqa: F401
 import syslog
 import time
 
-import praw
 import yaml
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/scripts/tree/master/modules/python/gutils  #
-############################################################################################
-
 from loguru import logger as log
+
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 error_flag = False
@@ -33,17 +28,22 @@ dp_completed = '{}/completed'.format(gutils.xdg.init('data'))
 gutils.create_dir(dp_pending)
 gutils.create_dir(dp_completed)
 
+
 @gutils.catch
 def main(args):
+    import praw
+
     global error_flag
 
     user_agent = 'User-Agent: linux:red_robot:v0.1.0 (by /u/bbugyi200)'
 
-    reddit = praw.Reddit(client_id=envvar('client_id'),
-                         client_secret=envvar('client_secret'),
-                         username=envvar('username'),
-                         password=envvar('password'),
-                         user_agent=user_agent)
+    reddit = praw.Reddit(
+        client_id=envvar('client_id'),
+        client_secret=envvar('client_secret'),
+        username=envvar('username'),
+        password=envvar('password'),
+        user_agent=user_agent,
+    )
 
     s = 0
     exceptions_raised = []
@@ -63,7 +63,9 @@ def main(args):
             syslog.syslog(syslog.LOG_ERR, msg)
             continue
 
-        msg = "Submitted post to '{}' subreddit: {}".format(D['subreddit'], D['fname'])
+        msg = "Submitted post to '{}' subreddit: {}".format(
+            D['subreddit'], D['fname']
+        )
         gutils.notify(msg, '-t', '0')
         syslog.syslog(syslog.LOG_INFO, msg)
 
@@ -120,9 +122,12 @@ def scan(dp_new, dp_old):
             global error_flag
 
             if not any([error_flag, multiple_dates]):
-                shutil.move(fp_post, '{}/{}.{}'.format(dp_old,
-                                                       fname,
-                                                       now.strftime('%Y%m%d%H%m%S')))
+                shutil.move(
+                    fp_post,
+                    '{}/{}.{}'.format(
+                        dp_old, fname, now.strftime('%Y%m%d%H%m%S')
+                    ),
+                )
 
                 if os.path.exists(fp_post):
                     os.remove(fp_post)
@@ -141,7 +146,9 @@ def scan(dp_new, dp_old):
 
         for field in ['title', 'subreddit']:
             if field not in D:
-                raise RuntimeError('Required field not defined: {}'.format(field))
+                raise RuntimeError(
+                    'Required field not defined: {}'.format(field)
+                )
 
         yield D
         complete_entry()

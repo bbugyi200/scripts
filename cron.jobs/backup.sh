@@ -60,7 +60,7 @@ function backup() {
 
         # If it has been less than 3/4 the expected time since the last backup
         # was run, something is wrong here. To keep moving forward now would be
-        # to risk overwriting older backup rotatons.
+        # to risk overwriting older backup rotations.
         local min_tbb=$((ETBB - ETBB / 4))
         if [[ "${diff}" -lt "${min_tbb}" ]]; then
             EC=$((EC | TOO_SOON_ERROR))
@@ -71,7 +71,11 @@ function backup() {
 
     _backup "${from}" "${to}" "${R}" "${@}"
 
-    EC=$((EC | NO_ERROR))
+    if [[ "${BACKUP_ERROR}" -eq 0 ]]; then
+        BACKUP_ERROR="${NO_ERROR}"
+    fi
+
+    EC=$((EC | BACKUP_ERROR))
 }
 
 function backup_home() {
@@ -79,6 +83,8 @@ function backup_home() {
 }
 
 function _backup() {
+    BACKUP_ERROR=0
+
     local from="$1"; shift
     local to="$1"; shift
     local R="$1"; shift
@@ -138,7 +144,7 @@ function _backup() {
         DELETE_LATER+=("${f_rsync_stderr}")
         date +%s > "${_to}"/backup.txt
     else
-        EC=$((EC | RSYNC_ERROR))
+        BACKUP_ERROR=$((BACKUP_ERROR | RSYNC_ERROR))
         ERR_MSGS+=("While running a $(basename "${to}") backup of ${from%/*}, rsync failed with the following error(s):\n$(cat "${f_rsync_stderr}")")
 
         "${RM}" -rf "${_to}"
@@ -184,7 +190,7 @@ function _backup() {
 
     time_spent_in_atomic_block=$((end_atomic_time - start_atomic_time))
     if [[ "${time_spent_in_atomic_block}" -gt "${MAX_ATOMIC_TIME}" ]]; then
-        EC=$((EC | NOT_ATOMIC_ERROR))
+        BACKUP_ERROR=$((BACKUP_ERROR | NOT_ATOMIC_ERROR))
         ERR_MSGS+=("While running a $(basename "${to}") backup of ${from%/*}, we took ${time_spent_in_atomic_block}ms to run all commands in an atomic block. This is NOT atomic!")
     fi
 

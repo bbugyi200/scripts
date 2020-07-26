@@ -1,7 +1,6 @@
 """Add a New Function / Alias to your bashrc / zshrc in Alphabetical Order"""
 
 import os
-from os.path import splitext
 import re
 import subprocess as sp
 import sys
@@ -72,9 +71,7 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 def run(args: Arguments) -> int:
     marker = str.upper(args.marker)
-    full_marker = '# {} marker: {}'.format(
-        splitext(scriptname)[0].rstrip("_"), marker
-    )
+    full_marker = '# def marker: {}'.format(marker)
 
     if args.alias:
         new_def = f"alias {args.name}=''\n"

@@ -8,6 +8,9 @@ zopen -C -q
 mopen -C
 check_shv_logs
 
+# Run tests for my local scripts.
+pytest -v --doctest-modules "${HOME}"/Sync/bin
+
 # Generate daily summary of process accounting (needed for `sar`).
 /usr/lib64/sa/sa2 -A &
 

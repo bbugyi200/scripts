@@ -2,15 +2,19 @@ import datetime as dt
 import importlib.util
 import importlib.machinery
 import os
-mport shutil
-mport unittest.mock as mock
+import shutil
 
-oader = importlib.machinery.SourceFileLoader("red_robot", "/home/bryan/Sync/bin/main/red_robot")
-pec = importlib.util.spec_from_loader("red_robot", loader)
- = importlib.util.module_from_spec(spec)
-pec.loader.exec_module(S)
+loader = importlib.machinery.SourceFileLoader(
+    "red_robot", "/home/bryan/Sync/bin/main/red_robot"
+)
+spec = importlib.util.spec_from_loader("red_robot", loader)
+S = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(S)
 
 import pytest  # noqa
+
+
+pytestmark = pytest.mark.skip("The 'praw' module is not installed.")
 
 
 dp_pending = '/tmp/red_robot/pending'
@@ -22,12 +26,29 @@ def test_envvar():
 
 
 def test_scan__PASS(remove_posts):
-    post_values = [{'title': 'T1', 'url': 'U1', 'subreddit': 'subreddit1',
-                    'text': None, 'fname': 'A'},
-                   {'title': 'T2', 'url': 'U2', 'subreddit': 'subreddit2',
-                    'text': None, 'fname': 'B'},
-                   {'title': 'T3', 'url': None, 'subreddit': 'subreddit3',
-                    'text': 'Markdown Text', 'fname': 'C'}]
+    post_values = [
+        {
+            'title': 'T1',
+            'url': 'U1',
+            'subreddit': 'subreddit1',
+            'text': None,
+            'fname': 'A',
+        },
+        {
+            'title': 'T2',
+            'url': 'U2',
+            'subreddit': 'subreddit2',
+            'text': None,
+            'fname': 'B',
+        },
+        {
+            'title': 'T3',
+            'url': None,
+            'subreddit': 'subreddit3',
+            'text': 'Markdown Text',
+            'fname': 'C',
+        },
+    ]
 
     post_url_fmt = 'title: {}\nurl: {}\nsubreddit: {}'
     post_text_fmt = 'title: {}\ntext: {}\nsubreddit: {}'
@@ -42,9 +63,13 @@ def test_scan__PASS(remove_posts):
             post_fmt = post_url_fmt
             url_or_text = 'url'
 
-        post_contents.append(post_fmt.format(post_values[i]['title'],
-                                             post_values[i][url_or_text],
-                                             post_values[i]['subreddit']))
+        post_contents.append(
+            post_fmt.format(
+                post_values[i]['title'],
+                post_values[i][url_or_text],
+                post_values[i]['subreddit'],
+            )
+        )
 
         post_fps.append('{}/{}'.format(dp_pending, post_values[i]['fname']))
 

@@ -1,31 +1,49 @@
 #!/bin/bash
 
-if [[ $(wmctrl -d | grep -v "NSP" | wc -l) -le 2 ]]; then
+if [[ $(wmctrl -d | grep -v -c "NSP") -le 2 ]]; then
     exit 1
 fi
 
-getWS() { wmctrl -d | grep "*" | tr -s " " | cut -d' ' -f9; }
-
-MAX=5
+DEBUG=false
 COUNT=1
-OLD_WS=$(getWS)
-WNAME=$1
+MAX_COUNT=5
 
-case $WNAME in
+wname="$1"; shift
+
+old_ws="$(active_desktop)"
+removed_empty_ws=false
+
+case "$wname" in
 	*"Anki"* )
-        removeWorkspace;;
+        removeWorkspace
+        exit 0;;
 	* )
-	while [[ $COUNT -le $MAX ]]; do
-		xdotool key super+shift+r
-		sleep 0.1
+        while [[ $COUNT -le $MAX_COUNT ]]; do
+            window_title="$(active_window_title)"
+            if [[ -z "${window_title}" ]]; then
+                xdotool key super+shift+r
 
-        CURR_WS=$(getWS)
-		if [[ $CURR_WS != $OLD_WS ]]; then
-            if [[ $CURR_WS == "NSP" ]]; then
-                xdotool key super+equal
+                curr_ws=$(active_desktop)
+                if [[ "${curr_ws}" != "${old_ws}" ]]; then
+                    if [[ $curr_ws == "NSP" ]]; then
+                        xdotool key super+equal
+                    fi
+                    
+                    if [[ "${DEBUG}" = true ]]; then
+                        removed_empty_ws=true
+                        notify-send "$(basename "$0")" "Removed empty workspace after ${COUNT} attempt(s)!"
+                    fi
+                fi
+
+                break
+            else
+                sleep 0.1
+                COUNT=$((COUNT+1))
             fi
-			break
-		fi
-		COUNT=$((COUNT+1))
-	done;;
+        done;;
 esac
+
+
+if [[ "${DEBUG}" = true ]] && [[ "${removed_empty_ws}" != true ]]; then
+    notify-send "$(basename "$0")" "Workspace still doesn't appear empty after $((COUNT - 1)) attempt(s)!"
+fi

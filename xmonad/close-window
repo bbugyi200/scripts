@@ -1,5 +1,6 @@
 #!/bin/bash
-WNAME="$(xdotool getwindowfocus getwindowname)"
+
+WNAME="$(active_window_title)"
 
 if _close-window; then
     removeEmptyWorkspace "${WNAME}"

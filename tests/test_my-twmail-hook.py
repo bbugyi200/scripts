@@ -3,13 +3,15 @@
 import datetime as dt
 import importlib.util
 import importlib.machinery
-mport os
-mport unittest.mock as mock
+import os
+import unittest.mock as mock
 
-oader = importlib.machinery.SourceFileLoader("twmail", "/home/bryan/Sync/bin/main/my-twmail-hook")
-pec = importlib.util.spec_from_loader("twmail", loader)
-wmail = importlib.util.module_from_spec(spec)
-pec.loader.exec_module(twmail)
+loader = importlib.machinery.SourceFileLoader(
+    "twmail", "/home/bryan/Sync/bin/main/my-twmail-hook"
+)
+spec = importlib.util.spec_from_loader("twmail", loader)
+twmail = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(twmail)
 
 import pytest  # noqa
 
@@ -30,7 +32,9 @@ def test_parse_body(sp_mock):
 
     _set_body(twargs, dirty_description)
 
-    actual_twargs, actual_description = twmail.parse_body(_get_body(twargs, dirty_description))
+    actual_twargs, actual_description = twmail.parse_body(
+        _get_body(twargs, dirty_description)
+    )
 
     assert actual_twargs == twargs
     assert actual_description == clean_description

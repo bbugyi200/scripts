@@ -3,6 +3,7 @@ Zathura Helper Script. Used to Search for and then Open Documents in Zathura.
 """
 
 import os
+from os.path import isfile
 from pathlib import Path
 import re
 import signal
@@ -10,18 +11,19 @@ import socket
 import subprocess as sp
 import sys
 import time
-from typing import Iterable, List, NamedTuple, Sequence
+from typing import Iterable, List, NamedTuple, Optional, Sequence, Union
 
 import gutils
 from loguru import logger as log
 
 
-xdg_data_dir = gutils.xdg.init('data')
+PathLike = Union[str, Path]
 
-ALL_DOCS_CACHE_FILE = xdg_data_dir / 'all_docs'
+_XDG_DATA_DIR = gutils.xdg.init('data')
+ALL_DOCS_CACHE_FILE = _XDG_DATA_DIR / 'all_docs'
 BOOKS_DIR = "/home/bryan/Sync/var/books"
 MAX_MOST_RECENT_DOCS = 100
-MOST_RECENT_CACHE_FILE = xdg_data_dir / 'recently_opened_docs'
+MOST_RECENT_CACHE_FILE = _XDG_DATA_DIR / 'recently_opened_docs'
 
 _DOC_FILE_EXTS = ("pdf", "epub", "djvu", "ps", "okular")
 _DOC_FILE_EXT_GROUP = r"\({}\)".format(r"\|".join(_DOC_FILE_EXTS))
@@ -82,14 +84,117 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
     )
 
     args = parser.parse_args(argv[1:])
+
     kwargs = dict(args._get_kwargs())
+    kwargs["generate_cache"] = kwargs["generate_cache"] or not isfile(
+        ALL_DOCS_CACHE_FILE
+    )
 
     return Arguments(**kwargs)
 
 
 def run(args: Arguments) -> int:
-    all_docs = None
-    if args.generate_cache or not os.path.isfile(ALL_DOCS_CACHE_FILE):
+    all_docs = get_all_docs(use_cache=not args.generate_cache)
+
+    if args.generate_cache:
+        with open(ALL_DOCS_CACHE_FILE, 'w') as f:
+            f.writelines([str(adoc) + "\n" for adoc in all_docs])
+
+    if args.quiet:
+        sys.exit(0)
+
+    if not isfile(MOST_RECENT_CACHE_FILE):
+        Path(MOST_RECENT_CACHE_FILE).touch()
+
+    with open(MOST_RECENT_CACHE_FILE, 'r') as f:
+        most_recent_docs = [Path(x.strip()) for x in f.readlines()]
+
+    ordered_docs = promote_most_recent_docs(all_docs, most_recent_docs)
+
+    open_docs = get_open_docs()
+    if open_docs:
+        ordered_docs = demote_open_docs(ordered_docs, open_docs)
+
+    pretty_docs = [
+        Path(re.sub(f'^{BOOKS_DIR}/', '', str(doc))) for doc in ordered_docs
+    ]
+
+    doc: Optional[PathLike]
+    if args.refresh:
+        # We assume that this should be the current (i.e. focused) doc, but it
+        # isn't always. With that said, this almost always works.
+        doc = ordered_docs[-1]
+    else:
+        doc = choose_doc_to_open(pretty_docs)
+
+    if doc is None:
+        return 1
+
+    replace = args.overwrite or args.refresh
+    open_document(doc, replace=replace)
+
+    # We sleep for a second here so the open docs list has time to be updated
+    # properly. When the -x or -R option is used, for example.
+    if replace:
+        time.sleep(1)
+        open_docs = get_open_docs()
+
+    add_to_mr_cache(most_recent_docs, doc, open_docs)
+
+    return 0
+
+
+def choose_doc_to_open(available_docs: Sequence[PathLike]) -> Optional[Path]:
+    printf_ps = sp.Popen(
+        [
+            'printf',
+            '{}'.format('\n'.join(str(adoc) for adoc in available_docs)),
+        ],
+        stdout=sp.PIPE,
+    )
+    rofi_ps = sp.Popen(
+        ['rofi', '-p', 'Document', '-m', '-4', '-dmenu', '-i'],
+        stdout=sp.PIPE,
+        stdin=printf_ps.stdout,
+    )
+    printf_ps.wait()
+
+    stdout, stderr = rofi_ps.communicate()
+
+    if rofi_ps.returncode != 0:
+        print("[ERROR] The 'rofi' command failed.", file=sys.stderr)
+
+        if stdout:
+            print(
+                f"\n----- STDOUT -----\n{stdout.decode().strip()}",
+                file=sys.stderr,
+            )
+
+        if stderr:
+            print(
+                f"\n----- STDERR -----\n{stderr.decode().strip()}",
+                file=sys.stderr,
+            )
+
+        return None
+
+    assert stdout
+    output = stdout.decode().strip()
+
+    if output.startswith('/'):
+        doc = Path(output)
+    else:
+        doc = Path(f'{BOOKS_DIR}/{output}')
+
+    return doc
+
+
+def get_all_docs(*, use_cache: bool) -> List[Path]:
+    if use_cache:
+        assert isfile(ALL_DOCS_CACHE_FILE)
+        out = sp.check_output(['cat', ALL_DOCS_CACHE_FILE])
+        all_docs_string = out.decode().strip()
+    else:
         directory_list = ['/home/bryan/Sync', '/home/bryan/projects']
         if socket.gethostname() == 'athena':
             directory_list.append(
@@ -104,25 +209,41 @@ def run(args: Arguments) -> int:
         cmd_list.extend(['-regex', DOC_PTTRN])
 
         out = sp.check_output(cmd_list)
-        all_docs = out.decode().strip()
-
-        with open(ALL_DOCS_CACHE_FILE, 'w') as f:
-            f.write(all_docs)
-
-    if args.quiet:
-        sys.exit(0)
-
-    if all_docs is None:
-        out = sp.check_output(['cat', ALL_DOCS_CACHE_FILE])
-        all_docs = out.decode().strip()
+        all_docs_string = out.decode().strip()
 
     # Append any docs found in the Downloads directory.
     out = sp.check_output(
         ['find', '/home/bryan/Downloads', '-regex', DOC_PTTRN]
     )
-    all_docs = all_docs + '\n' + out.decode().strip()
-    log.trace('----- Downloads -----\n{}', out.decode().strip())
+    downloads_docs_string = out.decode().strip()
+    all_docs_string = all_docs_string + '\n' + downloads_docs_string
+    log.trace('----- Downloads -----\n{}', downloads_docs_string)
 
+    all_docs = [
+        Path(adoc) for adoc in all_docs_string.split("\n") if isfile(adoc)
+    ]
+    return all_docs
+
+
+def add_to_mr_cache(
+    most_recent_docs: Sequence[PathLike],
+    new_doc: PathLike,
+    open_docs: Sequence[PathLike],
+) -> None:
+    new_mr_cache_lines = get_new_mr_cache_lines(
+        most_recent_docs, new_doc, open_docs
+    )
+
+    # Filter out docs that don't exist anymore.
+    new_mr_cache_lines = [
+        mr_doc for mr_doc in new_mr_cache_lines if mr_doc.is_file()
+    ]
+
+    with open(MOST_RECENT_CACHE_FILE, "w") as f:
+        f.writelines([f"{new_doc}\n" for new_doc in new_mr_cache_lines])
+
+
+def get_open_docs() -> List[Path]:
     try:
         cmd = (
             'wmctrl -lx | grep -E "zathura|okular" | tr -s " " | cut -d\' \''
@@ -137,63 +258,25 @@ def run(args: Arguments) -> int:
         open_docs = []
         log.debug('No documents are currently open in zathura.')
 
-    with open(MOST_RECENT_CACHE_FILE, 'r') as f:
-        most_recent_docs = [Path(x.strip()) for x in f.readlines()]
+    return open_docs
 
-    ordered_docs = promote_most_recent_docs(
-        [Path(doc) for doc in all_docs.split('\n')], most_recent_docs
-    )
 
-    if open_docs:
-        ordered_docs = demote_open_docs(ordered_docs, open_docs)
-
-    pretty_docs = [
-        re.sub(f'^{BOOKS_DIR}/', '', str(doc)) for doc in ordered_docs
-    ]
-
-    current_doc = ordered_docs[-1]
-    if args.refresh:
-        doc = current_doc
-    else:
-        ps = sp.Popen(
-            ['printf', '{}'.format('\n'.join(pretty_docs))], stdout=sp.PIPE
-        )
-        out = sp.check_output(
-            ['rofi', '-p', 'Document', '-m', '-4', '-dmenu', '-i'],
-            stdin=ps.stdout,
-        )
-        ps.wait()
-
-        output = out.decode().strip()
-
-        if output.startswith('/'):
-            doc = Path(output)
-        else:
-            doc = Path(f'{BOOKS_DIR}/{output}')
-
-    if args.overwrite:
-        senior_docs = [
-            odoc for odoc in open_docs if str(odoc) not in str(current_doc)
-        ]
-    else:
-        senior_docs = open_docs
-
-    add_to_cache(doc, senior_docs)
-
+def open_document(doc: PathLike, *, replace: bool = False) -> None:
     active_window_class = gutils.shell('active_window_class')
-    replace = args.overwrite or args.refresh
     if active_window_class == 'Zathura':
-        open_document('zathura', doc, replace=replace)
+        _open_document('zathura', doc, replace=replace)
     elif active_window_class == 'okular':
-        open_document('okular', doc, opts=['--unique'], replace=replace)
+        _open_document('okular', doc, opts=['--unique'], replace=replace)
     else:
-        open_document('okular', doc, replace=replace)
-
-    return 0
+        _open_document('okular', doc, replace=replace)
 
 
-def open_document(
-    cmd: str, doc: Path, *, opts: Sequence[str] = None, replace: bool = False
+def _open_document(
+    cmd: str,
+    doc: PathLike,
+    *,
+    opts: Sequence[str] = None,
+    replace: bool = False,
 ) -> None:
     if opts is None:
         opts = []
@@ -212,9 +295,12 @@ def open_document(
 
 
 def promote_most_recent_docs(
-    docs: Sequence[Path], most_recent_docs: Sequence[Path]
+    docs: Sequence[PathLike], most_recent_docs: Sequence[PathLike]
 ) -> List[Path]:
     """Docs in Cache File are Brought to the Top of the List of Options"""
+    docs = path_list(docs)
+    most_recent_docs = path_list(most_recent_docs)
+
     D = list(docs)
     for c in list(reversed(most_recent_docs)):
         if c in D:
@@ -224,9 +310,11 @@ def promote_most_recent_docs(
 
 
 def demote_open_docs(
-    docs: Sequence[Path], open_docs: Iterable[Path]
+    docs: Sequence[PathLike], open_docs: Iterable[PathLike]
 ) -> List[Path]:
     """Open Docs are Moved to the Bottom of the List of Options"""
+    docs = path_list(docs)
+
     D = list(docs)
     E = []
     for odoc in open_docs:
@@ -244,30 +332,59 @@ def demote_open_docs(
     return D
 
 
-def add_to_cache(doc: Path, senior_docs: Sequence[Path]) -> None:
-    """Adds/moves doc to the Top of the Cache File"""
-    log.debug('Adding {} to cache file...'.format(doc))
-    if os.path.isfile(MOST_RECENT_CACHE_FILE):
-        with open(MOST_RECENT_CACHE_FILE, 'r') as f:
-            most_recent_docs = f.read().strip().split('\n')
+def get_new_mr_cache_lines(
+    most_recent_docs: Sequence[PathLike],
+    new_doc: PathLike,
+    open_docs: Sequence[PathLike] = None,
+) -> List[Path]:
+    most_recent_docs = path_list(most_recent_docs)
+    new_doc = Path(new_doc)
 
-        if doc in most_recent_docs:
-            most_recent_docs.remove(str(doc))
-
-        idx = 0
-        for mr_doc in most_recent_docs:
-            if any(str(odoc) in str(mr_doc) for odoc in senior_docs):
-                idx += 1
-            else:
-                break
-
-        most_recent_docs.insert(idx, str(doc))
-
-        with open(MOST_RECENT_CACHE_FILE, 'w') as f:
-            f.write('\n'.join(most_recent_docs[:MAX_MOST_RECENT_DOCS]))
+    if open_docs is None:
+        open_docs = []
     else:
-        with open(MOST_RECENT_CACHE_FILE, 'w') as f:
-            f.write(str(doc))
+        open_docs = path_list(open_docs)
+
+    log.debug('Adding {} to cache file...'.format(new_doc))
+    seen_docs = set()
+    full_open_docs = []
+    for mr_doc in most_recent_docs[:]:
+        for odoc in open_docs:
+            if str(odoc) in str(mr_doc):
+                full_open_docs.append(Path(mr_doc))
+                seen_docs.add(mr_doc)
+                break
+        else:
+            if str(new_doc) == str(mr_doc):
+                seen_docs.add(mr_doc)
+
+        if mr_doc in seen_docs:
+            most_recent_docs.remove(mr_doc)
+        else:
+            seen_docs.add(mr_doc)
+
+    if new_doc in most_recent_docs:
+        most_recent_docs.remove(new_doc)
+
+    first_docs = full_open_docs[:]
+    if new_doc not in first_docs:
+        first_docs.append(new_doc)
+
+    most_recent_docs[0:0] = first_docs
+
+    return most_recent_docs[:MAX_MOST_RECENT_DOCS]
+
+
+def path_list(pseq: Sequence[PathLike]) -> List[Path]:
+    """
+    Examples:
+        >>> path_list(["foo"])
+        [PosixPath('foo')]
+
+        >>> path_list(["foo", "bar"])
+        [PosixPath('foo'), PosixPath('bar')]
+    """
+    return [Path(P) for P in pseq]
 
 
 if __name__ == "__main__":

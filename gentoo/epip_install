@@ -20,7 +20,9 @@ Arguments = NamedTuple(
 def install_pypacks(pypacks: Sequence[str], pyver: float) -> None:
     python = f"python{pyver}"
 
-    for pypack in pypacks:
+    all_pypacks = ["pip"]
+    all_pypacks.extend(pypacks)
+    for pypack in all_pypacks:
         print(f"----- Upgrading {pypack}...")
         ps = Popen([python, "-m", "pip", "install", "--user", "-U", pypack])
         ps.communicate()

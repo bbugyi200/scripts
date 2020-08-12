@@ -1,0 +1,5 @@
+#!/bin/bash
+
+firefox-bin --new-window https://app.slack.com/client/T043N5HHP/C5N1S9DU0 &
+sleep 0.2
+xdotool key --clearmodifiers ctrl+m  # Mute Tab 

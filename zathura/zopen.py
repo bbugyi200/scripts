@@ -98,15 +98,14 @@ def run(args: Arguments) -> int:
 
     if args.generate_cache:
         with open(ALL_DOCS_CACHE_FILE, 'w') as f:
-            f.writelines([str(adoc) + "\n" for adoc in all_docs])
+            f.writelines([str(adoc).rstrip() + "\n" for adoc in all_docs])
 
     if args.quiet:
-        sys.exit(0)
+        return 0
 
-    if not isfile(MOST_RECENT_CACHE_FILE):
-        Path(MOST_RECENT_CACHE_FILE).touch()
-
-    with open(MOST_RECENT_CACHE_FILE, 'r') as f:
+    mr_cache_path = Path(MOST_RECENT_CACHE_FILE)
+    mr_cache_path.touch()
+    with mr_cache_path.open("r") as f:
         most_recent_docs = [Path(x.strip()) for x in f.readlines()]
 
     ordered_docs = promote_most_recent_docs(all_docs, most_recent_docs)
@@ -144,7 +143,81 @@ def run(args: Arguments) -> int:
     return 0
 
 
-def choose_doc_to_open(available_docs: Sequence[PathLike]) -> Optional[Path]:
+def get_all_docs(*, use_cache: bool) -> List[Path]:
+    if use_cache:
+        assert isfile(ALL_DOCS_CACHE_FILE)
+        out = sp.check_output(['cat', ALL_DOCS_CACHE_FILE])
+        all_docs_string = out.decode().strip()
+    else:
+        directory_list = ['/home/bryan/Sync', '/home/bryan/projects']
+        if socket.gethostname() == 'athena':
+            directory_list.append(
+                '/media/bryan/hercules/archive/home/bryan/Sync'
+            )
+
+        cmd_list = ['find']
+        cmd_list.extend(directory_list)
+        cmd_list.extend(
+            ['-path', '/home/bryan/Sync/.dropbox.cache', '-prune', '-o']
+        )
+        cmd_list.extend(['-regex', DOC_PTTRN])
+
+        out = sp.check_output(cmd_list)
+        all_docs_string = out.decode().strip()
+
+    # Append any docs found in the Downloads directory.
+    out = sp.check_output(
+        ['find', '/home/bryan/Downloads', '-regex', DOC_PTTRN]
+    )
+    downloads_docs_string = out.decode().strip()
+    all_docs_string = all_docs_string + '\n' + downloads_docs_string
+    log.trace('----- Downloads -----\n{}', downloads_docs_string)
+
+    all_docs = [
+        Path(adoc) for adoc in all_docs_string.split("\n") if isfile(adoc)
+    ]
+    return all_docs
+
+
+def promote_most_recent_docs(
+    docs: Iterable[PathLike], most_recent_docs: Iterable[PathLike]
+) -> List[Path]:
+    """Docs in Cache File are Brought to the Top of the List of Options"""
+    docs = path_list(docs)
+    most_recent_docs = path_list(most_recent_docs)
+
+    new_docs = list(docs)
+    for mr_doc in list(reversed(most_recent_docs)):
+        if mr_doc in new_docs:
+            new_docs.remove(mr_doc)
+            new_docs.insert(0, mr_doc)
+    return new_docs
+
+
+def demote_open_docs(
+    docs: Iterable[PathLike], open_docs: Iterable[PathLike]
+) -> List[Path]:
+    """Open Docs are Moved to the Bottom of the List of Options"""
+    docs = path_list(docs)
+
+    new_docs = list(docs)
+    sorted_open_docs = []
+    for odoc in open_docs:
+        for doc in docs:
+            if str(odoc) in str(doc):
+                try:
+                    new_docs.remove(doc)
+                    sorted_open_docs.append(doc)
+                except ValueError:
+                    # Protects against multiple attempts to remove the same doc
+                    # which happens when the same doc is opened up in multiple
+                    # different instances.
+                    pass
+    new_docs.extend(sorted_open_docs)
+    return new_docs
+
+
+def choose_doc_to_open(available_docs: Iterable[PathLike]) -> Optional[Path]:
     printf_ps = sp.Popen(
         [
             'printf',
@@ -189,46 +262,10 @@ def choose_doc_to_open(available_docs: Sequence[PathLike]) -> Optional[Path]:
     return doc
 
 
-def get_all_docs(*, use_cache: bool) -> List[Path]:
-    if use_cache:
-        assert isfile(ALL_DOCS_CACHE_FILE)
-        out = sp.check_output(['cat', ALL_DOCS_CACHE_FILE])
-        all_docs_string = out.decode().strip()
-    else:
-        directory_list = ['/home/bryan/Sync', '/home/bryan/projects']
-        if socket.gethostname() == 'athena':
-            directory_list.append(
-                '/media/bryan/hercules/archive/home/bryan/Sync'
-            )
-
-        cmd_list = ['find']
-        cmd_list.extend(directory_list)
-        cmd_list.extend(
-            ['-path', '/home/bryan/Sync/.dropbox.cache', '-prune', '-o']
-        )
-        cmd_list.extend(['-regex', DOC_PTTRN])
-
-        out = sp.check_output(cmd_list)
-        all_docs_string = out.decode().strip()
-
-    # Append any docs found in the Downloads directory.
-    out = sp.check_output(
-        ['find', '/home/bryan/Downloads', '-regex', DOC_PTTRN]
-    )
-    downloads_docs_string = out.decode().strip()
-    all_docs_string = all_docs_string + '\n' + downloads_docs_string
-    log.trace('----- Downloads -----\n{}', downloads_docs_string)
-
-    all_docs = [
-        Path(adoc) for adoc in all_docs_string.split("\n") if isfile(adoc)
-    ]
-    return all_docs
-
-
 def add_to_mr_cache(
-    most_recent_docs: Sequence[PathLike],
+    most_recent_docs: Iterable[PathLike],
     new_doc: PathLike,
-    open_docs: Sequence[PathLike],
+    open_docs: Iterable[PathLike],
 ) -> None:
     new_mr_cache_lines = get_new_mr_cache_lines(
         most_recent_docs, new_doc, open_docs
@@ -275,7 +312,7 @@ def _open_document(
     cmd: str,
     doc: PathLike,
     *,
-    opts: Sequence[str] = None,
+    opts: Iterable[str] = None,
     replace: bool = False,
 ) -> None:
     if opts is None:
@@ -294,48 +331,10 @@ def _open_document(
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
 
-def promote_most_recent_docs(
-    docs: Sequence[PathLike], most_recent_docs: Sequence[PathLike]
-) -> List[Path]:
-    """Docs in Cache File are Brought to the Top of the List of Options"""
-    docs = path_list(docs)
-    most_recent_docs = path_list(most_recent_docs)
-
-    D = list(docs)
-    for c in list(reversed(most_recent_docs)):
-        if c in D:
-            D.remove(c)
-            D.insert(0, c)
-    return D
-
-
-def demote_open_docs(
-    docs: Sequence[PathLike], open_docs: Iterable[PathLike]
-) -> List[Path]:
-    """Open Docs are Moved to the Bottom of the List of Options"""
-    docs = path_list(docs)
-
-    D = list(docs)
-    E = []
-    for odoc in open_docs:
-        for doc in docs:
-            if str(odoc) in str(doc):
-                try:
-                    D.remove(doc)
-                    E.append(doc)
-                except ValueError:
-                    # Protects against multiple attempts to remove the same doc
-                    # which happens when the same doc is opened up in multiple
-                    # different instances.
-                    pass
-    D.extend(E)
-    return D
-
-
 def get_new_mr_cache_lines(
-    most_recent_docs: Sequence[PathLike],
+    most_recent_docs: Iterable[PathLike],
     new_doc: PathLike,
-    open_docs: Sequence[PathLike] = None,
+    open_docs: Iterable[PathLike] = None,
 ) -> List[Path]:
     most_recent_docs = path_list(most_recent_docs)
     new_doc = Path(new_doc)
@@ -347,11 +346,11 @@ def get_new_mr_cache_lines(
 
     log.debug('Adding {} to cache file...'.format(new_doc))
     seen_docs = set()
-    full_open_docs = []
+    sorted_open_docs = []
     for mr_doc in most_recent_docs[:]:
         for odoc in open_docs:
             if str(odoc) in str(mr_doc):
-                full_open_docs.append(Path(mr_doc))
+                sorted_open_docs.append(Path(mr_doc))
                 seen_docs.add(mr_doc)
                 break
         else:
@@ -366,7 +365,7 @@ def get_new_mr_cache_lines(
     if new_doc in most_recent_docs:
         most_recent_docs.remove(new_doc)
 
-    first_docs = full_open_docs[:]
+    first_docs = sorted_open_docs[:]
     if new_doc not in first_docs:
         first_docs.append(new_doc)
 
@@ -375,7 +374,7 @@ def get_new_mr_cache_lines(
     return most_recent_docs[:MAX_MOST_RECENT_DOCS]
 
 
-def path_list(pseq: Sequence[PathLike]) -> List[Path]:
+def path_list(path_like_iter: Iterable[PathLike]) -> List[Path]:
     """
     Examples:
         >>> path_list(["foo"])
@@ -384,7 +383,7 @@ def path_list(pseq: Sequence[PathLike]) -> List[Path]:
         >>> path_list(["foo", "bar"])
         [PosixPath('foo'), PosixPath('bar')]
     """
-    return [Path(P) for P in pseq]
+    return [Path(P) for P in path_like_iter]
 
 
 if __name__ == "__main__":

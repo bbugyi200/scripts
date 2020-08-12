@@ -18,6 +18,7 @@ EPIP_PY3_PACKAGES=(
     redis
     pymongo
     pyzmq
+    more-itertools
 )
 EPIP_SINGLE_TARGET_PACKAGES=(
     scalene  # CPU/Memory CLI profiling tool

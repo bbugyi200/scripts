@@ -24,7 +24,7 @@ if [[ "${sys_info}" == *"gentoo"* ]]; then
     if [[ "${time_since_last_sync}" -gt $((60 * 60 * 24)) ]]; then
         if econfirm "sudo emerge -A --sync"; then
             printf '\a'
-            echo "${now}" > "${last_sync_f}"
+            echo "${now}" >"${last_sync_f}"
         fi
     fi
 
@@ -68,4 +68,4 @@ if [[ "${sys_info}" == *"gentoo"* ]]; then
     echeck_kernel_version || printf ">>> The sys-kernel/gentoo-sources package was upgraded, so the linux kernel needs to be rebuilt and reinstalled!\n"
 fi
 
-exit 0  # Fixes issue caused by nonzero return status from last econfirm
+exit 0 # Fixes issue caused by nonzero return status from last econfirm

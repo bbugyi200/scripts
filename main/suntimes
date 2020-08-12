@@ -1,48 +1,9 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
-"""Writes sunset time to STDOUT"""
+import sys
 
-import datetime as dt  # noqa: F401
-import os  # noqa: F401
-import re
-import requests
-import subprocess as sp  # noqa: F401
-import sys  # noqa: F401
-
-import gutils
-
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
-from loguru import logger as log
-scriptname = os.path.basename(os.path.realpath(__file__))
-USER_AGENT = {'User-Agent': 'Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3'}
-
-@gutils.catch
-def main(args):
-    resp = requests.get('https://www.google.com/search?q=sun{}+times'.format(args.rise_or_set), headers=USER_AGENT)
-    source = resp.text
-
-    am_or_pm = 'AM' if args.rise_or_set == 'rise' else 'PM'
-    pttrn = '>([0-9][0-9]?:[0-9][0-9] {})</div>'.format(am_or_pm)
-    match = re.search(pttrn, source)
-
-    if match is None:
-        raise RuntimeError('Unable to find match for sun{} time in the HTML source.'.format(args.rise_or_set))
-    else:
-        time_string = match.groups()[0]
-
-    dt_suntime = dt.datetime.strptime(time_string, '%I:%M %p')
-
-    new_time_string = dt_suntime.strftime('%H:%M')
-    print(new_time_string)
+import suntimes
 
 
-if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
-    parser.add_argument('rise_or_set', choices=('rise', 'set'), help='Get sunrise or sunset?')
-    args = parser.parse_args()
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+if __name__ == '__main__':
+    sys.exit(suntimes.main())

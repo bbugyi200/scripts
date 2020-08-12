@@ -7,7 +7,7 @@ else
 fi
 
 if [[ -z "${fpath}" ]]; then
-    echo "[ERROR] No filename matched."
+    1>&2 printf "[ERROR] No filename matched.\n"
     exit 1
 fi
 

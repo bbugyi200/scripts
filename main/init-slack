@@ -1,5 +1,20 @@
 #!/bin/bash
 
+if [[ -z "${DEBUG}" ]]; then
+    DEBUG=0
+fi
+
 firefox-bin --new-window https://app.slack.com/client/T043N5HHP/C5N1S9DU0 &
-sleep 0.2
-xdotool key --clearmodifiers ctrl+m  # Mute Tab 
+
+i=0
+delay=0.1
+while [[ "$(active_window_title)" != "Slack"* ]]; do
+    i=$((i+1))
+    sleep "${delay}"
+done
+
+if [[ "${DEBUG}" -ne 0 ]]; then
+    notify-send "$(basename "$0")" "Slept for ${delay} seconds ${i} time(s) while waiting for the Slack window to load."
+fi
+
+xdotool key --clearmodifiers ctrl+m  # Mute Tab

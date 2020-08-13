@@ -1,12 +1,16 @@
 """Writes sunset time to STDOUT"""
 
 import datetime as dt
+import enum
 import os
 import re
 import sys
 from typing import NamedTuple, Sequence
 
+from bs4 import BeautifulSoup
 import gutils
+from gutils.io import eprint
+from gutils.result import Err, Ok, Result, init_err_helper
 from loguru import logger as log  # pylint: disable=unused-import
 import requests
 
@@ -20,6 +24,13 @@ USER_AGENT = {
 }
 
 
+class WebScrapingError(Exception):
+    """Error occurred while attempting to scrape a web page."""
+
+
+WErr = init_err_helper(WebScrapingError)
+
+
 @gutils.catch
 def main(argv: Sequence[str] = None) -> int:
     if argv is None:
@@ -29,48 +40,85 @@ def main(argv: Sequence[str] = None) -> int:
 
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
-    resp = requests.get(
-        'https://www.google.com/search?q=sun{}+times'.format(args.rise_or_set),
-        headers=USER_AGENT,
-    )
-    source = resp.text
+    return run(args)
 
-    am_or_pm = 'AM' if args.rise_or_set == 'rise' else 'PM'
-    pttrn = '>([0-9][0-9]?:[0-9][0-9] {})</(?:div|span)>'.format(am_or_pm)
-    match = re.search(pttrn, source)
 
-    if match is None:
-        raise RuntimeError(
-            'Unable to find match for sun{} time in the HTML source.'.format(
-                args.rise_or_set
-            )
-        )
+class RiseOrSet(enum.Enum):
+    Rise = "rise"
+    Set = "set"
 
-    time_string = match.groups()[0]
-    dt_suntime = dt.datetime.strptime(time_string, '%I:%M %p')
-
-    new_time_string = dt_suntime.strftime('%H:%M')
-    print(new_time_string)
-
-    return 0
+    def __str__(self) -> str:
+        return str(self.value)
 
 
 class Arguments(NamedTuple):
     debug: bool
     verbose: bool
-    rise_or_set: str
+    rise_or_set: RiseOrSet
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
     parser = gutils.ArgumentParser()
     parser.add_argument(
-        'rise_or_set', choices=('rise', 'set'), help='Get sunrise or sunset?'
+        'rise_or_set',
+        choices=list(RiseOrSet),
+        type=RiseOrSet,
+        help='Get sunrise or sunset?',
     )
 
     args = parser.parse_args(argv[1:])
     kwargs = dict(args._get_kwargs())
 
     return Arguments(**kwargs)
+
+
+def run(args: Arguments) -> int:
+    time_string_result = get_time_string(args.rise_or_set)
+    if isinstance(time_string_result, Err):
+        eprint(f"[ERROR] Unable to determine sun{args.rise_or_set} time.")
+
+        if args.debug:
+            e = time_string_result.err()
+
+            eheader = f"----- {type(e).__name__} -----"
+            bar = "-" * len(eheader)
+
+            eprint("\n{0}\n{1}\n{0}\n{2}".format(bar, eheader, str(e)))
+
+        return 1
+
+    time_string = time_string_result.ok()
+    print(time_string)
+
+    return 0
+
+
+def get_time_string(rise_or_set: RiseOrSet) -> Result[str, WebScrapingError]:
+    url = 'https://www.google.com/search?q=sun{}+times'.format(rise_or_set)
+    soup = get_soup(url)
+    source = str(soup)
+
+    am_or_pm = 'AM' if rise_or_set is RiseOrSet.Rise else 'PM'
+    pttrn = '>([0-9][0-9]?:[0-9][0-9] {})</(?:div|span)>'.format(am_or_pm)
+    match = re.search(pttrn, source)
+
+    if match is None:
+        return WErr(
+            "Unable to find a match in the following HTML source using"
+            f" pattern {pttrn!r}:\n\n{soup.prettify()}"
+        )
+
+    raw_time_string = match.groups()[0]
+    dt_suntime = dt.datetime.strptime(raw_time_string, '%I:%M %p')
+
+    time_string = dt_suntime.strftime('%H:%M')
+    return Ok(time_string)
+
+
+def get_soup(url: str) -> BeautifulSoup:
+    resp = requests.get(url, headers=USER_AGENT)
+    soup = BeautifulSoup(resp.text, "lxml")
+    return soup
 
 
 if __name__ == "__main__":

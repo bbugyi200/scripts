@@ -14,6 +14,7 @@ import time
 from typing import Iterable, List, NamedTuple, Optional, Sequence, Union
 
 import gutils
+from gutils.io import eprint
 from loguru import logger as log
 
 
@@ -235,19 +236,13 @@ def choose_doc_to_open(available_docs: Iterable[PathLike]) -> Optional[Path]:
     stdout, stderr = rofi_ps.communicate()
 
     if rofi_ps.returncode != 0:
-        print("[ERROR] The 'rofi' command failed.", file=sys.stderr)
+        eprint("[ERROR] The 'rofi' command failed.")
 
         if stdout:
-            print(
-                f"\n----- STDOUT -----\n{stdout.decode().strip()}",
-                file=sys.stderr,
-            )
+            eprint(f"\n----- STDOUT -----\n{stdout.decode().strip()}")
 
         if stderr:
-            print(
-                f"\n----- STDERR -----\n{stderr.decode().strip()}",
-                file=sys.stderr,
-            )
+            eprint(f"\n----- STDERR -----\n{stderr.decode().strip()}")
 
         return None
 

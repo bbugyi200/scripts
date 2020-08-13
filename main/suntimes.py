@@ -95,30 +95,39 @@ def run(args: Arguments) -> int:
 
 def get_time_string(rise_or_set: RiseOrSet) -> Result[str, WebScrapingError]:
     url = 'https://www.google.com/search?q=sun{}+times'.format(rise_or_set)
-    soup = get_soup(url)
-    source = str(soup)
-
-    am_or_pm = 'AM' if rise_or_set is RiseOrSet.Rise else 'PM'
-    pttrn = '>([0-9][0-9]?:[0-9][0-9] {})</(?:div|span)>'.format(am_or_pm)
-    match = re.search(pttrn, source)
-
-    if match is None:
-        return WErr(
-            "Unable to find a match in the following HTML source using"
-            f" pattern {pttrn!r}:\n\n{soup.prettify()}"
-        )
-
-    raw_time_string = match.groups()[0]
-    dt_suntime = dt.datetime.strptime(raw_time_string, '%I:%M %p')
-
-    time_string = dt_suntime.strftime('%H:%M')
-    return Ok(time_string)
+    google_soup = get_soup(url)
+    return get_time_string_from_google_search(google_soup, rise_or_set)
 
 
 def get_soup(url: str) -> BeautifulSoup:
     resp = requests.get(url, headers=USER_AGENT)
     soup = BeautifulSoup(resp.text, "lxml")
     return soup
+
+
+def get_time_string_from_google_search(
+    soup: BeautifulSoup, rise_or_set: RiseOrSet
+) -> Result[str, WebScrapingError]:
+    am_or_pm = 'AM' if rise_or_set is RiseOrSet.Rise else 'PM'
+    pttrn = '[0-9][0-9]?:[0-9][0-9] {}'.format(am_or_pm)
+
+    time_divs = soup.find_all(["div", "span"], text=re.compile(pttrn))
+
+    if not time_divs:
+        return WErr(
+            "Unable to find a match in the following HTML source using"
+            f" pattern {pttrn!r}:\n\n{soup.prettify()}"
+        )
+
+    time_tag = time_divs[0]
+    match = re.search(f"({pttrn})", time_tag.text)
+    assert match is not None
+
+    raw_time_string = match.groups()[0]
+    dt_suntime = dt.datetime.strptime(raw_time_string, '%I:%M %p')
+
+    time_string = dt_suntime.strftime('%H:%M')
+    return Ok(time_string)
 
 
 if __name__ == "__main__":

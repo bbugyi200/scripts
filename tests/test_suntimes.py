@@ -27,7 +27,7 @@ class TestSuntimes(unittest.TestCase):
             ),
         ]
     )
-    def test_get_time_string_from_google_search(
+    def test_get_ts_from_google_search(
         self,
         _name: str,
         html_basename: str,
@@ -36,17 +36,17 @@ class TestSuntimes(unittest.TestCase):
     ) -> None:
         html_path = DATA_DIR / f"{html_basename}.html"
         soup = BeautifulSoup(html_path.read_text(), "lxml")
-        time_string_res = suntimes.get_time_string_from_google_search(
+        time_string_result = suntimes.get_ts_from_google_search(
             soup, rise_or_set
         )
 
-        if isinstance(time_string_res, Err):
+        if isinstance(time_string_result, Err):
             self.fail(
                 "Error while scraping web page for suntime"
-                " [type(time_string_res) == Err]."
+                " [type(time_string_result) == Err]."
             )
 
-        time_string = time_string_res.ok()
+        time_string = time_string_result.ok()
         self.assertEqual(time_string, expected_time_string)
 
 

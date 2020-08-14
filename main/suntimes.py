@@ -5,7 +5,7 @@ import enum
 import os
 import re
 import sys
-from typing import NamedTuple, Sequence
+from typing import NamedTuple, Sequence, TypeVar
 
 from bs4 import BeautifulSoup
 import gutils
@@ -28,7 +28,9 @@ class WebScrapingError(Exception):
     """Error occurred while attempting to scrape a web page."""
 
 
+_T = TypeVar("_T")
 WErr = init_err_helper(WebScrapingError)
+WResult = Result[_T, WebScrapingError]
 
 
 @gutils.catch
@@ -93,10 +95,10 @@ def run(args: Arguments) -> int:
     return 0
 
 
-def get_time_string(rise_or_set: RiseOrSet) -> Result[str, WebScrapingError]:
+def get_time_string(rise_or_set: RiseOrSet) -> WResult[str]:
     url = 'https://www.google.com/search?q=sun{}+times'.format(rise_or_set)
     google_soup = get_soup(url)
-    return get_time_string_from_google_search(google_soup, rise_or_set)
+    return get_ts_from_google_search(google_soup, rise_or_set)
 
 
 def get_soup(url: str) -> BeautifulSoup:
@@ -105,9 +107,9 @@ def get_soup(url: str) -> BeautifulSoup:
     return soup
 
 
-def get_time_string_from_google_search(
+def get_ts_from_google_search(
     soup: BeautifulSoup, rise_or_set: RiseOrSet
-) -> Result[str, WebScrapingError]:
+) -> WResult[str]:
     am_or_pm = 'AM' if rise_or_set is RiseOrSet.Rise else 'PM'
     pttrn = '[0-9][0-9]?:[0-9][0-9] {}'.format(am_or_pm)
 

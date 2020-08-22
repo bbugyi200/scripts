@@ -41,11 +41,19 @@ set_pane_title "vim"
 
 # If file is owned by root, open using `sudo`.
 for arg in "${@}"; do
-    if [[ -f "${arg}" || -d "${arg}" ]] && [[ -z "$AT_WORK" ]] && [[ "$(stat --format '%U' "${arg}")" != "$USER" ]]; then
-        # shellcheck disable=SC2086
-        sudo -E ${editor} "$@"
-        found=true
-        break
+    if [[ -f "${arg}" || -d "${arg}" ]] && [[ -z "$AT_WORK" ]]; then
+        owner="$(stat --format '%U' "${arg}")"
+        if  [[ "${owner}" != "$USER" ]]; then
+            printf "%s: Opening with 'sudo' since '%s' is owned by %s.\n" \
+                "${scriptname}" \
+                "${arg}" \
+                "${owner}"
+
+            # shellcheck disable=SC2086
+            sudo -E ${editor} "$@"
+            found=true
+            break
+        fi
     fi
 done
 

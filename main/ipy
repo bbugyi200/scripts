@@ -7,11 +7,10 @@
 
 version="$1"; shift
 
+python="$(command -v python)"
 if [[ -n "${version}" ]]; then
     version="$(echo "${version}" | perl -nE 'print s/^([1-9])([1-9])$/\1.\2/gr')"
     python=python"${version}"
-else
-    python="$(command -v python)"
 fi
 
 "${python}" -m IPython "$@"

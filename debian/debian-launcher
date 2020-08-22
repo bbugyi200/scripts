@@ -1,39 +1,108 @@
 #!/bin/bash
 
-window_title="$1"; shift
-window_cmd="$1"; shift
+SCRIPTNAME="$(basename "$0")"
+LOG_FILE=/tmp/"${SCRIPTNAME}".log
 
-# --- CFG for regex used below ---
-#   Session ->  INTEGER | INTEGER:Window
-#   Window  ->  INTEGER | INTEGER.INTEGER
-#   INTEGER ->  [0-9]
-if [[ "$1" =~ ^[0-9]+(:[0-9]+(\.[0-9]+)?)?$ ]]; then
-    if [[ "$1" == *":"* ]]; then
-        desktop_id="${1%%:*}"
-        tmux_window="${1##*:}"
-    else
-        desktop_id="$1"
+
+function main() {
+    IFS="|" read -r -a window_title_array <<< "$1"; shift
+    local window_cmd="$1"; shift
+    
+    if [[ "$1" =~ ^[0-9]+$ ]]; then
+        local desktop_id="$1"; shift
     fi
+    
+    found_using_wmctrl=false
+    for window_title in "${window_title_array[@]}"; do
+        if wmctrl "$@" -a "${window_title}"; then
+            found_using_wmctrl=true
+            if is_active_desktop "${desktop_id}"; then
+                fix_focus_bug "${window_title}" "$@"
+                log "Successfully activated %s using wmctrl." "${window_title}"
+                return 0
+            else
+                log "Focused the wrong desktop (%d != %d) with wmctrl for %s." \
+                    "$(active_desktop_id)" \
+                    "${desktop_id}" \
+                    "${window_title}"
+            fi
+        else
+            log "No luck with using wmctrl to activate %s." "${window_title}"
+        fi
+    done
 
-    shift
-fi
-
-if [[ -n "${desktop_id}" ]]; then
-	wmctrl -s "${desktop_id}"
-
-	if [[ "$(active_window_name)" == "${window_title}" ]]; then
-		exit 0
-	fi
-fi
-
-if wmctrl "$@" -a "${window_title}"; then
-    # Fixes bug where window is pulled to front of screen but
-    # another window remains focused (in the background).
-    wmctrl "$@" -a "${window_cmd}"
-
-    if [[ -n "${tmux_window}" ]]; then
-        tmux -L "${window_title}" select-window -t "${tmux_window}"
+    if [[ -n "${desktop_id}" ]]; then
+        wmctrl -s "${desktop_id}"
     fi
-else
+    
+    if [[ "${found_using_wmctrl}" = true ]] && [[ -n "${desktop_id}" ]]; then
+        i=0
+        while [[ "${i}" -lt "$(window_count)" ]]; do
+            i=$((i+1))
+            for window_title in "${window_title_array[@]}"; do
+                if matches_active_window "${window_title}"; then
+                    log "%s%s%s" \
+                        "Was able to find " \
+                        "${window_title}" \
+                        " by scrolling through the windows on this desktop."
+                    return 0
+                fi
+            done
+        
+            winstack next
+        done
+    fi
+    
+    log "Using '%s' command to start application." "${window_cmd}"
     "${window_cmd}"
+}
+
+
+function log() {
+    printf "PID:%s | [%s] | " $$ "$(date +"%Y-%m-%d %H:%M:%S")" | tee -a "${LOG_FILE}"
+    printf "$1\n" "${@:2}" | tee -a "${LOG_FILE}"
+}
+
+
+function fix_focus_bug() {
+    local window_title="$1"; shift
+
+    # HACK: Fixes bug where window is pulled to front of screen but
+    # another window remains focused (in the background).
+    wmctrl "$@" -a "${window_title}"
+}
+
+
+function is_active_desktop() {
+    local desktop_id="$1"; shift
+
+    if [[ -z "${desktop_id}" ]]; then
+        return 0
+    fi
+
+    if [[ "$(active_desktop_id)" == "${desktop_id}" ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+
+function matches_active_window() {
+    local window_title="$1"; shift
+
+    if [[ "$(active_window_title)" == *"${window_title}"* ]]; then
+        return 0
+    fi
+
+    if [[ "$(active_window_class)" == *"${window_title}"* ]]; then
+        return 0
+    fi
+
+    return 1
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+	main "$@"
 fi

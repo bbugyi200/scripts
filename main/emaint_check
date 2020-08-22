@@ -55,13 +55,23 @@ function warn_user() {
     action="$1"; shift
     actual_days="$1"; shift
     max_days="$1"; shift
+    machine_name="$1"; shift
 
-    notify-send -u critical -t 0 "Maintenance Overdue!" "You should ${action} this machine.\n\n \
-        It has been ${actual_days} (>=${max_days}) days since the 'emanage --${action}' command was last run."
+    if [[ -z "${machine_name}" ]]; then
+        machine_name="this machine"
+    fi
+
+    notify-send -u critical -t 0 "Maintenance Overdue!" "You should ${action} ${machine_name}.\n\nIt has been ${actual_days} (>=${max_days}) days since the 'emanage --${action}' command was last run."
 }
 
 function get_max_days() {
     action="$1"; shift
+    multiplier="$1"; shift
+
+    if [[ -z "${multiplier}" ]]; then
+        multiplier=1
+    fi
+
     case "${action}" in
         "update" )
             max="${max_update_days}"
@@ -71,6 +81,7 @@ function get_max_days() {
             ;;
     esac
 
+    max="$((max * multiplier))"
     printf "${max}"
 }
 
@@ -81,5 +92,20 @@ for action in "update" "cleanup"; do
     max_days="$(get_max_days "${action}")"
     if [[ ${days} -ge "${max_days}" ]]; then
         warn_user "${action}" "${days}" "${max_days}"
+    fi
+done
+
+# >>> REMOTE
+for action in "update" "cleanup"; do
+    spec=$(emanage --days-since-last remote --"${action}")
+    machine_name="${spec%:*}"
+    days="${spec#*:}"
+    echo "${machine_name}"
+
+    max_days="$(get_max_days "${action}" 3)"
+    if [[ ${days} -ge "${max_days}" ]]; then
+        warn_user "${action}" "${days}" "${max_days}" "${machine_name}"
+    else
+        break
     fi
 done

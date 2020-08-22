@@ -1,0 +1,4 @@
+#!/bin/bash
+
+encfs -o allow_root ~/Sync/var/projects/.edgelp ~/projects/edgelp
+ssh-add ~/.ssh/id_ed25519 ~/.ssh/id_internal

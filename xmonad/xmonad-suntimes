@@ -65,4 +65,3 @@ else
 
     printf "%s / %s\n" "${R}" "${S}" > "${MY_XDG_RUNTIME}"/fifo
 fi
-

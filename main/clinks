@@ -17,7 +17,7 @@ else
     getopt=/usr/bin/getopt
 fi
 
-dropbox_path="${HOME}"/Sync
+SYNC="${HOME}"/Sync
 
 # ---------- Function Definitions ----------
 function stow_it() {
@@ -106,49 +106,49 @@ done
 
 # ---------- Main ----------
 if [[ "${at_work}" == true ]]; then
-    stow_it "${dropbox_path}/bin/macos" "$HOME/.local/bin"
+    stow_it "${SYNC}/bin/macos" "$HOME/.local/bin"
 else
     # >>> Other Directories
     mkdir -p /usr/share/rlwrap/{filters,completions} &> /dev/null
 
     if [[ $(hostname) == "athena" ]]; then
-	    stow_it "${dropbox_path}/bin/cron.jobs" "/etc"
+	    stow_it "${SYNC}/bin/cron.jobs" "/etc"
     fi
 
     ##### SCRIPTS
     if [[ "${sys_info}" == *"gentoo"* ]]; then
-        stow_it "${dropbox_path}/bin/gentoo" "$HOME/.local/bin"
-        stow_it "${dropbox_path}/bin/xmonad" "$HOME/.local/bin"
+        stow_it "${SYNC}/bin/gentoo" "$HOME/.local/bin"
+        stow_it "${SYNC}/bin/xmonad" "$HOME/.local/bin"
     fi
     
     if [[ "${sys_info}" == *"Debian"* ]]; then
-        stow_it "${dropbox_path}/bin/debian" "$HOME/.local/bin"
+        stow_it "${SYNC}/bin/debian" "$HOME/.local/bin"
     fi
 
     ##### MODULES / LIBRARIES / HEADERS
-    stow_it "${dropbox_path}/lib/python" "/usr/local/lib/python"
-    stow_it "${dropbox_path}/lib/C" "/usr/local/lib"
-    stow_it "${dropbox_path}/lib/zsh" "/usr/local/lib"
-    stow_it "${dropbox_path}/src" "/usr/local/src"
-    stow_it "${dropbox_path}/include" "/usr/local/include"
+    stow_it "${SYNC}/lib/python" "/usr/local/lib/python"
+    stow_it "${SYNC}/lib/C" "/usr/local/lib"
+    stow_it "${SYNC}/lib/zsh" "/usr/local/lib"
+    stow_it "${SYNC}/src" "/usr/local/src"
+    stow_it "${SYNC}/include" "/usr/local/include"
 
     ##### DOTFILES
-    stow_it "${dropbox_path}/usr" "/usr"
+    stow_it "${SYNC}/usr" "/usr"
 fi
 
 ##### SCRIPTS
-stow_it "${dropbox_path}/bin/awk" "$HOME/.local/bin"
-stow_it "${dropbox_path}/bin/GTD" "$HOME/.local/bin"
-stow_it "${dropbox_path}/bin/main" "$HOME/.local/bin"
-stow_it "${dropbox_path}/bin/tmux" "$HOME/.local/bin"
-stow_it "${dropbox_path}/bin/vim" "$HOME/.local/bin"
-stow_it "${dropbox_path}/bin/zathura" "$HOME/.local/bin"
+stow_it "${SYNC}/bin/awk" "$HOME/.local/bin"
+stow_it "${SYNC}/bin/GTD" "$HOME/.local/bin"
+stow_it "${SYNC}/bin/main" "$HOME/.local/bin"
+stow_it "${SYNC}/bin/tmux" "$HOME/.local/bin"
+stow_it "${SYNC}/bin/vim" "$HOME/.local/bin"
+stow_it "${SYNC}/bin/zathura" "$HOME/.local/bin"
 
 ##### DOTFILES
-stow_it "${dropbox_path}/home" "${HOME}"
+stow_it "${SYNC}/home" "${HOME}"
 
 ##### PROJECTS
-stow_it "${dropbox_path}/var/projects" "$HOME/projects"
+stow_it "${SYNC}/var/projects" "$HOME/projects"
 
 if [[ "${at_work}" = true ]]; then
     rm ~/.xinitrc

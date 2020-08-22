@@ -1,0 +1,12 @@
+#!/bin/bash
+
+if command -v firefox &> /dev/null; then
+    firefox="firefox"
+elif command -v firefox-bin &> /dev/null; then
+    firefox="firefox-bin"
+else
+    1>&2 printf "[ERROR]: Unable to find firefox executable.\n"
+    exit 1
+fi
+
+printf "%s\n" "${firefox}"

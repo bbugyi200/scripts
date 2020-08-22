@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+    window_idx="$1"; shift
+else
+    window_idx="$(tmux display-message -p '#{window_index}')"
+fi
+
+tmux select-layout -t "${window_idx}" main-vertical
+tmux select-layout -E -t "${window_idx}".left
+tmux move-window -r

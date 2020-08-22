@@ -1,0 +1,138 @@
+#!/bin/bash
+
+# shellcheck disable=SC2206
+# shellcheck disable=SC2207
+
+CLEANING_STARTED=false
+_PACK_LIST_DIR="${HOME}"/.epip_update_all/"$(hostname)"
+PY3_PACK_LIST="${_PACK_LIST_DIR}"/py3_pack_list
+SINGLE_TARGET_PACK_LIST="${_PACK_LIST_DIR}"/single_target_list
+SCRIPTNAME="$(basename "$0")"
+
+####################################################################
+##### PYTHON PACKAGE NOTES #########################################
+####################################################################
+# loguru:
+#   * my personal scripts use loguru
+# pygobject:
+#   * clipster dependency
+#   * required install of 'libgirepository1.0-dev' package on Debian
+# tldextract:
+#   * qute-pass dependency
+# scalene:
+#   * CPU/Memory CLI profiling tool
+####################################################################
+EPIP_PY2_PACKAGES=(
+    IPython
+)
+EPIP_PY3_PACKAGES=(
+    IPython
+    loguru
+    pandas
+    parameterized
+    pudb
+    pygobject
+    requests
+    selenium
+    tldextract
+    typing-extensions
+    redis
+    pymongo
+    pyzmq
+    more-itertools
+)
+EPIP_SINGLE_TARGET_PACKAGES=(
+    scalene
+)
+
+function main() {
+    install_packs 2.7 "${EPIP_PY2_PACKAGES[@]}"
+
+    for pyver in $(py3_versions); do
+        install_packs \
+            "${pyver}" \
+            "${EPIP_PY3_PACKAGES[@]}" \
+            $(single_target_packs "${pyver}")
+    done
+
+    ensure_pack_list_file "${PY3_PACK_LIST}"
+    ensure_pack_list_file "${SINGLE_TARGET_PACK_LIST}"
+
+    CURR_PACKS=(${EPIP_PY3_PACKAGES[@]})
+    OLD_PACKS=($(cat "${PY3_PACK_LIST}"))
+    if clean_packs "$(py3_versions)"; then
+        echo "${EPIP_PY3_PACKAGES[@]}" >"${PY3_PACK_LIST}"
+    fi
+
+    CURR_PACKS=(${EPIP_SINGLE_TARGET_PACKAGES[@]})
+    OLD_PACKS=($(cat "${SINGLE_TARGET_PACK_LIST}"))
+    if clean_packs "$(primary_version)"; then
+        echo "${EPIP_SINGLE_TARGET_PACKAGES[@]}" >"${SINGLE_TARGET_PACK_LIST}"
+    fi
+}
+
+function install_packs() {
+    pyver="$1"
+    shift
+    packages=("$@")
+    shift
+
+    epip_install -v "${pyver}" "${packages[@]}"
+
+    printf "\n"
+}
+
+function single_target_packs() {
+    local pyver="$1"
+    shift
+
+    if [[ "${pyver}" == "$(primary_version)" ]]; then
+        echo "${EPIP_SINGLE_TARGET_PACKAGES[@]}"
+    else
+        python"${pyver}" -m pip uninstall -y "${EPIP_SINGLE_TARGET_PACKAGES[@]}" &>/dev/null
+    fi
+}
+
+function ensure_pack_list_file() {
+    local pack_list_file="$1"
+    shift
+
+    pack_list_dir="$(dirname "${pack_list_file}")"
+    [[ -d "${pack_list_dir}" ]] || mkdir -p "${pack_list_dir}"
+    if ! [[ -f "${pack_list_file}" ]]; then
+        echo "${EPIP_PY3_PACKAGES[@]}" >"${pack_list_file}"
+    fi
+}
+
+function clean_packs() {
+    local status=0
+    for opack in "${OLD_PACKS[@]}"; do
+        if [[ " ${CURR_PACKS[*]} " != *" ${opack} "* ]]; then
+            if [[ "${CLEANING_STARTED}" != true ]]; then
+                CLEANING_STARTED=true
+                printf "===== %s =====\n" "Removing Old Packages"
+            fi
+
+            printf -- "----- Uninstalling %s\n" "${opack}"
+            for pyver in "${@}"; do
+                if ! python"${pyver}" -m pip uninstall -y "${opack}"; then
+                    status=1
+                fi
+            done
+        fi
+    done
+
+    return "${status}"
+}
+
+function py3_versions() {
+    python_versions | grep -v "^2" | sort -u
+}
+
+function primary_version() {
+    python3 2>&1 --version | perl -nE 'print s/Python ([1-9]\.[1-9][0-9]*).*/\1/gr'
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

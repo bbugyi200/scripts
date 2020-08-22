@@ -9,19 +9,18 @@ import yaml
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
 from loguru import logger as log
+
 
 @gutils.catch
 def main(args):
-    mux_yaml_path = '{}/.config/tmuxinator/{}.yml'.format(os.environ['HOME'], args.session_name)
+    mux_yaml_path = '{}/.config/tmuxinator/{}.yml'.format(
+        os.environ['HOME'], args.session_name
+    )
     all_windows = get_all_windows(mux_yaml_path, args.session_name)
 
     try:
-        _window_dict = all_windows[args.window_index]
+        _window_dict = all_windows[args.window_index - 1]
         window_name = next(iter(_window_dict))
         window_dict = _window_dict[window_name]
     except IndexError:
@@ -81,9 +80,17 @@ def get_rootdir(session_name, window_dict):
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
     parser.add_argument('session_name', help='Name of tmux session.')
-    parser.add_argument('window_index', type=int, help='Index of the tmux window.')
-    parser.add_argument('-s', '--set', help='Set window-specific root directory for the specified '
-                                            'Tmuxinator session.')
+    parser.add_argument(
+        'window_index', type=int, help='Index of the tmux window.'
+    )
+    parser.add_argument(
+        '-s',
+        '--set',
+        help=(
+            'Set window-specific root directory for the specified '
+            'Tmuxinator session.'
+        ),
+    )
     args = parser.parse_args()
 
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)

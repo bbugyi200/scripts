@@ -1,0 +1,60 @@
+#!/bin/bash
+
+LAST_WINDOW_NAME_FILE=/tmp/tmux_break_join.last
+SCRIPTNAME="$(basename "$0")"
+
+
+function main() {
+    if [[ "$1" == "--last" ]]; then
+        use_last=true; shift
+    fi
+
+    local opt="$1"; shift
+    if [[ "${use_last}" = true ]]; then
+        local arg="$(cat "${LAST_WINDOW_NAME_FILE}")"
+    else
+        local arg="$1"; shift
+    fi
+    
+    local dying_window
+    local target_window
+    if [[ "${opt}" == "-t" ]]; then
+        dying_window="$(window_index)"
+        target_window="${arg}"
+    else
+        tmux select-pane -t "$(window_index)".bottom-right
+
+        dying_window="${arg}"
+        target_window="$(window_index)"
+    fi
+    
+    local orig_target_panes="$(window_panes "${target_window}")"
+    local first_new_pane=$((orig_target_panes + 1))
+    
+    tmux display-message \
+        -t "${dying_window}" \
+        -p '#{window_name}' > "${LAST_WINDOW_NAME_FILE}"
+    while [[ "$(window_panes "${dying_window}")" -gt 1 ]]; do
+        tmux join-pane -d -h "${opt}" "${arg}"
+    done
+    
+    tmux join-pane -h "${opt}" "${arg}"
+    tmux select-pane -t "${first_new_pane}"
+    tm-fix-layout
+}
+
+
+function window_panes() {
+    local window="$1"; shift
+    tmux display-message -t "${window}" -p '#{window_panes}'
+}
+
+
+function window_index() {
+    tmux display-message -p '#{window_index}'
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

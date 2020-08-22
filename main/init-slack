@@ -4,7 +4,7 @@ if [[ -z "${DEBUG}" ]]; then
     DEBUG=0
 fi
 
-firefox-bin --new-window https://app.slack.com/client/T043N5HHP/C5N1S9DU0 &
+"$(firefox_exe)" --new-window https://app.slack.com/client/T043N5HHP/C5N1S9DU0 &
 
 i=0
 delay=0.1

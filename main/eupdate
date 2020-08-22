@@ -7,6 +7,15 @@
 source gutils.sh
 source /home/bryan/Sync/bin/main/emaint.sh
 
+function econfirm_if_cmd_exists() {
+    local cmd="$1"; shift
+    local full_cmd="$1"; shift
+
+    if command -v "${cmd}" &> /dev/null; then
+        econfirm "${full_cmd}"
+    fi
+}
+
 # ---------- Main Logic ----------
 _uname_output="$(uname -a)"
 sys_info="${_uname_output,,}"
@@ -57,11 +66,12 @@ if [[ "${sys_info}" == *"debian"* ]]; then
 fi
 
 # >>> ALL
-econfirm "sudo npm update --force -g"
-econfirm "rustup update"
-econfirm "vim +PluginUpdate +qall"
+econfirm_if_cmd_exists "snap" "sudo snap refresh"
+econfirm_if_cmd_exists "npm" "sudo npm update --force -g"
+econfirm_if_cmd_exists "rustup" "rustup update"
+econfirm_if_cmd_exists "pipx" "pipx upgrade-all"
 econfirm "epip_update_all"
-econfirm "pipx upgrade-all"
+econfirm "vim +PluginUpdate +qall"
 econfirm "sudo updatedb &"
 
 if [[ "${sys_info}" == *"gentoo"* ]]; then

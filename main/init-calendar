@@ -1,0 +1,3 @@
+#!/bin/bash
+
+"$(firefox_exe)" --new-window https://calendar.google.com/calendar/b/1/r/month

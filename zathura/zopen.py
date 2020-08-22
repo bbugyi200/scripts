@@ -106,7 +106,7 @@ def run(args: Arguments) -> int:
 
     mr_cache_path = Path(MOST_RECENT_CACHE_FILE)
     mr_cache_path.touch()
-    with mr_cache_path.open("r") as f:
+    with open(mr_cache_path, 'r') as f:
         most_recent_docs = [Path(x.strip()) for x in f.readlines()]
 
     ordered_docs = promote_most_recent_docs(all_docs, most_recent_docs)
@@ -324,6 +324,11 @@ def _open_document(
 
     log.debug('Opening {} in {}...'.format(doc, cmd))
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+    # HACK: I use this to force zathura to open in fullscreen on my Debian
+    # laptop.
+    time.sleep(0.2)
+    sp.Popen(["fullscreen"])
 
 
 def get_new_mr_cache_lines(

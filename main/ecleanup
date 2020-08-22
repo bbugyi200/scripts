@@ -18,7 +18,8 @@ D="/home/bryan/.local/share/Trash/files"
 econfirm -p "Delete all files in your Trash" "sudo rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 
 D="/root/.local/share/Trash/files"
-econfirm -p "Delete all files in root's Trash" "sudo rm -rf $D && sudo mkdir $D" "sudo xprint -x 'ls -a $D'"
+xprint="$(command -v xprint)"
+econfirm -p "Delete all files in root's Trash" "sudo rm -rf $D && sudo mkdir $D" "sudo ${xprint} -x 'ls -a $D'"
 
 D="/home/bryan/Downloads"
 econfirm -p "Delete all downloads" "safe-rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"

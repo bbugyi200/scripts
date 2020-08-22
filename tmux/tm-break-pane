@@ -3,12 +3,13 @@
 SCRIPTNAME="$(basename "$0")"
 LAST_WINDOW_NAME_FILE=/tmp/tmux_break_join.last
 
-
 function main() {
     if [[ "$1" == "--bulk" ]]; then
         shift
+
         if [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
-            bulk_idx="$1"; shift
+            bulk_idx="$1"
+            shift
         else
             bulk_idx="$(tmux display-message -p '#{pane_index}')"
             if [[ "${bulk_idx}" -eq 1 ]]; then
@@ -16,18 +17,22 @@ function main() {
             fi
         fi
     fi
-    
+
     focus_break_window=false
     if [[ "$1" == "--last" ]]; then
-        use_last=true; shift
+        use_last=true
+        shift
+
         [[ -f "${LAST_WINDOW_NAME_FILE}" ]] || exit 1
         window_name="$(cat "${LAST_WINDOW_NAME_FILE}")"
 
         if [[ "$1" == "--focus" ]]; then
-            focus_break_window=true; shift
+            focus_break_window=true
+            shift
         fi
     else
-        window_name="$1"; shift
+        window_name="$1"
+        shift
 
         if [[ "${window_name}" == *"@" ]]; then
             window_name="${window_name%@}"
@@ -38,25 +43,26 @@ function main() {
             window_name=zsh
         fi
 
-        echo "${window_name}" > "${LAST_WINDOW_NAME_FILE}"
+        echo "${window_name}" >"${LAST_WINDOW_NAME_FILE}"
     fi
-    
+
     if [[ -n "${bulk_idx}" ]]; then
         tmux select-pane -t "${bulk_idx}"
     fi
-    
+
     if [[ "${use_last}" = true ]]; then
         if ! tmux move-pane -d -t "${window_name}"; then
             "${SCRIPTNAME}" "${window_name}"
         fi
+
         tm-fix-layout
         tm-fix-layout "${window_name}"
     else
         break_idx="$(tmux break-pane -d -F '#{window_index}' -P -n "${window_name}")"
         curr_idx="$(tmux display-message -p '#{window_index}')"
-    
+
         tm-fix-layout
-    
+
         if [[ "${curr_idx}" -lt "${break_idx}" ]]; then
             while [[ "${break_idx}" -ne $((curr_idx + 1)) ]]; do
                 tmux swap-window -d -s "${break_idx}" -t $((break_idx - 1))
@@ -68,7 +74,7 @@ function main() {
             tmux select-window -t "${break_idx}"
         fi
     fi
-    
+
     window_panes="$(tmux display-message -p '#{window_panes}')"
     if [[ -n "${bulk_idx}" ]]; then
         if [[ "${bulk_idx}" -le "${window_panes}" ]]; then
@@ -85,7 +91,6 @@ function main() {
     fi
 }
 
-
 if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
-	main "$@"
+    main "$@"
 fi

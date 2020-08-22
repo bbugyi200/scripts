@@ -3,15 +3,18 @@
 SCRIPTNAME="$(basename "$0")"
 LOG_FILE=/tmp/"${SCRIPTNAME}".log
 
-
 function main() {
-    IFS="|" read -r -a window_title_array <<< "$1"; shift
-    local window_cmd="$1"; shift
-    
+    IFS="|" read -r -a window_title_array <<<"$1"
+    shift
+
+    local window_cmd="$1"
+    shift
+
     if [[ "$1" =~ ^[0-9]+$ ]]; then
-        local desktop_id="$1"; shift
+        local desktop_id="$1"
+        shift
     fi
-    
+
     found_using_wmctrl=false
     for window_title in "${window_title_array[@]}"; do
         if wmctrl "$@" -a "${window_title}"; then
@@ -34,11 +37,11 @@ function main() {
     if [[ -n "${desktop_id}" ]]; then
         wmctrl -s "${desktop_id}"
     fi
-    
+
     if [[ "${found_using_wmctrl}" = true ]] && [[ -n "${desktop_id}" ]]; then
         i=0
         while [[ "${i}" -lt "$(window_count)" ]]; do
-            i=$((i+1))
+            i=$((i + 1))
             for window_title in "${window_title_array[@]}"; do
                 if matches_active_window "${window_title}"; then
                     log "%s%s%s" \
@@ -48,33 +51,32 @@ function main() {
                     return 0
                 fi
             done
-        
+
             winstack next
         done
     fi
-    
+
     log "Using '%s' command to start application." "${window_cmd}"
     "${window_cmd}"
 }
-
 
 function log() {
     printf "PID:%s | [%s] | " $$ "$(date +"%Y-%m-%d %H:%M:%S")" | tee -a "${LOG_FILE}"
     printf "$1\n" "${@:2}" | tee -a "${LOG_FILE}"
 }
 
-
 function fix_focus_bug() {
-    local window_title="$1"; shift
+    local window_title="$1"
+    shift
 
     # HACK: Fixes bug where window is pulled to front of screen but
     # another window remains focused (in the background).
     wmctrl "$@" -a "${window_title}"
 }
 
-
 function is_active_desktop() {
-    local desktop_id="$1"; shift
+    local desktop_id="$1"
+    shift
 
     if [[ -z "${desktop_id}" ]]; then
         return 0
@@ -87,9 +89,9 @@ function is_active_desktop() {
     return 1
 }
 
-
 function matches_active_window() {
-    local window_title="$1"; shift
+    local window_title="$1"
+    shift
 
     if [[ "$(active_window_title)" == *"${window_title}"* ]]; then
         return 0
@@ -102,7 +104,6 @@ function matches_active_window() {
     return 1
 }
 
-
 if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
-	main "$@"
+    main "$@"
 fi

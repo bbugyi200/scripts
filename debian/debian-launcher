@@ -1,9 +1,40 @@
 #!/bin/bash
 
 SCRIPTNAME="$(basename "$0")"
-LOG_FILE=/tmp/"${SCRIPTNAME}".log
+LOG_FILE=/var/tmp/"${SCRIPTNAME}".log
+LAST_WINDOW_FILE=/tmp/"${SCRIPTNAME}".last
 
 function main() {
+    if [[ "$1" == "--last" ]]; then
+        shift
+
+        [[ -f "${LAST_WINDOW_FILE}" ]] || exit 1
+
+        last_window="$(cat "${LAST_WINDOW_FILE}")"
+        if [[ "$(window_count)" -ge 1 ]]; then
+            active_window_title >"${LAST_WINDOW_FILE}"
+        fi
+
+        log "Focusing last known active winodw: %s" "${last_window}"
+        wmctrl -a "${last_window}"
+    else
+        orig_desk_id="$(active_desktop_id)"
+        orig_window_title="$(active_window_title)"
+
+        run "$@"
+
+        if [[ "$(active_desktop_id)" != "${orig_desk_id}" ]]; then
+            echo "${orig_window_title}" >"${LAST_WINDOW_FILE}"
+        fi
+    fi
+}
+
+function log() {
+    printf "PID:%s | [%s] | " $$ "$(date +"%Y-%m-%d %H:%M:%S")" | tee -a "${LOG_FILE}"
+    printf "$1\n" "${@:2}" | tee -a "${LOG_FILE}"
+}
+
+function run() {
     IFS="|" read -r -a window_title_array <<<"$1"
     shift
 
@@ -58,11 +89,6 @@ function main() {
 
     log "Using '%s' command to start application." "${window_cmd}"
     "${window_cmd}"
-}
-
-function log() {
-    printf "PID:%s | [%s] | " $$ "$(date +"%Y-%m-%d %H:%M:%S")" | tee -a "${LOG_FILE}"
-    printf "$1\n" "${@:2}" | tee -a "${LOG_FILE}"
 }
 
 function fix_focus_bug() {

@@ -5,12 +5,20 @@
 # which Python version you would like to use.                     #
 ###################################################################
 
-version="$1"; shift
+version="$1"
+shift
 
-python="$(command -v python)"
 if [[ -n "${version}" ]]; then
     version="$(echo "${version}" | perl -nE 'print s/^([1-9])([1-9])$/\1.\2/gr')"
     python=python"${version}"
+else
+    if command -v python3 &>/dev/null && [[ -z "${VIRTUAL_ENV}" ]]; then
+        _python=python3
+    else
+        _python=python
+    fi
+
+    python="$(command -v "${_python}")"
 fi
 
 "${python}" -m IPython "$@"

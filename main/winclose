@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if [[ "$(uname -r)" == *"Gentoo"* ]]; then
+    xdotool key super+w
+else
+    wmctrl -c :ACTIVE:
+fi

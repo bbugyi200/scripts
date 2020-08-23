@@ -4,9 +4,25 @@
 #  Wrapper for umpv. Used by qutebrowser key bindings.                        #
 ###############################################################################
 
+SCRIPTNAME="$(basename "$0")"
+
 if [[ "$(wmctrl -lx | awk '{print $3}')" != *".mpv"* ]]; then
-    xdotool key super+l
-    xspawn -w mpv umpv "$@"
+    if command -v xspawn &> /dev/null; then
+        xdotool key super+l
+        xspawn -w mpv umpv "$@"
+    elif command -v debian-launcher &> /dev/null; then
+        debian-launcher "mpv" "umpv $*" 4
+    else
+        1>&2 printf "%s%s%s\n" \
+            "[ERROR] \
+            " "Need either 'xspawn' or 'debian-launcher' script to run " \
+            "${SCRIPTNAME}\n"
+        exit 1
+    fi
 else
+    if [[ "$(uname -r)" != *"Gentoo"* ]]; then
+        wmctrl -x -a mpv
+    fi
+
     umpv "$@"
 fi

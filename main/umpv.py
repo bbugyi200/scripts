@@ -1,0 +1,182 @@
+#!/usr/bin/python3
+
+from os.path import exists
+
+
+"""
+This script emulates "unique application" functionality on Linux. When starting
+playback with this script, it will try to reuse an already running instance of
+mpv (but only if that was started with umpv). Other mpv instances (not started
+by umpv) are ignored, and the script doesn't know about them.
+
+This only takes filenames as arguments. Custom options can't be used; the
+script interprets them as filenames. If mpv is already running, the files
+passed to umpv are appended to mpv's internal playlist. If a file does not
+exist or is otherwise not playable, mpv will skip the playlist entry when
+attempting to play it (from the GUI perspective, it's silently ignored).
+
+If mpv isn't running yet, this script will start mpv and let it control the
+current terminal. It will not write output to stdout/stderr, because this
+will typically just fill ~/.xsession-errors with garbage.
+
+mpv will terminate if there are no more files to play, and running the umpv
+script after that will start a new mpv instance.
+
+Note that you can control the mpv instance by writing to the command fifo:
+
+    echo "cycle fullscreen" > ~/.umpv_fifo
+
+Note: you can supply custom mpv path and options with the MPV environment
+variable. The environment variable will be split on whitespace, and the first
+item is used as path to mpv binary and the rest is passed as options _if_ the
+script starts mpv. If mpv is not started by the script (i.e. mpv is already
+running), this will be ignored.
+"""
+
+import argparse
+import errno
+import fcntl
+import os
+import string
+import subprocess as sp
+
+import gutils
+from loguru import logger as log  # pylint: disable=unused-import
+
+
+FIFO = "{}/fifo".format(gutils.xdg.init("runtime"))
+
+
+# this is the same method mpv uses to decide this
+def is_url(filename: str) -> bool:
+    if filename.startswith("magnet"):
+        return True
+
+    parts = filename.split("://", 1)
+    if len(parts) < 2:
+        return False
+
+    # protocol prefix has no special characters => it's an URL
+    allowed_symbols = string.ascii_letters + string.digits + "_"
+    prefix = parts[0]
+
+    return all(map(lambda c: c in allowed_symbols, prefix))
+
+
+def mpv_is_open():
+    # type: () -> bool
+    ps = sp.Popen(["wmctrl", "-lx"], stdout=sp.PIPE)
+    stdout, _stderr = ps.communicate()
+
+    output = stdout.decode()
+    for line in output.split("\n"):
+        if not line:
+            continue
+
+        if "mpv" in line.split()[2]:
+            return True
+
+    return False
+
+
+# make them absolute; also makes them safe against interpretation as options
+def make_abs(filename: str) -> str:
+    if not is_url(filename):
+        return os.path.abspath(filename)
+    return filename
+
+
+@gutils.catch
+def main() -> int:
+    append_help = "append video to playlist instead of starting immediately"
+    files_help = "the video files to play with mpv"
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("files", nargs=argparse.REMAINDER, help=files_help)
+    parser.add_argument(
+        "-a", "--append", action="store_true", help=append_help
+    )
+    args = parser.parse_args()
+
+    files = [make_abs(fp) for fp in args.files]
+
+    if os.system("pgrep -x mpv") != 0:
+        try:
+            os.remove(FIFO)
+        except FileNotFoundError:
+            pass
+
+    data_dir = "/home/bryan/.local/share/umpv"
+    last_file = "{}/last".format(data_dir)
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+
+    if len(files) > 0:
+        with open(last_file, "w") as f:
+            f.write(files[0])
+
+    fifo_fd = -1
+    try:
+        fifo_fd = os.open(FIFO, os.O_NONBLOCK | os.O_WRONLY)
+    except OSError as e:
+        if e.errno == errno.ENXIO:
+            pass  # pipe has no writer
+        elif e.errno == errno.ENOENT:
+            pass  # doesn't exist
+        else:
+            raise e
+
+    if fifo_fd >= 0:
+        print("FIFO Exists!")
+        # Unhandled race condition: what if mpv is terminating right now?
+        fcntl.fcntl(fifo_fd, fcntl.F_SETFL, 0)  # set blocking mode
+        fifo = os.fdopen(fifo_fd, "w")
+        for fp in files:
+            # escape: \ \n "
+            fp = (
+                fp.replace("\\", "\\\\")
+                .replace('"', '\\"')
+                .replace("\n", "\\n")
+            )
+            fp = '"' + fp + '"'
+            append = " append-play" if args.append else ""
+            fifo.write("raw loadfile " + fp + "{}\n".format(append))
+
+            # Fixes issue where mpv stays paused when new video is used to
+            # replace current one after the current one has already concluded.
+            fifo.write("set pause no\n")
+    else:
+        # Recreate pipe if it doesn't already exist.
+        # Also makes sure it's safe, and no other user can create a bogus pipe
+        # that breaks security.
+        try:
+            os.remove(FIFO)
+        except OSError as e:
+            pass
+
+        os.mkfifo(FIFO, 0o600)
+
+        mpv_cmd = (os.getenv("MPV") or "mpv").split()
+        mpv_cmd.extend(
+            [
+                "--no-terminal",
+                "--force-window",
+                "--input-file=" + FIFO,
+                "--",
+            ]
+        )
+        if files:
+            mpv_cmd.extend(files)
+            sp.check_call(mpv_cmd)
+        else:
+            sp.Popen("sleep 0.5 && cmpv keypress TAB", shell=True)
+
+            mpv_cmd.extend(["{}/{}".format(data_dir, "empty.mpeg")])
+            ps = sp.Popen(mpv_cmd)
+            ps.wait()
+
+    return 0
+
+
+if __name__ == "__main__":
+    main()

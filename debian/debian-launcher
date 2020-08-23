@@ -88,7 +88,7 @@ function run() {
     fi
 
     log "Using '%s' command to start application." "${window_cmd}"
-    "${window_cmd}"
+    ${window_cmd}
 }
 
 function fix_focus_bug() {

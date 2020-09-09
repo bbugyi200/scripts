@@ -5,12 +5,12 @@
 # which Python version you would like to use.                     #
 ###################################################################
 
-version="$1"
+pyver="$1"
 shift
 
-if [[ -n "${version}" ]]; then
-    version="$(echo "${version}" | perl -nE 'print s/^([1-9])([1-9])$/\1.\2/gr')"
-    python=python"${version}"
+if [[ -n "${pyver}" ]]; then
+    pyver="$(echo "${pyver}" | perl -nE 'print s/^([1-9])([1-9])$/\1.\2/gr')"
+    python=python"${pyver}"
 else
     if command -v python3 &>/dev/null && [[ -z "${VIRTUAL_ENV}" ]]; then
         _python=python3

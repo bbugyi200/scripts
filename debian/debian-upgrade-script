@@ -1,0 +1,17 @@
+#!/bin/bash
+
+###############################################################################
+#  This script is meant to be run after upgrading to a new Debian release.    #
+###############################################################################
+
+# First, we make the correct changes to /etc/apt/sources.list.
+#
+# We then run the following commands:
+confirm "sudo aptitude update"
+confirm "sudo aptitude full-upgrade"
+confirm "epip_update_all"
+confirm "pipx reinstall-all"
+confirm "debian-install-vim"
+confirm "tldr --update"
+confirm "emanage -u"
+confirm "reboot"

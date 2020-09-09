@@ -6,34 +6,26 @@ if [ "$(id -u)" != "0" ]; then
 fi
 
 # Clean from standard vim
-apt-get remove --purge vim vim-runtime vim-gnome vim-tiny vim-common vim-gui-common
+confirm "apt-get remove --purge vim vim-runtime vim-gnome vim-tiny vim-common vim-gui-common"
 # Vim dependency
-apt-get install liblua5.1-dev luajit libluajit-5.1 python-dev python3-dev libperl-dev libncurses5-dev ruby-dev
+confirm "apt-get install liblua5.1-dev luajit libluajit-5.1 python-dev python3-dev libperl-dev libncurses5-dev ruby-dev libx11-dev libxtst-dev libxt-dev libsm-dev libxpm-dev"
 
 # Clean and prepare folders
-rm -rf /usr/local/share/vim
-rm /usr/bin/vim
-mkdir /usr/include/lua5.1/include
+confirm "rm -rf /usr/local/share/vim"
+confirm "rm -f /usr/bin/vim"
+lua_include=/usr/include/lua5.1/include
+confirm "[[ -d ${lua_include} ]] || mkdir ${lua_include}"
 
 # Download it and compile
-cd /usr/local/src/ || exit 1
-git clone https://github.com/vim/vim
-cd vim/src || exit 1
-make distclean
+if confirm "# Clone vim into /usr/local/src/vim?"; then
+    cd /usr/local/src/ || exit 1
+    rm -rf /usr/local/src/vim
+    git clone https://github.com/vim/vim
+    cd vim/src || exit 1
 
-./configure --with-features=huge \
-            --enable-rubyinterp \
-            --with-ruby-command=$(command -v ruby) \
-            --enable-largefile \
-            --disable-netbeans \
-            --enable-python3interp=yes \
-            --with-python3-config-dir=$(python3-config --configdir) \
-            --enable-perlinterp \
-            --enable-luainterp \
-            --with-luajit \
-            --enable-gui=auto \
-            --enable-fail-if-missing \
-            --enable-cscope
-
-make
-make install
+    confirm "make distclean"
+    
+    confirm "./configure --with-features=huge --enable-rubyinterp --with-ruby-command=$(command -v ruby) --enable-largefile --disable-netbeans --enable-python3interp=yes --with-python3-config-dir=$(python3-config --configdir) --enable-perlinterp --enable-luainterp --with-luajit --enable-gui=auto --enable-fail-if-missing --enable-cscope"
+    
+    confirm "make -j && make install"
+fi

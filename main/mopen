@@ -1,11 +1,9 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """
 Provides list of movies / TV shows from filesystem for user to choose from and
 then plays the user's choice using mpv.
 """
-
-# pylint: disable=bad-continuation
 
 import argparse
 import os
@@ -43,7 +41,7 @@ def main(argv: List[str] = None) -> None:
 
     if args.cache or not os.path.exists(cache_fp):
         find_output = gutils.shell(
-            'find /media/bryan/zeus/media/Entertainment /home/bryan/Downloads '
+            'sudo find /mnt/hercules/plex /home/bryan/Downloads '
                 '-name "*.avi" -o '
                 '-name "*.m4v" -o '
                 '-name "*.mkv" -o '

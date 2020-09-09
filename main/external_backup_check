@@ -1,0 +1,39 @@
+#!/bin/bash
+
+
+SCRIPTNAME="$(basename "$0")"
+TSFILE=/home/bryan/.external_backup.txt
+
+function main() {
+    if [[ -z "$DISPLAY" ]]; then
+        printf "[ERROR]: No X11 session appears to be available.\n"
+        exit 3
+    fi
+    
+    now="$(date +%s)"
+
+    if [[ -f "${TSFILE}" ]]; then
+        last_external_backup="$(cat "${TSFILE}")"
+    else
+        last_external_backup=0
+    fi
+
+    _time_since_last_external_backup=$((now - last_external_backup))
+    days_since_last_external_backup=$((_time_since_last_external_backup / (60 * 60 * 24)))
+
+    echo "${days_since_last_external_backup} days since last external backup ($(date --date=@${last_external_backup} +"%Y-%m-%d %H:%M:%S"))."
+
+    max_days=30
+    if [[ "${max_days}" -lt "${days_since_last_external_backup}" ]]; then
+        notify-send \
+            -u critical \
+            "$(basename "$0")" \
+            "You should run the 'external_backup' command soon.\n\nIt has been ${days_since_last_external_backup} days since you last made an external backup."
+        return 1
+    fi
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

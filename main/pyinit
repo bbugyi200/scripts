@@ -5,8 +5,8 @@ name="$1"; shift
 export NAME="${name}"
 export TNAME="${name^}"
 
-cookie template.py -q "${name}".py
-cookie exe.py -x -q "${name}"
+cookie template.py -q "$@" "${name}".py
+cookie exe.py -x -q "$@" "${name}"
 cookie unittest.py -q ~/Sync/bin/tests/test_"${name}".py
 
 pim "${name}"

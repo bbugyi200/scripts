@@ -2,12 +2,13 @@
 
 source /home/bryan/Sync/bin/cron.jobs/backup.sh
 
-ETBB=$((60 * 60 * 24 * 7))  # seconds in a week
+function main() {
+    ETBB=$((60 * 60 * 24 * 7)) # seconds in a week
 
-backup /boot boot/weekly "${DEFAULT_R}"
-backup /etc etc/weekly "${DEFAULT_R}"
-backup_home weekly "${DEFAULT_R}"
+    backup /etc etc/weekly "${DEFAULT_R}"
+    backup_home weekly "${DEFAULT_R}"
 
-backup_kernel_config weekly
+    post_backup_hook
+}
 
-post_backup_hook
+main "$@"

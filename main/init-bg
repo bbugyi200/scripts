@@ -2,7 +2,8 @@
 
 # Set Background
 if ! holidaybg; then
-    BG=$(find ~/Sync/var/photos/backgrounds/random -type f | shuf -n 1)
-    feh --bg-fill "$BG"
+    _BG=$(find ~/Sync/var/photos/backgrounds/4K -type f | shuf -n 1)
+    BG="${_BG%_*}"
+    feh --bg-fill "${BG}"_0.jpg --bg-fill "${BG}"_1.jpg --bg-fill "${BG}"_2.jpg
     echo "$BG" > /tmp/current_bg.txt
 fi

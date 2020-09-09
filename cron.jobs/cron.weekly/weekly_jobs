@@ -1,8 +1,14 @@
-#!/bin/bash
+#!/usr/bin/bash
 
-set -e
+source /home/bryan/Sync/bin/cron.jobs/jobs.sh
 
-sort_qb_quickmarks
-clean_recent_file_log
-clean_mpv_history
-cache_cheaders
+function main() {
+    unsafe_cmd "sort_qb_quickmarks"
+    unsafe_cmd "clean_recent_file_log"
+    unsafe_cmd "clean_mpv_history"
+    unsafe_cmd "cache_cheaders"
+
+    return "${EC}"
+}
+
+main "$@"

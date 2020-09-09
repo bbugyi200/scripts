@@ -55,6 +55,8 @@ if [[ "${debug}" = true && "${verbose}" = true ]]; then
 fi
 
 # ---------- Main ----------
+set -e
+
 if [[ "${refresh}" = true ]]; then
     suntimes rise > "${fp_sunrise}"
     suntimes set > "${fp_sunset}"

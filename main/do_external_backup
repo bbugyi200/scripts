@@ -1,20 +1,23 @@
 #!/bin/bash
 
+SCRIPTNAME="$(basename "$0")"
+
 function notify() {
-    msg="$1"; shift
+    msg="$1"
+    shift
+
     notify-send -t 0 "external_backup" "${msg}"
 }
-
 
 function clear_last_notify() {
     xdotool key ctrl+space
 }
 
-
 function _run_rsync() {
-    D="$1"; shift
+    D="$1"
+    shift
 
-    backup_dir="${perseus}"/gentoo/"${D}"
+    backup_dir="${PERSEUS}"/"$(hostname)"/"${D}"
     [[ -d "${backup_dir}" ]] || sudo mkdir -p "${backup_dir}"
 
     if sudo rsync -av --delete "${D}"/ "${backup_dir}"; then
@@ -24,9 +27,9 @@ function _run_rsync() {
     fi
 }
 
-
 function run_rsync() {
-    D="$1"; shift
+    D="$1"
+    shift
 
     clear_last_notify
 
@@ -37,17 +40,19 @@ function run_rsync() {
     fi
 }
 
-
 function confirm_run_sync() {
-    D="$1"; shift
+    D="$1"
+    shift
+
     if confirm "# Sync ${D}"; then
         run_rsync "${D}"
     fi
 }
 
-
 function dir_is_empty() {
-    D="$1"; shift
+    D="$1"
+    shift
+
     if sudo find "${D}" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
         return 1
     else
@@ -55,16 +60,16 @@ function dir_is_empty() {
     fi
 }
 
-
 function main() {
     set -e
 
     if [[ -z "$1" ]]; then
-        1>&2 printf "usage: do_external_backup <external-drive-path>"
+        printf 1>&2 "usage: do_external_backup <external-drive-path>"
         exit 2
     fi
 
-    perseus="$1"; shift
+    PERSEUS="$1"
+    shift
 
     easy_group=()
     excluded_root_subdirs=(/dev /lost+found /proc /run /sys /tmp)
@@ -85,48 +90,48 @@ function main() {
             easy_group+=("${D}")
             continue
         fi
-    
-        if [[ "${D}" == /media ]]; then
-            for media_user in /media/*; do
-                for DD in "${media_user}"/*; do
-                    if [[ "${DD}" == "${perseus}" ]]; then
-                        continue
-                    fi
 
-                    if [[ ! -d "${DD}" ]] || dir_is_empty "${DD}"; then
-                        easy_group+=("${DD}")
-                        continue
-                    fi
+        mount_dir="$(dirname "${PERSEUS}")"
+        if [[ "${D}" == "${mount_dir}" ]]; then
+            for DD in "${mount_dir}"/*; do
+                if [[ "${DD}" == "${PERSEUS}" ]]; then
+                    continue
+                fi
 
-                    confirm_run_sync "${DD}"
-                done
+                if [[ ! -d "${DD}" ]] || dir_is_empty "${DD}"; then
+                    easy_group+=("${DD}")
+                    continue
+                fi
+
+                confirm_run_sync "${DD}"
             done
-    
+
             continue
         fi
-    
+
         confirm_run_sync "${D}"
     done
-    
+
     if confirm "# Backup Files/Dirs in Easy Group"; then
         nmsg=""
         for D in "${easy_group[@]}"; do
             if [[ -n "${nmsg}" ]]; then
                 nmsg+="\n"
             fi
-        
+
             if _run_rsync "${D}"; then
                 nmsg+="${D}: ok"
             else
                 nmsg+="${D}: FAIL"
             fi
         done
-        
+
         if [[ -n "${nmsg}" ]]; then
             notify "${nmsg}"
         fi
     fi
 }
 
-
-main "$@"
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

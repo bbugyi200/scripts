@@ -22,7 +22,7 @@ while read line; do
     echo "${line}" >> "${tmp_history}"
 done < "${mpv_history}"
 
-/usr/bin/safe-rm "${mpv_history}"
+safe-rm "${mpv_history}"
 mv "${tmp_history}" "${mpv_history}"
 
 sudo chown bryan:bryan "${mpv_history}"

@@ -1,18 +1,48 @@
-#!/bin/bash
+#!/usr/bin/bash
 
-set -e
+source /home/bryan/Sync/bin/cron.jobs/jobs.sh
 
-/usr/bin/updatedb
-clean_filesystem
-zopen -C -q
-mopen -C
-check_shv_logs
+function main() {
+    fix_log_files  # FIXES: zopen and mopen permission failure
 
-# Run tests for my local scripts.
-run_all_script_tests
+    unsafe_cmd "clean_filesystem"
+    unsafe_cmd "zopen -C -q"
+    unsafe_cmd "mopen -C"
+    unsafe_cmd "check_shv_logs"
 
-# Generate daily summary of process accounting (needed for `sar`).
-/usr/lib64/sa/sa2 -A &
+    # Re-initialize desktop wallpaper.
+    unsafe_cmd "init-bg"
 
-# zopen and mopen create log files owned by root.
-chown bryan:bryan /var/tmp/*.log
+    # Refresh sunrise/sunset times.
+    unsafe_cmd "xmonad-suntimes -R"
+
+    # Run tests for my local scripts.
+    unsafe_cmd "run_all_script_tests"
+
+    # Sync khal with gmail calendar.
+    vdirsyncer sync 2>/dev/null || test $? -eq 1
+
+    # Backup/update notifications.
+    emcheck &>/dev/null || test $? -eq 1
+    external_backup_check &>/dev/null || test $? -eq 1
+
+    # Generate daily summary of process accounting (needed for `sar`).
+    if [[ -f /usr/lib64/sa/sa2 ]]; then
+        sa2=/usr/lib64/sa/sa2
+    else
+        sa2=/usr/lib/sysstat/sa2
+    fi
+    sudo ${sa2} -A &
+
+    # Take back ownership from root.
+    fix_log_files
+    sudo chown -R bryan:bryan /home/bryan
+
+    return "${EC}"
+}
+
+function fix_log_files() {
+    sudo chown bryan:bryan /var/tmp/*.log # zopen and mopen create log files owned by root.
+}
+
+main "$@"

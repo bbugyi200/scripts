@@ -2,32 +2,27 @@
 
 """Uses jinja2 Template Engine to Generate Xmobar Config"""
 
-import datetime as dt  # noqa: F401
-import os  # noqa: F401
-import subprocess as sp  # noqa: F401
-import sys  # noqa: F401
-
-import jinja2
+import argparse
+import os
 
 import gutils
+import jinja2
+from loguru import logger as log  # pylint: disable=unused-import
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
 
-from loguru import logger as log
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-gutils.catch
-ef main(args):
-   fp_xmobar_template = '/home/bryan/Sync/var/templates/template.xmobarrc'
-   fp_xmobar_config = '/home/bryan/.xmobarrc'
 
-   xdg_runtime = gutils.xdg.get('runtime')
-    with open(fp_xmobar_template, 'r') as f:
+@gutils.catch
+def main(_args: argparse.Namespace) -> None:
+    fp_xmobar_template = "/home/bryan/Sync/var/templates/template.xmobarrc"
+    fp_xmobar_config = "/home/bryan/.xmobarrc"
+
+    xdg_runtime = gutils.xdg.get("runtime")
+    with open(fp_xmobar_template, "r") as f:
         contents = f.read()
 
-    with open(fp_xmobar_config, 'w') as f:
+    with open(fp_xmobar_config, "w") as f:
         T = jinja2.Template(contents)
         new_contents = T.render(xdg_runtime=xdg_runtime)
         f.write(new_contents)
@@ -35,7 +30,7 @@ ef main(args):
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    args = parser.parse_args()
+    ARGS = parser.parse_args()
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+    gutils.logging.configure(__file__, debug=ARGS.debug, verbose=ARGS.verbose)
+    main(ARGS)

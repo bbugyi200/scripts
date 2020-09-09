@@ -118,7 +118,6 @@ else
     ##### SCRIPTS
     if [[ "${sys_info}" == *"gentoo"* ]]; then
         stow_it "${SYNC}/bin/gentoo" "$HOME/.local/bin"
-        stow_it "${SYNC}/bin/xmonad" "$HOME/.local/bin"
     fi
     
     if [[ "${sys_info}" == *"Debian"* ]]; then
@@ -126,6 +125,7 @@ else
     fi
 
     ##### MODULES / LIBRARIES / HEADERS
+    stow_it "${SYNC}/bin/xmonad" "$HOME/.local/bin"
     stow_it "${SYNC}/lib/python" "/usr/local/lib/python"
     stow_it "${SYNC}/lib/C" "/usr/local/lib"
     stow_it "${SYNC}/lib/zsh" "/usr/local/lib"

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+SCRIPTNAME="$(basename "$0")"
+
+function main() {
+    for pkey_file in $(all_pkey_files); do
+        if ! ssh-add -l | grep -q "$(ssh-keygen -lf "${pkey_file}" | perl -lanE 'print @F[1]')"; then
+            ssh-add $(all_pkey_files)
+            return 0
+        fi
+    done
+}
+
+function all_pkey_files() {
+    echo "${HOME}"/.ssh/id_*[^.pub]
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

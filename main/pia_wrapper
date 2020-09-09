@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# ----- Enter Torrent Context
+confirm "piactl connect"                         # Connect to VPN?
+confirm "lock_network"                           # Lock network in-case of VPN failure?
+confirm "sudo service transmission-daemon start" # Start transmission daemon?
+
+printf \
+    "\n### %s %s\n\n" \
+    "Entering torrent context..." \
+    "Use 'tsm-tv' and 'tsm-mov' to download movies and TV shows!"
+
+# ----- Exit Torrent Context
+confirm "transmission-remote -tall -r"          # Remove all torrents?
+confirm "sudo service transmission-daemon stop" # Stop transmission daemon?
+confirm "unlock_network"                        # Unlock network?
+confirm "piactl disconnect"                     # Disconnect from VPN?
+
+printf \
+    "\n### %s\n" \
+    "Exiting torrent context..."

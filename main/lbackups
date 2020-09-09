@@ -7,9 +7,10 @@
 
 SCRIPTNAME="$(basename "$0")"
 
-
 function print_backups() {
-    local type="$1"; shift
+    local type="$1"
+    shift
+
     local output_lines=("$@")
 
     for oline in "${output_lines[@]}"; do
@@ -20,52 +21,51 @@ function print_backups() {
     done | sort -k 2br,2br
 }
 
-
 function main() {
-    pushd /media/bryan/hercules/backup &> /dev/null || exit 1
-        if [[ -z "$1" ]]; then
-            set -- ./*
-        fi
-    
-        local first_dir=true
-        for d in "$@"; do
-            d="$(basename "${d}")"
-            local D="${PWD}"/"${d}"
+    pushd /mnt/hercules/backup &>/dev/null || exit 1
+    if [[ -z "$1" ]]; then
+        set -- ./*
+    fi
 
-            if ! [[ -d "${D}" ]]; then
+    local first_dir=true
+    for d in "$@"; do
+        d="$(basename "${d}")"
+        local D="${PWD}"/"${d}"
+
+        if ! [[ -d "${D}" ]]; then
+            continue
+        fi
+
+        local output_lines=()
+
+        local first_subdir=true
+        for DD in "${D}"/*; do
+            local timestamp_file="${DD}"/backup.txt
+            if ! [[ -f "${timestamp_file}" ]]; then
                 continue
             fi
-    
-            local output_lines=()
-    
-            local first_subdir=true
-            for DD in "${D}"/*; do
-                local timestamp_file="${DD}"/backup.txt
-                if ! [[ -f "${timestamp_file}" ]]; then
-                    continue
+
+            if [[ "${first_subdir}" = true ]]; then
+                first_subdir=false
+
+                if [[ "${first_dir}" = true ]]; then
+                    first_dir=false
+                else
+                    echo
                 fi
 
-                if [[ "${first_subdir}" = true ]]; then
-                    first_subdir=false
+                printf -- "----- /%s\n" "${d}"
+            fi
 
-                    if [[ "${first_dir}" = true ]]; then
-                        first_dir=false
-                    else
-                        echo
-                    fi
-
-                    printf -- "----- /%s\n" "${d}"
-                fi
-
-                output_lines+=("$(printf "%-9s %s\n" "$(basename "${DD}")" "$(date --date=@"$(cat "${timestamp_file}")" +"%Y-%m-%d %H:%M:%S %Z")")")
-            done
-    
-            print_backups "daily" "${output_lines[@]}"
-            print_backups "weekly" "${output_lines[@]}"
-            print_backups "monthly" "${output_lines[@]}"
-            print_backups "yearly" "${output_lines[@]}"
+            output_lines+=("$(printf "%-9s %s\n" "$(basename "${DD}")" "$(date --date=@"$(cat "${timestamp_file}")" +"%Y-%m-%d %H:%M:%S %Z")")")
         done
-    popd &> /dev/null || exit 1
+
+        print_backups "daily" "${output_lines[@]}"
+        print_backups "weekly" "${output_lines[@]}"
+        print_backups "monthly" "${output_lines[@]}"
+        print_backups "yearly" "${output_lines[@]}"
+    done
+    popd &>/dev/null || exit 1
 }
 
 if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then

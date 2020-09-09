@@ -1,55 +1,172 @@
 #!/bin/bash
 
-###################################################################
-#  Wrapper around `git log`                                       #
-###################################################################
+# shellcheck disable=SC2086
 
+read -r -d '' DOC <<EOM
+Wrapper around \`git log\`. Helpful when you wish to review only the commits
+added in the current branch.
+EOM
 
-stat_opts="--stat --summary"
+source gutils.sh
 
+SCRIPTNAME="$(basename "$0")"
 
-if [[ "${1}" == "-d" ]]; then
-    shift
-    PS4='$LINENO: '
-    set -x
+OPTS="--color=always "
+STAT_OPTS="--stat --summary"
+DIFF_OPTS="-p --cc"
+ONELINE_OPTS="--abbrev=4 --oneline --decorate"
+
+MASTER="${MASTER_BRANCH:-master}"
+if [[ "$(git rev-parse "${MASTER}")" == "$(git rev-parse HEAD)" ]]; then
+    TARGET_BRANCH=HEAD
+else
+    TARGET_BRANCH="${MASTER}"..HEAD
 fi
 
+function main() {
+    parse_cli_args "$@"
 
-# shellcheck disable=SC2086
-if [[ -n "$1" ]]; then
-    if [[ "$1" =~ ^[1-9][0-9]*p$ ]] || [[ "$1" == "p" ]]; then
-        if [[ "$1" == "p" ]]; then
+    if [[ -n "${arg}" ]]; then
+        if [[ "${arg}" =~ ^[1-9][0-9]*p$ ]] || [[ "${arg}" == "p" ]]; then
             N="$(branch_commit_count)"
-        else
-            N="${1%p}"; shift
-        fi
-
-        i=0
-        while [[ "${i}" -lt "${N}"  ]]; do
-            git log --skip="${i}" --max-count=1 ${stat_opts} -p --color=always | less
-            i="$((i + 1))"
-        done
-    else
-        if [[ "$(git rev-parse P.master)" == "$(git rev-parse HEAD)" ]]; then
-            target_branch=HEAD
-        else
-            target_branch="${MASTER_BRANCH:-master}"..HEAD
-        fi
-
-        if [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
-            N="$1"; shift
-            git log ${stat_opts} --max-count="${N}" --color=always | less ${LESS_OPTS}
-        elif [[ "$1" == "+" ]] || [[ "$1" == "++" ]]; then
-            if [[ "$1" == "++" ]]; then
-                p_opt="-p"
+            if [[ "${arg}" != "p" ]]; then
+                n="${arg%p}"
+                if [[ "${n}" -lt "${N}" ]]; then
+                    N="${n}"
+                fi
             fi
-            git log ${stat_opts} ${p_opt} --color=always "${target_branch}" | less ${LESS_OPTS}
-        elif [[ "$1" == "-" ]]; then
-            git log --abbrev=4 --oneline --decorate --graph --color=always "${target_branch}" | nl -s ':  ' -v 0
+
+            i=0
+            while [[ "${i}" -lt "${N}" ]]; do
+                idx=$((i + 1))
+
+                bar="-----------------------------"
+                if [[ "${idx}" -ge 10 ]]; then
+                    bar+="-"
+                fi
+
+                if [[ "${idx}" -ge 100 ]]; then
+                    bar+="-"
+                fi
+
+                if [[ "${N}" -ge 10 ]]; then
+                    bar+="-"
+                fi
+
+                if [[ "${N}" -ge 100 ]]; then
+                    bar+="-"
+                fi
+
+                OPTS+="--skip=${i} --max-count=1 ${STAT_OPTS} ${DIFF_OPTS} "
+                {
+                    printf -- \
+                        "%s\n------- Commit %d of %d -------\n%s\n" \
+                        "${bar}" \
+                        "${idx}" \
+                        "${N}" \
+                        "${bar}"
+                    git_log
+                } | less
+                i="$((i + 1))"
+            done
         else
-            git log --color=always "$@" | less ${LESS_OPTS}
+            OPTS+="--graph ${STAT_OPTS} "
+            if [[ "${arg}" =~ ^[1-9][0-9]*$ ]]; then
+                OPTS+="--max-count=${arg} "
+            elif [[ "${arg}" == "+" ]]; then
+                :
+            elif [[ "${arg}" == "++" ]]; then
+                OPTS+="${DIFF_OPTS} "
+            else
+                printf 1>&2 "[ERROR] Unexpected argument: '%s'\n" "${arg}"
+                exit 1
+            fi
+
+            git_log | less
         fi
+    elif [[ "${#GLOG_ARGS[@]}" -ne 0 ]]; then
+        OPTS+="--graph "
+        git_log | less
+    else
+        OPTS+="${ONELINE_OPTS} "
+        git_log | nl -s ':  ' -v 0 | less
     fi
-else
-    git log --abbrev=4 --oneline --decorate --color=always | nl -s ':  ' -v 0 | less ${LESS_OPTS}
+}
+
+function parse_cli_args() {
+    export USAGE_GRAMMAR=(
+        "[-d] [git-log OPTIONS]"
+        "[-d] +[+] [git-log OPTIONS]"
+        "[-d] N [git-log OPTIONS]"
+        "[-d] [N]p [git-log OPTIONS]"
+        "-h"
+    )
+
+    read -r -d '' help <<EOM
+$(usage)
+
+${DOC}
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+
+Positional Arguments:
+    +
+        Show file stats for all commits added in this branch.
+
+    ++
+        Show file stats and diffs for all commits added in this branch.
+
+    N
+        Show the last N commits (where N is some integer).
+
+    [N]p
+        Show the last N commits (where N is some integer) OR, if N is not
+        given, all commits added in this branch. These commits are shown with
+        diffs and are displayed seperately, one at a time.
+EOM
+
+    while [[ -n "$1" ]]; do
+        case $1 in
+        -d | --debug)
+            debug=true
+            ;;
+        -h | --help)
+            echo "${help}"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            break
+            ;;
+        esac
+        shift
+    done
+
+    if [[ "${debug}" = true ]]; then
+        PS4='$LINENO: '
+        set -x
+    fi
+
+    if [[ -n "$1" ]] && [[ "$1" != "-"* ]]; then
+        arg="$1"
+        shift
+    fi
+
+    GLOG_ARGS=("$@")
+}
+
+function git_log() {
+    git log ${OPTS} "${TARGET_BRANCH}" "${GLOG_ARGS[@]}"
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
 fi

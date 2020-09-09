@@ -1,9 +1,15 @@
 #!/bin/bash
 
-SCRIPTNAME="$(basename "$0")"
 LAST_WINDOW_NAME_FILE=/tmp/tmux_break_join.last
+SCRIPTNAME="$(basename "$0")"
 
 function main() {
+    if [[ "${1}" == "-d" ]]; then
+        shift
+        PS4='$LINENO: '
+        set -x
+    fi
+
     if [[ "$1" == "--bulk" ]]; then
         shift
 
@@ -71,12 +77,15 @@ function main() {
         fi
 
         if [[ "${focus_break_window}" = true ]] && [[ -z "${bulk_idx}" ]]; then
-            tmux select-window -t "${break_idx}"
+            focus_idx="${break_idx}"
+        else
+            focus_idx="${curr_idx}"
         fi
+        tmux select-window -t "${focus_idx}"
     fi
 
-    window_panes="$(tmux display-message -p '#{window_panes}')"
     if [[ -n "${bulk_idx}" ]]; then
+        window_panes="$(tmux display-message -p '#{window_panes}')"
         if [[ "${bulk_idx}" -le "${window_panes}" ]]; then
             options=(--bulk "${bulk_idx}" --last)
 

@@ -26,12 +26,21 @@ class Arguments(NamedTuple):
     debug: bool
     verbose: bool
     zipcode: str
+    weather_cmd: str
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
     parser = gutils.ArgumentParser()
     parser.add_argument(
-        'zipcode', nargs='?', default='08060', help='zip code of location'
+        "zipcode", nargs="?", default="08060", help="zip code of location"
+    )
+    parser.add_argument(
+        "--weather-cmd",
+        default="weather",
+        help=(
+            "The command used to retrieve the weather report from the"
+            " command-line."
+        ),
     )
 
     args = parser.parse_args(argv[1:])
@@ -41,11 +50,11 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def run(args: Arguments) -> int:
-    raw_output = run_weather_report(args.zipcode)
+    raw_output = run_weather_cmd(args.weather_cmd, args.zipcode)
 
-    loc = get_group('Current conditions at (.*)\n', raw_output)
+    loc = get_group("Current conditions at (.*)\n", raw_output)
     temp = get_temp(raw_output)
-    sky = get_group(r'Sky conditions: ([A-z\s]+)$', raw_output)
+    sky = get_group(r"Sky conditions: ([A-z\s]+)$", raw_output)
     wind = get_wind(raw_output)
 
     assert loc is not None
@@ -55,14 +64,14 @@ def run(args: Arguments) -> int:
     return 0
 
 
-def run_weather_report(zipcode: str) -> str:
-    """Runs the 'weather-report' command.
+def run_weather_cmd(weather_cmd: str, zipcode: str) -> str:
+    """Runs the 'weather' command.
 
     Returns:
-        Raw output of weather-report command.
+        Raw output of 'weather' command.
     """
-    cmd_list = ['weather-report']
-    opts = ['--setpath', '/usr/share/weather-util', zipcode, '--no-cache']
+    cmd_list = [weather_cmd]
+    opts = ["--setpath", "/usr/share/weather-util", zipcode, "--no-cache"]
     cmd_list.extend(opts)
 
     for i in range(6):
@@ -71,10 +80,10 @@ def run_weather_report(zipcode: str) -> str:
         rc = child.returncode
 
         if rc == 0:
-            log.debug('weather-report Attempt #{}: SUCCESS'.format(i + 1))
+            log.debug("weather-report Attempt #{}: SUCCESS".format(i + 1))
             break
 
-        log.debug('weather-report Attempt #{}: FAILURE'.format(i + 1))
+        log.debug("weather-report Attempt #{}: FAILURE".format(i + 1))
         time.sleep(2 ** i)
 
     return out.decode().strip()
@@ -82,19 +91,19 @@ def run_weather_report(zipcode: str) -> str:
 
 def get_temp(raw_output: str) -> str:
     """Returns temperature."""
-    temp = get_group(r'Temperature: ([0-9]+\.[0-9]) F', raw_output)
+    temp = get_group(r"Temperature: ([0-9]+\.[0-9]) F", raw_output)
     if temp is None:
         return "N/A"
     else:
-        return f'{round(float(temp))} F'
+        return f"{round(float(temp))} F"
 
 
 def get_wind(raw_output: str) -> Optional[str]:
     """Returns wind description."""
-    wind = get_group(r'Wind: .*?([0-9\-]+ MPH)', raw_output)
+    wind = get_group(r"Wind: .*?([0-9\-]+ MPH)", raw_output)
 
     if wind is None:
-        wind = get_group(r'Wind: (.*)', raw_output)
+        wind = get_group(r"Wind: (.*)", raw_output)
 
     return wind
 
@@ -112,14 +121,14 @@ def format_report(
     loc: str, temp: str, sky: Optional[str], wind: Optional[str]
 ) -> str:
     """Formats weather report."""
-    report_fmt = '{}  |  TEMP: {}'
+    report_fmt = "{}  |  TEMP: {}"
     report = report_fmt.format(loc, temp)
 
     if sky is not None:
-        report = '{}  |  SKY: {}'.format(report, sky)
+        report = "{}  |  SKY: {}".format(report, sky)
 
     if wind is not None:
-        report = '{}  |  WIND: {}'.format(report, wind)
+        report = "{}  |  WIND: {}".format(report, wind)
 
     return report
 

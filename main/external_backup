@@ -1,15 +1,14 @@
 #!/bin/bash
 
-perseus=/media/bryan/perseus
-ts_file="${perseus}"/external_backup.txt  # Timestamp File
+perseus="${1:-/mnt/perseus}"
+ts_file="${perseus}"/external_backup.txt # Timestamp File
 ts_file_array=("${ts_file}" "${HOME}"/.external_backup.txt)
-
 
 if ! mount | grep -q "${perseus}"; then
     confirm "sudo mount -L PERSEUS ${perseus}"
-    
+
     if [[ -f "${ts_file}" ]]; then
-        last_backup="$(cat "${ts_file}")"
+        last_backup="$(date --date=@"$(cat "${ts_file}")" +"%Y-%m-%d %H:%M:%S %Z")"
     else
         last_backup="Never?"
     fi
@@ -19,9 +18,9 @@ else
     printf ">>> ${perseus} is already mounted.\n"
 fi
 
-do_external_backup ${perseus}
+do_external_backup "${perseus}"
 
 if confirm "# External Backup is Finished"; then
-    confirm "date | tee ${ts_file_array[*]} > /dev/null"
+    confirm "date +%s | tee ${ts_file_array[*]} > /dev/null"
     confirm "sudo umount ${perseus}"
 fi

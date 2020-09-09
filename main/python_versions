@@ -5,28 +5,22 @@ Outputs the version numbers (MAJOR.MINOR) of all python executables that are
 installed on this machine. Version numbers are seperated by newlines.
 """
 
+import argparse
 import os
 import re
 import sys
 from typing import Iterable, Iterator, NamedTuple, Sequence, Tuple
 
-import gutils
-from loguru import logger as log  # pylint: disable=unused-import
-
 
 class Arguments(NamedTuple):
     bindir: str
-    debug: bool
-    verbose: bool
 
 
-@gutils.catch
 def main(argv: Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv
 
     args = parse_cli_args(argv)
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
     bin_files = os.listdir(args.bindir)
     for (major, minor) in python_versions(bin_files):
@@ -50,7 +44,7 @@ def python_versions(bin_files: Iterable[str]) -> Iterator[Tuple[int, int]]:
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument(
         "-b",
         "--bindir",

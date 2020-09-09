@@ -56,7 +56,7 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
     parser = gutils.ArgumentParser()
     parser.add_argument(
         '-C',
-        dest='generate_cache',
+        "--generate-cache",
         action='store_true',
         help='Re-generate the document cache (aka the "find command cache").',
     )
@@ -73,13 +73,13 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
     )
     parser.add_argument(
         '-x',
-        dest='overwrite',
+        "--overwrite",
         action='store_true',
         help='Close current Zathura instance before opening new one.',
     )
     parser.add_argument(
         '-R',
-        dest='refresh',
+        "--refresh",
         action='store_true',
         help='Closes current Zathura instance and reopens same document.',
     )
@@ -153,7 +153,7 @@ def get_all_docs(*, use_cache: bool) -> List[Path]:
         directory_list = ['/home/bryan/Sync', '/home/bryan/projects']
         if socket.gethostname() == 'athena':
             directory_list.append(
-                '/media/bryan/hercules/archive/home/bryan/Sync'
+                '/mnt/hercules/archive/home/bryan/Sync'
             )
 
         cmd_list = ['find']
@@ -325,8 +325,7 @@ def _open_document(
     log.debug('Opening {} in {}...'.format(doc, cmd))
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
-    # HACK: I use this to force zathura to open in fullscreen on my Debian
-    # laptop.
+    # HACK: I use this to force zathura to open in fullscreen on XFCE.
     time.sleep(0.2)
     sp.Popen(["fullscreen"])
 
@@ -382,6 +381,10 @@ def path_list(path_like_iter: Iterable[PathLike]) -> List[Path]:
 
         >>> path_list(["foo", "bar"])
         [PosixPath('foo'), PosixPath('bar')]
+
+        >>> from pathlib import Path
+        >>> path_list([Path("foo")])
+        [PosixPath('foo')]
     """
     return [Path(P) for P in path_like_iter]
 

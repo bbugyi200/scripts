@@ -75,12 +75,12 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def run(args: Arguments) -> int:
-    time_string_result = get_time_string(args.rise_or_set)
-    if isinstance(time_string_result, Err):
+    time_string_r = get_time_string(args.rise_or_set)
+    if isinstance(time_string_r, Err):
         eprint(f"[ERROR] Unable to determine sun{args.rise_or_set} time.")
 
         if args.debug:
-            e = time_string_result.err()
+            e = time_string_r.err()
 
             eheader = f"----- {type(e).__name__} -----"
             bar = "-" * len(eheader)
@@ -89,7 +89,7 @@ def run(args: Arguments) -> int:
 
         return 1
 
-    time_string = time_string_result.ok()
+    time_string = time_string_r.ok()
     print(time_string)
 
     return 0
@@ -97,17 +97,17 @@ def run(args: Arguments) -> int:
 
 def get_time_string(rise_or_set: RiseOrSet) -> WResult[str]:
     url = 'https://www.google.com/search?q=sun{}+times'.format(rise_or_set)
-    google_soup = get_soup(url)
-    return get_ts_from_google_search(google_soup, rise_or_set)
+    google_soup = _get_soup(url)
+    return _get_ts_from_google_search(google_soup, rise_or_set)
 
 
-def get_soup(url: str) -> BeautifulSoup:
+def _get_soup(url: str) -> BeautifulSoup:
     resp = requests.get(url, headers=USER_AGENT)
     soup = BeautifulSoup(resp.text, "lxml")
     return soup
 
 
-def get_ts_from_google_search(
+def _get_ts_from_google_search(
     soup: BeautifulSoup, rise_or_set: RiseOrSet
 ) -> WResult[str]:
     am_or_pm = 'AM' if rise_or_set is RiseOrSet.Rise else 'PM'

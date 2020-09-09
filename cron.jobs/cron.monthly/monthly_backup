@@ -2,22 +2,21 @@
 
 source /home/bryan/Sync/bin/cron.jobs/backup.sh
 
-ETBB=$((60 * 60 * 24 * 30))  # seconds in a month
+function main() {
+    ETBB=$((60 * 60 * 24 * 30)) # seconds in a month
 
-backup /boot boot/monthly "${DEFAULT_R}"
-backup /etc etc/monthly "${DEFAULT_R}"
-backup_home monthly "${DEFAULT_R}"
+    backup /etc etc/monthly "${DEFAULT_R}"
+    backup_home monthly "${DEFAULT_R}"
 
-backup_kernel_config monthly
+    # Yearly Backup
+    if [[ $(date +%m) -eq 1 ]]; then
+        ETBB=$((60 * 60 * 24 * 365)) # seconds in a year
 
-# Yearly Backup
-if [[ "$(date +%m)" -eq 1 ]]; then
-    ETBB=$((60 * 60 * 24 * 365))  # seconds in a year
+        backup /etc etc/yearly "${DEFAULT_R}"
+        backup_home yearly "${DEFAULT_R}"
+    fi
 
-    backup /etc etc/yearly "${DEFAULT_R}"
-    backup_home yearly "${DEFAULT_R}"
+    post_backup_hook
+}
 
-    backup_kernel_config yearly
-fi
-
-post_backup_hook
+main "$@"

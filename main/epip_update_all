@@ -9,24 +9,30 @@ PY3_PACK_LIST="${_PACK_LIST_DIR}"/py3_pack_list
 SINGLE_TARGET_PACK_LIST="${_PACK_LIST_DIR}"/single_target_list
 SCRIPTNAME="$(basename "$0")"
 
-####################################################################
-##### PYTHON PACKAGE NOTES #########################################
-####################################################################
+###############################################################################
+##### PYTHON PACKAGE NOTES ####################################################
+###############################################################################
 # loguru:
 #   * my personal scripts use loguru
 # pygobject:
 #   * clipster dependency
-#   * required install of 'libgirepository1.0-dev' package on Debian
+#   * required install of 'libgirepository1.0-dev' and 'libcairo2-dev' packages
+#     on Debian.
 # tldextract:
 #   * qute-pass dependency
 # scalene:
 #   * CPU/Memory CLI profiling tool
-####################################################################
+###############################################################################
 EPIP_PY2_PACKAGES=(
     IPython
 )
 EPIP_PY3_PACKAGES=(
+    # --- My Projects
+    /home/bryan/projects/pylibs
+    pyfunky
+    # --- Everything Else
     IPython
+    pipx
     loguru
     pandas
     parameterized
@@ -42,7 +48,6 @@ EPIP_PY3_PACKAGES=(
     more-itertools
 )
 EPIP_SINGLE_TARGET_PACKAGES=(
-    scalene
 )
 
 function main() {
@@ -114,11 +119,13 @@ function clean_packs() {
             fi
 
             printf -- "----- Uninstalling %s\n" "${opack}"
-            for pyver in "${@}"; do
-                if ! python"${pyver}" -m pip uninstall -y "${opack}"; then
-                    status=1
-                fi
-            done
+            if confirm "# Do you really want to uninstall ${opack}?"; then
+                for pyver in "${@}"; do
+                    if ! python"${pyver}" -m pip uninstall -y "${opack}"; then
+                        status=1
+                    fi
+                done
+            fi
         fi
     done
 

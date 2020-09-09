@@ -1,0 +1,68 @@
+#!/bin/bash
+
+SCRIPTNAME="$(basename "$0")"
+
+
+function main() {
+    dir="$1"
+    shift
+
+    if [[ "${dir}" == "--next" ]]; then
+        other_dir=--prev
+    elif [[ "${dir}" == "--prev" ]]; then
+        other_dir=--next
+    else
+        1>&2 printf \
+            "usage: %s --next\n       %s --prev\n" \
+            "${SCRIPTNAME}" \
+            "${SCRIPTNAME}"
+        exit 2
+    fi
+
+    eval `xdotool getwindowgeometry --shell $(xdotool getactivewindow)`
+    orig_x=$X
+
+    og_wid_arr=()
+    while [[ "$(active_window_title)" != "Desktop" ]]; do
+        eval `xdotool getwindowgeometry --shell $(xdotool getactivewindow)`
+        if [[ $X -ne $orig_x ]] && ! [[ $X -eq 0 && $Y -eq 0 ]]; then
+            focus-monitor "${other_dir}"
+            continue
+        fi
+        orig_win_id="$(active_window_id)"
+        og_wid_arr=("${orig_win_id}" "${og_wid_arr[@]}")
+
+        xdo_wid="$(xdotool getactivewindow)"
+        minimize_window "${xdo_wid}"
+    done
+
+    if [[ "${#og_wid_arr[@]}" -eq 0 ]]; then
+        1>&2 printf "[ERROR] %s\n" "No window found on current monitor."
+        exit 1
+    fi
+
+    xdotool windowraise "${xdo_wid}"
+    focus-monitor "${dir}"
+
+    while [[ "$(active_window_title)" != "Desktop" ]]; do
+        if [[ -z "${first_other_wid}" ]]; then
+            first_other_wid="$(active_window_id)"
+        fi
+        move-to-monitor "${other_dir}"
+        focus-monitor "${dir}"
+    done
+
+    if [[ -n "${first_other_wid}" ]]; then
+        wmctrl -ia "${first_other_wid}"
+    fi
+
+    for og_wid in "${og_wid_arr[@]}"; do
+        wmctrl -ia "${og_wid}"
+        move-to-monitor "${dir}"
+    done
+}
+
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

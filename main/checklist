@@ -2,6 +2,9 @@
 
 set -e
 
+fname="$1"
+shift
+
 vim -c "goto 1" \
     -c "/^\[" \
     -c "nnoremap <nowait> x :normal 0lclX<Esc>/^\[ \]<CR>" \
@@ -10,6 +13,8 @@ vim -c "goto 1" \
     -c "nnoremap <Leader><Space> :%s/\[.\]/[ ]/g<CR>gg/^\[<CR>" \
     -c "nnoremap <nowait> [ ?\[<CR>" \
     -c "nnoremap <nowait> ] /\[<CR>" \
-    "$1"
+    "$@" \
+    "${fname}"
 
-perl -i -nE 'print s/\[.\]/[ ]/gr' "$1"
+perl 1>&2 -nE 'print if /^\[/' "${fname}"
+perl -i -nE 'print s/\[.\]/[ ]/gr' "${fname}"

@@ -133,9 +133,9 @@ main() {
     while true; do
         TL=$(time_left)
         if [[ $TL -ge 3600 ]]; then
-            printf "<fc=$GREY>  %d:%02d:%02d$iclock</fc>  |  \n" $((TL/3600)) $((TL%3600/60)) $((TL%3600%60)) > "$FIFO"
+            printf "<fc=$GREY>  %d:%02d:%02d$iclock</fc>\n" $((TL/3600)) $((TL%3600/60)) $((TL%3600%60)) > "$FIFO"
         else
-            printf "<fc=$GREY>  %d:%02d$iclock</fc>  |  \n" $((TL/60)) $((TL%60)) > "$FIFO"
+            printf "<fc=$GREY>  %d:%02d$iclock</fc>\n" $((TL/60)) $((TL%60)) > "$FIFO"
         fi
 
         sleep 1

@@ -36,7 +36,7 @@ class TestSuntimes(unittest.TestCase):
     ) -> None:
         html_path = DATA_DIR / f"{html_basename}.html"
         soup = BeautifulSoup(html_path.read_text(), "lxml")
-        time_string_result = suntimes.get_ts_from_google_search(
+        time_string_result = suntimes._get_ts_from_google_search(
             soup, rise_or_set
         )
 

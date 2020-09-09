@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [[ -n "$1" ]]; then
+    wid="$1"
+    shift
+else
+    wid=$(xdotool getactivewindow)
+fi
+
+xdotool windowminimize "${wid}"

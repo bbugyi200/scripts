@@ -12,19 +12,21 @@ function main() {
 
         last_window="$(cat "${LAST_WINDOW_FILE}")"
         if [[ "$(window_count)" -ge 1 ]]; then
-            active_window_title >"${LAST_WINDOW_FILE}"
+            active_title_or_class >"${LAST_WINDOW_FILE}"
         fi
 
         log "Focusing last known active winodw: %s" "${last_window}"
-        wmctrl -a "${last_window}"
+        if ! wmctrl -a "${last_window}"; then
+            wmctrl -x -a "${last_window}"
+        fi
     else
         orig_desk_id="$(active_desktop_id)"
-        orig_window_title="$(active_window_title)"
+        orig_window_title_or_class="$(active_title_or_class)"
 
         run "$@"
 
         if [[ "$(active_desktop_id)" != "${orig_desk_id}" ]]; then
-            echo "${orig_window_title}" >"${LAST_WINDOW_FILE}"
+            echo "${orig_window_title_or_class}" >"${LAST_WINDOW_FILE}"
         fi
     fi
 }
@@ -32,6 +34,14 @@ function main() {
 function log() {
     printf "PID:%s | [%s] | " $$ "$(date +"%Y-%m-%d %H:%M:%S")" | tee -a "${LOG_FILE}"
     printf "$1\n" "${@:2}" | tee -a "${LOG_FILE}"
+}
+
+function active_title_or_class() {
+    result="$(active_window_title)"
+    if [[ -z "${result}" ]]; then
+        result="$(active_window_class)"
+    fi
+    echo "${result}"
 }
 
 function run() {
@@ -88,7 +98,7 @@ function run() {
     fi
 
     log "Using '%s' command to start application." "${window_cmd}"
-    ${window_cmd}
+    ${window_cmd} &
 }
 
 function fix_focus_bug() {

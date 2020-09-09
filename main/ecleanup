@@ -8,12 +8,6 @@ source gutils.sh
 source /home/bryan/Sync/bin/main/emaint.sh
 
 # ---------- Main Logic ----------
-if [[ "$(hostname)" == "athena" ]]; then
-    econfirm "efixsets"
-    econfirm "sudo eclean --deep distfiles"
-    econfirm -p "Review packages in @world" "vim /etc/portage/sets/shared /etc/portage/sets/*"
-fi
-
 D="/home/bryan/.local/share/Trash/files"
 econfirm -p "Delete all files in your Trash" "sudo rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 

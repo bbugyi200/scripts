@@ -1,47 +1,57 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """Navigate Windows on Current Desktop"""
 
-import datetime as dt  # noqa: F401
-import os  # noqa: F401
-import subprocess as sp  # noqa: F401
-import sys  # noqa: F401
+import argparse
+import os
+import sys
 
 import gutils
 
 
-from loguru import logger as log
+from loguru import logger as log  # pylint: disable=unused-import
+
 scriptname = os.path.basename(os.path.realpath(__file__))
 
-@gutils.catch
-def main(args):
-    hostname = gutils.shell('hostname')
-    if hostname == 'athena':
-        if args.direction == 'next':
-            gutils.shell('xdotool key super+d')
-        else:
-            gutils.shell('xdotool key super+u')
 
+@gutils.catch
+def main(args: argparse.Namespace) -> None:
+    hostname = gutils.shell("hostname")
+    if hostname == "athena":
+        if args.direction == "next":
+            key = "d"
+        else:
+            key = "u"
+
+        cmd = f"xdotool key super+{key}"
+        os.system(cmd)
         sys.exit(0)
 
-    active_desktop_id = gutils.shell('active_desktop_id')
-    window_stack = gutils.shell("wmctrl -l | awk '$2=={} {{print $1}}'".format(active_desktop_id)).split()
+    active_desktop_id = gutils.shell("active_desktop_id")
+    window_stack = gutils.shell(
+        "wmctrl -l | awk '$2=={} {{print $1}}'".format(active_desktop_id)
+    ).split()
 
-    active_window_id = gutils.shell('active_window_id')
+    active_window_id = gutils.shell("active_window_id")
     old_index = window_stack.index(active_window_id)
 
-    inc = 1 if args.direction == 'next' else -1
+    inc = 1 if args.direction == "next" else -1
     new_index = (old_index + inc) % len(window_stack)
 
     new_window_xid = window_stack[new_index]
-    gutils.shell('wmctrl -i -a {}'.format(new_window_xid))
+    gutils.shell("wmctrl -i -a {}".format(new_window_xid))
 
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('direction', choices=['next', 'prev'],
-                        help='Go to next or previous window?')
-    args = parser.parse_args()
+    parser.add_argument(
+        "direction",
+        choices=["next", "prev"],
+        help="Go to next or previous window?",
+    )
+    ARGS = parser.parse_args()
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+    gutils.logging.configure(
+        __file__, debug=ARGS.debug, verbose=ARGS.verbose
+    )
+    main(ARGS)

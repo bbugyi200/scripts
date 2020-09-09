@@ -69,6 +69,7 @@ fi
 econfirm_if_cmd_exists "snap" "sudo snap refresh"
 econfirm_if_cmd_exists "npm" "sudo npm update --force -g"
 econfirm_if_cmd_exists "rustup" "rustup update"
+econfirm_if_cmd_exists "cargo" "cargo install-update -a"
 econfirm_if_cmd_exists "pipx" "pipx upgrade-all"
 econfirm "epip_update_all"
 econfirm "vim +PluginUpdate +qall"

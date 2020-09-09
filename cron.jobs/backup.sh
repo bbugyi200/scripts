@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/bash
 
 ###############################################################################
 #  Shared backup functions used by cron backup scripts.                       #
@@ -8,8 +8,7 @@ set -e
 
 export DEFAULT_R=4
 
-BACKUP_DIR=/media/bryan/hercules/backup
-KCONF_DIR="${BACKUP_DIR}"/kernel_configs
+BACKUP_DIR=/mnt/hercules/backup
 MAX_R=10
 RM=/bin/rm
 
@@ -33,9 +32,14 @@ ERR_MSGS=()
 ETBB="${ETBB}"
 
 function backup() {
-    local from="$1"; shift
-    local to="$1"; shift
-    local R="$1"; shift
+    local from="$1"
+    shift
+
+    local to="$1"
+    shift
+
+    local R="$1"
+    shift
 
     if [[ "${from}" != *"/" ]]; then
         from="${from}"/
@@ -50,7 +54,7 @@ function backup() {
         EC=$((EC | NO_ETBB_ERROR))
         ERR_MSGS+=("The ETBB environment variable was NOT defined while running a $(basename "${to}") backup of ${from%/*}.")
 
-        ETBB=$((60 * 60 * 24 * 365 * 10))  # seconds in 10 years
+        ETBB=$((60 * 60 * 24 * 365 * 10)) # seconds in 10 years
     fi
 
     if [[ -f "${to}"/backup.txt ]]; then
@@ -85,9 +89,14 @@ function backup_home() {
 function _backup() {
     BACKUP_ERROR=0
 
-    local from="$1"; shift
-    local to="$1"; shift
-    local R="$1"; shift
+    local from="$1"
+    shift
+
+    local to="$1"
+    shift
+
+    local R="$1"
+    shift
 
     if [[ "${R}" -lt 1 ]]; then
         # No backup should be performed. This allows calls to the backup()
@@ -113,7 +122,7 @@ function _backup() {
     r=$((R + 1))
     while [[ "${r}" -le "${MAX_R}" ]]; do
         D="${to}"-"${r}"
-        [[ -d "${D}" ]] && "${RM}" -rf "${D}"  # SLOW
+        [[ -d "${D}" ]] && "${RM}" -rf "${D}" # SLOW
         r=$((r + 1))
     done
 
@@ -124,13 +133,13 @@ function _backup() {
     # will occur if, for example, the machine reboots while the
     # `rm -rf ${to}-${R}` command is being run (see the bottom of this
     # function).
-    find "$(dirname "${_to}")" -maxdepth 1 -type d -name "$(basename "${_to}")*" -exec "${RM}" -rf {} \;  # SLOW
+    find "$(dirname "${_to}")" -maxdepth 1 -type d -name "$(basename "${_to}")*" -exec "${RM}" -rf {} \; # SLOW
 
     # Since `cp` commands are much slower than `mv` commands, we copy this
     # directory here--with the full expectation that the system MAY reboot
     # while this command is running--and then place a corresponding `mv`
     # command in the atomic block below (which should run much faster).
-    cp -p -r -f "${to}" "${_to}"  # SLOW
+    cp -p -r -f "${to}" "${_to}" # SLOW
 
     # All files/directories added to this array will be deleted at the end of
     # this function.
@@ -140,9 +149,9 @@ function _backup() {
     # reboot while this command is running. This is not desirable, but should
     # not be catastrophic either (i.e. it should not corrupt this backup).
     f_rsync_stderr="$(mktemp /tmp/rsync-XXX.err)"
-    if rsync -av --delete --delete-excluded "${@}" "${from}" "${_to}" 2> "${f_rsync_stderr}"; then  # SLOW
+    if rsync -av --delete --delete-excluded "${@}" "${from}" "${_to}" >/dev/null 2>"${f_rsync_stderr}"; then # SLOW
         DELETE_LATER+=("${f_rsync_stderr}")
-        date +%s > "${_to}"/backup.txt
+        date +%s >"${_to}"/backup.txt
     else
         BACKUP_ERROR=$((BACKUP_ERROR | RSYNC_ERROR))
         ERR_MSGS+=("While running a $(basename "${to}") backup of ${from%/*}, rsync failed with the following error(s):\n$(cat "${f_rsync_stderr}")")
@@ -172,13 +181,13 @@ function _backup() {
         DELETE_LATER+=("${tmp_dir}")
 
         mv "${to}"-"${R}" "${tmp_dir}"
-        
+
         r="${R}"
         while [[ "${r}" -gt 2 ]]; do
             mv "${to}"-$((r - 1)) "${to}"-"${r}"
             r=$((r - 1))
         done
-        
+
         mv "${to}" "${to}"-2
         mv "${_to}" "${to}"
     else
@@ -195,30 +204,12 @@ function _backup() {
     fi
 
     for f in "${DELETE_LATER[@]}"; do
-        "${RM}" -rf "${f}"  # SLOW
+        "${RM}" -rf "${f}" # SLOW
     done
 }
 
 function _time() {
     echo $(($(date +%s%N) / 1000000))
-}
-
-function backup_kernel_config() {
-    local P="$1"; shift
-
-    [[ -d "${KCONF_DIR}" ]] || mkdir -p "${KCONF_DIR}"
-
-    /bin/cp -f /usr/src/linux/.config "${KCONF_DIR}"/"${P}"-"$(date +%Y%m%d%H%M%S)"-"$(uname -r)".config
-
-    KMAX=5
-    if [[ "$(_find_kconfigs "${P}" | wc -l)" -gt "${KMAX}" ]]; then
-        _find_kconfigs "${P}" | sort -u | head -n -"${KMAX}" | xargs "${RM}"
-    fi
-}
-
-function _find_kconfigs() {
-    local P="$1"; shift
-    find "${KCONF_DIR}" -type f -name "${P}*"
 }
 
 function post_backup_hook() {

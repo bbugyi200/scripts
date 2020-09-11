@@ -1,0 +1,446 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ALL_DOCS_CACHE_FILE	zathura/zopen.py	/^ALL_DOCS_CACHE_FILE = _XDG_DATA_DIR \/ 'all_docs'$/;"	v
+ARGS_FILE	main/libtorrent/app.py	/^ARGS_FILE = gutils.xdg.init("data") \/ "args"$/;"	v
+ATTEMPT_LIMIT	main/rfuncs/authenticator.py	/^ATTEMPT_LIMIT = 10$/;"	v
+ATTEMPT_PERIOD	main/rfuncs/authenticator.py	/^ATTEMPT_PERIOD = 10  # In minutes$/;"	v
+AccessRecord	main/rfuncs/types.py	/^class AccessRecord(NamedTuple):$/;"	c
+AnyStr	main/rfuncs/types.py	/^AnyStr = Union[str, bytes]$/;"	v
+Arguments	gentoo/ebvcheck.py	/^class Arguments(NamedTuple):$/;"	c
+Arguments	main/epip_install.py	/^Arguments = NamedTuple($/;"	v
+Arguments	main/filter_kern_prof.py	/^class Arguments(NamedTuple):$/;"	c
+Arguments	main/libtorrent/app.py	/^class Arguments(NamedTuple):$/;"	c
+Arguments	main/pydef.py	/^class Arguments(NamedTuple):$/;"	c
+Arguments	main/rfuncs/server.py	/^class Arguments(NamedTuple):$/;"	c
+Arguments	main/suntimes.py	/^class Arguments(NamedTuple):$/;"	c
+Arguments	xmonad/poll_weather.py	/^class Arguments(NamedTuple):$/;"	c
+Arguments	zathura/zopen.py	/^class Arguments(NamedTuple):$/;"	c
+AuthStatus	main/rfuncs/types.py	/^class AuthStatus(enum.Enum):$/;"	c
+Authenticator	main/rfuncs/authenticator.py	/^class Authenticator:$/;"	c
+BOOKS_DIR	zathura/zopen.py	/^BOOKS_DIR = "\/home\/bryan\/Sync\/var\/books"$/;"	v
+C	tests/data/google_sunrise_search__20200813.html	/^function C(){w=null;if(x){var a="\/complete\/search?client=heirloom-srp&hl="+hl+"&json=t&callback=hS&q="+encodeURIComponent(x);"undefined"!==typeof ds&&ds&&(a+="&ds="+ds);var c=document.createElement("script");c.src=a;if(null===e)a:{a=b.document;if((a=a.querySelector&&a.querySelector("script[nonce]"))&&(a=a.nonce||a.getAttribute("nonce"))&&d.test(a)){e=a;break a}e=""}(a=e)&&c.setAttribute("nonce",a);document.body.appendChild(c);x=null;w=setTimeout(C,500)}}$/;"	f
+C	tests/data/google_sunset_search__20200813.html	/^function C(){w=null;if(x){var a="\/complete\/search?client=heirloom-srp&hl="+hl+"&json=t&callback=hS&q="+encodeURIComponent(x);"undefined"!==typeof ds&&ds&&(a+="&ds="+ds);var c=document.createElement("script");c.src=a;if(null===e)a:{a=b.document;if((a=a.querySelector&&a.querySelector("script[nonce]"))&&(a=a.nonce||a.getAttribute("nonce"))&&d.test(a)){e=a;break a}e=""}(a=e)&&c.setAttribute("nonce",a);document.body.appendChild(c);x=null;w=setTimeout(C,500)}}$/;"	f
+D	tests/data/google_sunrise_search__20200813.html	/^function D(){for(;n.firstChild;)n.removeChild(n.firstChild);r=[];t=-1;z(!1)}function E(){var a=n.querySelector(".scs");a&&(a.className="");0<=t?(a=n.childNodes[t],a.className="scs",q=a.textContent):q=u;l.value=q}l.addEventListener("focus",function(){f&&(f.style.display="none")},!1);l.addEventListener("blur",function(){D();f&&(f.style.display="")},!1);l.addEventListener("keyup",function(a){q=l.value;y=!1;13==a.which?A():27==a.which?(D(),f&&(f.style.display=""),q=u,l.value=q):40==a.which?(t++,t>=r.length&&(t=-1),E()):38==a.which?(t--,-1>t&&(t=r.length-1),E()):(a=q)?(p&&(p.style.display=""),x=a,w||C(),u=a):(p&&(p.style.display="none"),z(!1),D(),u="",y=!0)},!1);m.addEventListener("click",A,!1);p.addEventListener("click",function(){l.value="";p.style.display="none";z(!1)},!1);k.addEventListener("click",function(){l.focus()},!1);window.hS=function(a){if(!y){D();0==a[1].length&&z(!1);for(var c=0;c<a[1].length;c++){var h=a[1][c][0],v=document.createElement("div");v.innerHTML=h;v.addEventListener("mousedown",function(B){B.preventDefault();return!1},!1);h=h.replace(\/<\\\/?b>\/g,"");v.addEventListener("click",function(B){return function(){t=B;A();E();D();g.submit()}}(c),!1);n.appendChild(v);z(!0);r.push(h)}}};}).call(this);})();(function(){$/;"	f
+D	tests/data/google_sunset_search__20200813.html	/^function D(){for(;n.firstChild;)n.removeChild(n.firstChild);r=[];t=-1;z(!1)}function E(){var a=n.querySelector(".scs");a&&(a.className="");0<=t?(a=n.childNodes[t],a.className="scs",q=a.textContent):q=u;l.value=q}l.addEventListener("focus",function(){f&&(f.style.display="none")},!1);l.addEventListener("blur",function(){D();f&&(f.style.display="")},!1);l.addEventListener("keyup",function(a){q=l.value;y=!1;13==a.which?A():27==a.which?(D(),f&&(f.style.display=""),q=u,l.value=q):40==a.which?(t++,t>=r.length&&(t=-1),E()):38==a.which?(t--,-1>t&&(t=r.length-1),E()):(a=q)?(p&&(p.style.display=""),x=a,w||C(),u=a):(p&&(p.style.display="none"),z(!1),D(),u="",y=!0)},!1);m.addEventListener("click",A,!1);p.addEventListener("click",function(){l.value="";p.style.display="none";z(!1)},!1);k.addEventListener("click",function(){l.focus()},!1);window.hS=function(a){if(!y){D();0==a[1].length&&z(!1);for(var c=0;c<a[1].length;c++){var h=a[1][c][0],v=document.createElement("div");v.innerHTML=h;v.addEventListener("mousedown",function(B){B.preventDefault();return!1},!1);h=h.replace(\/<\\\/?b>\/g,"");v.addEventListener("click",function(B){return function(){t=B;A();E();D();g.submit()}}(c),!1);n.appendChild(v);z(!0);r.push(h)}}};}).call(this);})();(function(){$/;"	f
+DATA_DIR	tests/test_suntimes.py	/^DATA_DIR = Path(__file__).parent \/ "data"$/;"	v
+DENIED	main/rfuncs/types.py	/^    DENIED = "DENIED"$/;"	v	class:AuthStatus
+DOC_PTTRN	zathura/zopen.py	/^DOC_PTTRN = rf'.*\\.{_DOC_FILE_EXT_GROUP}'$/;"	v
+Environ	main/rfuncs/types.py	/^Environ = Mapping[str, Any]$/;"	v
+Errors	main/rfuncs/routes.py	/^class Errors:$/;"	c
+FIFO	main/umpv.py	/^FIFO = "{}\/fifo".format(gutils.xdg.init("runtime"))$/;"	v
+GRANTED	main/rfuncs/types.py	/^    GRANTED = "GRANTED"$/;"	v	class:AuthStatus
+INVALID_TRACKER_KEY	main/libtorrent/worker.py	/^    INVALID_TRACKER_KEY = -1$/;"	v	class:_TorrentWorker
+KeyFunc	gentoo/ebvcheck.py	/^KeyFunc = Callable[[str], float]$/;"	v
+MAX_MOST_RECENT_DOCS	zathura/zopen.py	/^MAX_MOST_RECENT_DOCS = 100$/;"	v
+MOST_RECENT_CACHE_FILE	zathura/zopen.py	/^MOST_RECENT_CACHE_FILE = _XDG_DATA_DIR \/ 'recently_opened_docs'$/;"	v
+MagnetTracker	main/libtorrent/tracker.py	/^class MagnetTracker:$/;"	c
+MessageManager	gentoo/ebvcheck.py	/^class MessageManager:$/;"	c
+MutableEnviron	main/rfuncs/types.py	/^MutableEnviron = MutableMapping[str, Any]$/;"	v
+PLAIN_HEADER	main/rfuncs/routes.py	/^PLAIN_HEADER = [("Content-type", "text\/plain")]$/;"	v
+POpenError	gentoo/ebvcheck.py	/^class POpenError(Exception):$/;"	c
+PathDispatcher	main/rfuncs/path_dispatcher.py	/^class PathDispatcher:$/;"	c
+PathLike	zathura/zopen.py	/^PathLike = Union[str, Path]$/;"	v
+PkgContainer	gentoo/ebvcheck.py	/^class PkgContainer:$/;"	c
+Protocol	main/rfuncs/types.py	/^    Protocol = object  # type: ignore$/;"	v
+REPOLOGY	gentoo/ebvcheck.py	/^REPOLOGY = "https:\/\/repology.org\/api\/v1\/{}".format$/;"	v
+REPOLOGY_PROJECT_MAP	gentoo/ebvcheck.py	/^REPOLOGY_PROJECT_MAP = {$/;"	v
+REPOLOGY_REPO_MAP	gentoo/ebvcheck.py	/^REPOLOGY_REPO_MAP = {"dev-python\/tldr-python-client": "arch"}$/;"	v
+RepologyProject	gentoo/ebvcheck.py	/^RepologyProject = List[Dict[str, str]]$/;"	v
+RepologyProjectGroup	gentoo/ebvcheck.py	/^RepologyProjectGroup = Dict[str, RepologyProject]$/;"	v
+Response	main/rfuncs/client.py	/^    Response = object  # type: ignore$/;"	v
+Rise	main/suntimes.py	/^    Rise = "rise"$/;"	v	class:RiseOrSet
+RiseOrSet	main/suntimes.py	/^class RiseOrSet(enum.Enum):$/;"	c
+Route	main/rfuncs/types.py	/^Route = Callable[[Environ, 'StartResponse'], Iterable[AnyStr]]$/;"	v
+RouteMap	main/rfuncs/types.py	/^RouteMap = Dict[Tuple[str, str], Route]$/;"	v
+RouteRegistry	main/rfuncs/route_registry.py	/^class RouteRegistry:$/;"	c
+S	tests/.old_tests/test_red_robot.py	/^S = importlib.util.module_from_spec(spec)$/;"	v
+SUSPENDED	main/rfuncs/types.py	/^    SUSPENDED = "SUSPENDED"$/;"	v	class:AuthStatus
+Set	main/suntimes.py	/^    Set = "set"$/;"	v	class:RiseOrSet
+StartResponse	main/rfuncs/types.py	/^class StartResponse(Protocol):$/;"	c
+TestSuntimes	tests/test_suntimes.py	/^class TestSuntimes(unittest.TestCase):$/;"	c
+TestUmpv	tests/test_umpv.py	/^class TestUmpv(unittest.TestCase):$/;"	c
+TestZopen	tests/test_zopen.py	/^class TestZopen(unittest.TestCase):$/;"	c
+USER_AGENT	main/suntimes.py	/^USER_AGENT = {$/;"	v
+UStack	main/ustack.py	/^class UStack:$/;"	c
+WErr	main/suntimes.py	/^WErr = init_err_helper(WebScrapingError)$/;"	v
+WResult	main/suntimes.py	/^WResult = Result[_T, WebScrapingError]$/;"	v
+WebScrapingError	main/suntimes.py	/^class WebScrapingError(Exception):$/;"	c
+_DOC_FILE_EXTS	zathura/zopen.py	/^_DOC_FILE_EXTS = ("pdf", "epub", "djvu", "ps", "okular")$/;"	v
+_DOC_FILE_EXT_GROUP	zathura/zopen.py	/^_DOC_FILE_EXT_GROUP = r"\\({}\\)".format(r"\\|".join(_DOC_FILE_EXTS))$/;"	v
+_OptExcInfo	main/rfuncs/types.py	/^    _OptExcInfo = object  # type: ignore$/;"	v
+_T	main/suntimes.py	/^_T = TypeVar("_T")$/;"	v
+_TorrentWorker	main/libtorrent/worker.py	/^class _TorrentWorker:$/;"	c
+_XDG_DATA_DIR	zathura/zopen.py	/^_XDG_DATA_DIR = gutils.xdg.init('data')$/;"	v
+__call__	main/libtorrent/worker.py	/^    def __call__(self) -> None:$/;"	m	class:_TorrentWorker	file:
+__call__	main/rfuncs/path_dispatcher.py	/^    def __call__($/;"	m	class:PathDispatcher	file:
+__call__	main/rfuncs/types.py	/^    def __call__($/;"	m	class:StartResponse	file:
+__getitem__	main/libtorrent/tracker.py	/^    def __getitem__(self, i: int) -> str:$/;"	m	class:MagnetTracker	file:
+__init__	gentoo/ebvcheck.py	/^    def __init__(self) -> None:$/;"	m	class:MessageManager
+__init__	gentoo/ebvcheck.py	/^    def __init__(self) -> None:$/;"	m	class:PkgContainer
+__init__	main/libtorrent/tracker.py	/^    def __init__(self) -> None:$/;"	m	class:MagnetTracker
+__init__	main/libtorrent/worker.py	/^    def __init__(self, magnet: str, download_dir: Path, timeout: float):$/;"	m	class:_TorrentWorker
+__init__	main/rfuncs/authenticator.py	/^    def __init__(self, server_token: str) -> None:$/;"	m	class:Authenticator
+__init__	main/rfuncs/path_dispatcher.py	/^    def __init__(self, server_token: str, route_map: RouteMap) -> None:$/;"	m	class:PathDispatcher
+__init__	main/rfuncs/route_registry.py	/^    def __init__(self) -> None:$/;"	m	class:RouteRegistry
+__init__	main/ustack.py	/^    def __init__(self):$/;"	m	class:UStack
+__str__	main/rfuncs/types.py	/^    def __str__(self) -> str:$/;"	m	class:AuthStatus	file:
+__str__	main/suntimes.py	/^    def __str__(self) -> str:$/;"	m	class:RiseOrSet	file:
+_add_tw_env_var	tests/test_my_twmail_hook.py	/^def _add_tw_env_var(var, val):$/;"	f
+_backup	cron.jobs/backup.sh	/^function _backup() {$/;"	f
+_build_email	main/pymail.py	/^def _build_email(to: str, subject: str, body: Sequence[str]) -> str:$/;"	f
+_clean_packs	main/epip_update_all	/^function _clean_packs() {$/;"	f
+_enqueue_download	main/libtorrent/worker.py	/^    def _enqueue_download(self) -> None:$/;"	m	class:_TorrentWorker
+_ensure_pack_list_file	main/epip_update_all	/^function _ensure_pack_list_file() {$/;"	f
+_exit_handler	cron.jobs/jobs.sh	/^function _exit_handler() {$/;"	f
+_format_date	tests/test_my_twmail_hook.py	/^def _format_date(date_dt):$/;"	f
+_function_line_list_key	main/filter_kern_prof.py	/^def _function_line_list_key(function_lines: Sequence[str]) -> float:$/;"	f
+_fuzzy_key	gentoo/ebvcheck.py	/^    def _fuzzy_key(P: str) -> float:$/;"	f	function:fuzzy_key
+_get_body	tests/test_my_twmail_hook.py	/^def _get_body(twargs, description):$/;"	f
+_get_client_address	main/rfuncs/path_dispatcher.py	/^def _get_client_address(environ: Environ) -> str:$/;"	f
+_get_soup	main/suntimes.py	/^def _get_soup(url: str) -> BeautifulSoup:$/;"	f
+_get_subs	main/videos.py	/^def _get_subs():$/;"	f
+_get_ts_from_google_search	main/suntimes.py	/^def _get_ts_from_google_search($/;"	f
+_get_videos	main/videos.py	/^def _get_videos():$/;"	f
+_install_packs	main/epip_update_all	/^function _install_packs() {$/;"	f
+_kill_worker	main/libtorrent/worker.py	/^def _kill_worker(ID: str) -> None:$/;"	f
+_maybe_activate_pyenv	main/epip_update_all	/^function _maybe_activate_pyenv() {$/;"	f
+_open_document	zathura/zopen.py	/^def _open_document($/;"	f
+_parse_info	main/libtorrent/worker.py	/^def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:$/;"	f
+_register	main/rfuncs/route_registry.py	/^        def _register(route: Route) -> Route:$/;"	f	function:RouteRegistry.register
+_rofi_cmd_fmt	main/videos.py	/^_rofi_cmd_fmt = 'rofi -p {} -m -4 -width 90 -dmenu -i'$/;"	v
+_run_rsync	main/do_external_backup	/^function _run_rsync() {$/;"	f
+_save	main/ustack.py	/^    def _save(self):$/;"	m	class:UStack
+_setImagesSrc	tests/data/google_sunrise_search__20200813.html	/^   function _setImagesSrc(e,d){function f(a){a.onerror=function(){a.style.display="none"};a.src=d;a.setAttribute("data-deferred",2)}for(var g=0,b=void 0;b=e[g++];){var c=document.getElementById(b)||document.querySelector('img[data-iid="'+b+'"]');c?(google.c&&google.c.g&&google.c.a&&google.c.a(c),f(c)):(google.iir=google.iir||{},google.iir[b]=d)}}window.google=window.google||{};$/;"	f
+_set_body	tests/test_my_twmail_hook.py	/^def _set_body(twargs, description):$/;"	f
+_show	main/fsinfo	/^function _show() {$/;"	f
+_time	cron.jobs/backup.sh	/^function _time() {$/;"	f
+act_time	xmonad/poll-hamster	/^        act_time = "0.0h"$/;"	v
+act_time	xmonad/poll-hamster	/^        act_time = reg.search(ham_search_act).groups()[0]$/;"	v
+active_title_or_class	debian/debian-launcher	/^function active_title_or_class() {$/;"	f
+activity	xmonad/poll-hamster	/^    activity = current[:current.find("@")]$/;"	v
+add	gentoo/ebvcheck.py	/^    def add(self, pkg: str) -> int:$/;"	m	class:PkgContainer
+add_arraysub_element	main/subedit	/^	add_arraysub_element ()$/;"	f
+add_header	main/notepad	/^add_header() {$/;"	f
+add_to_mr_cache	zathura/zopen.py	/^def add_to_mr_cache($/;"	f
+add_tw_env_vars	tests/test_my_twmail_hook.py	/^def add_tw_env_vars(env_dict):$/;"	f
+adjust_time	main/subedit	/^adjust_time ()$/;"	f
+adjust_time_v2	main/subedit	/^adjust_time_v2 ()$/;"	f
+all_pkey_files	main/ssh-add-all	/^function all_pkey_files() {$/;"	f
+all_repology_projects	gentoo/ebvcheck.py	/^def all_repology_projects(search: str) -> RepologyProjectGroup:$/;"	f
+b	tests/data/google_sunrise_search__20200813.html	/^function b(a){for(a=a.target||a.srcElement;a&&"A"!=a.nodeName;)a=a.parentElement;a&&(a.href||"").match(\/\\\/search.*[?&]tbm=isch\/)&&(a.href+="&biw="+document.documentElement.clientWidth,a.href+="&bih="+document.documentElement.clientHeight)}document.addEventListener("click",b,!1);document.addEventListener("touchStart",b,!1);}).call(this);$/;"	f
+b	tests/data/google_sunset_search__20200813.html	/^function b(a){for(a=a.target||a.srcElement;a&&"A"!=a.nodeName;)a=a.parentElement;a&&(a.href||"").match(\/\\\/search.*[?&]tbm=isch\/)&&(a.href+="&biw="+document.documentElement.clientWidth,a.href+="&bih="+document.documentElement.clientHeight)}document.addEventListener("click",b,!1);document.addEventListener("touchStart",b,!1);}).call(this);$/;"	f
+backup	cron.jobs/backup.sh	/^function backup() {$/;"	f
+backup_home	cron.jobs/backup.sh	/^function backup_home() {$/;"	f
+badauth_401	main/rfuncs/routes.py	/^    def badauth_401($/;"	m	class:Errors
+bar	main/fsinfo	/^function bar() {$/;"	f
+basic_clean_up	main/subedit	/^basic_clean_up ()$/;"	f
+change_fps	main/subedit	/^change_fps ()$/;"	f
+change_owner	gentoo/epatch	/^function change_owner() {$/;"	f
+check	main/rfuncs/authenticator.py	/^    def check(self, client_addr: str, client_token: str) -> AuthStatus:$/;"	m	class:Authenticator
+check_file	main/subedit	/^check_file ()$/;"	f
+check_path_exists	gentoo/epatch	/^function check_path_exists() {$/;"	f
+check_pending	gentoo/ebvcheck.py	/^    def check_pending(self) -> None:$/;"	m	class:MessageManager
+check_pkg	gentoo/ebvcheck.py	/^def check_pkg(  # noqa: C901$/;"	f
+check_srt	main/subedit	/^check_srt ()$/;"	f
+check_srt_and_sub	main/subedit	/^check_srt_and_sub ()$/;"	f
+check_sub	main/subedit	/^check_sub ()$/;"	f
+choose_doc_to_open	zathura/zopen.py	/^def choose_doc_to_open(available_docs: Iterable[PathLike]) -> Optional[Path]:$/;"	f
+chown_log_files	cron.jobs/cron.daily/daily_jobs	/^function chown_log_files() {$/;"	f
+clean_all_packs	main/epip_update_all	/^function clean_all_packs() {$/;"	f
+clean_trash	main/subedit	/^clean_trash ()$/;"	f
+clear_last_notify	main/do_external_backup	/^function clear_last_notify() {$/;"	f
+confirm_run_sync	main/do_external_backup	/^function confirm_run_sync() {$/;"	f
+create_pidfile	main/libtorrent/app.py	/^def create_pidfile(args: Arguments) -> None:$/;"	f
+current	xmonad/poll-hamster	/^    current = ' '.join(current.split()[2:])$/;"	v
+current	xmonad/poll-hamster	/^current = popen("hamster current").read()$/;"	v
+day_time	xmonad/poll-hamster	/^    day_time = "0.0h"$/;"	v
+day_time	xmonad/poll-hamster	/^    day_time = reg.search(ham_list_day).groups()[0]$/;"	v
+default_hostname	main/rfuncs/client.py	/^def default_hostname() -> str:$/;"	f
+default_port	main/rfuncs/client.py	/^def default_port() -> int:$/;"	f
+default_token	main/rfuncs/client.py	/^def default_token() -> str:$/;"	f
+delete_HI	main/subedit	/^delete_HI ()$/;"	f
+demote_open_docs	zathura/zopen.py	/^def demote_open_docs($/;"	f
+dir_is_empty	main/do_external_backup	/^function dir_is_empty() {$/;"	f
+done	main/libtorrent/tracker.py	/^    def done(self) -> None:$/;"	m	class:MagnetTracker
+download_torrent	main/libtorrent/worker.py	/^    def download_torrent(self) -> None:$/;"	m	class:_TorrentWorker
+dp_completed	tests/.old_tests/test_red_robot.py	/^dp_completed = '\/tmp\/red_robot\/completed'$/;"	v
+dp_pending	tests/.old_tests/test_red_robot.py	/^dp_pending = '\/tmp\/red_robot\/pending'$/;"	v
+econfirm	main/emaint.sh	/^function econfirm() {$/;"	f
+econfirm_if_cmd_exists	main/eupdate	/^function econfirm_if_cmd_exists() {$/;"	f
+env_dict	tests/test_my_twmail_hook.py	/^def env_dict():$/;"	f
+exit_handler	main/alarm	/^exit_handler() {$/;"	f
+exit_handler	main/perms	/^function exit_handler() {$/;"	f
+exit_handler	main/pyprof	/^function exit_handler() {$/;"	f
+expected_values	tests/.old_tests/test_poll_timew.py	/^expected_values = [$/;"	v
+find_text	main/subedit	/^find_text ()$/;"	f
+fix_common_errors	main/subedit	/^fix_common_errors ()$/;"	f
+fix_focus_bug	debian/debian-launcher	/^function fix_focus_bug() {$/;"	f
+fix_srt_subtitles	main/subedit	/^		fix_srt_subtitles ()$/;"	f
+fix_sub_subtitles	main/subedit	/^		fix_sub_subtitles ()$/;"	f
+fix_vim_layout	tmux/tm-select-pane	/^function fix_vim_layout() {$/;"	f
+focus	tmux/tmux_view.sh	/^function focus() {$/;"	f
+format_report	xmonad/poll_weather.py	/^def format_report($/;"	f
+fuzzy_key	gentoo/ebvcheck.py	/^def fuzzy_key(pkg: str) -> KeyFunc:$/;"	f
+fuzzy_match	gentoo/ebvcheck.py	/^def fuzzy_match(S: str, T: str) -> float:$/;"	f
+get	main/videos.py	/^def get(opt):$/;"	f
+getDocFiles	main/LangDoc	/^function getDocFiles() {$/;"	f
+getNextWord	main/LangDoc	/^function getNextWord() {$/;"	f
+get_all_docs	zathura/zopen.py	/^def get_all_docs(*, use_cache: bool) -> List[Path]:$/;"	f
+get_all_files	gentoo/ebvcheck.py	/^def get_all_files(directory: str) -> List[str]:$/;"	f
+get_files	main/branch_changes	/^function get_files() {$/;"	f
+get_group	xmonad/poll_weather.py	/^def get_group(pttrn: str, string: str) -> Optional[str]:$/;"	f
+get_help	main/subedit	/^get_help ()$/;"	f
+get_humidity	xmonad/poll_weather.py	/^def get_humidity(raw_output: str) -> Optional[str]:$/;"	f
+get_latest_version	gentoo/ebvcheck.py	/^def get_latest_version($/;"	f
+get_max_days	main/emaint_check	/^function get_max_days() {$/;"	f
+get_new_mr_cache_lines	zathura/zopen.py	/^def get_new_mr_cache_lines($/;"	f
+get_open_docs	zathura/zopen.py	/^def get_open_docs() -> List[Path]:$/;"	f
+get_temp	xmonad/poll_weather.py	/^def get_temp(raw_output: str) -> str:$/;"	f
+get_time_string	main/suntimes.py	/^def get_time_string(rise_or_set: RiseOrSet) -> WResult[str]:$/;"	f
+get_wind	xmonad/poll_weather.py	/^def get_wind(raw_output: str) -> Optional[str]:$/;"	f
+getwindowat	main/focus-monitor	/^getwindowat() {$/;"	f
+gh_is_url	main/gh-md-toc	/^gh_is_url() {$/;"	f
+gh_toc	main/gh-md-toc	/^gh_toc(){$/;"	f
+gh_toc_app	main/gh-md-toc	/^gh_toc_app() {$/;"	f
+gh_toc_get_filename	main/gh-md-toc	/^gh_toc_get_filename() {$/;"	f
+gh_toc_grab	main/gh-md-toc	/^gh_toc_grab() {$/;"	f
+gh_toc_load	main/gh-md-toc	/^gh_toc_load() {$/;"	f
+gh_toc_md2html	main/gh-md-toc	/^gh_toc_md2html() {$/;"	f
+git_log	main/glg	/^function git_log() {$/;"	f
+ham_list_day	xmonad/poll-hamster	/^ham_list_day = popen("hamster list %s" % stoday).read()$/;"	v
+ham_list_week	xmonad/poll-hamster	/^ham_list_week = popen("hamster list %s %s" % (ssun, stoday)).read()$/;"	v
+ham_search_act	xmonad/poll-hamster	/^    ham_search_act = popen("hamster search %s %s" % (activity, stoday)).read()$/;"	v
+has_pyenv	main/epip_update_all	/^function has_pyenv() {$/;"	f
+header	main/pps	/^header() {$/;"	f
+header	tmux/tv_voltron	/^function header() {$/;"	f
+idx	xmonad/poll-hamster	/^idx = (today.weekday() + 1) % 7$/;"	v
+init_logging	main/rfuncs/server.py	/^def init_logging() -> None:$/;"	f
+init_scratchpad	main/scratch-toggle	/^function init_scratchpad() {$/;"	f
+install_packs	main/epip_update_all	/^function install_packs() {$/;"	f
+install_pypacks	main/epip_install.py	/^def install_pypacks(pypacks: Sequence[str], pyver: float) -> None:$/;"	f
+is_active_desktop	debian/debian-launcher	/^function is_active_desktop() {$/;"	f
+is_non_empty_dir	main/perms	/^function is_non_empty_dir() {$/;"	f
+is_url	main/umpv.py	/^def is_url(filename: str) -> bool:$/;"	f
+is_vim	tmux/tm-select-pane	/^function is_vim() {$/;"	f
+is_vim	tmux/tm-zoom	/^function is_vim() {$/;"	f
+join_srt	main/subedit	/^join_srt ()$/;"	f
+join_workers	main/libtorrent/worker.py	/^def join_workers() -> None:$/;"	f
+just_changed	vim/zim	/^function just_changed() {$/;"	f
+keywordcleaning	main/subedit	/^			keywordcleaning ()$/;"	f
+kill_all_workers	main/libtorrent/worker.py	/^def kill_all_workers() -> None:$/;"	f
+kill_directions	zathura/znav	/^function kill_directions() {$/;"	f
+loader	tests/.old_tests/test_red_robot.py	/^loader = importlib.machinery.SourceFileLoader($/;"	v
+loader	tests/test_my_twmail_hook.py	/^loader = importlib.machinery.SourceFileLoader($/;"	v
+log	debian/debian-launcher	/^function log() {$/;"	f
+log	main/rfuncs/authenticator.py	/^log = logging.getLogger(__name__)$/;"	v
+log	main/rfuncs/path_dispatcher.py	/^log = logging.getLogger(__name__)$/;"	v
+log	main/rfuncs/routes.py	/^log = logging.getLogger(__name__)$/;"	v
+log	main/rfuncs/server.py	/^log = logging.getLogger(__name__)$/;"	v
+log_cmd	xmonad/poll_weather.py	/^    def log_cmd(msg: str) -> None:$/;"	f	function:run_weather_cmd
+loop	tmux/tmux_view.sh	/^function loop() {$/;"	f
+m	tests/.old_tests/test_poll_timew.py	/^m = imp.load_source('poll-timew', '\/home\/bryan\/Sync\/bin\/xmonad\/poll-timew')$/;"	v
+magnet_tracker	main/libtorrent/worker.py	/^    magnet_tracker = MagnetTracker()$/;"	v	class:_TorrentWorker
+main	cron.jobs/cron.daily/daily_backup	/^function main() {$/;"	f
+main	cron.jobs/cron.daily/daily_jobs	/^function main() {$/;"	f
+main	cron.jobs/cron.monthly/monthly_backup	/^function main() {$/;"	f
+main	cron.jobs/cron.weekly/weekly_backup	/^function main() {$/;"	f
+main	cron.jobs/cron.weekly/weekly_jobs	/^function main() {$/;"	f
+main	debian/debian-launcher	/^function main() {$/;"	f
+main	gentoo/ebvcheck.py	/^def main(argv: Sequence[str] = None) -> None:$/;"	f
+main	gentoo/veb	/^main() {$/;"	f
+main	main/alarm	/^main() {$/;"	f
+main	main/batch_torrent	/^main() {$/;"	f
+main	main/clinks	/^function main() {$/;"	f
+main	main/do_external_backup	/^function main() {$/;"	f
+main	main/epip_install.py	/^def main(argv: Sequence[str] = None) -> int:$/;"	f
+main	main/epip_update_all	/^function main() {$/;"	f
+main	main/external_backup_check	/^function main() {$/;"	f
+main	main/eye	/^main() {$/;"	f
+main	main/filter_kern_prof.py	/^def main(argv: Sequence[str] = None) -> int:$/;"	f
+main	main/fsinfo	/^function main() {$/;"	f
+main	main/glg	/^function main() {$/;"	f
+main	main/lbackups	/^function main() {$/;"	f
+main	main/libtorrent/app.py	/^def main(argv: Sequence[str] = None) -> None:$/;"	f
+main	main/perms	/^main() {$/;"	f
+main	main/pydef.py	/^def main(argv: Sequence[str] = None) -> int:$/;"	f
+main	main/pyprof	/^main() {$/;"	f
+main	main/rfuncs/server.py	/^def main(argv: Sequence[str] = None) -> int:$/;"	f
+main	main/ssh-add-all	/^function main() {$/;"	f
+main	main/suntimes.py	/^def main(argv: Sequence[str] = None) -> int:$/;"	f
+main	main/swap-windows	/^function main() {$/;"	f
+main	main/umpv.py	/^def main() -> int:$/;"	f
+main	main/vgtd-daily-review	/^function main() {$/;"	f
+main	main/vinfo	/^main() {$/;"	f
+main	main/wtitle	/^main() {$/;"	f
+main	tmux/tm-break-pane	/^function main() {$/;"	f
+main	tmux/tm-join-pane	/^function main() {$/;"	f
+main	tmux/tm-select-pane	/^function main() {$/;"	f
+main	vim/zim	/^function main() {$/;"	f
+main	xmonad/poll_weather.py	/^def main(argv: Sequence[str] = None) -> int:$/;"	f
+main	xmonad/xmonad-weather	/^function main() {$/;"	f
+main	zathura/zopen.py	/^def main(argv: Sequence[str] = None) -> int:$/;"	f
+make_abs	main/umpv.py	/^def make_abs(filename: str) -> str:$/;"	f
+make_real_paths	gentoo/epatch	/^function make_real_paths() {$/;"	f
+master_function	main/subedit	/^master_function ()$/;"	f
+matches_active_window	debian/debian-launcher	/^function matches_active_window() {$/;"	f
+max_field	main/perms	/^function max_field() {$/;"	f
+merge_pdfs	main/merge_rocketbook_notes	/^function merge_pdfs() {$/;"	f
+message_manager	gentoo/ebvcheck.py	/^message_manager = MessageManager()$/;"	v
+mkbar	main/vinfo	/^mkbar() {$/;"	f
+mpv_is_open	main/umpv.py	/^def mpv_is_open():$/;"	f
+mt_key	main/libtorrent/worker.py	/^    def mt_key(self) -> int:$/;"	m	class:_TorrentWorker
+new	main/libtorrent/tracker.py	/^    def new(self, id_list: List[str]) -> int:$/;"	m	class:MagnetTracker
+new_torrent_worker	main/libtorrent/worker.py	/^def new_torrent_worker($/;"	f
+next	gentoo/init-chrome	/^function next-tab() { xkey "ctrl+Tab"; }$/;"	f
+noop	gentoo/ebvcheck.py	/^    def noop(self, id_number: int) -> None:$/;"	m	class:MessageManager
+notfound_404	main/rfuncs/routes.py	/^    def notfound_404($/;"	m	class:Errors
+notify	GTD/wtoggle	/^function notify() {$/;"	f
+notify	main/do_external_backup	/^function notify() {$/;"	f
+now	tests/.old_tests/test_red_robot.py	/^def now():$/;"	f
+open_document	zathura/zopen.py	/^def open_document(doc: PathLike, *, replace: bool = False) -> None:$/;"	f
+output	xmonad/poll-hamster	/^    output = "%s   (%s \/ %s \/ %s)" % (current, act_time, day_time, week_time)$/;"	v
+output	xmonad/poll-hamster	/^    output = "No Activity  (%s \/ %s)" % (day_time, week_time)$/;"	v
+outputs	tests/.old_tests/test_poll_timew.py	/^outputs = [$/;"	v
+parse_cli_args	gentoo/ebvcheck.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+parse_cli_args	main/epip_install.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+parse_cli_args	main/filter_kern_prof.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+parse_cli_args	main/glg	/^function parse_cli_args() {$/;"	f
+parse_cli_args	main/libtorrent/app.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+parse_cli_args	main/pydef.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+parse_cli_args	main/rfuncs/server.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+parse_cli_args	main/suntimes.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+parse_cli_args	xmonad/poll_weather.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+parse_cli_args	zathura/zopen.py	/^def parse_cli_args(argv: Sequence[str]) -> Arguments:$/;"	f
+patch_install	gentoo/epatch	/^function patch_install() {$/;"	f
+path_list	zathura/zopen.py	/^def path_list(path_like_iter: Iterable[PathLike]) -> List[Path]:$/;"	f
+pdate	main/emcheck	/^function pdate() {$/;"	f
+pin	gentoo/init-chrome	/^function pin-tab() { xkey "ctrl+shift+x"; }$/;"	f
+pkg_container	gentoo/ebvcheck.py	/^pkg_container = PkgContainer()$/;"	v
+pop	main/ustack.py	/^    def pop(self):$/;"	m	class:UStack
+popen_error	gentoo/ebvcheck.py	/^def popen_error($/;"	f
+post	main/rfuncs/client.py	/^def post(handler_name: str, **kwargs: Any) -> Response:$/;"	f
+post_backup_hook	cron.jobs/backup.sh	/^function post_backup_hook() {$/;"	f
+primary_only_packs	main/epip_update_all	/^function primary_only_packs() {$/;"	f
+print	gentoo/ebvcheck.py	/^    def print(self, msg: str, id_number: int) -> None:$/;"	m	class:MessageManager
+print_backups	main/lbackups	/^function print_backups() {$/;"	f
+print_icon	main/dbox_sync	/^print_icon() {$/;"	f
+print_perms	main/perms	/^function print_perms() {$/;"	f
+process_file	main/print_btorrents	/^function process_file() {$/;"	f
+process_torrent_file	main/batch_torrent	/^process_torrent_file() {$/;"	f
+promote_most_recent_docs	zathura/zopen.py	/^def promote_most_recent_docs($/;"	f
+purge_line	gentoo/efixsets	/^function purge_line() {$/;"	f
+purge_world	gentoo/del	/^function purge_world() {$/;"	f
+push	main/ustack.py	/^    def push(self, directory):$/;"	m	class:UStack
+put	main/yank	/^put() {$/;"	f
+py2_versions	main/epip_update_all	/^function py2_versions() {$/;"	f
+py3_versions	main/epip_update_all	/^function py3_versions() {$/;"	f
+py_versions	main/epip_update_all	/^function py_versions() {$/;"	f
+pytestmark	tests/.old_tests/test_poll_timew.py	/^pytestmark = pytest.mark.skip("The 'praw' module is not installed.")$/;"	v
+pytestmark	tests/.old_tests/test_red_robot.py	/^pytestmark = pytest.mark.skip("The 'praw' module is not installed.")$/;"	v
+python_version_exists	main/epip_install.py	/^def python_version_exists(pyver: float) -> bool:$/;"	f
+read_srt	main/subedit	/^read_srt ()$/;"	f
+read_sub	main/subedit	/^read_sub ()$/;"	f
+refresh_notes	main/notepad	/^refresh_notes() {$/;"	f
+reg	xmonad/poll-hamster	/^reg = re.compile("Study: (\\d+\\.\\dh)")$/;"	v
+register	main/rfuncs/route_registry.py	/^    def register($/;"	m	class:RouteRegistry
+register_handlers	main/libtorrent/app.py	/^def register_handlers() -> None:$/;"	f
+release	gentoo/ebvcheck.py	/^    def release(self, msg: str) -> None:$/;"	m	class:MessageManager
+remove	gentoo/ebvcheck.py	/^    def remove(self, pkg: str) -> None:$/;"	m	class:PkgContainer
+remove_posts	tests/.old_tests/test_red_robot.py	/^def remove_posts():$/;"	f
+replace_text	main/subedit	/^replace_text ()$/;"	f
+repology_project	gentoo/ebvcheck.py	/^def repology_project(name: str) -> RepologyProject:$/;"	f
+repology_project_group	gentoo/ebvcheck.py	/^def repology_project_group($/;"	f
+report	GTD/wpoll	/^report() {$/;"	f
+rint_panel	main/ham	/^rint_panel() {$/;"	f
+route	main/rfuncs/routes.py	/^route = route_registry.register$/;"	v
+route_registry	main/rfuncs/routes.py	/^route_registry = RouteRegistry()$/;"	v
+run	debian/debian-launcher	/^function run() {$/;"	f
+run	main/filter_kern_prof.py	/^def run(_args: Arguments) -> int:$/;"	f
+run	main/pydef.py	/^def run(args: Arguments) -> int:$/;"	f
+run	main/suntimes.py	/^def run(args: Arguments) -> int:$/;"	f
+run	xmonad/poll_weather.py	/^def run(args: Arguments) -> int:$/;"	f
+run	zathura/zopen.py	/^def run(args: Arguments) -> int:$/;"	f
+run_cprofile	main/pyprof	/^function run_cprofile() {$/;"	f
+run_line_profile	main/pyprof	/^function run_line_profile() {$/;"	f
+run_litecli	main/li_jobs	/^function run_litecli() {$/;"	f
+run_rsync	main/do_external_backup	/^function run_rsync() {$/;"	f
+run_weather_cmd	xmonad/poll_weather.py	/^def run_weather_cmd($/;"	f
+sa2	cron.jobs/cron.daily/daily_jobs	/^function sa2() {$/;"	f
+scriptname	main/pydef.py	/^scriptname = os.path.basename(os.path.realpath(__file__))$/;"	v
+scriptname	main/suntimes.py	/^scriptname = os.path.basename(os.path.realpath(__file__))$/;"	v
+select_pane	tmux/tm-select-pane	/^function select_pane() {$/;"	f
+sendmail	main/pymail.py	/^def sendmail(to: str, subject: str, body: Sequence[str]) -> int:$/;"	f
+sendmail	main/rfuncs/routes.py	/^def sendmail($/;"	f
+set_fargs	main/perms	/^function set_fargs() {$/;"	f
+set_overlay_dir	gentoo/veb	/^set_overlay_dir() {$/;"	f
+set_pane_title	vim/vim	/^function set_pane_title() {$/;"	f
+setup	main/libtorrent/app.py	/^    def setup(cmd: str) -> None:$/;"	f	function:setup_env
+setup_env	main/libtorrent/app.py	/^def setup_env(vpn: str, download_dir: Path) -> None:$/;"	f
+shell	tmux/tmux_view.sh	/^function shell() {$/;"	f
+shift_time	main/subedit	/^shift_time ()$/;"	f
+show	main/fsinfo	/^function show() {$/;"	f
+sort_subs	main/subedit	/^sort_subs ()$/;"	f
+sp_mock	tests/test_my_twmail_hook.py	/^def sp_mock():$/;"	f
+spec	tests/.old_tests/test_red_robot.py	/^spec = importlib.util.spec_from_loader("red_robot", loader)$/;"	v
+spec	tests/test_my_twmail_hook.py	/^spec = importlib.util.spec_from_loader("twmail", loader)$/;"	v
+split	tmux/tmux_view.sh	/^function split() {$/;"	f
+split_srt	main/subedit	/^split_srt ()$/;"	f
+srt2_sub	main/subedit	/^srt2_sub ()$/;"	f
+srtcleaning	main/subedit	/^	srtcleaning ()$/;"	f
+ss	main/li_jobs	/^function ss() {$/;"	f
+ssun	xmonad/poll-hamster	/^ssun = sun.strftime("%Y-%m-%d")$/;"	v
+stoday	xmonad/poll-hamster	/^stoday = today.strftime("%Y-%m-%d")$/;"	v
+stow_it	main/clinks	/^function stow_it() {$/;"	f
+sub2_srt	main/subedit	/^sub2_srt ()$/;"	f
+sun	xmonad/poll-hamster	/^sun = today - dt.timedelta(idx)$/;"	v
+suspended_403	main/rfuncs/routes.py	/^    def suspended_403($/;"	m	class:Errors
+switch_directions	zathura/znav	/^function switch_directions() {$/;"	f
+synchronize_with_file	main/subedit	/^synchronize_with_file ()$/;"	f
+teardown	main/libtorrent/app.py	/^    def teardown(cmd: str) -> None:$/;"	f	function:setup_env
+term_handler	main/libtorrent/app.py	/^    def term_handler($/;"	f	function:register_handlers
+test_envvar	tests/.old_tests/test_red_robot.py	/^def test_envvar():$/;"	f
+test_get_new_mr_cache_lines	tests/test_zopen.py	/^    def test_get_new_mr_cache_lines($/;"	m	class:TestZopen
+test_get_tag_time	tests/.old_tests/test_poll_timew.py	/^def test_get_tag_time():$/;"	f
+test_get_ts_from_google_search	tests/test_suntimes.py	/^    def test_get_ts_from_google_search($/;"	m	class:TestSuntimes
+test_main	tests/test_my_twmail_hook.py	/^def test_main(sp_mock):$/;"	f
+test_main	tests/test_umpv.py	/^    def test_main(self) -> None:$/;"	m	class:TestUmpv
+test_maybe_correct_date_false	tests/test_my_twmail_hook.py	/^def test_maybe_correct_date_false(sp_mock):$/;"	f
+test_maybe_correct_date_true	tests/test_my_twmail_hook.py	/^def test_maybe_correct_date_true(sp_mock):$/;"	f
+test_parse_body	tests/test_my_twmail_hook.py	/^def test_parse_body(sp_mock):$/;"	f
+test_parse_status	tests/.old_tests/test_poll_timew.py	/^def test_parse_status(output, expected):$/;"	f
+test_scan__COMPLETES_POST	tests/.old_tests/test_red_robot.py	/^def test_scan__COMPLETES_POST(remove_posts):$/;"	f
+test_scan__FAIL	tests/.old_tests/test_red_robot.py	/^def test_scan__FAIL(remove_posts):$/;"	f
+test_scan__MULTI_SUBREDDIT	tests/.old_tests/test_red_robot.py	/^def test_scan__MULTI_SUBREDDIT(remove_posts):$/;"	f
+test_scan__PASS	tests/.old_tests/test_red_robot.py	/^def test_scan__PASS(remove_posts):$/;"	f
+test_style_time	tests/.old_tests/test_poll_timew.py	/^def test_style_time():$/;"	f
+test_too_early__FAIL	tests/.old_tests/test_red_robot.py	/^def test_too_early__FAIL(now):$/;"	f
+test_too_early__PASS	tests/.old_tests/test_red_robot.py	/^def test_too_early__PASS(now):$/;"	f
+time_left	lemonbar/alarm-lemonbar	/^time_left() {$/;"	f
+time_left	main/alarm	/^time_left() {$/;"	f
+title	main/libtorrent/worker.py	/^    def title(self) -> str:$/;"	m	class:_TorrentWorker
+to_route_map	main/rfuncs/route_registry.py	/^    def to_route_map(self) -> RouteMap:$/;"	m	class:RouteRegistry
+today	xmonad/poll-hamster	/^today = dt.datetime.now() - dt.timedelta(0.25)$/;"	v
+twmail	tests/test_my_twmail_hook.py	/^twmail = importlib.util.module_from_spec(spec)$/;"	v
+unsafe_cmd	cron.jobs/jobs.sh	/^function unsafe_cmd() {$/;"	f
+update_current_sub_values	main/subedit	/^		update_current_sub_values ()$/;"	f
+update_prev1_values	main/subedit	/^		update_prev1_values ()$/;"	f
+update_prev2_values	main/subedit	/^		update_prev2_values ()$/;"	f
+update_sub_last_values	main/subedit	/^		update_sub_last_values ()$/;"	f
+update_sub_prev1_values	main/subedit	/^		update_sub_prev1_values ()$/;"	f
+update_sub_prev2_values	main/subedit	/^		update_sub_prev2_values ()$/;"	f
+usr1_handler	main/libtorrent/app.py	/^    def usr1_handler($/;"	f	function:register_handlers
+wait_for_first_magnet	main/libtorrent/worker.py	/^def wait_for_first_magnet() -> None:$/;"	f
+warn_user	main/emaint_check	/^function warn_user() {$/;"	f
+week_time	xmonad/poll-hamster	/^    week_time = "0.0h"$/;"	v
+week_time	xmonad/poll-hamster	/^    week_time = reg.search(ham_list_week).groups()[0]$/;"	v
+window_index	tmux/tm-join-pane	/^function window_index() {$/;"	f
+window_panes	tmux/tm-join-pane	/^function window_panes() {$/;"	f
+x	tests/data/google_sunrise_search__20200813.html	/^function x(a){return!a||y(a)?0:a.getBoundingClientRect?z(a,function(c){return c.getBoundingClientRect()}):1}function y(a){if("none"==a.style.display)return!0;if(document.defaultView&&document.defaultView.getComputedStyle){var c=a.getAttribute("data-deferred");c&&a.setAttribute("data-deferred",0);var b=document.defaultView.getComputedStyle(a);b=!!b&&("hidden"==b.visibility||"0px"==b.height&&"0px"==b.width);c&&a.setAttribute("data-deferred",c);return b}return!1}$/;"	f
+x	tests/data/google_sunset_search__20200813.html	/^function x(a){return!a||y(a)?0:a.getBoundingClientRect?z(a,function(c){return c.getBoundingClientRect()}):1}function y(a){if("none"==a.style.display)return!0;if(document.defaultView&&document.defaultView.getComputedStyle){var c=a.getAttribute("data-deferred");c&&a.setAttribute("data-deferred",0);var b=document.defaultView.getComputedStyle(a);b=!!b&&("hidden"==b.visibility||"0px"==b.height&&"0px"==b.width);c&&a.setAttribute("data-deferred",c);return b}return!1}$/;"	f
+xkey	gentoo/init-chrome	/^function xkey() { sleep 0.25 && xdotool key "$1"; }$/;"	f
+z	tests/data/google_sunrise_search__20200813.html	/^function z(a,c){var b=c(a);a=b.left+window.pageXOffset;c=b.top+window.pageYOffset;var f=b.width;b=b.height;var h=0;if(0>=b&&0>=f)return h;0>c+b?h=2:c>=(window.innerHeight||document.documentElement.clientHeight)&&(h=4);if(0>a+f||a>=(window.innerWidth||document.documentElement.clientWidth))h|=8;return h||1};var H=e,I=sn,J=[];function K(a,c,b){a="\/gen_204?atyp=csi&s="+(I||"web")+"&t="+a+("&lite=1&ei="+H+"&conn="+(window.navigator&&window.navigator.connection?window.navigator.connection.type:-1)+c);c="&rt=";for(var f in b)a+=""+c+f+"."+b[f],c=",";return a}function L(a){a={prt:a};window.wsrt&&(a.wsrt=window.wsrt);return a}function M(a){window.ping?window.ping(a):(new Image).src=a}$/;"	f
+z	tests/data/google_sunset_search__20200813.html	/^function z(a,c){var b=c(a);a=b.left+window.pageXOffset;c=b.top+window.pageYOffset;var f=b.width;b=b.height;var h=0;if(0>=b&&0>=f)return h;0>c+b?h=2:c>=(window.innerHeight||document.documentElement.clientHeight)&&(h=4);if(0>a+f||a>=(window.innerWidth||document.documentElement.clientWidth))h|=8;return h||1};var H=e,I=sn,J=[];function K(a,c,b){a="\/gen_204?atyp=csi&s="+(I||"web")+"&t="+a+("&lite=1&ei="+H+"&conn="+(window.navigator&&window.navigator.connection?window.navigator.connection.type:-1)+c);c="&rt=";for(var f in b)a+=""+c+f+"."+b[f],c=",";return a}function L(a){a={prt:a};window.wsrt&&(a.wsrt=window.wsrt);return a}function M(a){window.ping?window.ping(a):(new Image).src=a}$/;"	f

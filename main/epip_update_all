@@ -3,10 +3,6 @@
 # shellcheck disable=SC2206
 # shellcheck disable=SC2207
 
-CLEANING_STARTED=false
-_PACK_LIST_DIR="${HOME}"/.epip_update_all/"$(hostname)"
-PY3_PACK_LIST="${_PACK_LIST_DIR}"/py3_pack_list
-SINGLE_TARGET_PACK_LIST="${_PACK_LIST_DIR}"/single_target_list
 SCRIPTNAME="$(basename "$0")"
 
 ###############################################################################
@@ -18,21 +14,13 @@ SCRIPTNAME="$(basename "$0")"
 #   * clipster dependency
 #   * required install of 'libgirepository1.0-dev' and 'libcairo2-dev' packages
 #     on Debian.
-# tldextract:
-#   * qute-pass dependency
-# scalene:
-#   * CPU/Memory CLI profiling tool
 ###############################################################################
 EPIP_PY2_PACKAGES=(
     IPython
 )
 EPIP_PY3_PACKAGES=(
-    # --- My Projects
     /home/bryan/projects/pylibs
-    pyfunky
-    # --- Everything Else
     IPython
-    pipx
     loguru
     pandas
     parameterized
@@ -40,45 +28,71 @@ EPIP_PY3_PACKAGES=(
     pygobject
     requests
     selenium
-    tldextract
     typing-extensions
     redis
     pymongo
+    pyyaml
     pyzmq
     more-itertools
+    bs4
+    lxml
 )
-EPIP_SINGLE_TARGET_PACKAGES=(
+EPIP_PRIMARY_ONLY_PACKAGES=(
+    pipx
+    pyfunky
 )
 
 function main() {
-    install_packs 2.7 "${EPIP_PY2_PACKAGES[@]}"
-
-    for pyver in $(py3_versions); do
-        install_packs \
-            "${pyver}" \
-            "${EPIP_PY3_PACKAGES[@]}" \
-            $(single_target_packs "${pyver}")
-    done
-
-    ensure_pack_list_file "${PY3_PACK_LIST}"
-    ensure_pack_list_file "${SINGLE_TARGET_PACK_LIST}"
-
-    CURR_PACKS=(${EPIP_PY3_PACKAGES[@]})
-    OLD_PACKS=($(cat "${PY3_PACK_LIST}"))
-    if clean_packs "$(py3_versions)"; then
-        echo "${EPIP_PY3_PACKAGES[@]}" >"${PY3_PACK_LIST}"
+    if has_pyenv; then
+        PRIMARY_VERSION="$(pyenv global)"
+    else
+        PRIMARY_VERSION="$(py_versions | sort -u | tail -n 1)"
     fi
 
-    CURR_PACKS=(${EPIP_SINGLE_TARGET_PACKAGES[@]})
-    OLD_PACKS=($(cat "${SINGLE_TARGET_PACK_LIST}"))
-    if clean_packs "$(primary_version)"; then
-        echo "${EPIP_SINGLE_TARGET_PACKAGES[@]}" >"${SINGLE_TARGET_PACK_LIST}"
+    trap 'has_pyenv && pyenv global ${PRIMARY_VERSION}' INT TERM EXIT
+
+    EPIP_PACKAGES=(${EPIP_PY2_PACKAGES[@]})
+    for pyver in $(py2_versions); do
+        install_packs "${pyver}"
+    done
+
+    for pyver in $(py3_versions); do
+        EPIP_PACKAGES=(${EPIP_PY3_PACKAGES[@]})
+        EPIP_PACKAGES+=($(primary_only_packs "${pyver}"))
+
+        install_packs "${pyver}"
+    done
+
+    clean_all_packs
+}
+
+function primary_only_packs() {
+    local pyver="$1"
+    shift
+
+    if [[ "${pyver}" == "${PRIMARY_VERSION}" ]]; then
+        echo "${EPIP_PRIMARY_ONLY_PACKAGES[@]}"
+    else
+        pyver="$(_maybe_activate_pyenv "${pyver}")"
+        python"${pyver}" -m pip uninstall -y "${EPIP_PRIMARY_ONLY_PACKAGES[@]}" &>/dev/null
     fi
 }
 
 function install_packs() {
+    local pyver="$1"
+    shift
+
+    pyver="$(_maybe_activate_pyenv "${pyver}")"
+
+    _install_packs \
+        "${pyver}" \
+        "${EPIP_PACKAGES[@]}"
+}
+
+function _install_packs() {
     pyver="$1"
     shift
+
     packages=("$@")
     shift
 
@@ -87,32 +101,49 @@ function install_packs() {
     printf "\n"
 }
 
-function single_target_packs() {
-    local pyver="$1"
-    shift
+function clean_all_packs() {
+    _pack_list_dir="${HOME}"/.epip_update_all/"$(hostname)"
+    py2_pack_list="${_pack_list_dir}"/py2_pack_list
+    py3_pack_list="${_pack_list_dir}"/py3_pack_list
+    primary_only_pack_list="${_pack_list_dir}"/primary_only_pack_list
 
-    if [[ "${pyver}" == "$(primary_version)" ]]; then
-        echo "${EPIP_SINGLE_TARGET_PACKAGES[@]}"
-    else
-        python"${pyver}" -m pip uninstall -y "${EPIP_SINGLE_TARGET_PACKAGES[@]}" &>/dev/null
-    fi
+    _ensure_pack_list_file "${py2_pack_list}" "${EPIP_PY2_PACKAGES[@]}"
+    _ensure_pack_list_file "${py3_pack_list}" "${EPIP_PY3_PACKAGES[@]}"
+    _ensure_pack_list_file "${primary_only_pack_list}" "${EPIP_PRIMARY_ONLY_PACKAGES[@]}"
+
+    CLEAN_CURR_PACKS=(${EPIP_PY2_PACKAGES[@]})
+    CLEAN_PACK_LIST_FILE="${py2_pack_list}"
+    CLEAN_PYVERSIONS=($(py2_versions))
+    _clean_packs
+
+    CLEAN_CURR_PACKS=(${EPIP_PY3_PACKAGES[@]})
+    CLEAN_PACK_LIST_FILE="${py3_pack_list}"
+    CLEAN_PYVERSIONS=($(py3_versions))
+    _clean_packs
+
+    CLEAN_CURR_PACKS=(${EPIP_PRIMARY_ONLY_PACKAGES[@]})
+    CLEAN_PACK_LIST_FILE="${primary_only_pack_list}"
+    CLEAN_PYVERSIONS=(${PRIMARY_VERSION})
+    _clean_packs
 }
 
-function ensure_pack_list_file() {
+function _ensure_pack_list_file() {
     local pack_list_file="$1"
     shift
 
     pack_list_dir="$(dirname "${pack_list_file}")"
     [[ -d "${pack_list_dir}" ]] || mkdir -p "${pack_list_dir}"
     if ! [[ -f "${pack_list_file}" ]]; then
-        echo "${EPIP_PY3_PACKAGES[@]}" >"${pack_list_file}"
+        echo "$@" >"${pack_list_file}"
     fi
 }
 
-function clean_packs() {
+function _clean_packs() {
+    old_packs=($(cat "${CLEAN_PACK_LIST_FILE}"))
+
     local status=0
-    for opack in "${OLD_PACKS[@]}"; do
-        if [[ " ${CURR_PACKS[*]} " != *" ${opack} "* ]]; then
+    for opack in "${old_packs[@]}"; do
+        if [[ " ${CLEAN_CURR_PACKS[*]} " != *" ${opack} "* ]]; then
             if [[ "${CLEANING_STARTED}" != true ]]; then
                 CLEANING_STARTED=true
                 printf "===== %s =====\n" "Removing Old Packages"
@@ -120,24 +151,55 @@ function clean_packs() {
 
             printf -- "----- Uninstalling %s\n" "${opack}"
             if confirm "# Do you really want to uninstall ${opack}?"; then
-                for pyver in "${@}"; do
+                for pyver in "${CLEAN_PYVERSIONS[@]}"; do
+                    pyver="$(_maybe_activate_pyenv "${pyver}")"
+
+                    printf -- "----- %s\n" "${pyver}"
                     if ! python"${pyver}" -m pip uninstall -y "${opack}"; then
                         status=1
                     fi
                 done
+            else
+                status=1
             fi
         fi
     done
 
-    return "${status}"
+    if [[ "${status}" -eq 0 ]]; then
+        echo "${CLEAN_CURR_PACKS[@]}" >"${CLEAN_PACK_LIST_FILE}"
+    fi
 }
 
 function py3_versions() {
-    python_versions | grep -v "^2" | sort -u
+    py_versions | grep -v "^2"
 }
 
-function primary_version() {
-    python3 2>&1 --version | perl -nE 'print s/Python ([1-9]\.[1-9][0-9]*).*/\1/gr'
+function py2_versions() {
+    py_versions | grep -v "^3"
+}
+
+function py_versions() {
+    if has_pyenv; then
+        pyenv_versions
+    else
+        python_versions
+    fi
+}
+
+function has_pyenv() {
+    command -v pyenv &>/dev/null
+}
+
+function _maybe_activate_pyenv() {
+    local pyver="$1"
+    shift
+
+    if has_pyenv; then
+        pyenv global "${pyver}"
+        echo "${pyver%.*}"
+    else
+        echo "${pyver}"
+    fi
 }
 
 if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then

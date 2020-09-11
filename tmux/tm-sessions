@@ -8,36 +8,42 @@ import gutils
 
 from loguru import logger as log
 
+
 @gutils.catch
 def main() -> None:
-    ps = sp.check_output(['tmux', 'ls'])
+    ps = sp.check_output(["tmux", "ls"])
     out = ps.decode().strip()
 
-    _sessions = out.split('\n')
-    log.debug('_sessions: {}', _sessions)
+    _sessions = out.split("\n")
+    log.debug("_sessions: {}", _sessions)
 
     sessions = []
     for S in _sessions:
-        T = S[:S.index(':')]
+        T = S[: S.index(":")]
 
-        ps = sp.check_output(['tmux', 'display', '-p', '#S'])
+        ps = sp.check_output(["tmux", "display", "-p", "#S"])
         active_session_name = ps.decode().strip()
 
         if T == active_session_name:
-            sessions.append('[{}]'.format(T))
+            sessions.append("[{}]".format(T))
         else:
             sessions.append(T)
 
-    print('  '.join(sessions), end='')
+    print("  ".join(sessions), end="")
 
 
 if __name__ == "__main__":
     parser = gutils.ArgumentParser()
-    parser.add_argument('dummy', nargs='*',
-                        help='Dummy argument. Allows the active session name to be passed in as a '
-                             'command-line argument, but this script does not use this argument '
-                             'in any way. Sending in the active session name as an argument '
-                             'forces tmux to update the status-line properly.')
+    parser.add_argument(
+        "dummy",
+        nargs="*",
+        help=(
+            "Dummy argument. Allows the active session name to be passed in as"
+            " a command-line argument, but this script does not use this"
+            " argument in any way. Sending in the active session name as an"
+            " argument forces tmux to update the status-line properly."
+        ),
+    )
     args = parser.parse_args()
 
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)

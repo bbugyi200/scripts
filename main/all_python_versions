@@ -1,0 +1,10 @@
+#!/bin/bash
+
+###############################################################################
+#  Output ALL Python versions (even those installed using pyenv)              #
+###############################################################################
+
+{
+    python_versions
+    pyenv_versions
+} | sort -u

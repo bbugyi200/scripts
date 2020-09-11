@@ -26,6 +26,7 @@ def install_pypacks(pypacks: Sequence[str], pyver: float) -> None:
 
         if pypack.startswith("/"):
             os.chdir(pypack)
+            os.system("rm -rf *.egg-info")
             pip_args = ["-e", "."]
         else:
             pip_args = [pypack]

@@ -16,63 +16,75 @@ STAT_OPTS="--stat --summary"
 DIFF_OPTS="-p --cc"
 ONELINE_OPTS="--abbrev=4 --oneline --decorate"
 
-MASTER="${MASTER_BRANCH:-master}"
-if [[ "$(git rev-parse "${MASTER}")" == "$(git rev-parse HEAD)" ]]; then
-    TARGET_BRANCH=HEAD
-else
-    TARGET_BRANCH="${MASTER}"..HEAD
-fi
-
 function main() {
     parse_cli_args "$@"
+
+    master_branch="${MASTER_BRANCH:-master}"
+    if [[ "$(git rev-parse "${master_branch}")" == "$(git rev-parse HEAD)" ]]; then
+        TARGET_BRANCH=HEAD
+    else
+        TARGET_BRANCH="${master_branch}"..HEAD
+    fi
 
     if [[ -n "${arg}" ]]; then
         if [[ "${arg}" =~ ^[1-9][0-9]*p$ ]] || [[ "${arg}" == "p" ]]; then
             N="$(branch_commit_count)"
             if [[ "${arg}" != "p" ]]; then
                 n="${arg%p}"
-                if [[ "${n}" -lt "${N}" ]]; then
+                if [[ "${n}" -lt "${N}" ]] || [[ "${N}" -eq 0 ]]; then
                     N="${n}"
                 fi
             fi
+
+            C="-"
 
             i=0
             while [[ "${i}" -lt "${N}" ]]; do
                 idx=$((i + 1))
 
-                bar="-----------------------------"
-                if [[ "${idx}" -ge 10 ]]; then
-                    bar+="-"
-                fi
+                header_middle_fmt="$C$C$C$C$C$C$C Commit %d of %d $C$C$C$C$C$C$C"
+                num_of_percent_signs=2
 
-                if [[ "${idx}" -ge 100 ]]; then
-                    bar+="-"
-                fi
+                header_bar=""
 
-                if [[ "${N}" -ge 10 ]]; then
-                    bar+="-"
-                fi
+                j=0
+                while [[ "${j}" -lt $((${#header_middle_fmt} - num_of_percent_signs)) ]]; do
+                    header_bar+="${C}"
+                    j=$((j + 1))
+                done
 
-                if [[ "${N}" -ge 100 ]]; then
-                    bar+="-"
-                fi
+                for D in {10,100}; do
+                    if [[ "${idx}" -ge "${D}" ]]; then
+                        header_bar+="${C}"
+                    fi
 
+                    if [[ "${N}" -ge "${D}" ]]; then
+                        header_bar+="${C}"
+                    fi
+                done
+
+                header_fmt="$(printf "%%s\\n%s\\n%%s" "${header_middle_fmt}")"
                 OPTS+="--skip=${i} --max-count=1 ${STAT_OPTS} ${DIFF_OPTS} "
                 {
-                    printf -- \
-                        "%s\n------- Commit %d of %d -------\n%s\n" \
-                        "${bar}" \
+                    printf \
+                        "${header_fmt}\n" \
+                        "${header_bar}" \
                         "${idx}" \
                         "${N}" \
-                        "${bar}"
+                        "${header_bar}"
                     git_log
                 } | less
                 i="$((i + 1))"
             done
         else
             OPTS+="--graph ${STAT_OPTS} "
-            if [[ "${arg}" =~ ^[1-9][0-9]*$ ]]; then
-                OPTS+="--max-count=${arg} "
+            if [[ "${arg}" =~ ^[0-9]+$ ]]; then
+                N="${arg}"
+                if [[ "${N}" -eq 0 ]]; then
+                    N="$(branch_commit_count)"
+                fi
+
+                OPTS+="--max-count=${N} "
             elif [[ "${arg}" == "+" ]]; then
                 :
             elif [[ "${arg}" == "++" ]]; then
@@ -122,7 +134,9 @@ Positional Arguments:
         Show file stats and diffs for all commits added in this branch.
 
     N
-        Show the last N commits (where N is some integer).
+        Show the last N commits (where N is some integer). When N==0, we reset
+        N to the number of commits on the current branch that differ from
+        the master branch.
 
     [N]p
         Show the last N commits (where N is some integer) OR, if N is not

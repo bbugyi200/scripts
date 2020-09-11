@@ -19,5 +19,3 @@ D="/home/bryan/Downloads"
 econfirm -p "Delete all downloads" "safe-rm -rf $D && mkdir $D" "xprint -x 'ls -a $D'"
 
 econfirm -p "Delete all log files" "sudo safe-rm /var/tmp/*.log" "xprint -x 'ls -a /var/tmp/*.log'"
-
-econfirm "sudo updatedb &"

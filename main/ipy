@@ -10,7 +10,16 @@ shift
 
 if [[ -n "${pyver}" ]]; then
     pyver="$(echo "${pyver}" | perl -nE 'print s/^([1-9])([1-9])$/\1.\2/gr')"
+
     python=python"${pyver}"
+
+    # If this version of Python was installed using pyenv, activate the
+    # appropriate pyenv environment
+    if command -v pyenv &>/dev/null && [[ -x "${HOME}"/.pyenv/shims/"${python}" ]]; then
+        pyenv_version="$(pyenv_versions | grep "${pyver}" | tail -n 1)"
+        eval "$(pyenv init -)"
+        pyenv shell "${pyenv_version}"
+    fi
 else
     if command -v python3 &>/dev/null && [[ -z "${VIRTUAL_ENV}" ]]; then
         _python=python3

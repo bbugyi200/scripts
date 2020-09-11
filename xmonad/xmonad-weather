@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 ###################################################################################################
 #  Writes poll-weather output to xmobar                                                           #
@@ -8,8 +8,47 @@
 
 source gutils.sh
 
-fifo_path="${MY_XDG_RUNTIME}"/fifo
-[ -d "${MY_XDG_RUNTIME}" ] || mkdir "${MY_XDG_RUNTIME}"
-[ -p "${fifo_path}" ] || mkfifo "${fifo_path}"
+LAST_WEATHER_REPORT_F="${HOME}"/.poll-weather.txt
+SCRIPTNAME="$(basename "$0")"
 
-poll-weather > "${fifo_path}"
+function main() {
+    fifo_path="${MY_XDG_RUNTIME}"/fifo
+    [ -d "${MY_XDG_RUNTIME}" ] || mkdir "${MY_XDG_RUNTIME}"
+    [ -p "${fifo_path}" ] || mkfifo "${fifo_path}"
+
+    # Get rid of old report data (gathered later than 90 minutes ago)...
+    if [[ -f "${LAST_WEATHER_REPORT_F}"  ]]; then
+        last_report_dt="$(tail -n 1 "${LAST_WEATHER_REPORT_F}")"
+        now="$(date +%s)"
+        if [[ "${last_report_dt}" -lt $((now - (60 * 90))) ]]; then
+            rm "${LAST_WEATHER_REPORT_F}"
+        fi
+    fi
+    
+    if [[ "$1" == "--init" ]] || ! [[ -f "${LAST_WEATHER_REPORT_F}" ]]; then
+        shift
+
+        if [[ -f "${LAST_WEATHER_REPORT_F}" ]]; then
+            weather_report="$(head -n 1 "${LAST_WEATHER_REPORT_F}")"
+        else
+            weather_report="Scanning for local weather at $(date +%H:%M:%S)..."
+        fi
+
+        echo "${weather_report}" > "${fifo_path}"
+    fi
+    
+    tmp_f="$(mktemp /tmp/"${SCRIPTNAME}"-XXX.txt)"
+    trap 'rm -rf ${tmp_f}' INT TERM EXIT
+
+    if poll-weather "$@" &> "${tmp_f}"; then
+        # shellcheck disable=SC2002
+        cat "${tmp_f}" | tee "${LAST_WEATHER_REPORT_F}" > "${fifo_path}"
+        date +%s >> "${LAST_WEATHER_REPORT_F}"
+    elif ! [[ -f "${LAST_WEATHER_REPORT_F}" ]]; then
+        cat "${tmp_f}" > "${fifo_path}"
+    fi
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

@@ -9,22 +9,21 @@ if [[ -z "${RECENTLY_EDITED_FILES_LOG}" ]]; then
     eval "$(grep "export RECENTLY_EDITED_FILES_LOG=" "$HOME"/.profile)"
 fi
 
-
 if [[ "${1}" == "-d" ]]; then
     shift
     PS4='$LINENO: '
     set -x
 fi
 
+SCRIPTNAME="$(basename "$0")"
 
-scriptname="$(basename "$0")"
-if [[ -f /usr/local/bin/"${scriptname}" ]]; then
-    editor=/usr/local/bin/"${scriptname}"
-elif [[ -f /usr/bin/"${scriptname}" ]]; then
-    editor=/usr/bin/"${scriptname}"
+if [[ -f /usr/local/bin/"${SCRIPTNAME}" ]]; then
+    editor=/usr/local/bin/"${SCRIPTNAME}"
+elif [[ -f /usr/bin/"${SCRIPTNAME}" ]]; then
+    editor=/usr/bin/"${SCRIPTNAME}"
 else
     # shellcheck disable=SC2230
-    editor="$(which -a "${scriptname}" | tail -n 1)"
+    editor="$(which -a "${SCRIPTNAME}" | tail -n 1)"
 fi
 
 function set_pane_title() {
@@ -38,14 +37,13 @@ function set_pane_title() {
 old_pane_title="$(tmux display-message -p '#{pane_title}')"
 set_pane_title "vim"
 
-
 # If file is owned by root, open using `sudo`.
 for arg in "${@}"; do
     if [[ -f "${arg}" || -d "${arg}" ]] && [[ -z "$AT_WORK" ]]; then
         owner="$(stat --format '%U' "${arg}")"
-        if  [[ "${owner}" != "$USER" ]]; then
+        if [[ "${owner}" != "$USER" ]]; then
             printf "%s: Opening with 'sudo' since '%s' is owned by %s.\n" \
-                "${scriptname}" \
+                "${SCRIPTNAME}" \
                 "${arg}" \
                 "${owner}"
 
@@ -60,7 +58,6 @@ done
 if [[ "${found}" != true ]]; then
     ${editor} "$@"
 fi
-
 
 # Log filepaths of all files that were edited.
 for arg in "$@"; do
@@ -86,7 +83,7 @@ for arg in "$@"; do
         else
             sed -i "/${filepath//\//\\/}/d" "${RECENTLY_EDITED_FILES_LOG}"
         fi
-        echo "${filepath}" >> "${RECENTLY_EDITED_FILES_LOG}"
+        echo "${filepath}" >>"${RECENTLY_EDITED_FILES_LOG}"
     fi
 done
 

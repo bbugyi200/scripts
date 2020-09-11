@@ -3,7 +3,7 @@
 source /home/bryan/Sync/bin/cron.jobs/jobs.sh
 
 function main() {
-    fix_log_files  # FIXES: zopen and mopen permission failure
+    chown_log_files  # FIXES: zopen and mopen permission failure
 
     unsafe_cmd "clean_filesystem"
     unsafe_cmd "zopen -C -q"
@@ -27,21 +27,25 @@ function main() {
     external_backup_check &>/dev/null || test $? -eq 1
 
     # Generate daily summary of process accounting (needed for `sar`).
+    sa2
+
+    # Take back ownership from root.
+    chown_log_files
+    sudo chown -R bryan:bryan /home/bryan
+
+    return "${EC}"
+}
+
+function sa2() {
     if [[ -f /usr/lib64/sa/sa2 ]]; then
         sa2=/usr/lib64/sa/sa2
     else
         sa2=/usr/lib/sysstat/sa2
     fi
     sudo ${sa2} -A &
-
-    # Take back ownership from root.
-    fix_log_files
-    sudo chown -R bryan:bryan /home/bryan
-
-    return "${EC}"
 }
 
-function fix_log_files() {
+function chown_log_files() {
     sudo chown bryan:bryan /var/tmp/*.log # zopen and mopen create log files owned by root.
 }
 

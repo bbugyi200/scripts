@@ -1,46 +1,104 @@
 #!/bin/bash
 
-read -r -d '' doc << EOM
+read -r -d '' doc <<EOM
 Use 'stow' Command to Create Symlinks for All of My Dotfiles and Scripts
 EOM
 
-# ---------- Modules ----------
 source gutils.sh
-
-# ---------- Check if Running at Work -----------
-sys_info="$(uname -a)"
-if [[ "${sys_info}" == *"Darwin"* ]]; then
-    at_work=true
-
-    getopt=/usr/local/Cellar/gnu-getopt/2.33.2/bin/getopt
-else
-    getopt=/usr/bin/getopt
-fi
 
 SYNC="${HOME}"/Sync
 
-# ---------- Function Definitions ----------
-function stow_it() {
-    src="$1"; shift
-    target="$1"; shift
+function main() {
+    # Check if Running at Work
+    SYS_INFO="$(uname -a)"
+    if [[ "${SYS_INFO}" == *"Darwin"* ]]; then
+        AT_WORK=true
+        GETOPT=/usr/local/Cellar/gnu-getopt/2.33.2/bin/getopt
+    else
+        GETOPT=/usr/bin/getopt
+    fi
 
-    dir="${src%/*}"
-    subdir="${src##*/}"
+    parse_cli_args "$@"
 
-    # We use perl to filter out spurious warning output (see https://github.com/aspiers/stow/issues/65).
-    2>&1 sudo stow --dir="${dir}" --target="${target}" -"${FLAG}" "${subdir}" | perl -nE 'print unless /BUG in find_stowed_path\?/'
+    # ----- mkdir Commands
+    # Make sure that certain directories are not symlinked directly.
+    # >>> $HOME directories
+    home_dirs=(".vim" ".ssh")
+    for D in "${home_dirs[@]}"; do
+        mkdir "${HOME}"/"${D}" &>/dev/null
+    done
+
+    # >>> User Data Directories
+    data_dirs=("qutebrowser" "okular" "applications")
+    for D in "${data_dirs[@]}"; do
+        mkdir "${HOME}"/.local/share/"${D}" &>/dev/null
+    done
+
+    # ----- Cleanup Commands
+    find /home/bryan -type d -name ".mypy_cache*" -exec sudo /bin/rm -rf {} \; &>/dev/null
+
+    # ----- Main Logic
+    if [[ "${AT_WORK}" == true ]]; then
+        stow_it "${SYNC}/bin/macos" "$HOME/.local/bin"
+    else
+        # >>> Other Directories
+        mkdir -p /usr/share/rlwrap/{filters,completions} &>/dev/null
+
+        ##### ETC
+        if [[ $(hostname) == "athena" ]]; then
+            stow_it "${SYNC}/bin/cron.jobs" "/etc"
+        fi
+
+        ##### SCRIPTS
+        if [[ "${SYS_INFO}" == *"gentoo"* ]]; then
+            stow_it "${SYNC}/bin/gentoo" "$HOME/.local/bin"
+        fi
+
+        if [[ "${SYS_INFO}" == *"Debian"* ]]; then
+            stow_it "${SYNC}/bin/debian" "$HOME/.local/bin"
+        fi
+
+        ##### MODULES / LIBRARIES / HEADERS
+        stow_it "${SYNC}/bin/xmonad" "$HOME/.local/bin"
+        stow_it "${SYNC}/lib/python" "/usr/local/lib/python"
+        stow_it "${SYNC}/lib/C" "/usr/local/lib"
+        stow_it "${SYNC}/lib/zsh" "/usr/local/lib"
+        stow_it "${SYNC}/src" "/usr/local/src"
+        stow_it "${SYNC}/include" "/usr/local/include"
+
+        ##### DOTFILES
+        stow_it "${SYNC}/usr" "/usr"
+    fi
+
+    ##### SCRIPTS
+    stow_it "${SYNC}/bin/awk" "$HOME/.local/bin"
+    stow_it "${SYNC}/bin/GTD" "$HOME/.local/bin"
+    stow_it "${SYNC}/bin/main" "$HOME/.local/bin"
+    stow_it "${SYNC}/bin/tmux" "$HOME/.local/bin"
+    stow_it "${SYNC}/bin/vim" "$HOME/.local/bin"
+    stow_it "${SYNC}/bin/zathura" "$HOME/.local/bin"
+
+    ##### DOTFILES
+    stow_it "${SYNC}/home" "${HOME}"
+
+    ##### PROJECTS
+    stow_it "${SYNC}/var/projects" "$HOME/projects"
+
+    if [[ "${AT_WORK}" = true ]]; then
+        rm ~/.xinitrc
+    fi
 }
 
-# ---------- Parse Command-line Arguments ----------
-eval set -- "$("${getopt}" -o "d,h,v" -l "debug,help,verbose" -- "$@")"
+function parse_cli_args() {
+    eval set -- "$("${GETOPT}" -o "d,h,v" -l "debug,help,verbose" -- "$@")"
 
-export USAGE_GRAMMAR=(
-    "[-d] [-v] [STOW_FLAG]"
-    "-h"
-)
+    export USAGE_GRAMMAR=(
+        "[-d] [-v] [STOW_FLAG]"
+        "-h"
+    )
 
-# shellcheck disable=SC2154
-read -r -d '' help << EOM
+    # shellcheck disable=SC2154
+    read -r -d '' help <<EOM
 $(usage)
 
 ${doc}
@@ -59,97 +117,57 @@ Optional Arguments:
         Enable verbose output.
 EOM
 
-while [[ -n "$1" ]]; do
-    case $1 in
-       -d|--debug )
-           debug=true
-           ;;
-       -h|--help )
-           echo "${help}"
-           exit 0
-           ;;
-       -v|--verbose )
-           verbose=true
-           ;;
-       -- )
-           shift
-           break
-           ;;
-    esac
+    while [[ -n "$1" ]]; do
+        case $1 in
+        -d | --debug)
+            debug=true
+            ;;
+        -h | --help)
+            echo "${help}"
+            exit 0
+            ;;
+        -v | --verbose)
+            verbose=true
+            ;;
+        --)
+            shift
+            break
+            ;;
+        esac
+        shift
+    done
+
+    if [[ "${debug}" = true && "${verbose}" = true ]]; then
+        PS4='$LINENO: '
+        set -x
+    fi
+
+    if [[ -n "$1" ]]; then
+        FLAG="$1"
+        shift
+    else
+        FLAG=R
+    fi
+}
+
+function stow_it() {
+    src="$1"
     shift
-done
 
-if [[ "${debug}" = true && "${verbose}" = true ]]; then
-    PS4='$LINENO: '
-    set -x
-fi
+    target="$1"
+    shift
 
-if [[ -n "$1" ]]; then
-    FLAG="$1"; shift
-else
-    FLAG=R
-fi
+    dir="${src%/*}"
+    subdir="${src##*/}"
 
-# ---------- mkdir Commands ----------
-# Make sure that certain directories are not symlinked directly.
-# >>> $HOME directories
-home_dirs=(".vim" ".ssh")
-for D in "${home_dirs[@]}"; do
-    mkdir "${HOME}"/"${D}" &> /dev/null
-done
+    local stow_cmd="stow --dir=${dir} --target=${target} -${FLAG} ${subdir}"
+    echo "${stow_cmd}"
 
-# >>> User Data Directories
-data_dirs=("qutebrowser" "okular" "applications")
-for D in "${data_dirs[@]}"; do
-    mkdir "${HOME}"/.local/share/"${D}" &> /dev/null
-done
+    # shellcheck disable=SC2086
+    # We use perl to filter out spurious warning output (see https://github.com/aspiers/stow/issues/65).
+    sudo 2>&1 ${stow_cmd} | perl -nE 'print unless /BUG in find_stowed_path\?/'
+}
 
-# ---------- Main ----------
-if [[ "${at_work}" == true ]]; then
-    stow_it "${SYNC}/bin/macos" "$HOME/.local/bin"
-else
-    # >>> Other Directories
-    mkdir -p /usr/share/rlwrap/{filters,completions} &> /dev/null
-
-    if [[ $(hostname) == "athena" ]]; then
-	    stow_it "${SYNC}/bin/cron.jobs" "/etc"
-    fi
-
-    ##### SCRIPTS
-    if [[ "${sys_info}" == *"gentoo"* ]]; then
-        stow_it "${SYNC}/bin/gentoo" "$HOME/.local/bin"
-    fi
-    
-    if [[ "${sys_info}" == *"Debian"* ]]; then
-        stow_it "${SYNC}/bin/debian" "$HOME/.local/bin"
-    fi
-
-    ##### MODULES / LIBRARIES / HEADERS
-    stow_it "${SYNC}/bin/xmonad" "$HOME/.local/bin"
-    stow_it "${SYNC}/lib/python" "/usr/local/lib/python"
-    stow_it "${SYNC}/lib/C" "/usr/local/lib"
-    stow_it "${SYNC}/lib/zsh" "/usr/local/lib"
-    stow_it "${SYNC}/src" "/usr/local/src"
-    stow_it "${SYNC}/include" "/usr/local/include"
-
-    ##### DOTFILES
-    stow_it "${SYNC}/usr" "/usr"
-fi
-
-##### SCRIPTS
-stow_it "${SYNC}/bin/awk" "$HOME/.local/bin"
-stow_it "${SYNC}/bin/GTD" "$HOME/.local/bin"
-stow_it "${SYNC}/bin/main" "$HOME/.local/bin"
-stow_it "${SYNC}/bin/tmux" "$HOME/.local/bin"
-stow_it "${SYNC}/bin/vim" "$HOME/.local/bin"
-stow_it "${SYNC}/bin/zathura" "$HOME/.local/bin"
-
-##### DOTFILES
-stow_it "${SYNC}/home" "${HOME}"
-
-##### PROJECTS
-stow_it "${SYNC}/var/projects" "$HOME/projects"
-
-if [[ "${at_work}" = true ]]; then
-    rm ~/.xinitrc
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
 fi

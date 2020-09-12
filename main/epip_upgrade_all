@@ -15,9 +15,11 @@ SCRIPTNAME="$(basename "$0")"
 #   * required install of 'libgirepository1.0-dev' and 'libcairo2-dev' packages
 #     on Debian.
 ###############################################################################
+### Install on Python 2.7 ONLY
 EPIP_PY2_PACKAGES=(
     IPython
 )
+### Install on all Python 3.X versions
 EPIP_PY3_PACKAGES=(
     /home/bryan/projects/pylibs
     IPython
@@ -37,6 +39,7 @@ EPIP_PY3_PACKAGES=(
     bs4
     lxml
 )
+### Install on ONLY the primary Python 3.X version.
 EPIP_PRIMARY_ONLY_PACKAGES=(
     pipx
     pyfunky

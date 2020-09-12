@@ -30,7 +30,7 @@ case "$GLOBAL_MARK" in
        MARKED_FILE="$HOME/projects/CV/BryanBugyi_CV.tex"
        ;;
    'D' )
-       MARKED_FILE="$HOME/Sync/home/.config/GTD.sh"
+       MARKED_FILE="$HOME/Sync/home/.config/debian.sh"
        ;;
    'E' )
        MARKED_FILE='/etc/profile.d/private.sh'

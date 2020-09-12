@@ -9,7 +9,7 @@
 # We then run the following commands:
 confirm "sudo aptitude update"
 confirm "sudo aptitude full-upgrade"
-confirm "epip_update_all"
+confirm "epip_upgrade_all"
 confirm "pipx reinstall-all"
 confirm "debian-install-vim"
 confirm "tldr --update"

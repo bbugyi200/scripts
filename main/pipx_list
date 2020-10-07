@@ -1,0 +1,3 @@
+#!/bin/bash
+
+pipx list | perl -lanE 'print @F[1] if /^[ ]*package/'

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+cmd="$1"
+shift
+
+# ZSH Completion File
+zfile="${HOME}"/Sync/usr/local/share/zsh/site-functions/_"${cmd}"
+
+if ! [[ -f "${zfile}" ]]; then
+    MY_SCRIPTNAME="${cmd}" cookie _zsh_completion -qf "${zfile}"
+    clinks
+fi
+
+vim "${zfile}"

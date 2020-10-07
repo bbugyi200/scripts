@@ -83,7 +83,7 @@ function backup() {
 }
 
 function backup_home() {
-    backup /home home/"$1" "$2" --exclude ".cache" --exclude "bryan/Sync/var/projects/edgelp"
+    backup /home home/"$1" "$2" --exclude ".cache" --exclude "bryan/projects/edgelp"
 }
 
 function _backup() {

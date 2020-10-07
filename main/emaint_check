@@ -100,7 +100,6 @@ for action in "update" "cleanup"; do
     spec=$(emanage --days-since-last remote --"${action}")
     machine_name="${spec%:*}"
     days="${spec#*:}"
-    echo "${machine_name}"
 
     max_days="$(get_max_days "${action}" 3)"
     if [[ ${days} -ge "${max_days}" ]]; then

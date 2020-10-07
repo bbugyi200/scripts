@@ -20,7 +20,7 @@ function _run_rsync() {
     backup_dir="${PERSEUS}"/"$(hostname)"/"${D}"
     [[ -d "${backup_dir}" ]] || sudo mkdir -p "${backup_dir}"
 
-    if sudo rsync -av --delete "${D}"/ "${backup_dir}"; then
+    if sudo rsync -av --delete --delete-excluded --exclude ".cache" --exclude "bryan/projects/edgelp" "$@" "${D}"/ "${backup_dir}"; then
         return 0
     else
         return 1
@@ -33,7 +33,7 @@ function run_rsync() {
 
     clear_last_notify
 
-    if _run_rsync "${D}"; then
+    if _run_rsync "${D}" "$@"; then
         notify "${D}: ok"
     else
         notify "${D}: FAIL"
@@ -45,7 +45,7 @@ function confirm_run_sync() {
     shift
 
     if confirm "# Sync ${D}"; then
-        run_rsync "${D}"
+        run_rsync "${D}" "$@"
     fi
 }
 

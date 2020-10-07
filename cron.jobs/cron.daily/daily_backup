@@ -3,7 +3,7 @@
 source /home/bryan/Sync/bin/cron.jobs/backup.sh
 
 function main() {
-    ETBB=$((60 * 60 * 20)) # 20 hours (to give anacron more breathing room)
+    ETBB=$((60 * 60 * 20)) # seconds in 20 hours (to give anacron more breathing room)
 
     backup /bin bin/daily "${DEFAULT_R}"
     backup /boot boot/daily "${DEFAULT_R}"

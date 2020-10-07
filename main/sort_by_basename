@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+
+from os.path import basename
+import fileinput
+
+
+for f in sorted(fileinput.input(), key=basename):
+    print(f.strip())

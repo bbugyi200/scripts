@@ -18,26 +18,28 @@ SCRIPTNAME="$(basename "$0")"
 ### Install on Python 2.7 ONLY
 EPIP_PY2_PACKAGES=(
     IPython
+    virtualenv
 )
 ### Install on all Python 3.X versions
 EPIP_PY3_PACKAGES=(
     /home/bryan/projects/pylibs
+    bs4
     IPython
     loguru
+    lxml
+    more-itertools
     pandas
     parameterized
+    psutil
     pudb
     pygobject
-    requests
-    selenium
-    typing-extensions
-    redis
     pymongo
     pyyaml
     pyzmq
-    more-itertools
-    bs4
-    lxml
+    redis
+    requests
+    selenium
+    typing-extensions
 )
 ### Install on ONLY the primary Python 3.X version.
 EPIP_PRIMARY_ONLY_PACKAGES=(
@@ -87,9 +89,12 @@ function install_packs() {
 
     pyver="$(_maybe_activate_pyenv "${pyver}")"
 
+    # Sort the EPIP_PACKAGES array.
+    local epip_packages=( $(printf "%s\n" "${EPIP_PACKAGES[@]}" | sort) )
+
     _install_packs \
         "${pyver}" \
-        "${EPIP_PACKAGES[@]}"
+        "${epip_packages[@]}"
 }
 
 function _install_packs() {

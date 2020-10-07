@@ -1,8 +1,8 @@
 #!/bin/bash
 
 ###############################################################################
-#  List the timestamps of all of the daily/weekly/monthly backups in a given  #
-#  directory.                                                                 #
+#  List the timestamps of all of the daily/weekly/monthly/yearly backups in a #
+#  given directory.                                                           #
 ###############################################################################
 
 SCRIPTNAME="$(basename "$0")"

@@ -68,7 +68,7 @@ for H in holidays:
         delta = hdate - now
 
 if delta.days <= MAX:
-    path = '/home/bryan/Sync/var/photos/backgrounds/Holidays/{}.jpg'.format(
+    path = '/home/bryan/Sync/home/img/backgrounds/Holidays/{}.jpg'.format(
         H[0]
     )
     if os.path.exists(path):

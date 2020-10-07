@@ -1,0 +1,31 @@
+#!/bin/bash
+
+SCRIPTNAME="$(basename "$0")"
+
+PIPX_PACKAGES=(
+    flake8
+    grip
+    isort
+    khal
+    mypy
+    pipenv
+    poetry
+    pre-commit
+    pylint
+)
+
+function main() {
+    for pack in "${PIPX_PACKAGES[@]}"; do
+        if pipx_has_installed "${pack}"; then
+            printf -- "----- %s is already installed.\n" "${pack}"
+        else
+            confirm "pipx install ${pack}"
+        fi
+    done
+
+    confirm "pipx upgrade-all"
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

@@ -46,8 +46,8 @@ def main(argv: Sequence[str] = None) -> int:
 
 
 class RiseOrSet(enum.Enum):
-    Rise = "rise"
-    Set = "set"
+    RISE = "rise"
+    SET = "set"
 
     def __str__(self) -> str:
         return str(self.value)
@@ -110,7 +110,7 @@ def _get_soup(url: str) -> BeautifulSoup:
 def _get_ts_from_google_search(
     soup: BeautifulSoup, rise_or_set: RiseOrSet
 ) -> WResult[str]:
-    am_or_pm = 'AM' if rise_or_set is RiseOrSet.Rise else 'PM'
+    am_or_pm = 'AM' if rise_or_set is RiseOrSet.RISE else 'PM'
     pttrn = '[0-9][0-9]?:[0-9][0-9] {}'.format(am_or_pm)
 
     time_divs = soup.find_all(["div", "span"], text=re.compile(pttrn))

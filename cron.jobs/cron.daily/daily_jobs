@@ -22,10 +22,6 @@ function main() {
     # Sync khal with gmail calendar.
     vdirsyncer sync 2>/dev/null || test $? -eq 1
 
-    # Backup/update notifications.
-    emcheck &>/dev/null || test $? -eq 1
-    external_backup_check &>/dev/null || test $? -eq 1
-
     # Generate daily summary of process accounting (needed for `sar`).
     sa2
 

@@ -1,4 +1,7 @@
 #!/bin/bash
 
-encfs -o allow_root ~/Sync/var/projects/.edgelp ~/projects/edgelp
+if ! edgelp_mounted; then
+    encfs -o allow_root ~/Sync/var/projects/.edgelp ~/projects/edgelp
+fi
+
 ssh-add-all

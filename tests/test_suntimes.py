@@ -16,13 +16,13 @@ class TestSuntimes(unittest.TestCase):
             (
                 "grise_20200813",
                 "google_sunrise_search__20200813",
-                suntimes.RiseOrSet.Rise,
+                suntimes.RiseOrSet.RISE,
                 "06:10",
             ),
             (
                 "gset_20200813",
                 "google_sunset_search__20200813",
-                suntimes.RiseOrSet.Set,
+                suntimes.RiseOrSet.SET,
                 "19:58",
             ),
         ]

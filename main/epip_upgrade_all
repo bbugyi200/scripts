@@ -34,6 +34,7 @@ EPIP_PY3_PACKAGES=(
     pudb
     pygobject
     pymongo
+    python-dateutil
     pyyaml
     pyzmq
     redis
@@ -110,7 +111,7 @@ function _install_packs() {
 }
 
 function clean_all_packs() {
-    _pack_list_dir="${HOME}"/.epip_update_all/"$(hostname)"
+    _pack_list_dir="${HOME}"/."$(basename "$0")"/"$(hostname)"
     py2_pack_list="${_pack_list_dir}"/py2_pack_list
     py3_pack_list="${_pack_list_dir}"/py3_pack_list
     primary_only_pack_list="${_pack_list_dir}"/primary_only_pack_list

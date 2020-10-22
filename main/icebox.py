@@ -97,8 +97,13 @@ def freeze(icedir: Path, file_paths: Iterable[Path]) -> int:
 def unfreeze(icedir: Path) -> int:
     for path in icedir.rglob("*"):
         if path.is_file():
-            src = path.relative_to(icedir)
-            print(src)
+            src = path
+
+            dest = Path(".") / path.relative_to(icedir)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+
+            log.info("Copying {} to {}...", src, dest.absolute())
+            shutil.copy(src, dest)
     return 0
 
 

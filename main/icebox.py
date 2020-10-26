@@ -88,8 +88,7 @@ def freeze(icedir: Path, file_paths: Iterable[Path]) -> int:
         ice_parent.mkdir(parents=True, exist_ok=True)
         ice_path = ice_parent / path.name
 
-        log.info("Copying {} to {}...", path, ice_path)
-        shutil.copy(path, ice_path)
+        _shutil_copy(path, ice_path)
 
     return 0
 
@@ -102,9 +101,14 @@ def unfreeze(icedir: Path) -> int:
             dest = Path(".") / path.relative_to(icedir)
             dest.parent.mkdir(parents=True, exist_ok=True)
 
-            log.info("Copying {} to {}...", src, dest.absolute())
-            shutil.copy(src, dest)
+            _shutil_copy(src, dest.absolute())
     return 0
+
+
+def _shutil_copy(src, dest):
+    # type: (Path, Path) -> None
+    log.info("Copying {} --> {}...", src, dest)
+    shutil.copy(src, dest)
 
 
 if __name__ == "__main__":

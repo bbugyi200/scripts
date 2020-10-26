@@ -1,0 +1,20 @@
+#!/bin/bash
+
+###############################################################################
+#  Copy Nth commit message to clipboard.                                      #
+###############################################################################
+
+if [[ "$1" == "--title" ]]; then
+    shift
+    pipe_cmd="head -n 1"
+elif [[ "$1" == "--body" ]]; then
+    shift
+    pipe_cmd="tail -n +3"
+else
+    pipe_cmd="tee"
+fi
+
+N="${1:-1}"
+shift
+
+git log -1 --skip=$((N - 1)) --pretty=%B | head -n -1 | eval "${pipe_cmd}" | tee /dev/stderr | xclip -sel clipboard

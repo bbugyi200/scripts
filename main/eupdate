@@ -70,6 +70,7 @@ econfirm_if_cmd_exists "snap" "sudo snap refresh"
 econfirm_if_cmd_exists "npm" "sudo npm update --force -g"
 econfirm_if_cmd_exists "rustup" "rustup update"
 econfirm_if_cmd_exists "cargo" "cargo install-update -a"
+econfirm_if_cmd_exists "tldr" "tldr --update"
 econfirm_if_cmd_exists "pyenv" "pyenv update"
 if econfirm "# epip_upgrade_all"; then
     sudo -u bryan epip_upgrade_all

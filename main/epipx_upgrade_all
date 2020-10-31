@@ -3,6 +3,7 @@
 SCRIPTNAME="$(basename "$0")"
 
 PIPX_PACKAGES=(
+    black
     flake8
     grip
     isort

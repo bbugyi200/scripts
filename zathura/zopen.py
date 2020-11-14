@@ -3,7 +3,7 @@ Zathura Helper Script. Used to Search for and then Open Documents in Zathura.
 """
 
 import os
-from os.path import isfile
+from os import path
 from pathlib import Path
 import re
 import signal
@@ -20,15 +20,15 @@ from loguru import logger as log
 
 PathLike = Union[str, Path]
 
-_XDG_DATA_DIR = gutils.xdg.init('data')
-ALL_DOCS_CACHE_FILE = _XDG_DATA_DIR / 'all_docs'
+_XDG_DATA_DIR = gutils.xdg.init("data")
+ALL_DOCS_CACHE_FILE = _XDG_DATA_DIR / "all_docs"
 BOOKS_DIR = "/home/bryan/Sync/var/books"
 MAX_MOST_RECENT_DOCS = 100
-MOST_RECENT_CACHE_FILE = _XDG_DATA_DIR / 'recently_opened_docs'
+MOST_RECENT_CACHE_FILE = _XDG_DATA_DIR / "recently_opened_docs"
 
 _DOC_FILE_EXTS = ("pdf", "epub", "djvu", "ps", "okular")
 _DOC_FILE_EXT_GROUP = r"\({}\)".format(r"\|".join(_DOC_FILE_EXTS))
-DOC_PTTRN = rf'.*\.{_DOC_FILE_EXT_GROUP}'
+DOC_PTTRN = rf".*\.{_DOC_FILE_EXT_GROUP}"
 
 
 @gutils.catch
@@ -55,39 +55,39 @@ class Arguments(NamedTuple):
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
     parser = gutils.ArgumentParser()
     parser.add_argument(
-        '-C',
+        "-C",
         "--generate-cache",
-        action='store_true',
+        action="store_true",
         help='Re-generate the document cache (aka the "find command cache").',
     )
     parser.add_argument(
-        '-q',
-        '--quiet',
-        dest='quiet',
-        action='store_true',
+        "-q",
+        "--quiet",
+        dest="quiet",
+        action="store_true",
         help=(
-            'Do not prompt the user to choose a document. Use with -C to '
+            "Do not prompt the user to choose a document. Use with -C to "
             'silently re-generate the document cache (aka the "find command  '
             'cache").'
         ),
     )
     parser.add_argument(
-        '-x',
+        "-x",
         "--overwrite",
-        action='store_true',
-        help='Close current Zathura instance before opening new one.',
+        action="store_true",
+        help="Close current Zathura instance before opening new one.",
     )
     parser.add_argument(
-        '-R',
+        "-R",
         "--refresh",
-        action='store_true',
-        help='Closes current Zathura instance and reopens same document.',
+        action="store_true",
+        help="Closes current Zathura instance and reopens same document.",
     )
 
     args = parser.parse_args(argv[1:])
 
     kwargs = dict(args._get_kwargs())
-    kwargs["generate_cache"] = kwargs["generate_cache"] or not isfile(
+    kwargs["generate_cache"] = kwargs["generate_cache"] or not path.isfile(
         ALL_DOCS_CACHE_FILE
     )
 
@@ -98,7 +98,7 @@ def run(args: Arguments) -> int:
     all_docs = get_all_docs(use_cache=not args.generate_cache)
 
     if args.generate_cache:
-        with open(ALL_DOCS_CACHE_FILE, 'w') as f:
+        with open(ALL_DOCS_CACHE_FILE, "w") as f:
             f.writelines([str(adoc).rstrip() + "\n" for adoc in all_docs])
 
     if args.quiet:
@@ -106,7 +106,7 @@ def run(args: Arguments) -> int:
 
     mr_cache_path = Path(MOST_RECENT_CACHE_FILE)
     mr_cache_path.touch()
-    with open(mr_cache_path, 'r') as f:
+    with open(mr_cache_path, "r") as f:
         most_recent_docs = [Path(x.strip()) for x in f.readlines()]
 
     ordered_docs = promote_most_recent_docs(all_docs, most_recent_docs)
@@ -116,7 +116,7 @@ def run(args: Arguments) -> int:
         ordered_docs = demote_open_docs(ordered_docs, open_docs)
 
     pretty_docs = [
-        Path(re.sub(f'^{BOOKS_DIR}/', '', str(doc))) for doc in ordered_docs
+        Path(re.sub(f"^{BOOKS_DIR}/", "", str(doc))) for doc in ordered_docs
     ]
 
     doc: Optional[PathLike]
@@ -146,36 +146,34 @@ def run(args: Arguments) -> int:
 
 def get_all_docs(*, use_cache: bool) -> List[Path]:
     if use_cache:
-        assert isfile(ALL_DOCS_CACHE_FILE)
-        out = sp.check_output(['cat', ALL_DOCS_CACHE_FILE])
+        assert path.isfile(ALL_DOCS_CACHE_FILE)
+        out = sp.check_output(["cat", ALL_DOCS_CACHE_FILE])
         all_docs_string = out.decode().strip()
     else:
-        directory_list = ['/home/bryan/Sync', '/home/bryan/projects']
-        if socket.gethostname() == 'athena':
-            directory_list.append(
-                '/mnt/hercules/archive/home/bryan/Sync'
-            )
+        directory_list = ["/home/bryan/Sync", "/home/bryan/projects"]
+        if socket.gethostname() == "athena":
+            directory_list.append("/mnt/hercules/archive/home/bryan/Sync")
 
-        cmd_list = ['find']
+        cmd_list = ["find"]
         cmd_list.extend(directory_list)
         cmd_list.extend(
-            ['-path', '/home/bryan/Sync/.dropbox.cache', '-prune', '-o']
+            ["-path", "/home/bryan/Sync/.dropbox.cache", "-prune", "-o"]
         )
-        cmd_list.extend(['-regex', DOC_PTTRN])
+        cmd_list.extend(["-regex", DOC_PTTRN])
 
         out = sp.check_output(cmd_list)
         all_docs_string = out.decode().strip()
 
     # Append any docs found in the Downloads directory.
     out = sp.check_output(
-        ['find', '/home/bryan/Downloads', '-regex', DOC_PTTRN]
+        ["find", "/home/bryan/Downloads", "-regex", DOC_PTTRN]
     )
     downloads_docs_string = out.decode().strip()
-    all_docs_string = all_docs_string + '\n' + downloads_docs_string
-    log.trace('----- Downloads -----\n{}', downloads_docs_string)
+    all_docs_string = all_docs_string + "\n" + downloads_docs_string
+    log.trace("----- Downloads -----\n{}", downloads_docs_string)
 
     all_docs = [
-        Path(adoc) for adoc in all_docs_string.split("\n") if isfile(adoc)
+        Path(adoc) for adoc in all_docs_string.split("\n") if path.isfile(adoc)
     ]
     return all_docs
 
@@ -221,13 +219,13 @@ def demote_open_docs(
 def choose_doc_to_open(available_docs: Iterable[PathLike]) -> Optional[Path]:
     printf_ps = sp.Popen(
         [
-            'printf',
-            '{}'.format('\n'.join(str(adoc) for adoc in available_docs)),
+            "printf",
+            "{}".format("\n".join(str(adoc) for adoc in available_docs)),
         ],
         stdout=sp.PIPE,
     )
     rofi_ps = sp.Popen(
-        ['rofi', '-p', 'Document', '-m', '-4', '-dmenu', '-i'],
+        ["rofi", "-p", "Document", "-m", "-4", "-dmenu", "-i"],
         stdout=sp.PIPE,
         stdin=printf_ps.stdout,
     )
@@ -249,10 +247,10 @@ def choose_doc_to_open(available_docs: Iterable[PathLike]) -> Optional[Path]:
     assert stdout
     output = stdout.decode().strip()
 
-    if output.startswith('/'):
+    if output.startswith("/"):
         doc = Path(output)
     else:
-        doc = Path(f'{BOOKS_DIR}/{output}')
+        doc = Path(f"{BOOKS_DIR}/{output}")
 
     return doc
 
@@ -283,24 +281,24 @@ def get_open_docs() -> List[Path]:
         )
 
         open_docs_string = gutils.shell(cmd)
-        open_docs = [Path(x) for x in open_docs_string.split('\n')]
+        open_docs = [Path(x) for x in open_docs_string.split("\n")]
 
-        log.debug('Open Docs: {}'.format(open_docs))
+        log.debug("Open Docs: {}".format(open_docs))
     except sp.CalledProcessError:
         open_docs = []
-        log.debug('No documents are currently open in zathura.')
+        log.debug("No documents are currently open in zathura.")
 
     return open_docs
 
 
 def open_document(doc: PathLike, *, replace: bool = False) -> None:
-    active_window_class = gutils.shell('active_window_class')
-    if active_window_class == 'Zathura':
-        _open_document('zathura', doc, replace=replace)
-    elif active_window_class == 'okular':
-        _open_document('okular', doc, opts=['--unique'], replace=replace)
+    active_window_class = gutils.shell("active_window_class")
+    if active_window_class == "Zathura":
+        _open_document("zathura", doc, replace=replace)
+    elif active_window_class == "okular":
+        _open_document("okular", doc, opts=["--unique"], replace=replace)
     else:
-        _open_document('okular', doc, replace=replace)
+        _open_document("okular", doc, replace=replace)
 
 
 def _open_document(
@@ -314,15 +312,15 @@ def _open_document(
         opts = []
 
     if replace:
-        pid = int(gutils.shell('active_window_pid'))
-        log.debug('Killing Document Instance: {}'.format(pid))
+        pid = int(gutils.shell("active_window_pid"))
+        log.debug("Killing Document Instance: {}".format(pid))
         os.kill(pid, signal.SIGTERM)
 
     cmd_list = [cmd]
     cmd_list.extend(opts)
     cmd_list.append(str(doc))
 
-    log.debug('Opening {} in {}...'.format(doc, cmd))
+    log.debug("Opening {} in {}...".format(doc, cmd))
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
 
     # HACK: I use this to force zathura to open in fullscreen on XFCE.
@@ -343,7 +341,7 @@ def get_new_mr_cache_lines(
     else:
         open_docs = path_list(open_docs)
 
-    log.debug('Adding {} to cache file...'.format(new_doc))
+    log.debug("Adding {} to cache file...".format(new_doc))
     seen_docs = set()
     sorted_open_docs = []
     for mr_doc in most_recent_docs[:]:

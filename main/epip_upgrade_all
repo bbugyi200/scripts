@@ -18,6 +18,7 @@ SCRIPTNAME="$(basename "$0")"
 ### Install on Python 2.7 ONLY
 EPIP_PY2_PACKAGES=(
     IPython
+    regex
     virtualenv
 )
 ### Install on all Python 3.X versions
@@ -34,10 +35,12 @@ EPIP_PY3_PACKAGES=(
     pudb
     pygobject
     pymongo
+    pytest
     python-dateutil
     pyyaml
     pyzmq
     redis
+    regex
     requests
     selenium
     typing-extensions

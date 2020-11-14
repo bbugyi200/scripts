@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Interface for Gentoo System Maintenance Tasks"""
+"""Interface for System Maintenance Tasks"""
 
 import datetime as dt
 import enum

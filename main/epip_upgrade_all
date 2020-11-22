@@ -17,7 +17,9 @@ SCRIPTNAME="$(basename "$0")"
 ###############################################################################
 ### Install on Python 2.7 ONLY
 EPIP_PY2_PACKAGES=(
+    enum34
     IPython
+    pathlib
     regex
     virtualenv
 )

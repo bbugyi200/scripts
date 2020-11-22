@@ -106,7 +106,7 @@ def unfreeze(icedir: Path) -> int:
 
 
 def _shutil_copy(src: Path, dest: Path) -> None:
-    log.info("Copying {} --> {}...", src, dest)
+    log.info("Copying {} -> {}...", src, dest)
     shutil.copy(src, dest)
 
 

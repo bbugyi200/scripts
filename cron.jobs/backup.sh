@@ -220,10 +220,10 @@ function post_backup_hook() {
     for err_msg in "${ERR_MSGS[@]}"; do
         if [[ "${first_error}" = true ]]; then
             first_error=false
-            1>&2 printf "%s\n%s\n%s\n" "${bar}" "${header}" "${bar}"
+            printf 1>&2 "%s\n%s\n%s\n" "${bar}" "${header}" "${bar}"
         fi
 
-        1>&2 printf "* %s\n" "${err_msg}"
+        printf 1>&2 "* %s\n" "${err_msg}"
     done
 
     if [[ "${EC}" -eq "${NO_ERROR}" ]]; then

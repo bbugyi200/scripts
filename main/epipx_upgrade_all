@@ -10,6 +10,7 @@ PIPX_PACKAGES=(
     khal
     litecli
     mypy
+    pip-tools
     pipenv
     poetry
     pre-commit

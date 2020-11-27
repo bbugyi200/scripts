@@ -15,6 +15,7 @@ PIPX_PACKAGES=(
     poetry
     pre-commit
     pylint
+    trash-cli
 )
 
 function main() {

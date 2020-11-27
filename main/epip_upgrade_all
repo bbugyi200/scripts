@@ -33,6 +33,7 @@ EPIP_PY3_PACKAGES=(
     more-itertools
     pandas
     parameterized
+    pdbpp
     psutil
     pudb
     pygobject

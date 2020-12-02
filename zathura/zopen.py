@@ -87,8 +87,8 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
     args = parser.parse_args(argv[1:])
 
     kwargs = dict(args._get_kwargs())
-    kwargs["generate_cache"] = kwargs["generate_cache"] or not path.isfile(
-        ALL_DOCS_CACHE_FILE
+    kwargs["generate_cache"] = (
+        kwargs["generate_cache"] or not Path(ALL_DOCS_CACHE_FILE).is_file()
     )
 
     return Arguments(**kwargs)

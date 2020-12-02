@@ -146,7 +146,7 @@ def run(args: Arguments) -> int:
 
 def get_all_docs(*, use_cache: bool) -> List[Path]:
     if use_cache:
-        assert path.isfile(ALL_DOCS_CACHE_FILE)
+        assert Path(ALL_DOCS_CACHE_FILE).is_file()
         out = sp.check_output(["cat", ALL_DOCS_CACHE_FILE])
         all_docs_string = out.decode().strip()
     else:
@@ -173,7 +173,9 @@ def get_all_docs(*, use_cache: bool) -> List[Path]:
     log.trace("----- Downloads -----\n{}", downloads_docs_string)
 
     all_docs = [
-        Path(adoc) for adoc in all_docs_string.split("\n") if path.isfile(adoc)
+        Path(adoc)
+        for adoc in all_docs_string.split("\n")
+        if Path(adoc).is_file()
     ]
     return all_docs
 

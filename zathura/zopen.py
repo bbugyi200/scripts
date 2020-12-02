@@ -3,7 +3,6 @@ Zathura Helper Script. Used to Search for and then Open Documents in Zathura.
 """
 
 import os
-from os import path
 from pathlib import Path
 import re
 import signal

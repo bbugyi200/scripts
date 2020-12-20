@@ -1,7 +1,49 @@
 #!/bin/bash
 
-watson stop &> /dev/null
+###############################################################################
+#  Lock this machine and start 'motion' if it is installed.                   #
+###############################################################################
 
-scrot /tmp/screenshot.png
-convert /tmp/screenshot.png -blur 0x5 /tmp/screenshotblur.png
-i3lock -n -i /tmp/screenshotblur.png
+### Parse CLI options.
+if [[ "${1}" == "-d" ]]; then
+    shift
+    PS4='$LINENO: '
+    set -x
+fi
+
+if [[ "${1}" == --no-blur ]]; then
+    shift
+    no_blur=true
+fi
+
+### Setup exit handler.
+REMOVE_ON_EXIT=()
+function exit_handler() {
+    rm -rf "${REMOVE_ON_EXIT[@]}"
+    if pgrep motion; then
+        sudo pkill motion
+    fi
+}
+trap 'exit_handler' INT TERM EXIT
+
+### Start 'motion'.
+if command -v motion &>/dev/null; then
+    sudo motion &
+fi
+
+### Run 'i3lock'.
+if [[ "${no_blur}" = true ]]; then
+    grey=7b7575
+    i3lock -n -c "${grey}"
+else
+    tmpf="$(mktemp /tmp/screenshot-XXX.png)"
+    rm -rf "${tmpf}"  # 'scrot' expects this file to NOT exist
+    REMOVE_ON_EXIT+=("${tmpf}")
+
+    blurred_tmpf="$(mktemp /tmp/screenshotblur-XXX.png)"
+    REMOVE_ON_EXIT+=("${blurred_tmpf}")
+
+    scrot "${tmpf}"
+    convert "${tmpf}" -blur 0x5 "${blurred_tmpf}"
+    i3lock -n -i "${blurred_tmpf}"
+fi

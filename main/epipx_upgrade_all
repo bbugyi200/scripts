@@ -3,7 +3,9 @@
 SCRIPTNAME="$(basename "$0")"
 
 PIPX_PACKAGES=(
+    argcomplete
     black
+    bump2version
     flake8
     grip
     isort
@@ -14,6 +16,7 @@ PIPX_PACKAGES=(
     pipenv
     poetry
     pre-commit
+    pyfunky
     pylint
     trash-cli
 )

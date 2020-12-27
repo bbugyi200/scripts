@@ -5,10 +5,16 @@ if [[ "$1" == "--dry" ]]; then
     shift
 fi
 
-sshot_file=/tmp/shot.png
+REMOVE_ON_EXIT=()
 
-scrot_err="$(mktemp /tmp/scrot.XXX.err)"
-trap 'rm -rf ${scrot_err}' EXIT
+sshot_file="$(mktemp /tmp/shot-XXX.png)"
+rm -rf "${sshot_file}"
+REMOVE_ON_EXIT+=("${sshot_file}")
+
+scrot_err="$(mktemp /tmp/scrot-XXX.err)"
+REMOVE_ON_EXIT+=("${scrot_err}")
+
+trap 'rm -rf ${REMOVE_ON_EXIT[@]}' INT TERM EXIT
 
 release_mod_keys
 if ! scrot -s "${sshot_file}" 2> "${scrot_err}"; then

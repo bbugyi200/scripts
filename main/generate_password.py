@@ -151,6 +151,12 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def run(args: Arguments) -> int:
+    password = generate_password(args)
+    print(password)
+    return 0
+
+
+def generate_password(args: Arguments) -> str:
     password_chars = ""
 
     if args.use_uppercase:
@@ -184,9 +190,8 @@ def run(args: Arguments) -> int:
         random.choice("".join(set(password_chars)))
         for _ in range(args.password_length)
     )
-    print(password)
 
-    return 0
+    return password
 
 
 if __name__ == "__main__":

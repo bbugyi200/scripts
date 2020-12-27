@@ -1,0 +1,3 @@
+#!/bin/bash
+
+/home/bryan/projects/spider/crawl_linkedin -k "python software:python developer:python production engineer:python site reliability engineer:python SRE" -l "NYC" -p "1-3" -e 15 -u bryanbugyi34@gmail.com -S 3600:1800 >/dev/null 2>/dev/null

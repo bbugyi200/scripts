@@ -36,6 +36,7 @@ EPIP_PY3_PACKAGES=(
     pdbpp
     psutil
     pudb
+    prometheus_client
     pygobject
     pymongo
     pytest

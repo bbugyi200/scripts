@@ -27,6 +27,7 @@ EPIP_PY2_PACKAGES=(
 EPIP_PY3_PACKAGES=(
     /home/bryan/projects/pylibs
     bs4
+    fastapi
     IPython
     loguru
     lxml
@@ -52,6 +53,7 @@ EPIP_PY3_PACKAGES=(
 ### Install on ONLY the primary Python 3.X version.
 EPIP_PRIMARY_ONLY_PACKAGES=(
     pipx
+    uvicorn
     virtualenvwrapper
 )
 
@@ -64,11 +66,13 @@ function main() {
 
     trap 'has_pyenv && pyenv global ${PRIMARY_VERSION}' INT TERM EXIT
 
+    ONE_AT_A_TIME=0
     EPIP_PACKAGES=(${EPIP_PY2_PACKAGES[@]})
     for pyver in $(py2_versions); do
         install_packs "${pyver}"
     done
 
+    ONE_AT_A_TIME=0
     for pyver in $(py3_versions); do
         EPIP_PACKAGES=(${EPIP_PY3_PACKAGES[@]})
         EPIP_PACKAGES+=($(primary_only_packs "${pyver}"))
@@ -112,7 +116,13 @@ function _install_packs() {
     packages=("$@")
     shift
 
-    epip_install -v "${pyver}" "${packages[@]}"
+    epip_install_args=()
+    if [[ "${ONE_AT_A_TIME}" -eq 1 ]]; then
+        epip_install_args+=(-1)
+    fi
+    epip_install_args+=(-V "${pyver}" "${packages[@]}")
+
+    epip_install "${epip_install_args[@]}"
 
     printf "\n"
 }

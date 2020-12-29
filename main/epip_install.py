@@ -2,51 +2,39 @@
 Installs provided python packages if they do not already exist.
 """
 
-import argparse
 import os
 from shutil import which
 from subprocess import Popen
 import sys
 from typing import NamedTuple, Sequence
 
-
-Arguments = NamedTuple(
-    "Arguments",
-    [("python_packages", Sequence[str]), ("python_versions", Sequence[float])],
-)
+import gutils
 
 
-def install_pypacks(pypacks: Sequence[str], pyver: float) -> None:
-    python = f"python{pyver}"
+@gutils.catch
+def main(argv: Sequence[str] = None) -> int:
+    if argv is None:
+        argv = sys.argv
 
-    all_pypacks = ["pip"]
-    all_pypacks.extend(pypacks)
-    for pypack in all_pypacks:
-        print(f"----- Upgrading {pypack}...")
+    args = parse_cli_args(argv)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
-        if pypack.startswith("/"):
-            os.chdir(pypack)
-            os.system("rm -rf *.egg-info")
-            pip_args = ["-e", "."]
-        else:
-            pip_args = [pypack]
-
-        pip_cmd_list = [python, "-m", "pip", "install", "--user", "-U"]
-        pip_cmd_list.extend(pip_args)
-        ps = Popen(pip_cmd_list)
-        ps.communicate()
+    return run(args)
 
 
-def python_version_exists(pyver: float) -> bool:
-    if which(f"python{pyver}") is None:
-        return False
-    return True
+class Arguments(NamedTuple):
+    debug: bool
+    verbose: bool
+    python_packages: Sequence[str]
+    python_versions: Sequence[float]
+    one_at_a_time: bool
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = gutils.ArgumentParser()
     parser.add_argument(
-        "-v",
+        "-V",
+        "--python-version",
         action="append",
         dest="python_versions",
         metavar="MAJOR.MINOR",
@@ -55,6 +43,12 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
             "A valid python version number (e.g. 2.7, 3.6, 3.7, etc....). This"
             " option can be provided more than once."
         ),
+    )
+    parser.add_argument(
+        "-1",
+        "--one-at-a-time",
+        action="store_true",
+        help="Install each Python pacakge individually.",
     )
     parser.add_argument(
         "python_packages",
@@ -72,18 +66,14 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
             " option)."
         )
 
-    return Arguments(**dict(args._get_kwargs()))
+    kwargs = dict(args._get_kwargs())
+    return Arguments(**kwargs)
 
 
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-
+def run(args: Arguments) -> int:
     is_first_pyver = True
     for pyver in args.python_versions:
-        if not python_version_exists(pyver):
+        if not _python_version_exists(pyver):
             raise SystemExit(f"[ERROR]: python{pyver} is not installed.")
 
         if is_first_pyver:
@@ -92,9 +82,63 @@ def main(argv: Sequence[str] = None) -> int:
             print()
 
         print(f"===== Python {pyver} =====")
-        install_pypacks(args.python_packages, pyver)
+        _install_pypacks(
+            args.python_packages, pyver, one_at_a_time=args.one_at_a_time
+        )
 
     return 0
+
+
+def _install_pypacks(
+    pypacks: Sequence[str], pyver: float, one_at_a_time: bool = True
+) -> None:
+    all_pypacks = ["pip"]
+    all_pypacks.extend(pypacks)
+
+    python = f"python{pyver}"
+    pip_install_cmd = [python, "-m", "pip", "install", "--user", "-U"]
+
+    pypacks_installed = 0
+    for pypack in all_pypacks:
+        if not one_at_a_time and not pypack.startswith("/"):
+            continue
+
+        pypacks_installed += 1
+        print(
+            f"----- Upgrading {pypack}"
+            f" ({pypacks_installed}/{len(all_pypacks)})..."
+        )
+
+        if pypack.startswith("/"):
+            os.chdir(pypack)
+            os.system("rm -rf *.egg-info")
+            pip_args = ["-e", "."]
+        else:
+            pip_args = [pypack]
+
+        pip_cmd_list = list(pip_install_cmd)
+        pip_cmd_list.extend(pip_args)
+        ps = Popen(pip_cmd_list)
+        ps.communicate()
+
+    if one_at_a_time:
+        return
+
+    if pypacks_installed > 0:
+        print(f"----- Upgrading Remaining {len(all_pypacks)} Packages")
+
+    pip_cmd_list = list(pip_install_cmd)
+    pip_cmd_list.extend(
+        [pypack for pypack in all_pypacks if not pypack.startswith("/")]
+    )
+    ps = Popen(pip_cmd_list)
+    ps.communicate()
+
+
+def _python_version_exists(pyver: float) -> bool:
+    if which(f"python{pyver}") is None:
+        return False
+    return True
 
 
 if __name__ == "__main__":

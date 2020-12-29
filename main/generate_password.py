@@ -2,10 +2,18 @@
 Generate a random N character password.
 """
 
+import argparse as ap
 import random
 import string
 import sys
-from typing import NamedTuple, Sequence
+from typing import (
+    Any,
+    Callable,
+    MutableMapping,
+    NamedTuple,
+    NoReturn,
+    Sequence,
+)
 
 import gutils
 from loguru import logger as log  # pylint: disable=unused-import
@@ -30,11 +38,17 @@ class Arguments(NamedTuple):
     use_lowercase: bool
     use_digits: bool
     use_symbols: bool
+    reverse: bool
     include_chars: str
     exclude_chars: str
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
+    if any(opt in argv for opt in ["-r", "--reverse"]):
+        store_bool = "store_true"
+    else:
+        store_bool = "store_false"
+
     parser = gutils.ArgumentParser()
     parser.add_argument(
         "password_length",
@@ -52,32 +66,38 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
         "-U",
         "--no-uppercase",
         dest="use_uppercase",
-        action="store_false",
+        action=store_bool,
         help="Do NOT allow uppercase letters to be included in the password.",
     )
     parser.add_argument(
         "-L",
         "--no-lowercase",
         dest="use_lowercase",
-        action="store_false",
+        action=store_bool,
         help="Do NOT allow lowercase letters to be included in the password.",
     )
     parser.add_argument(
         "-D",
         "--no-digits",
         dest="use_digits",
-        action="store_false",
+        action=store_bool,
         help="Do NOT allow digits (i.e. 0-9) to be included in the password.",
     )
     parser.add_argument(
         "-S",
         "--no-symbols",
         dest="use_symbols",
-        action="store_false",
+        action=store_bool,
         help=(
             "Do NOT allow symbols (e.g. '@', '!', '>', ...) to be included in"
             " the password."
         ),
+    )
+    parser.add_argument(
+        "-r",
+        "--reverse",
+        action="store_true",
+        help="Reverse the effects of the -U, -L, -S, and -D options.",
     )
     parser.add_argument(
         "-i",
@@ -96,7 +116,17 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
     )
 
     args = parser.parse_args(argv[1:])
+    _validate_cli_args(args, parser.error)
 
+    kwargs = dict(args._get_kwargs())
+    _set_password_length(kwargs)
+
+    return Arguments(**kwargs)
+
+
+def _validate_cli_args(
+    args: ap.Namespace, parser_error: Callable[[str], NoReturn]
+) -> None:
     if not (
         args.use_uppercase
         or args.use_lowercase
@@ -104,11 +134,20 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
         or args.use_symbols
         or args.include_chars
     ):
-        parser.error(
-            "Cannot use ALL of the -U, -L, -D, and -S options, since this"
-            " leaves us with no characters that we are allowed to include in"
-            " our newly generated password."
-        )
+        if args.reverse:
+            emsg = (
+                "Must use at least one of -U, -L, -D, or -S options when the"
+                " --reverse option is given, since we cannot create a password"
+                " consisting of only characters from the empty set."
+            )
+        else:
+            emsg = (
+                "Cannot use ALL of the -U, -L, -D, and -S options, since this"
+                " leaves us with no characters that we are allowed to include"
+                " in our newly generated password."
+            )
+
+        parser_error(emsg)
 
     last = 0
     for N in args.password_length.split(":", 1):
@@ -117,7 +156,7 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
             assert last < n
             last = n
         except (AssertionError, ValueError):
-            parser.error(
+            parser_error(
                 "The 'password_length' argument must be of the form 'L[:U]',"
                 " where both 'L' and 'U' are positive nonzero integer values"
                 " such that 'U' (if specified) is greater than 'L'."
@@ -128,35 +167,36 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
         and args.exclude_chars
         and any(ch in args.include_chars for ch in args.exclude_chars)
     ):
-        parser.error(
+        parser_error(
             "The character sets specified by the -i and -x options CANNOT"
             " intersect."
         )
 
-    kwargs = dict(args._get_kwargs())
-    if ":" in args.password_length:
-        (lower, upper) = args.password_length.split(":", 1)
+
+def _set_password_length(kwargs: MutableMapping[str, Any]) -> None:
+    raw_password_length = kwargs["password_length"]
+
+    if ":" in raw_password_length:
+        (lower, upper) = raw_password_length.split(":", 1)
         (plower, pupper) = (
             int(lower),
             int(upper) + 1,
         )
     else:
-        plower = int(args.password_length)
+        plower = int(raw_password_length)
         pupper = plower + 1
 
     password_length = random.choice(range(plower, pupper))
     kwargs["password_length"] = password_length
 
-    return Arguments(**kwargs)
-
 
 def run(args: Arguments) -> int:
-    password = generate_password(args)
+    password = _generate_password(args)
     print(password)
     return 0
 
 
-def generate_password(args: Arguments) -> str:
+def _generate_password(args: Arguments) -> str:
     password_chars = ""
 
     if args.use_uppercase:

@@ -38,17 +38,11 @@ class Arguments(NamedTuple):
     use_lowercase: bool
     use_digits: bool
     use_symbols: bool
-    reverse: bool
     include_chars: str
     exclude_chars: str
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    if any(opt in argv for opt in ["-r", "--reverse"]):
-        store_bool = "store_true"
-    else:
-        store_bool = "store_false"
-
     parser = gutils.ArgumentParser()
     parser.add_argument(
         "password_length",
@@ -66,38 +60,32 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
         "-U",
         "--no-uppercase",
         dest="use_uppercase",
-        action=store_bool,
+        action="store_false",
         help="Do NOT allow uppercase letters to be included in the password.",
     )
     parser.add_argument(
         "-L",
         "--no-lowercase",
         dest="use_lowercase",
-        action=store_bool,
+        action="store_false",
         help="Do NOT allow lowercase letters to be included in the password.",
     )
     parser.add_argument(
         "-D",
         "--no-digits",
         dest="use_digits",
-        action=store_bool,
+        action="store_false",
         help="Do NOT allow digits (i.e. 0-9) to be included in the password.",
     )
     parser.add_argument(
         "-S",
         "--no-symbols",
         dest="use_symbols",
-        action=store_bool,
+        action="store_false",
         help=(
             "Do NOT allow symbols (e.g. '@', '!', '>', ...) to be included in"
             " the password."
         ),
-    )
-    parser.add_argument(
-        "-r",
-        "--reverse",
-        action="store_true",
-        help="Reverse the effects of the -U, -L, -S, and -D options.",
     )
     parser.add_argument(
         "-i",
@@ -134,20 +122,11 @@ def _validate_cli_args(
         or args.use_symbols
         or args.include_chars
     ):
-        if args.reverse:
-            emsg = (
-                "Must use at least one of -U, -L, -D, or -S options when the"
-                " --reverse option is given, since we cannot create a password"
-                " consisting of only characters from the empty set."
-            )
-        else:
-            emsg = (
-                "Cannot use ALL of the -U, -L, -D, and -S options, since this"
-                " leaves us with no characters that we are allowed to include"
-                " in our newly generated password."
-            )
-
-        parser_error(emsg)
+        parser_error(
+            "Cannot use ALL of the -U, -L, -D, and -S options, since this"
+            " leaves us with no characters that we are allowed to include in"
+            " our newly generated password."
+        )
 
     last = 0
     for N in args.password_length.split(":", 1):

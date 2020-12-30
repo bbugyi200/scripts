@@ -7,12 +7,15 @@ import sys
 from typing import NamedTuple, Sequence
 from wsgiref.simple_server import make_server
 
+import prometheus_client as pc
+
 from . import client
-from .routes import route_registry
 from .path_dispatcher import PathDispatcher
+from .routes import route_registry
 
 
 log = logging.getLogger(__name__)
+PROMETHEUS_METRICS_PORT = 9101
 
 
 class Arguments(NamedTuple):
@@ -60,8 +63,8 @@ def main(argv: Sequence[str] = None) -> int:
     args = parse_cli_args(argv)
 
     init_logging()
-
     try:
+        pc.start_http_server(PROMETHEUS_METRICS_PORT)
         pid_dir = "/var/run" if os.access("/var/run", os.W_OK) else "/tmp"
         pid_file = f"{pid_dir}/rfserver.pid"
         with open(pid_file, "w") as f:

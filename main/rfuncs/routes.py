@@ -2,6 +2,8 @@ import json
 import logging
 from typing import Iterable
 
+import prometheus_client as pc
+
 from .authenticator import ATTEMPT_LIMIT, ATTEMPT_PERIOD
 from .route_registry import RouteRegistry
 from .types import AnyStr, Environ, StartResponse
@@ -13,19 +15,34 @@ log = logging.getLogger(__name__)
 route_registry = RouteRegistry()
 route = route_registry.register
 
+error_count = pc.Counter("rfserver_error_count", "Count of failed requests.", ["code"])
+error_count.labels(401)
+error_count.labels(403)
+error_count.labels(404)
+
 
 class Errors:
     @staticmethod
     def badauth_401(
         _environ: Environ, start_response: StartResponse
     ) -> Iterable[AnyStr]:
+        error_count.labels(401).inc()
         start_response("401 Not Authorized", PLAIN_HEADER)
         yield "Not Authorized: Bad Access Token"
+
+    @staticmethod
+    def no_token_401(
+        _environ: Environ, start_response: StartResponse
+    ) -> Iterable[AnyStr]:
+        error_count.labels(401).inc()
+        start_response("401 No Token Provided", PLAIN_HEADER)
+        yield "Not Authorized: No Token Provided"
 
     @staticmethod
     def suspended_403(
         _environ: Environ, start_response: StartResponse
     ) -> Iterable[AnyStr]:
+        error_count.labels(403).inc()
         start_response("403 Forbidden", PLAIN_HEADER)
         yield (
             "Access Suspended: This client address has made more than"
@@ -37,6 +54,7 @@ class Errors:
     def notfound_404(
         _environ: Environ, start_response: StartResponse
     ) -> Iterable[AnyStr]:
+        error_count.labels(403).inc()
         start_response("404 Not Found", PLAIN_HEADER)
         yield "Not Found"
 

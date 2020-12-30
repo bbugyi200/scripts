@@ -1,6 +1,15 @@
 from typing import Callable, Sequence
 
+import prometheus_client as pc
+
 from .types import Route, RouteMap
+
+
+route_time = pc.Summary(
+    "rfserver_route_time",
+    "The amount of time spent in each route.",
+    ["endpoint"],
+)
 
 
 class RouteRegistry:
@@ -18,8 +27,9 @@ class RouteRegistry:
 
         def _register(route: Route) -> Route:
             assert methods is not None
+            timed_route = route_time.labels(endpoint=path).time()(route)
             for method in methods:
-                self.map[method.lower(), path] = route
-            return route
+                self.map[method.lower(), path] = timed_route
+            return timed_route
 
         return _register

@@ -2,15 +2,9 @@ import cgi
 import logging
 from typing import Iterable
 
-from .authenticator import Authenticator
 from . import routes
-from .types import (
-    AuthStatus,
-    Environ,
-    RouteMap,
-    MutableEnviron,
-    StartResponse,
-)
+from .authenticator import Authenticator
+from .types import AuthStatus, Environ, MutableEnviron, RouteMap, StartResponse
 
 
 log = logging.getLogger(__name__)
@@ -27,40 +21,46 @@ class PathDispatcher:
         _params = cgi.FieldStorage(environ["wsgi.input"], environ=environ)
         params = {key: _params.getvalue(key) for key in _params.keys()}
 
-        client_token = params["token"]
-        del params["token"]
-        environ["params"] = params
+        method = None
+        if "token" in params:
+            client_token = params["token"]
+            del params["token"]
+            environ["params"] = params
 
-        path = environ["PATH_INFO"]
-        method = environ["REQUEST_METHOD"].lower()
-        route = self.route_map.get(
-            (method, path), routes.Errors.notfound_404
-        )
+            path = environ["PATH_INFO"]
+            method = environ["REQUEST_METHOD"].lower()
+            route = self.route_map.get(
+                (method, path), routes.Errors.notfound_404
+            )
 
-        log.info(
-            f"New Client Request: method={method!r}, path={path!r},"
-            f" params={params!r}"
-        )
+            log.info(
+                f"New Client Request: method={method!r}, path={path!r},"
+                f" params={params!r}"
+            )
 
-        client_addr = _get_client_address(environ)
-        auth_status = self.authenticator.check(client_addr, client_token)
-        if auth_status is AuthStatus.DENIED:
-            route = routes.Errors.badauth_401
-        elif auth_status is AuthStatus.SUSPENDED:
-            route = routes.Errors.suspended_403
+            client_addr = _get_client_address(environ)
+            auth_status = self.authenticator.check(client_addr, client_token)
+            if auth_status is AuthStatus.DENIED:
+                route = routes.Errors.badauth_401
+            elif auth_status is AuthStatus.SUSPENDED:
+                route = routes.Errors.suspended_403
+        else:
+            route = routes.Errors.no_token_401
 
         for resp_msg in route(environ, start_response):
             if isinstance(resp_msg, str):
                 resp_msg = resp_msg.encode("utf-8")
 
-            log.info(
-                f"{method.upper()} response from {path} route: {resp_msg!r}"
-            )
+            if method is not None:
+                log.info(
+                    f"{method.upper()} response from {path} route: {resp_msg!r}"
+                )
+
             yield resp_msg
 
 
 def _get_client_address(environ: Environ) -> str:
     try:
-        return environ['HTTP_X_FORWARDED_FOR'].split(',')[-1].strip()
+        return environ["HTTP_X_FORWARDED_FOR"].split(",")[-1].strip()
     except KeyError:
-        return environ['REMOTE_ADDR']
+        return environ["REMOTE_ADDR"]

@@ -4,8 +4,9 @@ SCRIPTNAME="$(basename "$0")"
 
 PIPX_PACKAGES=(
     argcomplete
-    black
+    /home/bryan/projects/black
     bump2version
+    /home/bryan/projects/clipster
     flake8
     grip
     isort
@@ -23,10 +24,15 @@ PIPX_PACKAGES=(
 
 function main() {
     for pack in "${PIPX_PACKAGES[@]}"; do
-        if pipx_has_installed "${pack}"; then
-            printf -- "----- %s is already installed.\n" "${pack}"
+        pack_name="$(basename "${pack}")"
+        if pipx_has_installed "${pack_name}"; then
+            printf -- "----- %s is already installed.\n" "${pack_name}"
         else
-            confirm "pipx install ${pack}"
+            if [[ "${pack}" == "${pack_name}" ]]; then
+                confirm "pipx install ${pack}"
+            else
+                confirm "pipx install -e ${pack}"
+            fi
         fi
     done
 

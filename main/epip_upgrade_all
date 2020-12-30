@@ -10,10 +10,6 @@ SCRIPTNAME="$(basename "$0")"
 ###############################################################################
 # loguru:
 #   * my personal scripts use loguru
-# pygobject:
-#   * clipster dependency
-#   * required install of 'libgirepository1.0-dev' and 'libcairo2-dev' packages
-#     on Debian.
 ###############################################################################
 ### Install on Python 2.7 ONLY
 EPIP_PY2_PACKAGES=(
@@ -38,7 +34,6 @@ EPIP_PY3_PACKAGES=(
     psutil
     pudb
     prometheus_client
-    pygobject
     pymongo
     pytest
     python-dateutil

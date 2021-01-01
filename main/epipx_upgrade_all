@@ -3,28 +3,30 @@
 SCRIPTNAME="$(basename "$0")"
 
 PIPX_PACKAGES=(
-    argcomplete
-    /home/bryan/projects/black
-    bump2version
-    /home/bryan/projects/clipster
-    flake8
-    grip
-    isort
-    khal
-    litecli
-    mypy
-    pip-tools
-    pipenv
-    poetry
-    pre-commit
-    pyfunky
-    pylint
-    trash-cli
+    "argcomplete"
+    "/home/bryan/projects/black"
+    "bump2version"
+    "/home/bryan/projects/clipster[prometheus]"
+    "flake8"
+    "grip"
+    "isort"
+    "khal"
+    "litecli"
+    "mypy"
+    "pip-tools"
+    "pipenv"
+    "poetry"
+    "pre-commit"
+    "pyfunky"
+    "pylint"
+    "trash-cli"
 )
 
 function main() {
     for pack in "${PIPX_PACKAGES[@]}"; do
         pack_name="$(basename "${pack}")"
+        pack_name="$(echo "${pack_name}" | perl -nE 'print s/\[.*//gr')"
+
         if pipx_has_installed "${pack_name}"; then
             printf -- "----- %s is already installed.\n" "${pack_name}"
         else

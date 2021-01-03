@@ -177,21 +177,30 @@ def _monthly_payment(
 
 
 def run(args: Arguments) -> int:
-    print(args)
+    log.debug(args)
+
     ipayments, ppayments = get_all_payments(args)
 
-    locale.setlocale(locale.LC_ALL, "")
-    money = partial(locale.currency, grouping=True)
-    for i, (iamount, pamount) in enumerate(zip(ipayments, ppayments)):
-        spacing = " " * (4 - len(str(i + 1)))
-        print(
-            f"[{i + 1}]:{spacing}Interest={money(iamount):<11}| "
-            f" Principal={money(pamount)}"
-        )
+    if args.verbose:
+        locale.setlocale(locale.LC_ALL, "")
+        money = partial(locale.currency, grouping=True)
+        total_interest = 0.0
+        total_principal = args.deposit
+        for i, (iamount, pamount) in enumerate(zip(ipayments, ppayments)):
+            total_interest += iamount
+            total_principal += pamount
+            spacing = " " * (4 - len(str(i + 1)))
+            print(
+                f"[{i + 1}]:{spacing}Interest={money(iamount):<11}| "
+                f" Principal={money(pamount):<11}| Total"
+                f" Interest={money(total_interest):<13}| Total"
+                f" Principal={money(total_principal)}"
+            )
 
-    print()
-    print(f"INTEREST PAID: {money(sum(ipayments))}")
-    print(f"TOTAL AMOUNT PAID: {money(sum(ipayments) + args.principal)}")
+        print()
+        print(f"TOTAL AMOUNT PAID: {money(sum(ipayments) + args.principal)}")
+    else:
+        print(int(sum(ipayments)))
 
     return 0
 
@@ -210,11 +219,12 @@ def get_all_payments(args: Arguments) -> Tuple[List[float], List[float]]:
         ipayments.append(iamount)
 
         pamount = min(P, monthly_payment - iamount)
+        if i < args.extra_payments.months:
+            pamount += args.extra_payments.amount
+
         ppayments.append(pamount)
 
         P -= pamount
-        if i < args.extra_payments.months:
-            P -= args.extra_payments.amount
 
         if P <= 0:
             break

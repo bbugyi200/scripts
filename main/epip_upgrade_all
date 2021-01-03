@@ -42,6 +42,7 @@ EPIP_PY3_PACKAGES=(
     redis
     regex
     requests
+    schedule
     selenium
     typing-extensions
 )

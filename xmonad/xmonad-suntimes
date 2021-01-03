@@ -55,6 +55,10 @@ if [[ "${debug}" = true && "${verbose}" = true ]]; then
 fi
 
 # ---------- Main ----------
+if ! xmonad_is_running; then
+    exit 0
+fi
+
 set -e
 
 if [[ "${refresh}" = true ]]; then

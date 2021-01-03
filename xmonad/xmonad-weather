@@ -12,6 +12,16 @@ LAST_WEATHER_REPORT_F="${HOME}"/.poll-weather.txt
 SCRIPTNAME="$(basename "$0")"
 
 function main() {
+    if [[ "${1}" == "-d" ]]; then
+        shift
+        PS4='$LINENO: '
+        set -x
+    fi
+
+    if ! xmonad_is_running; then
+        return 0
+    fi
+
     fifo_path="${MY_XDG_RUNTIME}"/fifo
     [ -d "${MY_XDG_RUNTIME}" ] || mkdir "${MY_XDG_RUNTIME}"
     [ -p "${fifo_path}" ] || mkfifo "${fifo_path}"

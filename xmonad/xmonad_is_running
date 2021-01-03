@@ -1,0 +1,7 @@
+#!/bin/bash
+
+if pgrep -x -f /home/bryan/.xmonad/xmonad-x86_64-linux &>/dev/null; then
+    exit 0
+else
+    exit 1
+fi

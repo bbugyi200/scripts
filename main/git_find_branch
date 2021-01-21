@@ -1,3 +1,9 @@
 #!/bin/bash
 
-git branch | awk '{print $1}' | grep "^$1-.*" | head -n 1
+result="$(git branch | awk '{print $1}' | grep "^$1-.*" | head -n 1)"
+
+if [[ -z "${result}" ]]; then
+    result="$1"
+fi
+
+echo "${result}"

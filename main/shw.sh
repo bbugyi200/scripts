@@ -7,6 +7,11 @@
 #  'preexec' function.                            #
 ###################################################
 
+if [[ -z "${SHV_SHELL_HISTORY_ROOT}" ]]; then
+    printf 1>&2 "shw.sh: In order to run shw.sh, the SHV_SHELL_HISTORY_ROOT environment variable must first be set.\n"
+    exit 1
+fi
+
 HOSTNAME="$(hostname)"
 LOGFILE="${SHV_SHELL_HISTORY_ROOT}/${HOSTNAME}/$(date +%Y/%m).log"
 LOGDIR="$(dirname "$LOGFILE")"

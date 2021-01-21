@@ -21,6 +21,6 @@ fi
 do_external_backup "${perseus}"
 
 if confirm "# External Backup is Finished"; then
-    confirm "date +%s | tee ${ts_file_array[*]} > /dev/null"
+    confirm "date +%s | tee ${ts_file_array[*]} >/dev/null"
     confirm "sudo umount ${perseus}"
 fi

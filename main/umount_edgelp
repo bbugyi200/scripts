@@ -1,8 +1,0 @@
-#!/bin/bash
-
-if edgelp_mounted; then
-    nohup sh -c "sleep 3 && fusermount -u /home/bryan/projects/edgelp" >/dev/null & disown
-    echo "The edgelp directory has been unmounted."
-else
-    echo "The edgelp directory is NOT currently mounted."
-fi

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+###############################################################################
+#  Fix monitor bug when coming back from sleep (2021-01-18)
+###############################################################################
+
+function run() {
+    local port="$1"
+    shift
+
+    xrandr --output DisplayPort-"${port}" "$@"
+}
+
+run 1 --off
+run 1 --mode 1920x1080
+run 1 --mode 3840x2160
+run 1 --right-of DisplayPort-0

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+###############################################################################
+# Use 'my-screenlock' to lock the screen after the system has been idle for
+# MILLISECONDS milliseconds.
+###############################################################################
+
+SCRIPTNAME="$(basename "$0")"
+
+if [[ $# -ne 1 ]]; then
+    printf 1>&2 "usage: ${SCRIPTNAME} MILLISECONDS\n"
+    exit 1
+fi
+
+max_idle="$1"
+shift
+
+PIDFILE=/tmp/lock_on_idle.pid
+trap 'rm -rf ${PIDFILE}' INT TERM EXIT
+
+if [[ "$(xprintidle)" -gt "${max_idle}" ]] && ! [[ -f "${PIDFILE}" ]]; then
+    echo $$ > "${PIDFILE}"
+    my-screenlock --no-blur
+    exit 0
+else
+    exit 1
+fi

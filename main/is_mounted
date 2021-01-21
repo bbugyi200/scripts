@@ -1,0 +1,10 @@
+#!/bin/bash
+
+company="$1"
+shift
+
+if mount | grep -q "encfs.*${company}"; then
+    exit 0
+else
+    exit 1
+fi

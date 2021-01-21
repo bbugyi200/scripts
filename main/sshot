@@ -5,3 +5,4 @@ rm -rf "${temp}"
 
 release_mod_keys
 scrot -s "${temp}" && xclip -selection 'clipboard' -t image/png "${temp}"
+echo "${temp}"

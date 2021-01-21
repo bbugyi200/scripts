@@ -1,0 +1,11 @@
+#!/bin/bash
+
+company="$1"
+shift
+
+if is_mounted "${company}"; then
+    nohup sh -c "sleep 3 && fusermount -u /home/bryan/projects/${company}" >/dev/null & disown
+    echo "The ${company} directory has been unmounted."
+else
+    echo "The ${company} directory is NOT currently mounted."
+fi

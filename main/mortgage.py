@@ -168,14 +168,6 @@ def _kwargs_hook(
     K["deposit"] = int(K["deposit"])
 
 
-def _monthly_payment(
-    principal: float, interest_rate: float, months: int
-) -> float:
-    N = interest_rate * (1 + interest_rate) ** months
-    D = (1 + interest_rate) ** months - 1
-    return principal * N / D
-
-
 def run(args: Arguments) -> int:
     log.debug(args)
 
@@ -230,6 +222,14 @@ def get_all_payments(args: Arguments) -> Tuple[List[float], List[float]]:
             break
 
     return ipayments, ppayments
+
+
+def _monthly_payment(
+    principal: float, interest_rate: float, months: int
+) -> float:
+    N = interest_rate * (1 + interest_rate) ** months
+    D = (1 + interest_rate) ** months - 1
+    return principal * N / D
 
 
 if __name__ == "__main__":

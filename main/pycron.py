@@ -37,11 +37,15 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def run(_args: Arguments) -> int:
+    log.info("Starting pycron...")
+
     xmonad_weather = command("xmonad-weather", ["xmonad-weather"])
     for M in [":00", ":15", ":30", ":45"]:
+        log.info("Registering 'xmonad-weather' to run every hour at {}...", M)
         schedule.every().hour.at(M).do(run_threaded, xmonad_weather)
 
     xmonad_suntimes = command("xmonad-suntimes", ["xmonad-suntimes"])
+    log.info("Registering 'xmonad-suntimes' to run every 6 hours...")
     schedule.every(6).hours.do(run_threaded, xmonad_suntimes)
 
     while True:
@@ -60,6 +64,8 @@ def command(name: str, cmd_list: Sequence[str]) -> Callable[[], None]:
     run_count = 0
 
     def _command() -> None:
+        log.info("Running the {!r} command...", name)
+
         nonlocal run_count
         run_count += 1
 

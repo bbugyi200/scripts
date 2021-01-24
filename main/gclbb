@@ -1,0 +1,81 @@
+#!/bin/bash
+
+###############################################################################
+#  `git clone` a bloomberg repo
+###############################################################################
+
+PROJECT_DIR="${HOME}"/projects/work/bloomberg
+SCRIPTNAME="$(basename "$0")"
+
+function main() {
+    if run "$@"; then
+        local exit_code=0
+    else
+        local exit_code=$?
+        printf ".\n"
+    fi
+
+    return "${exit_code}"
+}
+
+function run() {
+    if [[ $# -ne 1 ]]; then
+        printf 1>&2 "usage: %s PATH/TO/REPO\n" "${SCRIPTNAME}"
+        return 2
+    fi
+
+    local repo="$1"
+    shift
+
+    if ! is_mounted "bloomberg"; then
+        printf 1>&2 \
+            "[ERROR] The %s directory has not been mounted yet!\n" \
+            "${PROJECT_DIR}"
+        return 1
+    fi
+
+    cd "${PROJECT_DIR}" || return 1
+
+    local repo_dir="$(dirname "${repo}")"
+    mkdir -p "${repo_dir}" &>/dev/null
+    cd "${repo_dir}" || return 1
+
+    local repo_name="$(basename "${repo}")"
+    if [[ "${repo}" == *".git" ]]; then
+        local git_repo="${repo}"
+        repo_name="${repo_name/.git/}"
+    else
+        local git_repo="${repo}".git
+    fi
+
+    local full_repo_dir="${PROJECT_DIR}"/"${repo_dir}"/"${repo_name}"
+    local repo_git_dir="${full_repo_dir}"/.git
+
+    if ! [[ -d "${repo_git_dir}" ]]; then
+        if [[ "${repo}" == *"bbugyi/"* ]]; then
+            local origin="origin"
+        else
+            local origin="upstream"
+        fi
+
+        if ! git clone git@bbgithub.dev.bloomberg.com:"${git_repo}" -o "${origin}"; then
+            printf 1>&2 "[ERROR] The \`git clone\` command failed.\n"
+            return 1
+        fi
+    fi
+
+    if ! [[ -d "${repo_git_dir}" ]]; then
+        printf 1>&2 \
+            "[ERROR] Logic error in the '%s' script: The %s directory does not exist.\n" \
+            "${SCRIPTNAME}" \
+            "${repo_git_dir}"
+        return 1
+    fi
+
+    printf "${full_repo_dir}\n" | tee /dev/stderr
+    return 0
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

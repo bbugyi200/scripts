@@ -20,7 +20,7 @@ function _run_rsync() {
     backup_dir="${PERSEUS}"/"$(hostname)"/"${D}"
     [[ -d "${backup_dir}" ]] || sudo mkdir -p "${backup_dir}"
 
-    if sudo rsync -av --delete --delete-excluded --exclude ".cache" --exclude "bryan/projects/edgelp" "$@" "${D}"/ "${backup_dir}"; then
+    if sudo rsync -av --delete --delete-excluded --exclude ".cache" --exclude "bryan/projects/work" "$@" "${D}"/ "${backup_dir}"; then
         return 0
     else
         return 1

@@ -83,7 +83,7 @@ function backup() {
 }
 
 function backup_home() {
-    backup /home home/"$1" "$2" --exclude ".cache" --exclude "bryan/projects/edgelp"
+    backup /home home/"$1" "$2" --exclude ".cache" --exclude "bryan/projects/work"
 }
 
 function _backup() {

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+company="$1"
+shift
+
+if ! is_mounted "${company}"; then
+    encfs -o allow_root ~/Sync/var/projects/work/."${company}" ~/projects/work/"${company}"
+fi
+
+ssh-add-all

@@ -6,9 +6,9 @@ if [[ "${1}" == "-d" ]]; then
     set -x
 fi
 
-
-if [[ -n "$1" ]]; then
+if [[ $# -ge 1 ]]; then
     repo="$1"
+    shift
 else
     repo="$(xclip -selection clipboard -out)"
 fi

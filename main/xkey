@@ -1,0 +1,3 @@
+#!/bin/bash
+
+release_mod_keys && xdotool key --clearmodifiers "$@"

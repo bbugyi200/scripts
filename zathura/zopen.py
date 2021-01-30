@@ -1,5 +1,5 @@
 """
-Zathura Helper Script. Used to Search for and then Open Documents in Zathura.
+Zathura helper script. Used to search for and then open documents in Zathura.
 """
 
 import os

@@ -1,4 +1,4 @@
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 import unittest
 
 from parameterized import parameterized
@@ -20,7 +20,7 @@ class TestZopen(unittest.TestCase):
         self,
         mr_docs: Iterable[PathLike],
         new_doc: PathLike,
-        open_docs: Iterable[PathLike],
+        open_docs: Optional[Iterable[PathLike]],
         expected: List[str],
     ) -> None:
         new_mr_cache_lines = zopen.get_new_mr_cache_lines(
@@ -31,5 +31,5 @@ class TestZopen(unittest.TestCase):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -3,7 +3,7 @@
 source /home/bryan/Sync/bin/cron.jobs/jobs.sh
 
 function main() {
-    chown_log_files  # FIXES: zopen and mopen permission failure
+    unsafe_cmd "chown_log_files" # FIXES: zopen and mopen permission failure
 
     unsafe_cmd "clean_filesystem"
     unsafe_cmd "zopen -C -q"
@@ -23,7 +23,7 @@ function main() {
     vdirsyncer sync 2>/dev/null || test $? -eq 1
 
     # Generate daily summary of process accounting (needed for `sar`).
-    sa2
+    unsafe_cmd "sa2"
 
     # Take back ownership from root.
     chown_log_files

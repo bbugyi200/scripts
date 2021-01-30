@@ -19,13 +19,27 @@ function main() {
 }
 
 function run() {
-    if [[ $# -ne 1 ]]; then
-        printf 1>&2 "usage: %s PATH/TO/REPO\n" "${SCRIPTNAME}"
+    if [[ $# -gt 1 ]]; then
+        printf 1>&2 "usage: %s [PATH/TO/REPO]\n" "${SCRIPTNAME}"
         return 2
     fi
 
-    local repo="$1"
-    shift
+    if [[ $# -eq 1 ]]; then
+        local repo="$1"
+        shift
+    else
+        local repo="$(xclip -o -sel clip)"
+
+        local bbgithub_url=bbgithub.dev.bloomberg.com
+        if [[ "${repo}" != *"${bbgithub_url}"* ]]; then
+            printf 1>&2 \
+                "[ERROR] Invalid repo URL scraped from system clipboard: %s\n" \
+                "${repo}"
+            return 1
+        fi
+
+        repo="${repo#*${bbgithub_url}/}"
+    fi
 
     if ! is_mounted "bloomberg"; then
         printf 1>&2 \
@@ -36,9 +50,9 @@ function run() {
 
     cd "${PROJECT_DIR}" || return 1
 
-    local repo_dir="$(dirname "${repo}")"
-    mkdir -p "${repo_dir}" &>/dev/null
-    cd "${repo_dir}" || return 1
+    local project_dir="$(dirname "${repo}")"
+    mkdir -p "${project_dir}" &>/dev/null
+    cd "${project_dir}" || return 1
 
     local repo_name="$(basename "${repo}")"
     if [[ "${repo}" == *".git" ]]; then
@@ -48,7 +62,7 @@ function run() {
         local git_repo="${repo}".git
     fi
 
-    local full_repo_dir="${PROJECT_DIR}"/"${repo_dir}"/"${repo_name}"
+    local full_repo_dir="${PROJECT_DIR}"/"${project_dir}"/"${repo_name}"
     local repo_git_dir="${full_repo_dir}"/.git
 
     if ! [[ -d "${repo_git_dir}" ]]; then

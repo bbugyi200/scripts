@@ -9,6 +9,11 @@ if [ "$(id -u)" != "$(id -u bryan)" ]; then
     exec sudo -u bryan "$0" "$@"
 fi
 
+if [[ "$1" == "-v" || "$1" == "--verbose" ]]; then
+    shift
+    VERBOSE=true
+fi
+
 source "${HOME}"/.profile
 
 DELETE_LATER=()
@@ -30,6 +35,10 @@ function unsafe_cmd() {
 
     cmd_stdout_f="$(mktemp "/tmp/daily_jobs-${cmd%% *}-XXX.out")"
     DELETE_LATER+=("${cmd_stdout_f}")
+
+    if [[ "${VERBOSE}" = true ]]; then
+        printf "unsafe_cmd: %s\n" "${cmd}"
+    fi
 
     eval "${cmd}" >"${cmd_stdout_f}"
     LAST_EC=$?

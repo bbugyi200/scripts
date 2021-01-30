@@ -3,9 +3,11 @@
 company="$1"
 shift
 
+DELAY=3
+
 if is_mounted "${company}"; then
-    nohup sh -c "sleep 3 && fusermount -u /home/bryan/projects/work/${company}" &>/dev/null & disown
-    echo "The ${company} directory has been unmounted."
+    nohup sh -c "sleep ${DELAY} && fusermount -u /home/bryan/projects/work/${company} || notify-send -u critical 'fusermount' 'Failed to unmount the ${company} directory.'" &>/dev/null & disown
+    echo "The ${company} directory will be unmounted in ${DELAY} seconds."
 else
     echo "The ${company} directory is NOT currently mounted."
 fi

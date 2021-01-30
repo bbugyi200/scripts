@@ -2,6 +2,7 @@
 
 """Adds new inbox task to Evernote."""
 
+import subprocess as sp
 import sys
 from typing import Sequence
 
@@ -18,13 +19,12 @@ def main(argv: Sequence[str] = None) -> int:
     args = parser.parse_args(argv[1:])
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
-    raw_out = gutils.shell("prompt Inbox")
+    ps = sp.Popen(["prompt", "Inbox"], stdout=sp.PIPE)
+    stdout, _stderr = ps.communicate()
+    out = stdout.decode().strip()
 
-    gutils.shell(
-        'send2en "{}"'.format(
-            raw_out.strip("'\""),
-        )
-    )
+    ps = sp.Popen(["send2en", out])
+    ps.communicate()
 
     gutils.notify("Added new task to Evernote.")
     return 0

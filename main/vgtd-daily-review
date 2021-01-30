@@ -30,24 +30,6 @@ function main() {
 
         printf ">>> Saved completed daily checklist:  ${history_f}\n"
     fi
-    
-    # if ! update-daily-tasks; then
-    #     vgtd-weekly-review
-    #     confirm "perl -i.bak -pE 's/(?<=Days Until Weekly Review: )0/14/' ~/Sync/var/notes/daily_tasks.txt"
-    # fi
-    
-    work_time_card="$HOME"/Sync/var/logs/work_time_card.log
-    if [[ "$(hostname)" == *"bugyidesk.pr.edgelp.net"* ]]; then
-        if [[ -f "${work_time_card}" ]]; then
-            cp "${work_time_card}" "${work_time_card}".bak
-        fi
-    
-        pmset -g log | grep -E "Display is turned (on|off)" >> "${work_time_card}".bak
-        sort -u "${work_time_card}".bak > "${work_time_card}"
-        rm "${work_time_card}".bak
-    
-        scp -r "gitlab-ci.pr.edgelp.net:/prod/home/bbugyi/shell-history/*" ~/Sync/var/logs/shell-history/ &> /dev/null
-    fi
 }
 
 if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then

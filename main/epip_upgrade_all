@@ -35,6 +35,7 @@ EPIP_PY3_PACKAGES=(
     pudb
     prometheus_client
     pymongo
+    pysocks
     pytest
     python-dateutil
     pyyaml

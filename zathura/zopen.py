@@ -57,7 +57,7 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
         "-C",
         "--generate-cache",
         action="store_true",
-        help='Re-generate the document cache (aka the "find command cache").',
+        help="Re-generate the document cache.",
     )
     parser.add_argument(
         "-q",
@@ -66,8 +66,7 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
         action="store_true",
         help=(
             "Do not prompt the user to choose a document. Use with -C to "
-            'silently re-generate the document cache (aka the "find command  '
-            'cache").'
+            "silently re-generate the document cache."
         ),
     )
     parser.add_argument(

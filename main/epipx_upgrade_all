@@ -3,6 +3,8 @@
 SCRIPTNAME="$(basename "$0")"
 
 PIPX_PACKAGES=(
+    "ansible"
+    "ansible-lint"
     "argcomplete"
     "/home/bryan/projects/black"
     "bump2version"

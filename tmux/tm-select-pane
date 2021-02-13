@@ -91,7 +91,7 @@ fi
 
 
 function is_vim() {
-    if tmux display-message -p '#{pane_title}' | grep -iq vim; then
+    if tmux display-message -p '#{pane_current_command} #{pane_title}' | grep -v ssh | grep -iq vim; then
         return 0
     else
         return 1

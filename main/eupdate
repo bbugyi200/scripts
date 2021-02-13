@@ -77,6 +77,9 @@ if econfirm "# epip_upgrade_all"; then
 fi
 econfirm_if_cmd_exists "pipx" "epipx_upgrade_all"
 econfirm "vim +PluginUpdate +qall"
+if econfirm "# ansible-playbook"; then
+    ansible-playbook ~/projects/ansible_config/playbook.yml -e "ansible_sudo_pass=$(pass show bryan@athena)" -l "$(hostname)"
+fi
 
 if [[ "${sys_info}" == *"gentoo"* ]]; then
     echeck_kernel_version || printf ">>> The sys-kernel/gentoo-sources package was upgraded, so the linux kernel needs to be rebuilt and reinstalled!\n"

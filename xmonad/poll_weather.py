@@ -2,7 +2,7 @@
 
 import datetime as dt
 import re
-import subprocess as sp  # noqa: F401
+import subprocess as sp
 import sys
 import time
 from typing import NamedTuple, Optional, Sequence

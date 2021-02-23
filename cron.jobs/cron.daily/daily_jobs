@@ -20,7 +20,7 @@ function main() {
     unsafe_cmd "run_all_script_tests"
 
     # Sync khal with gmail calendar.
-    vdirsyncer sync 2>/dev/null || test $? -eq 1
+    unsafe_cmd "vdirsyncer sync"
 
     # Generate daily summary of process accounting (needed for `sar`).
     unsafe_cmd "sa2"

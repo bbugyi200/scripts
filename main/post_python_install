@@ -1,0 +1,18 @@
+#!/bin/bash
+
+###############################################################################
+#  Run this script after installing a new primary python version via pyenv.
+#
+# Example:
+# ```
+# pyenv uninstall 3.8.7
+# pyenv install 3.8.8
+# pyenv global 3.8.8
+# post_python_install
+# ```
+###############################################################################
+
+confirm "python -m pip uninstall pipx"
+confirm "python -m pip install pipx"
+confirm "pipx reinstall-all"
+confirm "debian-install-vim"

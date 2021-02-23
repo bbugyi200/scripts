@@ -64,10 +64,9 @@ set -e
 if [[ "${refresh}" = true ]]; then
     suntimes rise > "${fp_sunrise}"
     suntimes set > "${fp_sunset}"
-    sleep 5
-else
-    R="$(cat ${fp_sunrise})"
-    S="$(cat ${fp_sunset})"
-
-    printf "%s / %s\n" "${R}" "${S}" > "${MY_XDG_RUNTIME}"/fifo
 fi
+
+R="$(cat ${fp_sunrise})"
+S="$(cat ${fp_sunset})"
+
+printf "%s / %s\n" "${R}" "${S}" > "${MY_XDG_RUNTIME}"/fifo

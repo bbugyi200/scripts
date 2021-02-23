@@ -9,11 +9,10 @@ import subprocess as sp
 import sys
 import textwrap
 from types import FrameType
-from typing import MutableSequence, NamedTuple, Sequence
+from typing import Final, MutableSequence, NamedTuple, Sequence
 
 import gutils
 from loguru import logger as log  # pylint: disable=unused-import
-from typing_extensions import Final
 
 
 TS_FMT: Final = "%Y%m%d%H%M%S"

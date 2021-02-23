@@ -19,8 +19,14 @@ function main() {
 }
 
 function run() {
+    if [[ "${1}" == "-d" ]]; then
+        shift
+        PS4='$LINENO: '
+        set -x
+    fi
+
     if [[ $# -gt 1 ]]; then
-        printf 1>&2 "usage: %s [PATH/TO/REPO]\n" "${SCRIPTNAME}"
+        printf 1>&2 "usage: %s [-d] [PATH/TO/REPO]\n" "${SCRIPTNAME}"
         return 2
     fi
 
@@ -56,7 +62,10 @@ function run() {
 
     local repo_name="$(basename "${repo}")"
     if [[ "${repo}" == *".git" ]]; then
+        local git_repo="${repo}"
         repo_name="${repo_name/.git/}"
+    else
+        local git_repo="${repo}".git
     fi
 
     local full_repo_dir="${PROJECT_DIR}"/"${project_dir}"/"${repo_name}"
@@ -69,7 +78,7 @@ function run() {
             local origin="upstream"
         fi
 
-        if ! git clone git@bbgithub.dev.bloomberg.com:"${repo_name}".git -o "${origin}"; then
+        if ! git clone git@bbgithub.dev.bloomberg.com:"${git_repo}" -o "${origin}"; then
             printf 1>&2 "[ERROR] The \`git clone\` command failed.\n"
             return 1
         fi

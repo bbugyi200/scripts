@@ -8,10 +8,9 @@ Any command starting with an uppercase letter will be run inside of a new urxvt
 instance. Any command starting with '@' will also be piped to less.
 """
 
-import argparse
 import subprocess as sp  # noqa: F401
 import sys
-from typing import List, Sequence
+from typing import List, NamedTuple, Sequence
 
 import gutils
 from loguru import logger as log
@@ -25,12 +24,41 @@ def main(argv: Sequence[str] = None) -> int:
     args = parse_cli_args(argv)
     gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
-    prompt_cmd = ['prompt', '@'] if args.less else 'prompt'
+    return run(args)
+
+
+class Arguments(NamedTuple):
+    debug: bool
+    less: bool
+    verbose: bool
+
+
+def parse_cli_args(argv: Sequence[str]) -> Arguments:
+    parser = gutils.ArgumentParser()
+    parser.add_argument(
+        "-L",
+        dest="less",
+        action="store_true",
+        help="Pipe output of command to `less`.",
+    )
+
+    args = parser.parse_args(argv[1:])
+    kwargs = dict(args._get_kwargs())
+
+    return Arguments(**kwargs)
+
+
+def run(args: Arguments) -> int:
+    prompt_cmd = ["prompt", "@"] if args.less else "prompt"
     ps = sp.Popen(prompt_cmd, stdout=sp.PIPE)
     cmd = ps.communicate()[0].decode().strip()
 
-    if cmd == '':
+    if cmd == "":
         sys.exit(1)
+
+    # Escape special shell characters.
+    for ch in ["?", "!"]:
+        cmd = cmd.replace(ch, f"\\{ch}")
 
     cmd_list = shell_cmd(cmd, args.less)
     sp.Popen(cmd_list, stdout=sp.DEVNULL, stderr=sp.STDOUT)
@@ -38,38 +66,26 @@ def main(argv: Sequence[str] = None) -> int:
     return 0
 
 
-def parse_cli_args(argv: Sequence[str]) -> argparse.Namespace:
-    parser = gutils.ArgumentParser()
-    parser.add_argument(
-        '-L',
-        dest='less',
-        action='store_true',
-        help='Pipe output of command to `less`.',
-    )
-    args = parser.parse_args(argv[1:])
-    return args
-
-
 def shell_cmd(cmd: str, less: bool) -> List[str]:
     """ Returns Shell Command List """
     cmd_list = []
 
-    if cmd[0] == '@' or less or cmd[0].isupper():
-        log.debug('Using urxvt command list.')
-        cmd_list.extend(['urxvt', '-name', 'big-floater', '-e'])
+    if cmd[0] == "@" or less or cmd[0].isupper():
+        log.debug("Using urxvt command list.")
+        cmd_list.extend(["urxvt", "-name", "big-floater", "-e"])
         cmd = cmd[0].lower() + cmd[1:]
-        if cmd[0] == '@' or less:
+        if cmd[0] == "@" or less:
             log.debug('Piping output of "{}" to less.'.format(cmd))
-            cmd = cmd[1:] if cmd[0] == '@' else cmd
-            cmd = '{}{}'.format(cmd, ' | less')
+            cmd = cmd[1:] if cmd[0] == "@" else cmd
+            cmd = "{}{}".format(cmd, " | less")
     else:
         log.debug('Will run "{}" in the background.'.format(cmd))
 
-    cmd_list.extend(['zsh', '-i', '-c', cmd])
-    log.debug('Shell Command List: {}'.format(cmd_list))
+    cmd_list.extend(["zsh", "-i", "-c", cmd])
+    log.debug("Shell Command List: {}".format(cmd_list))
 
     return cmd_list
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

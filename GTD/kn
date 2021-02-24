@@ -5,48 +5,79 @@
 import datetime as dt
 import os
 import subprocess as sp
+import sys
+from typing import NamedTuple, Sequence
 
-from dateutil.parser import parse
-from loguru import logger as log  # pylint: disable=unused-import
-
+from dateutil.parser import parse as parse_dt
 import gutils
+from loguru import logger as log  # pylint: disable=unused-import
 
 
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
 @gutils.catch
-def main(args):
-    start_dt = parse(args.start_time)
+def main(argv: Sequence[str] = None) -> int:
+    if argv is None:
+        argv = sys.argv
+
+    args = parse_cli_args(argv)
+    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+
+    return run(args)
+
+
+class Arguments(NamedTuple):
+    debug: bool
+    start_time: str
+    event_name: str
+    tomorrow: bool
+    verbose: bool
+
+
+def parse_cli_args(argv: Sequence[str]) -> Arguments:
+    parser = gutils.ArgumentParser()
+    parser.add_argument("start_time", help="Start-time of event.")
+    parser.add_argument("event_name", nargs="*", help="Event name.")
+    parser.add_argument(
+        "-T",
+        "--tomorrow",
+        action="store_true",
+        help="Create event for tomorrow instead of today.",
+    )
+
+    args = parser.parse_args(argv[1:])
+    kwargs = dict(args._get_kwargs())
+
+    return Arguments(**kwargs)
+
+
+def run(args: Arguments) -> int:
+    start_dt = parse_dt(args.start_time)
     now = dt.datetime.now()
 
     if start_dt < now or args.tomorrow:
         start_dt = start_dt.replace(day=start_dt.day + 1)
 
     cmd_list = [
-        'khal',
-        'new',
-        '-a',
-        'daily',
-        start_dt.strftime('%Y-%m-%dT%H:%M'),
-        ' '.join(args.event_name),
+        "khal",
+        "new",
+        "-a",
+        "daily",
+        start_dt.strftime("%Y-%m-%dT%H:%M"),
+        " ".join(args.event_name),
     ]
 
-    sp.check_call(cmd_list)
-    sp.Popen(['calalrms'], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+    exit_code = 0
+
+    ps = sp.Popen(cmd_list)
+    ps.communicate()
+    exit_code |= ps.returncode
+
+    sp.Popen(["calalrms"], stdout=sp.DEVNULL, stderr=sp.STDOUT)
+
+    return exit_code
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
-    parser.add_argument('start_time', help='Start-time of event.')
-    parser.add_argument('event_name', nargs='*', help='Event name.')
-    parser.add_argument(
-        '-T',
-        '--tomorrow',
-        action='store_true',
-        help="Create event for tomorrow instead of today.",
-    )
-    args = parser.parse_args()
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-    main(args)
+    sys.exit(main())

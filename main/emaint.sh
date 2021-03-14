@@ -1,4 +1,4 @@
-# shellcheck disable=SC2154
+#!/bin/bash
 
 ###################################################################################################
 #  Bash module for Gentoo maintenance scripts (which are interfaced via the `emanage` script.     #
@@ -16,24 +16,28 @@ count_path="${MY_XDG_DATA}"/count
 
 slave_count=0
 if [[ -n "$1" ]]; then
-    master_count="$1"; shift
+    master_count="$1"
+    shift
 else
     master_count=0
 fi
 
 function econfirm() {
-    echo "${slave_count}" &> "${count_path}"
+    echo "${slave_count}" &>"${count_path}"
     slave_count=$((slave_count + 1))
 
     if [[ "$1" == "-p" ]]; then
         shift
-        local prompt="$1"; shift
+        local prompt="$1"
+        shift
     fi
 
-    cmd="$1"; shift
+    cmd="$1"
+    shift
     if [[ "${master_count}" -lt "${slave_count}" ]]; then
         if [[ -n "$1" ]]; then
-            eval "$1"; shift
+            eval "$1"
+            shift
         fi
 
         master_count=$((master_count + 1))

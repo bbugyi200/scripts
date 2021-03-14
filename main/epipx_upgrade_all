@@ -9,6 +9,7 @@ PIPX_PACKAGES=(
     "/home/bryan/projects/black"
     "bump2version"
     "/home/bryan/projects/clipster[prometheus]"
+    "cruft"
     "flake8"
     "grip"
     "isort"
@@ -27,21 +28,23 @@ PIPX_PACKAGES=(
 )
 
 function main() {
+    pipx_list_file="$(mktemp /tmp/pipx-list-XXX.txt)"
     for pack in "${PIPX_PACKAGES[@]}"; do
         pack_name="$(basename "${pack}")"
         pack_name="$(echo "${pack_name}" | perl -nE 'print s/\[.*//gr')"
 
-        if pipx_has_installed "${pack_name}"; then
+        if pipx_has_installed "${pack_name}" -f "${pipx_list_file}"; then
             printf -- "----- %s is already installed.\n" "${pack_name}"
         else
-            if [[ "${pack}" == "${pack_name}" ]]; then
-                confirm "pipx install ${pack}"
-            else
+            if [[ "${pack}" == "/"* ]]; then
                 confirm "pipx install -e ${pack}"
+            else
+                confirm "pipx install ${pack}"
             fi
         fi
     done
 
+    rm -rf "${pipx_list_file}"
     confirm "pipx upgrade-all"
 }
 

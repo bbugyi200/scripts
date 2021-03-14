@@ -4,7 +4,9 @@ perseus="${1:-/mnt/perseus}"
 ts_file="${perseus}"/external_backup.txt # Timestamp File
 ts_file_array=("${ts_file}" "${HOME}"/.external_backup.txt)
 
-if ! mount | grep -q "${perseus}"; then
+if mount | grep -q "${perseus}"; then
+    printf ">>> ${perseus} is already mounted.\n"
+else
     confirm "sudo mount -L PERSEUS ${perseus}"
 
     if [[ -f "${ts_file}" ]]; then
@@ -14,8 +16,6 @@ if ! mount | grep -q "${perseus}"; then
     fi
 
     printf "LAST EXTERNAL BACKUP: %s\n\n" "${last_backup}"
-else
-    printf ">>> ${perseus} is already mounted.\n"
 fi
 
 do_external_backup "${perseus}"

@@ -13,16 +13,15 @@ import time
 
 import gutils
 
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
 from loguru import logger as log
-RUNTIME_DIR = gutils.xdg.init('runtime')
-PID_FILE = '{}/pid'.format(RUNTIME_DIR)
-FIFO_PATH = '{}/fifo'.format(RUNTIME_DIR)
-TOMORROW_MARKER = '@'
+
+
+RUNTIME_DIR = gutils.xdg.init("runtime")
+PID_FILE = "{}/pid".format(RUNTIME_DIR)
+FIFO_PATH = "{}/fifo".format(RUNTIME_DIR)
+TOMORROW_MARKER = "@"
 today = dt.date.today()
+
 
 @gutils.catch
 def main():
@@ -36,24 +35,24 @@ def main():
     log.debug("Raw Event List: {}".format(event_list))
 
     event_list = get_NL_split_event_list(event_list)
-    log.debug('Newline Split Event List: {}'.format(event_list))
+    log.debug("Newline Split Event List: {}".format(event_list))
 
     event_list = list(filter_allday_events(event_list))
-    log.debug('Event List (without allday events): {}'.format(event_list))
+    log.debug("Event List (without allday events): {}".format(event_list))
 
     event_list = list(map(lambda event: event.split(maxsplit=1), event_list))
-    log.debug('Double Split Event List: {}'.format(event_list))
+    log.debug("Double Split Event List: {}".format(event_list))
 
     event_list = get_marked_event_list(event_list)
-    log.debug('Marked Event List: {}'.format(event_list))
+    log.debug("Marked Event List: {}".format(event_list))
 
     events = get_unique_event_ordered_dict(event_list)
-    log.debug('Unique Event List: {}'.format(events))
+    log.debug("Unique Event List: {}".format(events))
 
     for start, titles in events.items():
-        title = ' + '.join(titles)
+        title = " + ".join(titles)
 
-        cmd_list = ['alarm']
+        cmd_list = ["alarm"]
         opts = []
 
         if start[0] == TOMORROW_MARKER:
@@ -62,29 +61,31 @@ def main():
             # check if day has changed
             current_day = dt.date.today().day
             if today.day == current_day:
-                opts.extend(['-T'])
+                opts.extend(["-T"])
 
         opts.extend([start, title])
         cmd_list.extend(opts)
 
         if xmonad_is_running:
-            with open(FIFO_PATH, 'w') as fifo:
+            with open(FIFO_PATH, "w") as fifo:
                 log.debug('Writing "{}" to {}.'.format(title, FIFO_PATH))
                 fifo.write('"{}" at {}\n'.format(title, start))
 
         try:
-            log.debug('Command List: {}', cmd_list)
+            log.debug("Command List: {}", cmd_list)
             child_pid = os.fork()
             if child_pid == 0:
-                os.execl('{}/.local/bin/alarm'.format(os.environ['HOME']), *cmd_list)
+                os.execl(
+                    "{}/.local/bin/alarm".format(os.environ["HOME"]), *cmd_list
+                )
 
             pid, status = os.waitpid(child_pid, 0)
         except sp.CalledProcessError:
-            raise RuntimeError('Current alarm was interupted.')
+            raise RuntimeError("Current alarm was interupted.")
         else:
             time.sleep(0.5)
 
-    log.debug('No calendar events to set alarm for. Terminating...')
+    log.debug("No calendar events to set alarm for. Terminating...")
 
 
 def get_raw_event_list():
@@ -94,12 +95,12 @@ def get_raw_event_list():
         Output of 'khal list' command.
     """
     end_date = dt.date.today() + dt.timedelta(days=2)
-    end_date_string = end_date.strftime('%Y-%m-%d')
+    end_date_string = end_date.strftime("%Y-%m-%d")
     cmd = "khal list --notstarted --format '{{start-time}} {{title}}' now {}"
     out = sp.check_output(cmd.format(end_date_string), shell=True)
     event_list = out.decode().strip()
 
-    if event_list.strip().startswith('No'):
+    if event_list.strip().startswith("No"):
         sys.exit(0)
 
     return event_list
@@ -114,8 +115,8 @@ def get_NL_split_event_list(old_event_list):
     Returns ([str]):
         A list of event strings.
     """
-    event_list = old_event_list.split('\n')
-    if 'Today' in event_list[0]:
+    event_list = old_event_list.split("\n")
+    if "Today" in event_list[0]:
         event_list = event_list[1:]
     return event_list
 
@@ -133,12 +134,17 @@ def get_marked_event_list(old_event_list):
     tomorrow_index = len(old_event_list)
     for i, event_pair in enumerate(old_event_list):
         event_time, _ = event_pair
-        if 'Tomorrow,' == event_time:
+        if "Tomorrow," == event_time:
             tomorrow_index = i
             break
 
     event_list = old_event_list[:tomorrow_index]
-    event_list.extend([['{}{}'.format(TOMORROW_MARKER, start), title] for start, title in old_event_list[tomorrow_index + 1:]])
+    event_list.extend(
+        [
+            ["{}{}".format(TOMORROW_MARKER, start), title]
+            for start, title in old_event_list[tomorrow_index + 1 :]
+        ]
+    )
     return event_list
 
 
@@ -170,7 +176,7 @@ def filter_allday_events(event_list):
         Events without any allday events.
     """
     for event in event_list:
-        if event[0] != ' ':
+        if event[0] != " ":
             yield event
 
 
@@ -179,7 +185,10 @@ def create_pidfile():
     try:
         gutils.create_pidfile()
     except gutils.StillAliveException as e:
-        log.debug('Previous instance of {} is still alive. Sending SIGTERM...'.format(os.path.basename(__file__)))
+        log.debug(
+            "Previous instance of {} is still alive. Sending SIGTERM..."
+            .format(os.path.basename(__file__))
+        )
         os.kill(e.pid, signal.SIGTERM)
         time.sleep(1)
         create_pidfile()
@@ -195,12 +204,12 @@ def stop_alarm():
     """Exit Handler"""
     pid = os.fork()
     if pid == 0:
-        os.system('alarm --stop')
+        os.system("alarm --stop")
         sys.exit(0)
     else:
         if xmonad_is_running:
-            with open(FIFO_PATH, 'w') as fifo:
-                fifo.write('\n')
+            with open(FIFO_PATH, "w") as fifo:
+                fifo.write("\n")
 
 
 if __name__ == "__main__":
@@ -212,7 +221,7 @@ if __name__ == "__main__":
 
     # Check if XMonad is running
     try:
-        sp.check_call(['pgrep', 'xmonad'])
+        sp.check_call(["pgrep", "xmonad"])
         xmonad_is_running = True
     except sp.CalledProcessError:
         xmonad_is_running = False

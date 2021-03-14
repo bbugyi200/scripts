@@ -10,7 +10,7 @@ from typing import NamedTuple, Sequence, TypeVar
 from bs4 import BeautifulSoup
 import gutils
 from gutils.io import eprint
-from gutils.result import Err, Ok, Result, init_err_helper
+from gutils.errors import Err, Ok, Result, init_err_helper
 from loguru import logger as log  # pylint: disable=unused-import
 import requests
 

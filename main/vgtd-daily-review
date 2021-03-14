@@ -4,6 +4,12 @@ SCRIPTNAME="$(basename "$0")"
 HISTORY_ROOT_DIR="${HOME}"/Sync/var/logs/"${SCRIPTNAME}"
 
 function main() {
+    if [[ "$1" == "-f" || "$1" == "--force" ]]; then
+        shift
+        start_checklist
+        return 0
+    fi
+
     history_dir="${HISTORY_ROOT_DIR}"/"$(date +%Y)"
     [[ -d "${history_dir}" ]] || mkdir -p "${history_dir}"
     history_f="${history_dir}"/"$(date +%m)".txt
@@ -20,7 +26,7 @@ function main() {
     tmp_f="$(mktemp /tmp/"${SCRIPTNAME}"-XXX.txt)"
     trap 'rm -rf ${tmp_f}' INT TERM EXIT
 
-    checklist ~/Sync/var/notes/daily_tasks.txt 2> "${tmp_f}"
+    start_checklist 2> "${tmp_f}"
 
     clear
 
@@ -30,6 +36,10 @@ function main() {
 
         printf ">>> Saved completed daily checklist:  ${history_f}\n"
     fi
+}
+
+function start_checklist() {
+    checklist ~/Sync/var/notes/daily_tasks.txt
 }
 
 if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then

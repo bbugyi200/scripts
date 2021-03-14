@@ -20,6 +20,9 @@ DELETE_LATER=()
 EC=0
 LAST_EC=0
 
+# Should be defined by the main script that sources job.sh.
+SCRIPTNAME="${SCRIPTNAME}"
+
 trap "_exit_handler" INT TERM EXIT
 set -e
 
@@ -36,9 +39,12 @@ function unsafe_cmd() {
     cmd_stdout_f="$(mktemp "/tmp/daily_jobs-${cmd%% *}-XXX.out")"
     DELETE_LATER+=("${cmd_stdout_f}")
 
+    out_files=(/var/tmp/"${SCRIPTNAME}".log)
     if [[ "${VERBOSE}" = true ]]; then
-        printf "unsafe_cmd: %s\n" "${cmd}"
+        out_files+=(/dev/stderr)
     fi
+
+    printf "unsafe_cmd: %s\n" "${cmd}" | tee "${out_files[@]}" >/dev/null
 
     eval "${cmd}" >"${cmd_stdout_f}"
     LAST_EC=$?

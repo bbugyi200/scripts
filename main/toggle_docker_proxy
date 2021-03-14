@@ -1,0 +1,21 @@
+#!/bin/bash
+
+###############################################################################
+#  Enable/Disable docker daemon's proxy settings.
+###############################################################################
+
+PROXY_CONF=/etc/systemd/system/docker.service.d/proxy.conf
+
+if grep -q -E "^Environment=" "${PROXY_CONF}"; then
+    sudo perl -i -nE 'print s/^(Environment=.*)$/# \1/gr' "${PROXY_CONF}"
+    printf "Disabling docker daemon proxy...\n"
+elif grep -q -E "^#[ ]*Environment=" "${PROXY_CONF}"; then
+    sudo perl -i -nE 'print s/^#[ ]*(Environment=.*)$/\1/gr' "${PROXY_CONF}"
+    printf "Enabling docker daemon proxy...\n"
+else
+    printf 1>&2 "No 'Environment' variable found in %s\n" "${PROXY_CONF}"
+    exit 1
+fi
+
+sudo systemctl daemon-reload
+sudo systemctl restart docker

@@ -4,7 +4,9 @@ company="$1"
 shift
 
 if ! is_mounted "${company}"; then
-    encfs -o allow_root ~/Sync/var/projects/work/."${company}" ~/projects/work/"${company}"
+    work_dir=~/projects/work/"${company}"
+    mkdir -p "${work_dir}" &>/dev/null
+    encfs -o allow_root ~/Sync/var/projects/work/."${company}" "${work_dir}"
 fi
 
 ssh-add-all

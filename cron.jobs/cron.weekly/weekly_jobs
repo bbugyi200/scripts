@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+export SCRIPTNAME="daily_jobs"
 source /home/bryan/Sync/bin/cron.jobs/jobs.sh
 
 function main() {

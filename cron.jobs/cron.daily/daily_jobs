@@ -1,5 +1,6 @@
 #!/usr/bin/bash
 
+export SCRIPTNAME="daily_jobs"
 source /home/bryan/Sync/bin/cron.jobs/jobs.sh
 
 function main() {
@@ -13,14 +14,11 @@ function main() {
     # Re-initialize desktop wallpaper.
     unsafe_cmd "init-bg"
 
-    # Refresh sunrise/sunset times.
-    unsafe_cmd "xmonad-suntimes -R"
-
     # Run tests for my local scripts.
     unsafe_cmd "run_all_script_tests"
 
     # Sync khal with gmail calendar.
-    unsafe_cmd "vdirsyncer sync"
+    unsafe_cmd "vdirsyncer sync 2>&1"
 
     # Generate daily summary of process accounting (needed for `sar`).
     unsafe_cmd "sa2"

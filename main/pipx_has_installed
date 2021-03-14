@@ -1,9 +1,33 @@
 #!/bin/bash
 
-pack="$1"
+package="$1"
 shift
 
-if [[ " $(pipx_list | tr '\n' ' ') " ==  *" ${pack} "* ]]; then
+if [[ "$1" == "-f" || "$1" == "--file" ]]; then
+    shift
+
+    if [[ -z "$1" ]]; then
+        printf 1>&2 "usage: pipx_has_installed <PACKAGE> [-f <PIPX_LIST_FILE>]\n"
+        exit 1
+    fi
+
+    PIPX_LIST_FILE="${1}"
+    shift
+fi
+
+function get_pipx_list() {
+    if [[ -n "${PIPX_LIST_FILE}" ]]; then
+        if [[ -s "${PIPX_LIST_FILE}" ]]; then
+            cat "${PIPX_LIST_FILE}"
+        else
+            pipx_list | tee "${PIPX_LIST_FILE}"
+        fi
+    else
+        pipx_list
+    fi
+}
+
+if [[ " $(get_pipx_list | tr '\n' ' ') " ==  *" ${package} "* ]]; then
     exit 0
 else
     exit 1

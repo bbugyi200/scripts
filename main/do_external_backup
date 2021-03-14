@@ -53,7 +53,7 @@ function dir_is_empty() {
     D="$1"
     shift
 
-    if sudo find "${D}" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+    if sudo find "${D}" -follow -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
         return 1
     else
         return 0

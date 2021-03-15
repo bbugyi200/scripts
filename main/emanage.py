@@ -11,26 +11,13 @@ import textwrap
 from types import FrameType
 from typing import Final, MutableSequence, NamedTuple, Sequence
 
-import gutils
+from gutils import xdg
+from gutils.core import ArgumentParser, main_factory, secret as get_secret
+from gutils.io import getch, imsg
 from loguru import logger as log  # pylint: disable=unused-import
 
 
 TS_FMT: Final = "%Y%m%d%H%M%S"
-
-
-@gutils.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    signal.signal(signal.SIGINT, keyboard_interrupt_handler)
-    signal.signal(signal.SIGQUIT, keyboard_interrupt_handler)
-
-    return run(args)
 
 
 class Action(enum.Enum):
@@ -53,7 +40,7 @@ Arguments = NamedTuple(
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = ArgumentParser()
 
     parser.add_argument(
         "-M",
@@ -98,8 +85,8 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
         dest="dsl",
         choices=["local", "remote"],
         help=(
-            'Prints the number of days its been since the specified '
-            'maintenance task was last performed. This option takes an '
+            "Prints the number of days its been since the specified "
+            "maintenance task was last performed. This option takes an "
             'argument indicating what machine(s) to check. "local" indicates '
             'the local machine and "remote" indicates all remote machines.'
         ),
@@ -130,18 +117,10 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
     return Arguments(**kwargs)
 
 
-def keyboard_interrupt_handler(
-    signum: signal.Signals, frame: FrameType  # pylint: disable=unused-argument
-) -> None:
-    """Signal handler for keyboard shortcuts that terminate the program."""
-    signame = {signal.SIGINT: "SIGINT", signal.SIGQUIT: "SIGQUIT"}[signum]
-
-    print()
-    gutils.io.imsg("{} signal detected. Terminating...".format(signame))
-    sys.exit(128 + signum)
-
-
 def run(args: Arguments) -> int:
+    signal.signal(signal.SIGINT, keyboard_interrupt_handler)
+    signal.signal(signal.SIGQUIT, keyboard_interrupt_handler)
+
     cmd_list = []
     cmd_opts = []
 
@@ -158,7 +137,7 @@ def run(args: Arguments) -> int:
     cmd_list.append(escript)
     cmd_list.extend(cmd_opts)
 
-    data_dir = gutils.xdg.init("data")
+    data_dir = xdg.init("data")
     local_hostname = os.uname().nodename
 
     cmd_dir = "/{}/{}/{}".format(data_dir, local_hostname, escript)
@@ -168,18 +147,18 @@ def run(args: Arguments) -> int:
         print(escript)
         sys.exit(0)
     elif args.dsl:
-        _process_dsl(args.dsl, local_tsfile, local_hostname, data_dir, escript)
+        process_dsl(args.dsl, local_tsfile, local_hostname, data_dir, escript)
         sys.exit(0)
 
     # Just used to force myself to use emanage. :)
     #
     # Requires that the secret.sh file be sourced into every script that could
     # be called here.
-    secret = gutils.secret()
+    secret = get_secret()
     cmd_list.extend([secret])
 
     fp_count = "{}/count".format(cmd_dir)
-    _append_count_to_cmd_list(fp_count, escript, cmd_list)
+    append_count_to_cmd_list(fp_count, escript, cmd_list)
 
     try:
         sp.check_call(cmd_list)
@@ -189,12 +168,23 @@ def run(args: Arguments) -> int:
         if e.returncode != 1:
             raise e
     else:
-        _write_timestamp(local_tsfile)
+        write_timestamp(local_tsfile)
 
     return 0
 
 
-def _process_dsl(
+def keyboard_interrupt_handler(
+    signum: signal.Signals, frame: FrameType  # pylint: disable=unused-argument
+) -> None:
+    """Signal handler for keyboard shortcuts that terminate the program."""
+    signame = {signal.SIGINT: "SIGINT", signal.SIGQUIT: "SIGQUIT"}[signum]
+
+    print()
+    imsg("{} signal detected. Terminating...".format(signame))
+    sys.exit(128 + signum)
+
+
+def process_dsl(
     dsl: str,
     local_tsfile: Path,
     local_hostname: str,
@@ -218,7 +208,19 @@ def _process_dsl(
             print("{}:{}".format(H, days))
 
 
-def _append_count_to_cmd_list(
+def _days_since_last(fp_timestamp: Path) -> int:
+    try:
+        date_string = open(fp_timestamp, "r").read().rstrip()
+        last_clean = dt.datetime.strptime(date_string, TS_FMT)
+        delta = dt.datetime.today() - last_clean
+        days = delta.days
+    except FileNotFoundError:
+        days = 99999
+
+    return days
+
+
+def append_count_to_cmd_list(
     fp_count: str, escript: str, cmd_list: MutableSequence[str]
 ) -> None:
     if os.path.exists(fp_count):
@@ -232,7 +234,7 @@ def _append_count_to_cmd_list(
                 "redo the last command (r), or "
                 "start a new session (n)?: ".format(escript)
             )
-            choice = gutils.io.getch("\n".join(textwrap.wrap(prompt, 80)))
+            choice = getch("\n".join(textwrap.wrap(prompt, 80)))
 
             if choice == "y":
                 cmd_list.append(count)
@@ -242,19 +244,7 @@ def _append_count_to_cmd_list(
                 sys.exit(0)
 
 
-def _days_since_last(fp_timestamp: Path) -> int:
-    try:
-        date_string = open(fp_timestamp, "r").read().rstrip()
-        last_clean = dt.datetime.strptime(date_string, TS_FMT)
-        delta = dt.datetime.today() - last_clean
-        days = delta.days
-    except FileNotFoundError:
-        days = 99999
-
-    return days
-
-
-def _write_timestamp(fp: Path) -> None:
+def write_timestamp(fp: Path) -> None:
     """Writes Timestamp to a File"""
     dp = os.path.dirname(fp)
     if not os.path.exists(dp):
@@ -265,5 +255,6 @@ def _write_timestamp(fp: Path) -> None:
         f.write(now.strftime(TS_FMT))
 
 
+main = main_factory(parse_cli_args, run)
 if __name__ == "__main__":
     main()

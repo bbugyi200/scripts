@@ -12,14 +12,15 @@ import sys
 import time
 from typing import Iterable, List, NamedTuple, Optional, Sequence, Union
 
-import gutils
+from gutils import xdg
+from gutils.core import ArgumentParser, main_factory, shell
 from gutils.io import eprint
 from loguru import logger as log
 
 
 PathLike = Union[str, Path]
 
-_XDG_DATA_DIR = gutils.xdg.init("data")
+_XDG_DATA_DIR = xdg.init("data")
 ALL_DOCS_CACHE_FILE = _XDG_DATA_DIR / "all_docs"
 BOOKS_DIR = "/home/bryan/Sync/var/books"
 MAX_MOST_RECENT_DOCS = 100
@@ -28,18 +29,6 @@ MOST_RECENT_CACHE_FILE = _XDG_DATA_DIR / "recently_opened_docs"
 _DOC_FILE_EXTS = ("pdf", "epub", "djvu", "ps", "okular")
 _DOC_FILE_EXT_GROUP = r"\({}\)".format(r"\|".join(_DOC_FILE_EXTS))
 DOC_PTTRN = rf".*\.{_DOC_FILE_EXT_GROUP}"
-
-
-@gutils.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    return run(args)
 
 
 class Arguments(NamedTuple):
@@ -52,7 +41,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument(
         "-C",
         "--generate-cache",
@@ -280,7 +269,7 @@ def get_open_docs() -> List[Path]:
             f' -f5- | grep -o "{DOC_PTTRN}"'
         )
 
-        open_docs_string = gutils.shell(cmd)
+        open_docs_string = shell(cmd)
         open_docs = [Path(x) for x in open_docs_string.split("\n")]
 
         log.debug("Open Docs: {}".format(open_docs))
@@ -292,7 +281,7 @@ def get_open_docs() -> List[Path]:
 
 
 def open_document(doc: PathLike, *, replace: bool = False) -> None:
-    active_window_class = gutils.shell("active_window_class")
+    active_window_class = shell("active_window_class")
     if active_window_class == "Zathura":
         _open_document("zathura", doc, replace=replace)
     elif active_window_class == "okular":
@@ -312,7 +301,7 @@ def _open_document(
         opts = []
 
     if replace:
-        pid = int(gutils.shell("active_window_pid"))
+        pid = int(shell("active_window_pid"))
         log.debug("Killing Document Instance: {}".format(pid))
         os.kill(pid, signal.SIGTERM)
 
@@ -387,5 +376,6 @@ def path_list(path_like_iter: Iterable[PathLike]) -> List[Path]:
     return [Path(P) for P in path_like_iter]
 
 
+main = main_factory(parse_cli_args, run)
 if __name__ == "__main__":
     sys.exit(main())

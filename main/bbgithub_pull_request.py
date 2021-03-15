@@ -88,8 +88,6 @@ def _reviewers_type(arg: str) -> List[str]:
 
 
 def run(args: Arguments) -> int:
-    log.debug("args = {!r}", args)
-
     remotes_r = git.remotes()
 
     if isinstance(remotes_r, Err):
@@ -120,10 +118,14 @@ def run(args: Arguments) -> int:
 
     proxies = {"http": args.proxy, "https": args.proxy} if args.proxy else None
     headers = {"Authorization": f"token {args.token}"}
+
     api_get = partial(requests.get, proxies=proxies, headers=headers)
     api_post = partial(requests.post, proxies=proxies, headers=headers)
 
-    if not fork_exists(api_get, org, repo, args.user).unwrap():
+    if fork_exists(api_get, org, repo, args.user).unwrap():
+        log.info("The '{}/{}' fork already exists.", args.user, repo)
+    else:
+        log.info("Creating the '{}/{}' fork...", args.user, repo)
         create_fork(api_get, api_post, org, repo, args.user).unwrap()
 
     if origin is None:
@@ -132,7 +134,7 @@ def run(args: Arguments) -> int:
 
         log.info("Added 'origin' git remote: {}", origin_url)
     else:
-        log.debug("The 'origin' git remote already exists: {}", origin.url)
+        log.info("The 'origin' git remote already exists: {}", origin.url)
 
     current_branch = git.current_branch().unwrap()
     if current_branch == "master":
@@ -263,8 +265,6 @@ def create_fork(
             f" '{user}' (status_code={code}):\n{pformat(resp.json())}"
         )
 
-    log.info("Creating the '{}/{}' fork...", user, repo)
-
     delay = 1
     total_delay = 0
     max_delay = 60
@@ -272,7 +272,8 @@ def create_fork(
         if total_delay >= max_delay:
             return BErr(
                 f"Slept for {total_delay}s >= {max_delay}s and the"
-                f" '{user}/{repo}' fork still does NOT exist."
+                f" '{user}/{repo}' fork still does NOT"
+                f" exist:\n{pformat(resp.json())}"
             )
 
         log.info(

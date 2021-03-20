@@ -9,20 +9,20 @@ import sys
 from typing import NamedTuple, Sequence
 
 from dateutil.parser import parse as parse_dt
-import gutils
+import bugyi
 from loguru import logger as log  # pylint: disable=unused-import
 
 
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
-@gutils.catch
+@bugyi.catch
 def main(argv: Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv
 
     args = parse_cli_args(argv)
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
     return run(args)
 
@@ -36,7 +36,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = bugyi.ArgumentParser()
     parser.add_argument("start_time", help="Start-time of event.")
     parser.add_argument("event_name", nargs="*", help="Event name.")
     parser.add_argument(

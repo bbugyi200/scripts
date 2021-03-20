@@ -4,9 +4,15 @@ company="$1"
 shift
 
 if ! is_mounted "${company}"; then
-    work_dir=~/projects/work/"${company}"
-    mkdir -p "${work_dir}" &>/dev/null
-    encfs -o allow_root ~/Sync/var/projects/work/."${company}" "${work_dir}"
+    # Delete ~/projects/work if it is a symlink.
+    work_dir="${HOME}"/projects/work
+    if [[ -L "${work_dir}" ]]; then
+        rm -rf "${work_dir}"
+    fi
+
+    company_dir="${work_dir}"/"${company}"
+    mkdir -p "${company_dir}" &>/dev/null
+    encfs -o allow_root ~/Sync/var/projects/work/."${company}" "${company_dir}"
 fi
 
 ssh-add-all

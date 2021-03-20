@@ -6,20 +6,9 @@ from threading import Thread
 import time
 from typing import Callable, NamedTuple, Sequence
 
-import gutils
+from bugyi.core import ArgumentParser, main_factory
 from loguru import logger as log  # pylint: disable=unused-import
 import schedule
-
-
-@gutils.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    return run(args)
 
 
 class Arguments(NamedTuple):
@@ -28,7 +17,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = ArgumentParser()
 
     args = parser.parse_args(argv[1:])
 
@@ -84,5 +73,6 @@ def command_factory(name: str, cmd_list: Sequence[str]) -> Callable[[], None]:
     return command
 
 
+main = main_factory(parse_cli_args, run)
 if __name__ == "__main__":
     sys.exit(main())

@@ -11,6 +11,8 @@ import sys
 import tempfile
 import time
 from typing import (
+    Any,
+    Dict,
     Iterable,
     List,
     NamedTuple,
@@ -20,10 +22,10 @@ from typing import (
     Tuple,
 )
 
-from gutils import git_tools as git, subprocess as bsp
-from gutils.core import ArgumentParser, main_factory
-from gutils.errors import BErr, BResult, Err, Ok
-from gutils.types import PathLike
+from bugyi import git_tools as git, subprocess as bsp
+from bugyi.core import ArgumentParser, main_factory
+from bugyi.errors import BErr, BResult, Err, Ok
+from bugyi.types import PathLike
 from loguru import logger as log
 import requests
 
@@ -91,9 +93,8 @@ def run(args: Arguments) -> int:
     remotes_r = git.remotes()
 
     if isinstance(remotes_r, Err):
-        log.error(
-            "Unable to determine git remotes:\n{}", remotes_r.err().report()
-        )
+        e = remotes_r.err()
+        log.error("Unable to determine git remotes:\n{}", e.report())
         return 1
 
     remotes = remotes_r.ok()
@@ -114,19 +115,18 @@ def run(args: Arguments) -> int:
         log.error("No 'upstream' git remote is defined.")
         return 1
 
-    org, repo = get_org_and_repo(upstream.url)
-
     proxies = {"http": args.proxy, "https": args.proxy} if args.proxy else None
     headers = {"Authorization": f"token {args.token}"}
 
-    api_get = partial(requests.get, proxies=proxies, headers=headers)
-    api_post = partial(requests.post, proxies=proxies, headers=headers)
+    requests_get = partial(requests.get, proxies=proxies, headers=headers)
+    requests_post = partial(requests.post, proxies=proxies, headers=headers)
 
-    if fork_exists(api_get, org, repo, args.user).unwrap():
+    org, repo = get_org_and_repo(upstream.url)
+    if fork_exists(requests_get, org, repo, args.user).unwrap():
         log.info("The '{}/{}' fork already exists.", args.user, repo)
     else:
         log.info("Creating the '{}/{}' fork...", args.user, repo)
-        create_fork(api_get, api_post, org, repo, args.user).unwrap()
+        create_fork(requests_get, requests_post, org, repo, args.user).unwrap()
 
     if origin is None:
         origin_url = f"git@bbgithub.dev.bloomberg.com:{args.user}/{repo}.git"
@@ -141,7 +141,6 @@ def run(args: Arguments) -> int:
         log.error("The current branch MUST be a feature branch, NOT 'master'.")
         return 1
 
-    log.debug("Pushing current branch to 'origin' remote.")
     bsp.safe_popen(["git", "push", "-u", "origin", current_branch]).unwrap()
 
     first_commit_hash = get_first_commit_hash()
@@ -171,7 +170,7 @@ def run(args: Arguments) -> int:
             "body": pr_body,
         }
     )
-    resp = api_post(pulls_api_url, data=data)
+    resp = requests_post(pulls_api_url, data=data)
 
     if (code := resp.status_code) != 201:
         log.error(
@@ -202,7 +201,7 @@ def run(args: Arguments) -> int:
             f"repos/{org}/{repo}/pulls/{pr_number}/requested_reviewers"
         )
         data = json.dumps({"reviewers": args.reviewers})
-        resp = api_post(reviewers_api_url, data=data)
+        resp = requests_post(reviewers_api_url, data=data)
         if (code := resp.status_code) != 201:
             log.error(
                 "An error occurred while attempting to request reviewers"
@@ -229,10 +228,10 @@ class _RequestsPost(Protocol):
 
 
 def fork_exists(
-    api_get: _RequestsGet, org: str, repo: str, user: str
+    get: _RequestsGet, org: str, repo: str, user: str
 ) -> BResult[bool]:
     forks_api_url = BBGITHUB_API(f"repos/{org}/{repo}/forks")
-    resp = api_get(forks_api_url)
+    resp = get(forks_api_url)
 
     if (code := resp.status_code) != 200:
         return BErr(
@@ -240,7 +239,7 @@ def fork_exists(
             f" (status_code={code}):\n{pformat(resp.json())}"
         )
 
-    fork_info_list = resp.json()
+    fork_info_list: List[Dict[str, Any]] = resp.json()
     for fork_info in fork_info_list:
         if fork_info["full_name"] == f"{user}/{repo}":
             return Ok(True)
@@ -249,15 +248,15 @@ def fork_exists(
 
 
 def create_fork(
-    api_get: _RequestsGet,
-    api_post: _RequestsPost,
+    get: _RequestsGet,
+    post: _RequestsPost,
     org: str,
     repo: str,
     user: str,
 ) -> BResult[None]:
     forks_api_url = BBGITHUB_API(f"repos/{org}/{repo}/forks")
     data = json.dumps({})
-    resp = api_post(forks_api_url, data=data)
+    resp = post(forks_api_url, data=data)
 
     if (code := resp.status_code) != 202:
         return BErr(
@@ -268,7 +267,7 @@ def create_fork(
     delay = 1
     total_delay = 0
     max_delay = 60
-    while not fork_exists(api_get, org, repo, user):
+    while not fork_exists(get, org, repo, user).unwrap():
         if total_delay >= max_delay:
             return BErr(
                 f"Slept for {total_delay}s >= {max_delay}s and the"

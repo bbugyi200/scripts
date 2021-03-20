@@ -11,9 +11,9 @@ import textwrap
 from types import FrameType
 from typing import Final, MutableSequence, NamedTuple, Sequence
 
-from gutils import xdg
-from gutils.core import ArgumentParser, main_factory, secret as get_secret
-from gutils.io import getch, imsg
+from bugyi import xdg
+from bugyi.core import ArgumentParser, main_factory, secret as get_secret
+from bugyi.io import getch, imsg
 from loguru import logger as log  # pylint: disable=unused-import
 
 
@@ -26,17 +26,13 @@ class Action(enum.Enum):
     MAINT_CHECK = enum.auto()
 
 
-Arguments = NamedTuple(
-    "Arguments",
-    [
-        ("debug", bool),
-        ("verbose", bool),
-        ("max_days", str),
-        ("action", Action),
-        ("dsl", str),
-        ("pretend", bool),
-    ],
-)
+class Arguments(NamedTuple):
+    action: Action
+    debug: bool
+    dsl: str
+    max_days: str
+    pretend: bool
+    verbose: bool
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:

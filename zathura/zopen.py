@@ -12,9 +12,9 @@ import sys
 import time
 from typing import Iterable, List, NamedTuple, Optional, Sequence, Union
 
-from gutils import xdg
-from gutils.core import ArgumentParser, main_factory, shell
-from gutils.io import eprint
+from bugyi import xdg
+from bugyi.core import ArgumentParser, main_factory, shell
+from bugyi.errors import BErr, BResult, Err, Ok
 from loguru import logger as log
 
 
@@ -112,10 +112,17 @@ def run(args: Arguments) -> int:
         # isn't always. With that said, this almost always works.
         doc = ordered_docs[-1]
     else:
-        doc = choose_doc_to_open(pretty_docs)
+        doc_r = choose_doc_to_open(pretty_docs)
+        if isinstance(doc_r, Err):
+            e = doc_r.err()
+            log.error(
+                "An error occurred while the user was choosing a doc to"
+                " open:\n{}",
+                e.report(),
+            )
+            return 1
 
-    if doc is None:
-        return 1
+        doc = doc_r.ok()
 
     replace = args.overwrite or args.refresh
     open_document(doc, replace=replace)
@@ -205,7 +212,7 @@ def demote_open_docs(
     return new_docs
 
 
-def choose_doc_to_open(available_docs: Iterable[PathLike]) -> Optional[Path]:
+def choose_doc_to_open(available_docs: Iterable[PathLike]) -> BResult[Path]:
     printf_ps = sp.Popen(
         [
             "printf",
@@ -223,15 +230,15 @@ def choose_doc_to_open(available_docs: Iterable[PathLike]) -> Optional[Path]:
     stdout, stderr = rofi_ps.communicate()
 
     if rofi_ps.returncode != 0:
-        eprint("[ERROR] The 'rofi' command failed.")
+        emsg = "The 'rofi' command failed."
 
         if stdout:
-            eprint(f"\n----- STDOUT -----\n{stdout.decode().strip()}")
+            emsg += f"\n\n----- STDOUT -----\n{stdout.decode().strip()}"
 
         if stderr:
-            eprint(f"\n----- STDERR -----\n{stderr.decode().strip()}")
+            emsg += f"\n\n----- STDERR -----\n{stderr.decode().strip()}"
 
-        return None
+        return BErr(emsg)
 
     assert stdout
     output = stdout.decode().strip()
@@ -241,7 +248,7 @@ def choose_doc_to_open(available_docs: Iterable[PathLike]) -> Optional[Path]:
     else:
         doc = Path(f"{BOOKS_DIR}/{output}")
 
-    return doc
+    return Ok(doc)
 
 
 def add_to_mr_cache(

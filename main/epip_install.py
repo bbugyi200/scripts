@@ -4,20 +4,20 @@ Installs provided python packages if they do not already exist.
 
 import os
 from shutil import which
-from subprocess import Popen
+import subprocess as sp
 import sys
-from typing import NamedTuple, Sequence
+from typing import NamedTuple, Optional, Sequence
 
-import gutils
+import bugyi
 
 
-@gutils.catch
+@bugyi.catch
 def main(argv: Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv
 
     args = parse_cli_args(argv)
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
     return run(args)
 
@@ -31,7 +31,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = bugyi.ArgumentParser()
     parser.add_argument(
         "-V",
         "--python-version",
@@ -110,28 +110,30 @@ def _install_pypacks(
         )
 
         if pypack.startswith("/"):
-            os.chdir(pypack)
+            cwd: Optional[str] = pypack
             os.system("rm -rf *.egg-info")
             pip_args = ["-e", "."]
         else:
+            cwd = None
             pip_args = [pypack]
 
         pip_cmd_list = list(pip_install_cmd)
         pip_cmd_list.extend(pip_args)
-        ps = Popen(pip_cmd_list)
+        ps = sp.Popen(pip_cmd_list, cwd=cwd)
         ps.communicate()
 
     if one_at_a_time:
         return
 
+    normal_pypacks = [
+        pypack for pypack in all_pypacks if not pypack.startswith("/")
+    ]
     if pypacks_installed > 0:
-        print(f"----- Upgrading Remaining {len(all_pypacks)} Packages")
+        print(f"----- Upgrading Remaining {len(normal_pypacks)} Packages")
 
     pip_cmd_list = list(pip_install_cmd)
-    pip_cmd_list.extend(
-        [pypack for pypack in all_pypacks if not pypack.startswith("/")]
-    )
-    ps = Popen(pip_cmd_list)
+    pip_cmd_list.extend(normal_pypacks)
+    ps = sp.Popen(pip_cmd_list)
     ps.communicate()
 
 

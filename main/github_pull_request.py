@@ -80,17 +80,14 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def _reviewers_type(arg: str) -> List[str]:
-    xdg_data = xdg.get_full_dir("config")
-    config_yml = xdg_data / "config.yml"
-
-    if config_yml.exists():
-        conf = yaml.load(config_yml.open(), Loader=yaml.Loader)
+    conf = _get_config()
+    if conf is None:
+        alias_map = {}
+    else:
         if "reviewer_aliases" in conf:
             alias_map = conf["reviewer_aliases"]
         else:
             alias_map = {}
-    else:
-        alias_map = {}
 
     reviewers = arg.split(",")
     for R in reviewers[:]:
@@ -99,6 +96,15 @@ def _reviewers_type(arg: str) -> List[str]:
             reviewers.append(alias_map[R])
 
     return reviewers
+
+
+def _get_config() -> Optional[Dict[str, Any]]:
+    xdg_config = xdg.get_full_dir("config")
+    config_yml = xdg_config / "config.yml"
+    if config_yml.exists():
+        return yaml.load(config_yml.open(), Loader=yaml.Loader)
+    else:
+        return None
 
 
 def run(args: Arguments) -> int:

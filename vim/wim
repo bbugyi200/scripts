@@ -8,7 +8,7 @@ jumps to the line number of the corresponding alias/function definition.
 EOM
 
 # ---------- Modules ----------
-source gutils.sh
+source bugyi.sh
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "a,d,h,v" -l "alias,debug,help,verbose" -- "$@")"
@@ -106,11 +106,11 @@ while [[ -n "$1" ]] && [[ "$1" != "-"* ]]; do
 done
 
 if [[ $# -gt 0 ]]; then
-    VIM_ARGS=("$@")
+    VIM_OPTIONS=("$@")
 else
-    VIM_ARGS=(-c "silent! normal g;")
+    VIM_OPTIONS=(-c "silent! normal g;")
 fi
 
 if [[ "${#all_scripts[@]}" -ne 0 ]]; then
-	vim "${VIM_ARGS[@]}" "${all_scripts[@]}"
+	vim "${VIM_OPTIONS[@]}" "${all_scripts[@]}"
 fi

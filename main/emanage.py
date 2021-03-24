@@ -9,7 +9,7 @@ import subprocess as sp
 import sys
 import textwrap
 from types import FrameType
-from typing import Final, MutableSequence, NamedTuple, Sequence
+from typing import Final, MutableSequence, NamedTuple, Optional, Sequence
 
 from bugyi import xdg
 from bugyi.core import ArgumentParser, main_factory, secret as get_secret
@@ -29,8 +29,8 @@ class Action(enum.Enum):
 class Arguments(NamedTuple):
     action: Action
     debug: bool
-    dsl: str
-    max_days: str
+    dsl: Optional[str]
+    max_days: Optional[str]
     pretend: bool
     verbose: bool
 
@@ -126,6 +126,11 @@ def run(args: Arguments) -> int:
         escript = "ecleanup"
     elif args.action == Action.MAINT_CHECK:
         escript = "emaint_check"
+        assert args.max_days is not None, (
+            "Logic error in CLI argument parsing logic: The --maint-check"
+            " option should require that the --max-days option also be"
+            " specified."
+        )
         cmd_opts.append(args.max_days)
     else:
         raise RuntimeError("No maintenance task specified.")

@@ -8,8 +8,8 @@ import subprocess as sp
 import sys
 from typing import NamedTuple, Sequence
 
-from dateutil.parser import parse as parse_dt
 import bugyi
+from dateutil.parser import parse as parse_dt
 from loguru import logger as log  # pylint: disable=unused-import
 
 

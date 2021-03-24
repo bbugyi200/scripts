@@ -111,6 +111,7 @@ function _backup() {
     # did not already exist). This way we can assume that all of these
     # directories exist going foward and don't have to worry about any annoying
     # errors from `cp`, `mv`, or `rm`.
+    [[ -d "${to}" ]] || mkdir -p "${to}"
     local r=2
     while [[ "${r}" -le "${R}" ]]; do
         D="${to}"-"${r}"

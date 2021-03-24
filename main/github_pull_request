@@ -2,7 +2,7 @@
 
 import sys
 
-from bbgithub_pull_request import main
+from github_pull_request import main
 
 
 if __name__ == '__main__':

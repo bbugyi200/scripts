@@ -45,6 +45,8 @@ EPIP_PY3_PACKAGES=(
     requests
     schedule
     selenium
+    tabulate
+    tqdm
     typing-extensions
 )
 ### Install on ONLY the primary Python 3.X version.

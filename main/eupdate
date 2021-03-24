@@ -4,7 +4,7 @@
 #  Runs System Update Commands       #
 ######################################
 
-source gutils.sh
+source bugyi.sh
 source /home/bryan/Sync/bin/main/emaint.sh
 
 function econfirm_if_cmd_exists() {

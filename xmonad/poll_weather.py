@@ -7,21 +7,9 @@ import sys
 import time
 from typing import NamedTuple, Optional, Sequence
 
-import gutils
-from gutils.io import eprint
+from bugyi.core import ArgumentParser, main_factory
+from bugyi.io import eprint
 from loguru import logger as log
-
-
-@gutils.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    return run(args)
 
 
 class Arguments(NamedTuple):
@@ -35,7 +23,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = ArgumentParser()
     parser.add_argument(
         "zipcode", nargs="?", default="08060", help="zip code of location"
     )
@@ -217,5 +205,6 @@ def format_report(
     return report
 
 
+main = main_factory(parse_cli_args, run)
 if __name__ == "__main__":
     sys.exit(main())

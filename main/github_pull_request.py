@@ -17,23 +17,22 @@ from typing import (
     List,
     NamedTuple,
     Optional,
-    Protocol,
     Sequence,
     Tuple,
 )
 
-from bugyi import git_tools as git, subprocess as bsp
+from bugyi import git_tools as git, subprocess as bsp, xdg
 from bugyi.core import ArgumentParser, main_factory
 from bugyi.errors import BErr, BResult, Err, Ok
-from bugyi.types import PathLike
+from bugyi.types import PathLike, Protocol
 from loguru import logger as log
 import requests
+import yaml
 
 
 # TODO(bugyi): Make compatiable with standard GitHub (https://www.github.com).
 BBGITHUB = "bbgithub.dev.bloomberg.com"
 BBGITHUB_API = f"https://{BBGITHUB}/api/v3/{{}}".format
-REVIEWER_ALIASES = {"jv": "jvalkiun", "ho": "htak"}
 
 
 class Arguments(NamedTuple):
@@ -81,11 +80,24 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def _reviewers_type(arg: str) -> List[str]:
+    xdg_data = xdg.get_full_dir("config")
+    config_yml = xdg_data / "config.yml"
+
+    if config_yml.exists():
+        conf = yaml.load(config_yml.open(), Loader=yaml.Loader)
+        if "reviewer_aliases" in conf:
+            alias_map = conf["reviewer_aliases"]
+        else:
+            alias_map = {}
+    else:
+        alias_map = {}
+
     reviewers = arg.split(",")
     for R in reviewers[:]:
-        if R in REVIEWER_ALIASES:
+        if R in alias_map:
             reviewers.remove(R)
-            reviewers.append(REVIEWER_ALIASES[R])
+            reviewers.append(alias_map[R])
+
     return reviewers
 
 
@@ -108,6 +120,10 @@ def run(args: Arguments) -> int:
         bsp.safe_popen(
             ["git", "remote", "rename", "origin", "upstream"]
         ).unwrap()
+
+        remotes = git.remotes().unwrap()
+        get_remote = partial(get_remote_by_name, remotes)
+
         upstream = get_remote("upstream")
         origin = None
 
@@ -141,18 +157,21 @@ def run(args: Arguments) -> int:
         log.error("The current branch MUST be a feature branch, NOT 'master'.")
         return 1
 
+    log.info("Pushing the '{}' branch to the 'origin' remote.", current_branch)
     bsp.safe_popen(["git", "push", "-u", "origin", current_branch]).unwrap()
 
     first_commit_hash = get_first_commit_hash()
     title, body = get_commit_title_and_body(first_commit_hash)
+    pr_file_contents = get_initial_pr_file_contents(
+        title, body, current_branch
+    )
 
     tmpdir = Path("/tmp/bbgh")
     tmpdir.mkdir(exist_ok=True)
     _, pr_file = tempfile.mkstemp(
         prefix="pull-request-", suffix=".md", dir=str(tmpdir)
     )
-    contents = get_initial_pr_file_contents(title, body, current_branch)
-    Path(pr_file).write_text(contents)
+    Path(pr_file).write_text(pr_file_contents)
 
     editor = os.environ.get("EDITOR", "vim")
     ps = sp.Popen([editor, pr_file])
@@ -188,7 +207,6 @@ def run(args: Arguments) -> int:
     pr_api_url = resp_json["url"]
     pr_number = int(pr_api_url.split("/")[-1])
     pr_url = f"https://{BBGITHUB}/{org}/{repo}/pull/{pr_number}"
-
     log.info(f"Created new pull request: {pr_url}")
 
     if bsp.command_exists("xclip"):
@@ -339,7 +357,9 @@ def get_initial_pr_file_contents(title: str, body: str, branch: str) -> str:
 
         body += (
             "Related Jira Ticket:"
-            f" [{jira_ticket}](https://jira.prod.bloomberg.com/browse/{jira_ticket})"
+            " [{0}](https://jira.prod.bloomberg.com/browse/{0})".format(
+                jira_ticket
+            )
         )
 
     contents = f"{title}\n\n{body}"
@@ -356,6 +376,9 @@ def get_title_and_body_from_pr_file(pr_file: PathLike) -> Tuple[str, str]:
         body = "\n".join(rest[1:])
     else:
         body = ""
+
+    # Remove long-line-wrapping newline characters.
+    body = re.sub("([^\n])\n([^\n])", r"\1 \2", body)
 
     return title, body
 

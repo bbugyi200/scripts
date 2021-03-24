@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###################################################################################################
-#  Bash module for Gentoo maintenance scripts (which are interfaced via the `emanage` script.     #
+#  Bash module for system maintenance scripts which are interfaced via the `emanage` script.      #
 ###################################################################################################
 
 # shellcheck disable=SC2034

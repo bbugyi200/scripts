@@ -39,12 +39,16 @@ function unsafe_cmd() {
     cmd_stdout_f="$(mktemp "/tmp/daily_jobs-${cmd%% *}-XXX.out")"
     DELETE_LATER+=("${cmd_stdout_f}")
 
-    out_files=(/var/tmp/"${SCRIPTNAME}".log)
+    logfile=/var/tmp/"${SCRIPTNAME}".log
+    date +"%Y-%m-%d %H:%M" > "${logfile}"
+    echo >> "${logfile}"
+
+    out_files=("${logfile}")
     if [[ "${VERBOSE}" = true ]]; then
         out_files+=(/dev/stderr)
     fi
 
-    printf "unsafe_cmd: %s\n" "${cmd}" | tee "${out_files[@]}" >/dev/null
+    printf "unsafe_cmd: %s\n" "${cmd}" | tee -a "${out_files[@]}" >/dev/null
 
     eval "${cmd}" >"${cmd_stdout_f}"
     LAST_EC=$?

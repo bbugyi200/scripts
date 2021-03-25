@@ -13,6 +13,7 @@ PIPX_PACKAGES=(
     "flake8"
     "grip"
     "isort"
+    "j2cli"
     "khal"
     "litecli"
     "multivisor[all]"

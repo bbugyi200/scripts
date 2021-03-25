@@ -72,6 +72,7 @@ econfirm_if_cmd_exists "rustup" "rustup update"
 econfirm_if_cmd_exists "cargo" "cargo install-update -a"
 econfirm_if_cmd_exists "tldr" "tldr --update"
 econfirm_if_cmd_exists "pyenv" "pyenv update"
+econfirm_if_cmd_exists "zsh" "zsh -ic 'omz update'"
 if econfirm "# epip_upgrade_all"; then
     sudo -u bryan epip_upgrade_all
 fi

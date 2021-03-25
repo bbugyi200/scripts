@@ -204,14 +204,10 @@ def term_handler(signum, frame):
 @atexit.register
 def stop_alarm():
     """Exit Handler"""
-    pid = os.fork()
-    if pid == 0:
-        os.system("alarm --stop")
-        sys.exit(0)
-    else:
-        if xmonad_is_running:
-            with open(FIFO_PATH, "w") as fifo:
-                fifo.write("\n")
+    sp.Popen(["alarm", "--stop"])
+    if xmonad_is_running:
+        with open(FIFO_PATH, "w") as fifo:
+            fifo.write("\n")
 
 
 if __name__ == "__main__":

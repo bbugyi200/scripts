@@ -80,31 +80,31 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
 
 
 def _reviewers_type(arg: str) -> List[str]:
-    conf = _get_config()
-    if conf is None:
-        alias_map = {}
-    else:
-        if "reviewer_aliases" in conf:
-            alias_map = conf["reviewer_aliases"]
-        else:
-            alias_map = {}
-
+    alias_map = _get_reviewers_alias_map()
     reviewers = arg.split(",")
     for R in reviewers[:]:
         if R in alias_map:
             reviewers.remove(R)
             reviewers.append(alias_map[R])
-
     return reviewers
 
 
-def _get_config() -> Optional[Dict[str, Any]]:
+def _get_reviewers_alias_map() -> Dict[str, str]:
+    conf = _get_config()
+    if "reviewer_aliases" in conf:
+        alias_map = conf["reviewer_aliases"]
+    else:
+        alias_map = {}
+    return alias_map
+
+
+def _get_config() -> Dict[str, Any]:
     xdg_config = xdg.get_full_dir("config")
     config_yml = xdg_config / "config.yml"
     if config_yml.exists():
         return yaml.load(config_yml.open(), Loader=yaml.Loader)
     else:
-        return None
+        return {}
 
 
 def run(args: Arguments) -> int:

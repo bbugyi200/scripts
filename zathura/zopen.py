@@ -20,7 +20,7 @@ from loguru import logger as log
 
 PathLike = Union[str, Path]
 
-_XDG_DATA_DIR = xdg.init("data")
+_XDG_DATA_DIR = xdg.init_full_dir("data")
 ALL_DOCS_CACHE_FILE = _XDG_DATA_DIR / "all_docs"
 BOOKS_DIR = "/home/bryan/Sync/var/books"
 MAX_MOST_RECENT_DOCS = 100

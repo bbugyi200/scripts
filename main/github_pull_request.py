@@ -163,8 +163,9 @@ def run(args: Arguments) -> int:
         log.error("The current branch MUST be a feature branch, NOT 'master'.")
         return 1
 
-    log.info("Pushing the '{}' branch to the 'origin' remote.", current_branch)
-    bsp.safe_popen(["git", "push", "-u", "origin", current_branch]).unwrap()
+    cmd_list = ["git", "push", "-u", "origin", current_branch]
+    log.info("Pushing current branch to remote: {}", " ".join(cmd_list))
+    bsp.safe_popen(cmd_list).unwrap()
 
     first_commit_hash = get_first_commit_hash()
     title, body = get_commit_title_and_body(first_commit_hash)

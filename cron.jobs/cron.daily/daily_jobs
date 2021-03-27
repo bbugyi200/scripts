@@ -25,7 +25,7 @@ function main() {
 
     # Take back ownership from root.
     unsafe_cmd "chown_log_files"
-    sudo chown -R bryan:bryan /home/bryan
+    unsafe_cmd "sudo chown -R bryan:bryan /home/bryan"
 
     return "${EC}"
 }

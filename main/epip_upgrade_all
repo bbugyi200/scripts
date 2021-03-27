@@ -31,6 +31,7 @@ EPIP_PY3_PACKAGES=(
     pandas
     parameterized
     pdbpp
+    pexpect
     psutil
     pudb
     prometheus_client

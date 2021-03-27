@@ -32,6 +32,7 @@ function _exit_handler() {
     done
 }
 
+FIRST_UNSAFE_CMD=true
 function unsafe_cmd() {
     local cmd="$1"
     shift
@@ -40,17 +41,24 @@ function unsafe_cmd() {
     DELETE_LATER+=("${cmd_stdout_f}")
 
     logfile=/var/tmp/"${SCRIPTNAME}".log
-    date +"%Y-%m-%d %H:%M" > "${logfile}"
-    echo >> "${logfile}"
+
+    if [[ "${FIRST_UNSAFE_CMD}" = true ]]; then
+        FIRST_UNSAFE_CMD=false
+
+        printf "TIMESTAMP: " > "${logfile}"
+        date +"%Y-%m-%d %H:%M:%S" >> "${logfile}"
+        echo "------------------------------" >> "${logfile}"
+    fi
 
     out_files=("${logfile}")
     if [[ "${VERBOSE}" = true ]]; then
         out_files+=(/dev/stderr)
     fi
 
-    printf "unsafe_cmd: %s\n" "${cmd}" | tee -a "${out_files[@]}" >/dev/null
-
+    printf "unsafe_cmd: %s  " "${cmd}" | tee -a "${out_files[@]}" >/dev/null
     eval "${cmd}" >"${cmd_stdout_f}"
+    printf "[%s]\n" "$(date +%H:%M:%S)" | tee -a "${out_files[@]}" >/dev/null
+
     LAST_EC=$?
     if [[ "${LAST_EC}" -ne 0 ]]; then
         EC=$((EC | LAST_EC))

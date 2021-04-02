@@ -16,6 +16,7 @@ PIPX_PACKAGES=(
     "j2cli"
     "khal"
     "litecli"
+    "mkdocs"
     "multivisor[all]"
     "mypy"
     "pgcli"
@@ -26,6 +27,7 @@ PIPX_PACKAGES=(
     "pyfunky"
     "pylint"
     "trash-cli"
+    "twine"
 )
 
 function main() {

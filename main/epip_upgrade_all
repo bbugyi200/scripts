@@ -31,7 +31,6 @@ EPIP_PY3_PACKAGES=(
     pandas
     parameterized
     pdbpp
-    pexpect
     psutil
     pudb
     prometheus_client
@@ -169,7 +168,7 @@ function _clean_packs() {
 
     local status=0
     for opack in "${old_packs[@]}"; do
-        if [[ " ${CLEAN_CURR_PACKS[*]} " != *" ${opack} "* ]]; then
+        if [[ " ${CLEAN_CURR_PACKS[*]} " != *" ${opack} "* ]] && ! _pack_has_dependants "${opack}"; then
             if [[ "${CLEANING_STARTED}" != true ]]; then
                 CLEANING_STARTED=true
                 printf "===== %s =====\n" "Removing Old Packages"
@@ -193,6 +192,17 @@ function _clean_packs() {
 
     if [[ "${status}" -eq 0 ]]; then
         echo "${CLEAN_CURR_PACKS[@]}" >"${CLEAN_PACK_LIST_FILE}"
+    fi
+}
+
+function _pack_has_dependants() {
+    local pack="$1"
+    shift
+
+    if  python -m pip show "${pack}" | grep -qE "Required-by: [A-Za-z].*"; then
+        return 0
+    else
+        return 1
     fi
 }
 

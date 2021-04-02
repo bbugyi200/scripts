@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if command -v python3 &>/dev/null && [[ -z "${VIRTUAL_ENV}" ]] && ! [[ -f ./.python-version ]]; then
+    _python=python3
+else
+    _python=python
+fi
+
+command -v "${_python}"

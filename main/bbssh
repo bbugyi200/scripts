@@ -1,9 +1,19 @@
-#!/usr/bin/env python3
+#!/usr/bin/expect
 
-import sys
+set timeout 120
 
-from bbssh import main
+set password [lindex $argv 0]
+set host [lindex $argv 1]
 
+spawn ssh $host.bloomberg.com
+expect "Password:" {
+    send "$password\r"
+    expect "Password:" {
+        send "$password\r"
+    } "Last login:" {}
+} "Last login:" {}
 
-if __name__ == '__main__':
-    sys.exit(main())
+expect "bbugyi" {
+    send ""
+    interact
+}

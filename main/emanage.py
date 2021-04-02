@@ -1,5 +1,6 @@
 """Interface for System Maintenance Tasks"""
 
+from dataclasses import dataclass
 import datetime as dt
 import enum
 import os
@@ -9,10 +10,10 @@ import subprocess as sp
 import sys
 import textwrap
 from types import FrameType
-from typing import Final, MutableSequence, NamedTuple, Optional, Sequence
+from typing import Final, MutableSequence, Optional, Sequence
 
-from bugyi import xdg
-from bugyi.core import ArgumentParser, main_factory, secret as get_secret
+from bugyi import cli, xdg
+from bugyi.core import main_factory, secret as get_secret
 from bugyi.io import getch, imsg
 from loguru import logger as log  # pylint: disable=unused-import
 
@@ -26,17 +27,16 @@ class Action(enum.Enum):
     MAINT_CHECK = enum.auto()
 
 
-class Arguments(NamedTuple):
+@dataclass(frozen=True)
+class Arguments(cli.Arguments):
     action: Action
-    debug: bool
     dsl: Optional[str]
     max_days: Optional[str]
     pretend: bool
-    verbose: bool
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser()
 
     parser.add_argument(
         "-M",

@@ -12,8 +12,8 @@ import sys
 import time
 from typing import Iterable, List, NamedTuple, Optional, Sequence, Union
 
-from bugyi import xdg
-from bugyi.core import ArgumentParser, main_factory, shell
+from bugyi import cli, xdg
+from bugyi.core import main_factory, shell
 from bugyi.errors import BErr, BResult, Err, Ok
 from loguru import logger as log
 
@@ -41,7 +41,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument(
         "-C",
         "--generate-cache",

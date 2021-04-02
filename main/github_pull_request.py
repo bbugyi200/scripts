@@ -1,5 +1,6 @@
 """Helper script for creating new pull requests."""
 
+from dataclasses import dataclass
 from functools import partial
 import json
 import os
@@ -15,15 +16,15 @@ from typing import (
     Dict,
     Iterable,
     List,
-    NamedTuple,
     Optional,
     Sequence,
     Tuple,
 )
 
-from bugyi import git_tools as git, subprocess as bsp, xdg
-from bugyi.core import ArgumentParser, main_factory
+from bugyi import cli, git_tools as git, subprocess as bsp, xdg
+from bugyi.core import main_factory
 from bugyi.errors import BErr, BResult, Err, Ok
+from bugyi.tools import xclip_copy
 from bugyi.types import PathLike, Protocol
 from loguru import logger as log
 import requests
@@ -35,17 +36,16 @@ BBGITHUB = "bbgithub.dev.bloomberg.com"
 BBGITHUB_API = f"https://{BBGITHUB}/api/v3/{{}}".format
 
 
-class Arguments(NamedTuple):
-    debug: bool
+@dataclass(frozen=True)
+class Arguments(cli.Arguments):
     proxy: Optional[str]
     reviewers: Optional[List[str]]
     token: str
     user: str
-    verbose: bool
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument(
         "-x",
         "--proxy",
@@ -216,10 +216,7 @@ def run(args: Arguments) -> int:
     pr_url = f"https://{BBGITHUB}/{org}/{repo}/pull/{pr_number}"
     log.info(f"Created new pull request: {pr_url}")
 
-    if bsp.command_exists("xclip"):
-        xclip_copy(pr_url)
-    else:
-        log.warning("'xclip' is not installed.")
+    xclip_copy(pr_url)
 
     if args.reviewers:
         reviewers_api_url = BBGITHUB_API(
@@ -313,12 +310,6 @@ def create_fork(
     return Ok(None)
 
 
-def xclip_copy(clip: str) -> None:
-    ps = sp.Popen(["xclip", "-sel", "clip"], stdin=sp.PIPE)
-    ps.communicate(input=clip.encode())
-    log.info("Copied {} into clipboard using xclip.", clip)
-
-
 def get_org_and_repo(remote_url: str) -> Tuple[str, str]:
     slash_list = remote_url.split("/")
     org = slash_list[-2].split(":")[-1]
@@ -385,7 +376,7 @@ def get_title_and_body_from_pr_file(pr_file: PathLike) -> Tuple[str, str]:
         body = ""
 
     # Remove long-line-wrapping newline characters.
-    body = re.sub("([^\n])\n([^\n])", r"\1 \2", body)
+    body = re.sub(r"([^\n])\n([^\n\*0-9])", r"\1 \2", body)
 
     return title, body
 

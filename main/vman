@@ -5,7 +5,7 @@ View man page(s) using vim (or default system editor).
 EOM
 
 # ---------- Modules ----------
-source gutils.sh
+source bugyi.sh
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,h,v" -l "debug,help,verbose" -- "$@")"

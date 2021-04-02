@@ -21,13 +21,7 @@ if [[ -n "${pyver}" ]]; then
         pyenv shell "${pyenv_version}"
     fi
 else
-    if command -v python3 &>/dev/null && [[ -z "${VIRTUAL_ENV}" ]] && ! [[ -f ./.python-version ]]; then
-        _python=python3
-    else
-        _python=python
-    fi
-
-    python="$(command -v "${_python}")"
+    python="$(get_python_exe)"
 fi
 
 "${python}" -m IPython "$@"

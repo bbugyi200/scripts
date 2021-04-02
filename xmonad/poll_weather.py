@@ -7,7 +7,8 @@ import sys
 import time
 from typing import NamedTuple, Optional, Sequence
 
-from bugyi.core import ArgumentParser, main_factory
+from bugyi import cli
+from bugyi.core import main_factory
 from bugyi.io import eprint
 from loguru import logger as log
 
@@ -23,7 +24,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument(
         "zipcode", nargs="?", default="08060", help="zip code of location"
     )

@@ -6,12 +6,12 @@ set password [lindex $argv 0]
 set host [lindex $argv 1]
 
 spawn ssh $host.bloomberg.com
-expect "Password:" {
+expect "Last login:" {} "Password:" {
     send "$password\r"
-    expect "Password:" {
+    expect "Last login:" {} "Password:" {
         send "$password\r"
-    } "Last login:" {}
-} "Last login:" {}
+    }
+}
 
 expect "bbugyi" {
     send ""

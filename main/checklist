@@ -7,8 +7,8 @@ shift
 
 vim -c "goto 1" \
     -c "/^\[" \
-    -c "nnoremap <nowait> x :normal 0lclX<Esc>/^\[ \]<CR>" \
-    -c "nnoremap - :normal 0lcl-<Esc>/^\[<CR>" \
+    -c "nnoremap <nowait> x :normal 0lclX<Esc>/^\[ \]<CR>:w<CR>" \
+    -c "nnoremap - :normal 0lcl-<Esc>/^\[<CR>:w<CR>" \
     -c "nnoremap <Space> :s/\[.\]/[ ]/g<CR>" \
     -c "nnoremap <Leader><Space> :%s/\[.\]/[ ]/g<CR>gg/^\[<CR>" \
     -c "nnoremap <nowait> [ ?\[<CR>" \

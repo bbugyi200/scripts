@@ -92,11 +92,13 @@ def run(args: Arguments) -> int:
 def _install_pypacks(
     pypacks: Sequence[str], pyver: float, one_at_a_time: bool = True
 ) -> None:
-    all_pypacks = ["pip"]
+    all_pypacks = [] if pyver < 3.0 else ["pip"]
     all_pypacks.extend(pypacks)
 
     python = f"python{pyver}"
-    pip_install_cmd = [python, "-m", "pip", "install", "--user", "-U"]
+    pip_install_cmd = [python, "-m", "pip", "install", "--user"]
+    if pyver >= 3.0:
+        pip_install_cmd.append("-U")
 
     pypacks_installed = 0
     for pypack in all_pypacks:

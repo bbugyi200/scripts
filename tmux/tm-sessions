@@ -4,12 +4,12 @@
 
 import subprocess as sp  # noqa: F401
 
-import gutils
+import bugyi
 
 from loguru import logger as log
 
 
-@gutils.catch
+@bugyi.catch
 def main() -> None:
     ps = sp.check_output(["tmux", "ls"])
     out = ps.decode().strip()
@@ -33,7 +33,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
+    parser = bugyi.ArgumentParser()
     parser.add_argument(
         "dummy",
         nargs="*",
@@ -46,5 +46,5 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

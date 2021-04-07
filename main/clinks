@@ -37,7 +37,7 @@ function main() {
     # ----- Cleanup Commands
     if [[ "${SAFE}" = true ]]; then
         printf "%s: Deleting all .mypy_cache/ directories...\n" "${SCRIPTNAME}"
-        find /home/bryan -type d -name ".mypy_cache*" -exec sudo /bin/rm -rf {} \; &>/dev/null
+        find /home/bryan/Sync/bin -type d -name ".mypy_cache*" -exec sudo /bin/rm -rf {} \; &>/dev/null
     fi
 
     # ----- Main Logic

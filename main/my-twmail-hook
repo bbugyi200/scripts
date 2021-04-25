@@ -16,12 +16,13 @@ import os
 import subprocess as sp
 import sys
 
-import gutils
-
+import bugyi
+from bugyi import cli
+from bugyi.core import catch
 from loguru import logger as log
 
 
-@gutils.catch
+@catch
 def main():
     # Log all TWMAIL environment variable values
     date = teelog('date')  # noqa: F841
@@ -82,7 +83,7 @@ def notify(twargs, description):
     msg_fmt = 'Adding "{}" to TW using the following fields: {}.'
     msg = msg_fmt.format(description, ' '.join(twargs))
     log.info(msg)
-    gutils.notify(msg)
+    bugyi.notify(msg)
 
 
 def add_task(twargs, description):
@@ -129,8 +130,8 @@ def _get_utc_dt(date, dt_fmt):
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
     args = parser.parse_args()
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

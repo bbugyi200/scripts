@@ -5,11 +5,12 @@
 import subprocess as sp  # noqa: F401
 
 import bugyi
-
+from bugyi import cli
+from bugyi.core import catch
 from loguru import logger as log
 
 
-@bugyi.catch
+@catch
 def main() -> None:
     ps = sp.check_output(["tmux", "ls"])
     out = ps.decode().strip()
@@ -33,7 +34,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    parser = bugyi.ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument(
         "dummy",
         nargs="*",

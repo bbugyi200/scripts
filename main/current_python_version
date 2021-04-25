@@ -1,0 +1,3 @@
+#!/bin/bash
+
+python --version 2>&1 | perl -lanE 'print @F[1]' | perl -nE 'print s/(.*)\.\d/\1/gr'

@@ -6,7 +6,7 @@ shift
 DELAY=3
 
 if is_mounted "${company}"; then
-    nohup sh -c "sleep ${DELAY} && kill \$(lsof -t ${HOME}/projects/work/${company} | tr '\n' ' '); sleep 1 && fusermount -u ${HOME}/projects/work/${company} || notify-send -u critical 'fusermount' 'Failed to unmount the ${company} directory.'" &>/dev/null & disown
+    nohup sh -c "sleep $((DELAY - 1)) && kill \$(lsof -t ${HOME}/projects/work/${company} | tr '\n' ' '); sleep 1 && fusermount -u ${HOME}/projects/work/${company} || notify-send -u critical 'fusermount' 'Failed to unmount the ${company} directory.'" &>/dev/null & disown
     echo "The ${company} directory will be unmounted in ${DELAY} seconds."
 else
     echo "The ${company} directory is NOT currently mounted."

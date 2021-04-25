@@ -8,6 +8,8 @@
 # pyenv uninstall 3.8.7
 # pyenv install 3.8.8
 # pyenv global 3.8.8
+#
+# # start new shell first
 # post_python_install
 # ```
 ###############################################################################

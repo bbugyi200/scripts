@@ -9,9 +9,11 @@ import sys
 from typing import NamedTuple, Optional, Sequence
 
 import bugyi
+from bugyi import cli
+from bugyi.core import catch
 
 
-@bugyi.catch
+@catch
 def main(argv: Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv
@@ -31,7 +33,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = bugyi.ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument(
         "-V",
         "--python-version",

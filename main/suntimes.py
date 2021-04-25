@@ -8,9 +8,11 @@ import sys
 from typing import NamedTuple, Sequence, TypeVar
 
 from bs4 import BeautifulSoup
-import gutils
-from gutils.io import eprint
-from gutils.errors import Err, Ok, Result, init_err_helper
+import bugyi
+from bugyi import cli
+from bugyi.core import catch
+from bugyi.errors import Err, Ok, Result, init_err_helper
+from bugyi.io import eprint
 from loguru import logger as log  # pylint: disable=unused-import
 import requests
 
@@ -33,14 +35,14 @@ WErr = init_err_helper(WebScrapingError)
 WResult = Result[_T, WebScrapingError]
 
 
-@gutils.catch
+@catch
 def main(argv: Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv
 
     args = parse_cli_args(argv)
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
     return run(args)
 
@@ -60,7 +62,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument(
         'rise_or_set',
         choices=list(RiseOrSet),

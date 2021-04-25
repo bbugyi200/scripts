@@ -3,42 +3,46 @@
 """Wrapper for rofi that implements my version of a good input prompt."""
 
 import argparse
-import subprocess as sp  # noqa: F401
+import subprocess as sp
 
-import gutils
-
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
+import bugyi
+from bugyi import cli
+from bugyi.core import catch
 from loguru import logger as log
 
-@gutils.catch
-def main():
-    log.debug('Extra Rofi Options: {}'.format(args.opts))
 
-    cmd_list = ['rofi']
+@catch
+def main() -> None:
+    log.debug("Extra Rofi Options: {}".format(args.opts))
+
+    cmd_list = ["rofi"]
 
     opts = []
-    opts.extend(['-m', '-4'])
-    opts.extend(['-lines', '0'])
-    opts.extend(['-p', args.prompt])
-    opts.extend(['-location', '6'])
-    opts.extend(['-theme', 'Pop-Dark.rasi'])
-    opts.extend(['-dmenu'])
+    opts.extend(["-m", "-4"])
+    opts.extend(["-lines", "0"])
+    opts.extend(["-p", args.prompt])
+    opts.extend(["-location", "6"])
+    opts.extend(["-theme", "Pop-Dark.rasi"])
+    opts.extend(["-dmenu"])
     opts.extend(args.opts)
 
     cmd_list.extend(opts)
-    log.debug('Prompt Command List: {}'.format(cmd_list))
+    log.debug("Prompt Command List: {}".format(cmd_list))
 
     sp.check_call(cmd_list)
 
 
 if __name__ == "__main__":
-    parser = gutils.ArgumentParser()
-    parser.add_argument('prompt', nargs='?', default='', help='prompt to use for rofi window')
-    parser.add_argument('opts', nargs=argparse.REMAINDER, help='additional arguments to be passed to rofi')
+    parser = cli.ArgumentParser()
+    parser.add_argument(
+        "prompt", nargs="?", default="", help="prompt to use for rofi window"
+    )
+    parser.add_argument(
+        "opts",
+        nargs=argparse.REMAINDER,
+        help="additional arguments to be passed to rofi",
+    )
     args = parser.parse_args()
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     main()

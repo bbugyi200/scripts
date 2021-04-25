@@ -71,7 +71,12 @@ econfirm_if_cmd_exists "npm" "sudo npm update --force -g"
 econfirm_if_cmd_exists "rustup" "rustup update"
 econfirm_if_cmd_exists "cargo" "cargo install-update -a"
 econfirm_if_cmd_exists "tldr" "tldr --update"
+
+# Update python versions with pyenv manually after this (if necessary).
+# Remember to run post_python_install if you update the main pyenv python #
+# version.
 econfirm_if_cmd_exists "pyenv" "pyenv update"
+
 econfirm_if_cmd_exists "zsh" "zsh -ic 'omz update'"
 if econfirm "# epip_upgrade_all"; then
     sudo -u bryan epip_upgrade_all

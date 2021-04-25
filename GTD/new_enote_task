@@ -6,27 +6,36 @@ import subprocess as sp
 import sys
 from typing import Sequence
 
-import gutils
+import bugyi
+from bugyi import cli
+from bugyi.core import catch
+from bugyi.tools import notify
 from loguru import logger as log  # pylint: disable=unused-import
 
 
-@gutils.catch
+@catch
 def main(argv: Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv
 
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
     args = parser.parse_args(argv[1:])
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
     ps = sp.Popen(["prompt", "Inbox"], stdout=sp.PIPE)
     stdout, _stderr = ps.communicate()
+    if (ec := ps.returncode) != 0:
+        log.error(
+            "The 'prompt' command failed with a non-zero exit status: {}", ec
+        )
+        return 1
+
     out = stdout.decode().strip()
 
     ps = sp.Popen(["send2en", out])
     ps.communicate()
 
-    gutils.notify("Added new task to Evernote.")
+    notify("Added new task to Evernote.")
     return 0
 
 

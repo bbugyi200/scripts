@@ -15,17 +15,19 @@ from typing import (
     Sequence,
 )
 
-import gutils
+import bugyi
+from bugyi import cli
+from bugyi.core import catch
 from loguru import logger as log  # pylint: disable=unused-import
 
 
-@gutils.catch
+@catch
 def main(argv: Sequence[str] = None) -> int:
     if argv is None:
         argv = sys.argv
 
     args = parse_cli_args(argv)
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
     return run(args)
 
@@ -43,7 +45,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument(
         "password_length",
         nargs="?",

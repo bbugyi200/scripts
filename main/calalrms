@@ -12,7 +12,8 @@ import sys
 import time
 
 import bugyi
-
+from bugyi import cli, subprocess as bsp
+from bugyi.core import catch, mkfifo
 from loguru import logger as log
 
 
@@ -23,10 +24,10 @@ TOMORROW_MARKER = "@"
 today = dt.date.today()
 
 
-@bugyi.catch
+@catch
 def main():
     if xmonad_is_running:
-        bugyi.mkfifo(FIFO_PATH)
+        mkfifo(FIFO_PATH)
 
     stop_alarm()
     create_pidfile()
@@ -185,8 +186,8 @@ def filter_allday_events(event_list):
 def create_pidfile():
     """Duplicate Process Management"""
     try:
-        bugyi.create_pidfile()
-    except bugyi.StillAliveException as e:
+        bsp.create_pidfile()
+    except bsp.StillAliveException as e:
         log.debug(
             "Previous instance of {} is still alive. Sending SIGTERM..."
             .format(os.path.basename(__file__))
@@ -211,7 +212,7 @@ def stop_alarm():
 
 
 if __name__ == "__main__":
-    parser = bugyi.ArgumentParser()
+    parser = cli.ArgumentParser()
     args = parser.parse_args()
 
     signal.signal(signal.SIGTERM, term_handler)

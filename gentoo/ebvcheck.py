@@ -15,7 +15,9 @@ import threading
 import time
 from typing import Callable, Dict, List, NamedTuple, Optional, Sequence, Set
 
-import gutils
+import bugyi
+from bugyi import cli
+from bugyi.core import catch
 from loguru import logger as log
 import numpy as np
 import requests
@@ -145,18 +147,18 @@ pkg_queue: 'queue.Queue[str]' = queue.Queue()
 threads: List[threading.Thread] = []
 
 
-@gutils.catch  # noqa: C901
+@catch  # noqa: C901
 def main(argv: Sequence[str] = None) -> None:
     if argv is None:
         argv = sys.argv
 
     args = parse_cli_args(argv)
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
     if not args.color:
-        for attr in dir(gutils.colorize):
+        for attr in dir(bugyi.colorize):
             if not attr.startswith('_'):
-                setattr(gutils.colorize, attr, lambda x: x)
+                setattr(bugyi.colorize, attr, lambda x: x)
 
     all_files = get_all_files(args.overlay_dir)
     all_ebuild_paths = [f for f in all_files if f.endswith('.ebuild')]
@@ -220,7 +222,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument(
         '-D',
         dest='overlay_dir',
@@ -303,7 +305,7 @@ def check_pkg(  # noqa: C901
             if show_offline_pkgs:
                 message_manager.print(
                     msg_fmt.format(
-                        pkg, gutils.colorize.magenta('NOT INSTALLED')
+                        pkg, bugyi.colorize.magenta('NOT INSTALLED')
                     ),
                     id_number,
                 )
@@ -316,7 +318,7 @@ def check_pkg(  # noqa: C901
         if version == '9999':
             if show_live_pkgs:
                 message_manager.print(
-                    msg_fmt.format(pkg, gutils.colorize.blue('LIVE BUILD')),
+                    msg_fmt.format(pkg, bugyi.colorize.blue('LIVE BUILD')),
                     id_number,
                 )
             else:
@@ -328,7 +330,7 @@ def check_pkg(  # noqa: C901
         if latest_version_A is None:
             log.debug('{} UNKNOWN (#{}).'.format(pkg, id_number))
             message_manager.print(
-                msg_fmt.format(pkg, gutils.colorize.yellow('UNKNOWN')),
+                msg_fmt.format(pkg, bugyi.colorize.yellow('UNKNOWN')),
                 id_number,
             )
         else:
@@ -344,7 +346,7 @@ def check_pkg(  # noqa: C901
 
                 fail_msg = msg_fmt.format(
                     pkg,
-                    gutils.colorize.red(
+                    bugyi.colorize.red(
                         'FAILED  (New Version: {})'.format(new_version)
                     ),
                 )
@@ -353,7 +355,7 @@ def check_pkg(  # noqa: C901
             else:
                 log.debug('{} PASSED (#{}).'.format(pkg, id_number))
                 message_manager.print(
-                    msg_fmt.format(pkg, gutils.colorize.green('PASSED')),
+                    msg_fmt.format(pkg, bugyi.colorize.green('PASSED')),
                     id_number,
                 )
     finally:

@@ -7,9 +7,9 @@ shift
 
 vim -c "goto 1" \
     -c "/^\[" \
-    -c "nnoremap <nowait> x :normal 0lclX<Esc>/^\[ \]<CR>:w<CR>" \
-    -c "nnoremap - :normal 0lcl-<Esc>/^\[<CR>:w<CR>" \
-    -c "nnoremap <Space> :normal 0lcl <Esc>/^\[ \]<CR>:w<CR>" \
+    -c "nnoremap <nowait> x :normal 0lclX<Esc>:w<CR>/^\[ \]<CR>" \
+    -c "nnoremap - :normal 0lcl-<Esc>:w<CR>/^\[<CR>" \
+    -c "nnoremap <Space> :s/\[.\]/[ ]/g<CR>:w<CR>" \
     -c "nnoremap <Leader><Space> :%s/\[.\]/[ ]/g<CR>gg/^\[<CR>:w<CR>" \
     -c "nnoremap <nowait> [ ?\[<CR>" \
     -c "nnoremap <nowait> ] /\[<CR>" \

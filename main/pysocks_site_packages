@@ -1,0 +1,19 @@
+#!/bin/bash
+
+VENV=/tmp/pysocks-venv
+
+function site_packages_dir() { find "${VENV}" -type d -name site-packages 2>/dev/null; }
+
+if [[ "$(site_packages_dir)" == "" ]]; then
+    printf 1>&2 ">>> Creating pysocks venv...\n"
+    python3 -m venv "${VENV}" 1>&2
+
+    printf 1>&2 ">>> Installing pysocks into pysocks venv...\n"
+    source "${VENV}"/bin/activate
+    pip install -U pip setuptools pysocks 1>&2
+
+    D="$(site_packages_dir)"
+    rm -rf "${D}"/pip* "${D}"/setuptools*
+fi
+
+site_packages_dir

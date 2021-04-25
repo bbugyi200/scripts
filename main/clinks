@@ -35,10 +35,10 @@ function main() {
     done
 
     # ----- Cleanup Commands
-    if [[ "${SAFE}" = true ]]; then
-        printf "%s: Deleting all .mypy_cache/ directories...\n" "${SCRIPTNAME}"
-        find /home/bryan/Sync/bin -type d -name ".mypy_cache*" -exec sudo /bin/rm -rf {} \; &>/dev/null
-    fi
+    printf "%s: Deleting all .mypy_cache/ directories...\n" "${SCRIPTNAME}"
+    for D in "bin" "home"; do
+        find /home/bryan/Sync/"${D}" -type d -name ".mypy_cache*" -exec sudo /bin/rm -rf {} \; &>/dev/null
+    done
 
     # ----- Main Logic
     if [[ "${AT_WORK}" == true ]]; then
@@ -93,7 +93,7 @@ function main() {
 }
 
 function parse_cli_args() {
-    eval set -- "$("${GETOPT}" -o "d,h,s,v" -l "debug,help,safe,verbose" -- "$@")"
+    eval set -- "$("${GETOPT}" -o "d,h,v" -l "debug,help,verbose" -- "$@")"
 
     export USAGE_GRAMMAR=(
         "[-d] [-v] [STOW_FLAG]"
@@ -116,10 +116,6 @@ Optional Arguments:
     -h | --help
         View this help message.
 
-    -s | --safe
-        Take extra steps to ensure stowing all directories works properly. This
-        option can slow down clinks considerably.
-
     -v | --verbose
         Enable verbose output.
 EOM
@@ -132,9 +128,6 @@ EOM
         -h | --help)
             echo "${help}"
             exit 0
-            ;;
-        -s | --safe)
-            SAFE=true
             ;;
         -v | --verbose)
             VERBOSE=true

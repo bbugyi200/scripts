@@ -7,18 +7,15 @@ import pickle
 import sys
 import typing as Type  # pylint: disable=unused-import
 
-import gutils
-
-############################################################################################
-#  gutils library: https://github.com/bbugyi200/pylibs/tree/master/gutils                  #
-############################################################################################
-
+import bugyi
+from bugyi import cli
+from bugyi.core import catch
 from loguru import logger as log
 
 
-@gutils.catch
+@catch
 def main():
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
     exgroup = parser.add_mutually_exclusive_group()
     exgroup.add_argument(
         '--get',
@@ -45,9 +42,9 @@ def main():
     )
     args = parser.parse_args()
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
-    fpath = '{}/default-dirs.pickle'.format(gutils.xdg.init('data'))
+    fpath = '{}/default-dirs.pickle'.format(bugyi.xdg.init('data'))
 
     default_dirs: Type.Dict[str, str] = {}
     if not os.path.isfile(fpath):

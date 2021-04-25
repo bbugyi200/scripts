@@ -2,6 +2,7 @@
 Zathura helper script. Used to search for and then open documents in Zathura.
 """
 
+from dataclasses import dataclass
 import os
 from pathlib import Path
 import re
@@ -10,7 +11,7 @@ import socket
 import subprocess as sp
 import sys
 import time
-from typing import Iterable, List, NamedTuple, Optional, Sequence, Union
+from typing import Iterable, List, Optional, Sequence, Union
 
 from bugyi import cli, xdg
 from bugyi.core import main_factory, shell
@@ -31,9 +32,8 @@ _DOC_FILE_EXT_GROUP = r"\({}\)".format(r"\|".join(_DOC_FILE_EXTS))
 DOC_PTTRN = rf".*\.{_DOC_FILE_EXT_GROUP}"
 
 
-class Arguments(NamedTuple):
-    verbose: bool
-    debug: bool
+@dataclass(frozen=True)
+class Arguments(cli.Arguments):
     generate_cache: bool
     quiet: bool
     overwrite: bool

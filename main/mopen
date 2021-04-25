@@ -14,33 +14,35 @@ from typing import List
 
 from loguru import logger as log
 
-import gutils
+import bugyi
+from bugyi import cli
+from bugyi.core import catch, shell
 
 
 scriptname = os.path.basename(os.path.realpath(__file__))
-data_dir = gutils.xdg.init('data')
+data_dir = bugyi.xdg.init('data')
 cache_fp = f'{data_dir}/cache'
 
 
 def parse_cli_args(argv: List[str]) -> argparse.Namespace:
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument('-C', dest='cache', action='store_true',
                         help='Generate cache for media files.')
 
     return parser.parse_args(argv[1:])
 
 
-@gutils.catch
+@catch
 def main(argv: List[str] = None) -> None:
     if argv is None:
         argv = sys.argv
 
     args = parse_cli_args(argv)
 
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
     if args.cache or not os.path.exists(cache_fp):
-        find_output = gutils.shell(
+        find_output = shell(
             'sudo find /mnt/hercules/plex /home/bryan/Downloads '
                 '-name "*.avi" -o '
                 '-name "*.m4v" -o '
@@ -77,7 +79,7 @@ def main(argv: List[str] = None) -> None:
     out, _ = ps.communicate(input=all_media_files.encode())
     choice = out.decode().strip()
 
-    gutils.shell(f'umpv "{options[choice]}"')
+    shell(f'umpv "{options[choice]}"')
 
 
 if __name__ == "__main__":

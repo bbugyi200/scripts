@@ -7,11 +7,13 @@
 PROXY_CONF=/etc/systemd/system/docker.service.d/proxy.conf
 
 if grep -q -E "^Environment=" "${PROXY_CONF}"; then
-    sudo perl -i -nE 'print s/^(Environment=.*)$/# \1/gr' "${PROXY_CONF}"
     printf "Disabling docker daemon proxy...\n"
+    sudo perl -i -nE 'print s/^(Environment=.*)$/# \1/gr' "${PROXY_CONF}"
+    python -c "import json; config_json = '$HOME/.docker/config.json'; D = json.load(open(config_json)); D.pop('proxies', None); json.dump(D, open(config_json, 'w'), indent=4)"
 elif grep -q -E "^#[ ]*Environment=" "${PROXY_CONF}"; then
-    sudo perl -i -nE 'print s/^#[ ]*(Environment=.*)$/\1/gr' "${PROXY_CONF}"
     printf "Enabling docker daemon proxy...\n"
+    sudo perl -i -nE 'print s/^#[ ]*(Environment=.*)$/\1/gr' "${PROXY_CONF}"
+    python -c "import json; config_json = '$HOME/.docker/config.json'; D = json.load(open(config_json)); proxy = 'http://192.168.1.198:8888'; D.setdefault('proxies', {'default': {'httpProxy': proxy, 'httpsProxy': proxy}}); json.dump(D, open(config_json, 'w'), indent=4)"
 else
     printf 1>&2 "No 'Environment' variable found in %s\n" "${PROXY_CONF}"
     exit 1

@@ -1,41 +1,32 @@
 """Add a New Function / Alias to your bashrc / zshrc in Alphabetical Order"""
 
+from dataclasses import dataclass
 import os
 import re
 import subprocess as sp
 import sys
-from typing import List, NamedTuple, Optional, Sequence
+from typing import List, Optional, Sequence
 
-import gutils
+from bugyi import cli
+from bugyi.core import main_factory
+from bugyi.io import emsg
 from loguru import logger as log
 
 
 scriptname = os.path.basename(os.path.realpath(__file__))
 
 
-@gutils.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    return run(args)
-
-
-class Arguments(NamedTuple):
+@dataclass(frozen=True)
+class Arguments(cli.Arguments):
     alias: bool
-    debug: bool
     marker: str
     name: str
     file_list: List[str]
-    verbose: bool
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
+
     parser.add_argument(
         'name', metavar='NAME', help='Name of the new function / alias.'
     )
@@ -64,8 +55,8 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
     )
 
     args = parser.parse_args(argv[1:])
-
     kwargs = dict(args._get_kwargs())
+
     return Arguments(**kwargs)
 
 
@@ -109,7 +100,7 @@ def run(args: Arguments) -> int:
             log.trace('line_name => {}', repr(line_name))
 
             if args.name == line_name.strip():
-                gutils.io.emsg('{} is already defined.'.format(args.name))
+                emsg('{} is already defined.'.format(args.name))
                 sp.check_call(['wim', '-a', args.name])
                 return 0
 
@@ -145,5 +136,6 @@ def run(args: Arguments) -> int:
     return 0
 
 
+main = main_factory(parse_cli_args, run)
 if __name__ == "__main__":
     sys.exit(main())

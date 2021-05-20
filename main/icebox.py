@@ -6,30 +6,20 @@ directories).
 """
 
 import argparse
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 import shutil
 import sys
-from typing import Iterable, NamedTuple, Sequence
+from typing import Iterable, Sequence
 
-import gutils
-from loguru import logger as log  # pylint: disable=unused-import
-
-
-@gutils.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    return run(args)
+from bugyi import cli
+from bugyi.core import main_factory
+from loguru import logger as log
 
 
-class Arguments(NamedTuple):
-    debug: bool
-    verbose: bool
+@dataclass(frozen=True)
+class Arguments(cli.Arguments):
     freeze: bool
     unfreeze: bool
     icedir: Path
@@ -37,7 +27,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
     g1 = parser.add_mutually_exclusive_group()
     g1.add_argument("--freeze", action="store_true", help="Freeze files.")
     g1.add_argument("--unfreeze", action="store_true", help="Un-Freeze files.")
@@ -110,5 +100,6 @@ def _shutil_copy(src: Path, dest: Path) -> None:
     shutil.copy(src, dest)
 
 
+main = main_factory(parse_cli_args, run)
 if __name__ == "__main__":
     sys.exit(main())

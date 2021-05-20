@@ -144,9 +144,11 @@ def get_all_docs(*, use_cache: bool) -> List[Path]:
         out = sp.check_output(["cat", ALL_DOCS_CACHE_FILE])
         all_docs_string = out.decode().strip()
     else:
-        directory_list = ["/home/bryan/Sync", "/home/bryan/projects"]
+        directory_list = ["/home/bryan/Sync/var/books", "/home/bryan/projects"]
         if socket.gethostname() == "athena":
-            directory_list.append("/mnt/hercules/archive/home/bryan/Sync")
+            directory_list.append(
+                "/mnt/hercules/archive/home/bryan/Sync/var/books"
+            )
 
         cmd_list = ["find"]
         cmd_list.extend(directory_list)

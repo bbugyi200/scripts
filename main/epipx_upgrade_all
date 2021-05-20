@@ -28,6 +28,7 @@ PIPX_PACKAGES=(
     "pylint"
     "trash-cli"
     "twine"
+    "yq"
 )
 
 function main() {

@@ -1,4 +1,30 @@
-"""Helper script for creating new pull requests."""
+"""Script for creating new pull requests on GitHub.
+
+Running this script from a git feature branch will create a new PR from that
+feature branch to the master branch. Specifically, the following steps are
+performed:
+
+1) If the 'origin' and 'upstream' git remotes both exist:
+    - We assume that 'upstream' points to the main repository and 'origin'
+      points to your personal fork of that repository.
+  otherwise, if only 'origin' exists:
+    - We assume that 'origin' is the main repository and thus rename 'origin'
+      to 'upstream'. We then attempt to derive a new 'origin' git remote that
+      points to your fork of the main repository.
+2) If you have not already forked the main repository, we attempt to do that
+   for you.
+3) We push your feature branch to 'origin'.
+4) We use the commits on this feature branch to guess at what our new PR's
+   title and body will look like. A file is opened using your system's
+   preferred editor which contains this "guess".
+5) When the editor is closed, the contents of this file are used to derive a
+   new (if the file was changed) PR title and body.
+6) We use the title and body from the last step to create a new PR.
+7) We load the new PR's URL to the system's clipboard (this step only works if
+   'xclip' is installed).
+8) If any reviewers were specified via the --reviewers option, we attempt to
+   add them as reviewers of the new PR.
+"""
 
 from dataclasses import dataclass
 from functools import partial
@@ -92,7 +118,7 @@ def _reviewers_type(arg: str) -> List[str]:
 def _get_reviewers_alias_map() -> Dict[str, str]:
     conf = _get_config()
     if "reviewer_aliases" in conf:
-        alias_map = conf["reviewer_aliases"]
+        alias_map: Dict[str, str] = conf["reviewer_aliases"]
     else:
         alias_map = {}
     return alias_map
@@ -102,7 +128,10 @@ def _get_config() -> Dict[str, Any]:
     xdg_config = xdg.get_full_dir("config")
     config_yml = xdg_config / "config.yml"
     if config_yml.exists():
-        return yaml.load(config_yml.open(), Loader=yaml.Loader)
+        result: Dict[str, Any] = yaml.load(
+            config_yml.open(), Loader=yaml.Loader
+        )
+        return result
     else:
         return {}
 
@@ -311,6 +340,13 @@ def create_fork(
 
 
 def get_org_and_repo(remote_url: str) -> Tuple[str, str]:
+    """
+    Examples:
+        >>> get_org_and_repo( \
+                'https://bbgithub.dev.bloomberg.com/ComplianceSRE/tools' \
+            )
+        ('ComplianceSRE', 'tools')
+    """
     slash_list = remote_url.split("/")
     org = slash_list[-2].split(":")[-1]
     repo = slash_list[-1].replace(".git", "")
@@ -346,6 +382,17 @@ def get_commit_title_and_body(commit_hash: str) -> Tuple[str, str]:
 
 
 def get_initial_pr_file_contents(title: str, body: str, branch: str) -> str:
+    r"""
+    Examples:
+        >>> get_initial_pr_file_contents('Title', 'Body', 'plain-branch')
+        'Title\n\nBody'
+
+        >>> get_initial_pr_file_contents(
+        ...    'Title', 'Body', 'CSRE-123-jira-ticket-branch'
+        ... )
+        '[CSRE-123] Title\n\nBody\n\nRelated Jira Ticket:
+        [CSRE-123](https://jira.prod.bloomberg.com/browse/CSRE-123)'
+    """
     if match := re.match("^([A-Z][A-Za-z0-9]*-[1-9][0-9]*)-.*", branch):
         jira_ticket = match.group(1)
         title = f"[{jira_ticket}] {title}"
@@ -365,6 +412,34 @@ def get_initial_pr_file_contents(title: str, body: str, branch: str) -> str:
 
 
 def get_title_and_body_from_pr_file(pr_file: PathLike) -> Tuple[str, str]:
+    r"""
+    Examples:
+        # --- imports
+        >>> from pathlib import Path
+        >>> import os, tempfile
+
+        # --- setup
+        >>> _, tmpf = tempfile.mkstemp()
+        >>> pr_file = Path(tmpf)
+
+        # --- tests
+        >>> _ = pr_file.write_text('Title\n\nBody')
+        >>> get_title_and_body_from_pr_file(pr_file)
+        ('Title', 'Body')
+
+        >>> _ = pr_file.write_text('Title\n\nLong\nBody')
+        >>> get_title_and_body_from_pr_file(pr_file)
+        ('Title', 'Long Body')
+
+        >>> _ = pr_file.write_text(
+        ...        'Title\n\nLong\nBody\n\n* 1\n* 2\n\n- A\n- B'
+        ...     )
+        >>> get_title_and_body_from_pr_file(pr_file)
+        ('Title', 'Long Body\n\n* 1\n* 2\n\n- A\n- B')
+
+        # --- teardown
+        >>> os.remove(tmpf)
+    """
     pr_file = Path(pr_file)
 
     contents = pr_file.read_text()
@@ -376,7 +451,7 @@ def get_title_and_body_from_pr_file(pr_file: PathLike) -> Tuple[str, str]:
         body = ""
 
     # Remove long-line-wrapping newline characters.
-    body = re.sub(r"([^\n])\n([^\n\*0-9])", r"\1 \2", body)
+    body = re.sub(r"([^\n])\n([^\n*-0-9])", r"\1 \2", body)
 
     return title, body
 

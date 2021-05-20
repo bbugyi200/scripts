@@ -37,10 +37,10 @@ function unsafe_cmd() {
     local cmd="$1"
     shift
 
-    cmd_stdout_f="$(mktemp "/tmp/daily_jobs-${cmd%% *}-XXX.out")"
+    local cmd_stdout_f="$(mktemp "/tmp/daily_jobs-${cmd%% *}-XXX.out")"
     DELETE_LATER+=("${cmd_stdout_f}")
 
-    logfile=/var/tmp/"${SCRIPTNAME}".log
+    local logfile=/var/tmp/"${SCRIPTNAME}".log
 
     if [[ "${FIRST_UNSAFE_CMD}" = true ]]; then
         FIRST_UNSAFE_CMD=false
@@ -50,7 +50,7 @@ function unsafe_cmd() {
         echo "------------------------------" >> "${logfile}"
     fi
 
-    out_files=("${logfile}")
+    local out_files=("${logfile}")
     if [[ "${VERBOSE}" = true ]]; then
         out_files+=(/dev/stderr)
     fi

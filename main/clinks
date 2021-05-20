@@ -37,8 +37,11 @@ function main() {
     # ----- Cleanup Commands
     printf "%s: Deleting all .mypy_cache/ directories...\n" "${SCRIPTNAME}"
     for D in "bin" "home"; do
-        find /home/bryan/Sync/"${D}" -type d -name ".mypy_cache*" -exec sudo /bin/rm -rf {} \; &>/dev/null
+        find "${HOME}"/Sync/"${D}" -type d -name ".mypy_cache*" -exec sudo /bin/rm -rf {} \; &>/dev/null
     done
+
+    printf "%s: Deleting all __pycache__/ directories...\n" "${SCRIPTNAME}"
+    find "${HOME}"/Sync/bin -type d -name __pycache__ -exec rm -rf {} \;
 
     # ----- Main Logic
     if [[ "${AT_WORK}" == true ]]; then

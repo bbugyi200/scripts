@@ -1,0 +1,104 @@
+#!/bin/bash
+
+source bugyi.sh
+
+read -r -d '' DOC <<EOM
+Mute the system sound for a user-specified number of minutes / seconds.
+
+Examples:
+    # Mute the system volume for 10 minutes.
+    ${SCRIPTNAME} 10
+
+    # Mute the system volume for 30 seconds.
+    ${SCRIPTNAME} 30s
+EOM
+
+function main() {
+    parse_cli_args "$@"
+
+    local orig_volume="$(current_volume)"
+
+    if [[ "${N}" == *"s" ]]; then
+        delay="${N::-1}"
+        notify "Muting system volume for ${delay} seconds..."
+    else
+        delay=$((N * 60))
+        notify "Muting system volume for ${N} minutes..."
+    fi
+
+    set_volume 0%
+    sleep "${delay}"
+
+    notify "Unmuting system volume (setting back to ${orig_volume}%)..."
+    set_volume "${orig_volume}%"
+}
+
+function parse_cli_args() {
+    eval set -- "$(getopt -o "d,h" -l "debug,help" -- "$@")"
+
+    export USAGE_GRAMMAR=(
+        "[-d] MINUTES"
+        "[-d] SECONDS"
+        "-h"
+    )
+
+    # shellcheck disable=SC2154
+    read -r -d '' help <<EOM
+$(usage)
+
+${DOC}
+
+Positional Arguments:
+    MINUTES
+        A positive integer. Will result in the system volume muting for MINUTES
+        minutes.
+
+    SECONDS
+        A positive integer prepended to the 's' character. Will result in the
+        system volume muting for SECONDS seconds.
+
+Optional Arguments:
+    -d | --debug
+        Enable debug mode.
+
+    -h | --help
+        View this help message.
+EOM
+
+    while [[ -n "$1" ]]; do
+        case $1 in
+        -d | --debug)
+            debug=true
+            ;;
+        -h | --help)
+            echo "${help}"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        esac
+        shift
+    done
+
+    if [[ "${debug}" = true ]]; then
+        PS4='$LINENO: '
+        set -x
+    fi
+
+    if [[ -z "$1" ]]; then
+        die "$(usage)" 2
+    fi
+
+    N="$1"
+    shift
+}
+
+function notify() {
+    notify-send -t 3000 "${SCRIPTNAME}" "$@"
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

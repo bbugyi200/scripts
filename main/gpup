@@ -4,15 +4,13 @@
 #  Update and Push Current Git Repo using Generic Commit Message                                  #
 ###################################################################################################
 
-source gutils.sh
-
+source bugyi.sh
 
 if [[ -n "$1" ]]; then
     MSG="$1"; shift
 else
     MSG="Update $(gitrepo) ($(date +%Y-%m-%d))"
 fi
-
 
 cd "$(gitdir)" || exit 1
 git add .

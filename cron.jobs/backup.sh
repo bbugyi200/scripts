@@ -136,12 +136,6 @@ function _backup() {
     # function).
     find "$(dirname "${_to}")" -maxdepth 1 -type d -name "$(basename "${_to}")*" -exec "${RM}" -rf {} \; # SLOW
 
-    # Since `cp` commands are much slower than `mv` commands, we copy this
-    # directory here--with the full expectation that the system MAY reboot
-    # while this command is running--and then place a corresponding `mv`
-    # command in the atomic block below (which should run much faster).
-    cp -p -r -f "${to}" "${_to}" # SLOW
-
     # All files/directories added to this array will be deleted at the end of
     # this function.
     local DELETE_LATER=()

@@ -6,7 +6,7 @@ across multiple machines.
 EOM
 
 # ---------- Modules ----------
-source gutils.sh
+source bugyi.sh
 
 # ---------- Global Variables ----------
 export USAGE_GRAMMAR=(
@@ -18,7 +18,7 @@ dropbox_dots_home="$HOME"/Sync/home
 parent="${PWD#$HOME}"
 
 # ---------- Command-line Arguments ----------
-eval set -- "$(getopt -o "d,h,u,v" -l "debug,help,undo,verbose" -- "$@")"
+eval set -- "$(getopt -o "h,u,v" -l "help,undo,verbose" -- "$@")"
 
 read -r -d '' help << EOM
 $(usage)
@@ -29,9 +29,6 @@ Positional Arguments:
     DOTFILE     A dotfile to dow / undow.
 
 Optional Arguments:
-    -d | --debug
-        Enable debug mode.
-
     -h | --help
         View this help message.
 
@@ -42,20 +39,21 @@ Optional Arguments:
         Enable verbose output.
 EOM
 
+VERBOSE=0
 while [[ -n "$1" ]]; do
     case $1 in
-       -d|--debug )
-           debug=true
-           ;;
        -h|--help )
            echo "${help}"
            exit 0
            ;;
        -u|--undo )
-           undow=true
+           UNDOW=true
            ;;
        -v|--verbose )
-           verbose=true
+           VERBOSE=$((VERBOSE + 1))
+
+           # shellcheck disable=SC2034
+           VERBOSE_OPT="-v"
            ;;
        -- )
            shift
@@ -65,7 +63,7 @@ while [[ -n "$1" ]]; do
     shift
 done
 
-if [[ "${debug}" = true && "${verbose}" = true ]]; then
+if [[ "${VERBOSE}" -gt 1 ]]; then
     PS4='$LINENO: '
     set -x
 fi
@@ -75,7 +73,7 @@ if [[ -z "$1" ]]; then
     die "$(usage)" 2
 fi
 
-if [[ "${undow}" = true ]]; then
+if [[ "${UNDOW}" = true ]]; then
     action_word="Undowing"
     src="${dropbox_dots_home}"/"${parent}"
     dest="${PWD}"
@@ -91,7 +89,7 @@ for dotfile in "$@"; do
     DEST="${dest}"/"${dotfile}"
 
     if [[ -h "${dotfile}" ]]; then
-        if [[ "${undow}" = true ]]; then
+        if [[ "${UNDOW}" = true ]]; then
             dmsg "Removing symlink: ${dotfile}."
             safe-rm -rf "${dotfile}"
         else
@@ -117,4 +115,4 @@ for dotfile in "$@"; do
 done
 
 imsg "Running clinks."
-clinks
+clinks ${VERBOSE_OPT}

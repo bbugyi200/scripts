@@ -18,27 +18,36 @@ function main() {
 
     local orig_volume="$(current_volume)"
 
+    if [[ "${orig_volume}" == "0" ]]; then
+        die "The system volume is already muted (i.e. set to 0%%)."
+    fi
+
     if [[ "${N}" == *"s" ]]; then
-        delay="${N::-1}"
+        local delay="${N::-1}"
         notify "Muting system volume for ${delay} seconds..."
     else
-        delay=$((N * 60))
+        local delay=$((N * 60))
         notify "Muting system volume for ${N} minutes..."
     fi
 
     set_volume 0%
     sleep "${delay}"
 
+    local new_volume="$(current_volume)"
+    if [[ "${new_volume}" != "0" ]]; then
+        die "The system volume is no longer muted (${new_volume}%%). It was probably adjusted manually while we were waiting."
+    fi
+
     notify "Unmuting system volume (setting back to ${orig_volume}%)..."
     set_volume "${orig_volume}%"
 }
 
 function parse_cli_args() {
-    eval set -- "$(getopt -o "d,h" -l "debug,help" -- "$@")"
+    eval set -- "$(getopt -o "h,v" -l "help,verbose" -- "$@")"
 
     export USAGE_GRAMMAR=(
-        "[-d] MINUTES"
-        "[-d] SECONDS"
+        "[-v] MINUTES"
+        "[-v] SECONDS"
         "-h"
     )
 
@@ -58,21 +67,22 @@ Positional Arguments:
         system volume muting for SECONDS seconds.
 
 Optional Arguments:
-    -d | --debug
-        Enable debug mode.
-
     -h | --help
         View this help message.
+
+    -v | --verbose
+        Enable verbose output. This option can be specified multiple times (e.g. -v, -vv, ...).
 EOM
 
+    VERBOSE=0
     while [[ -n "$1" ]]; do
         case $1 in
-        -d | --debug)
-            debug=true
-            ;;
         -h | --help)
             echo "${help}"
             exit 0
+            ;;
+        -v | --verbose)
+            VERBOSE=$((VERBOSE + 1))
             ;;
         --)
             shift
@@ -82,7 +92,7 @@ EOM
         shift
     done
 
-    if [[ "${debug}" = true ]]; then
+    if [[ "${VERBOSE}" -gt 1 ]]; then
         PS4='$LINENO: '
         set -x
     fi
@@ -93,6 +103,10 @@ EOM
 
     N="$1"
     shift
+
+    if [[ -n "$1" ]]; then
+        die "$(usage)" 2
+    fi
 }
 
 function notify() {

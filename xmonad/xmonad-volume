@@ -6,7 +6,7 @@ fi
 
 FIFO=$XDG_RUNTIME_DIR/volume.fifo
 
-[[ -p $FIFO ]] || mkfifo $FIFO
+[[ -p $FIFO ]] || mkfifo "${FIFO}"
 
 while true; do
     if pgrep xmobar > /dev/null; then
@@ -22,7 +22,7 @@ while true; do
         SUFFIX=${COLONS:$NUM_OF_BANGS}
         OUTPUT="${PREFIX//:/\#}$SUFFIX"
 
-        printf "$OUTPUT\n" > $FIFO
+        printf "$OUTPUT\n" > "${FIFO}"
         break
     else
         sleep 5

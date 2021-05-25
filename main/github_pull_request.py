@@ -58,12 +58,15 @@ import yaml
 
 
 # TODO(bugyi): Make compatiable with standard GitHub (https://www.github.com).
+# TODO(bugyi): Replace --fork-exists option with a real solution.
+# TODO(bugyi): Add support for subtasks (e.g. `CSRE-123-124-feature` branch where `123` is the parent and `124` is the subtask).
 BBGITHUB = "bbgithub.dev.bloomberg.com"
 BBGITHUB_API = f"https://{BBGITHUB}/api/v3/{{}}".format
 
 
 @dataclass(frozen=True)
 class Arguments(cli.Arguments):
+    ensure_fork_exists: bool
     proxy: Optional[str]
     reviewers: Optional[List[str]]
     token: str
@@ -97,6 +100,18 @@ def parse_cli_args(argv: Sequence[str]) -> Arguments:
         "--user",
         required=True,
         help="The Github user creating the pull request.",
+    )
+    parser.add_argument(
+        "-F",
+        "--fork-exists",
+        dest="ensure_fork_exists",
+        action="store_false",
+        help=(
+            "Don't check if fork exists, since we know that it does already."
+            " This option is a temporary workaround for popular repos that"
+            " have so many forks that the GitHub API is likely using"
+            " pagination."
+        ),
     )
 
     args = parser.parse_args(argv[1:])
@@ -173,7 +188,10 @@ def run(args: Arguments) -> int:
     requests_post = partial(requests.post, proxies=proxies, headers=headers)
 
     org, repo = get_org_and_repo(upstream.url)
-    if fork_exists(requests_get, org, repo, args.user).unwrap():
+    if (
+        not args.ensure_fork_exists
+        or fork_exists(requests_get, org, repo, args.user).unwrap()
+    ):
         log.info("The '{}/{}' fork already exists.", args.user, repo)
     else:
         log.info("Creating the '{}/{}' fork...", args.user, repo)

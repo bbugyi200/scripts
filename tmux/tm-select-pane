@@ -5,7 +5,7 @@ Wrapper for 'tmux select-pane' command.
 EOM
 
 # ---------- Modules ----------
-source gutils.sh
+source bugyi.sh
 
 # ---------- Command-line Arguments ----------
 eval set -- "$(getopt -o "d,f,h,v,L,R,U,D" -l "debug,force,help,verbose" -- "$@")"

@@ -4,11 +4,11 @@ read -r -d '' doc <<EOM
 Use 'stow' Command to Create Symlinks for All of My Dotfiles and Scripts
 EOM
 
-source gutils.sh
+source bugyi.sh
 
 SYNC="${HOME}"/Sync
 
-function main() {
+function run() {
     # Check if Running at Work
     SYS_INFO="$(uname -a)"
     if [[ "${SYS_INFO}" == *"Darwin"* ]]; then
@@ -35,71 +35,89 @@ function main() {
     done
 
     # ----- Cleanup Commands
-    printf "%s: Deleting all .mypy_cache/ directories...\n" "${SCRIPTNAME}"
+    imsg "Cleaning up files that might cause the stow command to fail..."
+
+    dmsg "Deleting all .mypy_cache/ directories..."
     for D in "bin" "home"; do
         find "${HOME}"/Sync/"${D}" -type d -name ".mypy_cache*" -exec sudo /bin/rm -rf {} \; &>/dev/null
     done
 
-    printf "%s: Deleting all __pycache__/ directories...\n" "${SCRIPTNAME}"
-    find "${HOME}"/Sync/bin -type d -name __pycache__ -exec rm -rf {} \;
+    dmsg "Deleting all __pycache__/ directories..."
+    find "${HOME}"/Sync/bin -type d -name __pycache__ -exec sudo /bin/rm -rf {} \; &>/dev/null
 
     # ----- Main Logic
+    imsg "Collecting stow commands to run..."
     if [[ "${AT_WORK}" == true ]]; then
-        stow_it "${SYNC}/bin/macos" "$HOME/.local/bin"
+        stow_it_later "${SYNC}/bin/macos" "$HOME/.local/bin"
     else
         # >>> Other Directories
         mkdir -p /usr/share/rlwrap/{filters,completions} &>/dev/null
 
         ##### ETC
         if [[ $(hostname) == "athena" ]]; then
-            stow_it "${SYNC}/bin/cron.jobs" "/etc"
+            stow_it_later "${SYNC}/bin/cron.jobs" "/etc"
         fi
 
         ##### SCRIPTS
         if [[ "${SYS_INFO}" == *"gentoo"* ]]; then
-            stow_it "${SYNC}/bin/gentoo" "$HOME/.local/bin"
+            stow_it_later "${SYNC}/bin/gentoo" "$HOME/.local/bin"
         fi
 
         if [[ "${SYS_INFO}" == *"Debian"* ]]; then
-            stow_it "${SYNC}/bin/debian" "$HOME/.local/bin"
+            stow_it_later "${SYNC}/bin/debian" "$HOME/.local/bin"
         fi
 
         ##### MODULES / LIBRARIES / HEADERS
-        stow_it "${SYNC}/bin/xmonad" "$HOME/.local/bin"
-        stow_it "${SYNC}/lib/python" "/usr/local/lib/python"
-        stow_it "${SYNC}/lib/C" "/usr/local/lib"
-        stow_it "${SYNC}/lib/zsh" "/usr/local/lib"
-        stow_it "${SYNC}/src" "/usr/local/src"
-        stow_it "${SYNC}/include" "/usr/local/include"
+        stow_it_later "${SYNC}/bin/xmonad" "$HOME/.local/bin"
+        stow_it_later "${SYNC}/lib/python" "/usr/local/lib/python"
+        stow_it_later "${SYNC}/lib/C" "/usr/local/lib"
+        stow_it_later "${SYNC}/lib/zsh" "/usr/local/lib"
+        stow_it_later "${SYNC}/src" "/usr/local/src"
+        stow_it_later "${SYNC}/include" "/usr/local/include"
 
         ##### DOTFILES
-        stow_it "${SYNC}/usr" "/usr"
+        stow_it_later "${SYNC}/usr" "/usr"
     fi
 
     ##### SCRIPTS
-    stow_it "${SYNC}/bin/awk" "$HOME/.local/bin"
-    stow_it "${SYNC}/bin/GTD" "$HOME/.local/bin"
-    stow_it "${SYNC}/bin/main" "$HOME/.local/bin"
-    stow_it "${SYNC}/bin/tmux" "$HOME/.local/bin"
-    stow_it "${SYNC}/bin/vim" "$HOME/.local/bin"
-    stow_it "${SYNC}/bin/zathura" "$HOME/.local/bin"
+    stow_it_later "${SYNC}/bin/awk" "$HOME/.local/bin"
+    stow_it_later "${SYNC}/bin/GTD" "$HOME/.local/bin"
+    stow_it_later "${SYNC}/bin/main" "$HOME/.local/bin"
+    stow_it_later "${SYNC}/bin/tmux" "$HOME/.local/bin"
+    stow_it_later "${SYNC}/bin/vim" "$HOME/.local/bin"
+    stow_it_later "${SYNC}/bin/zathura" "$HOME/.local/bin"
 
     ##### DOTFILES
-    stow_it "${SYNC}/home" "${HOME}"
+    stow_it_later "${SYNC}/home" "${HOME}"
 
     ##### PROJECTS
-    stow_it "${SYNC}/var/projects" "$HOME/projects"
+    stow_it_later "${SYNC}/var/projects" "$HOME/projects"
+
+    if [[ "${VERBOSE}" -eq 0 ]]; then
+        local tqdm_cmd="tqdm --desc 'running stow commands' --total ${#STOW_IT_CMDS[@]}"
+    else
+        dmsg "Running ${#STOW_IT_CMDS[@]} stow commands..."
+        local tqdm_cmd="tee /dev/null"
+    fi
+
+    for stow_cmd in "${STOW_IT_CMDS[@]}"; do
+        eval "${stow_cmd}" 1>&2
+        echo
+    done | eval "${tqdm_cmd}" >/dev/null
 
     if [[ "${AT_WORK}" = true ]]; then
         rm ~/.xinitrc
     fi
 }
 
+STOW_IT_CMDS=()
+function stow_it_later() { STOW_IT_CMDS+=("stow_it $*"); }
+
 function parse_cli_args() {
-    eval set -- "$("${GETOPT}" -o "d,h,v" -l "debug,help,verbose" -- "$@")"
+    eval set -- "$("${GETOPT}" -o "h,v" -l "help,verbose" -- "$@")"
 
     export USAGE_GRAMMAR=(
-        "[-d] [-v] [STOW_FLAG]"
+        "[-v] [STOW_FLAG]"
         "-h"
     )
 
@@ -113,27 +131,22 @@ Positional Arguments:
     STOW_FLAG       Option flag to pass to the 'stow' command. Defaults to '-R'.
 
 Optional Arguments:
-    -d | --debug
-        Enable debug mode.
-
     -h | --help
         View this help message.
 
     -v | --verbose
-        Enable verbose output.
+        Enable verbose output. This option can be specified multiple times (e.g. -v, -vv, ...).
 EOM
 
+    VERBOSE=0
     while [[ -n "$1" ]]; do
         case $1 in
-        -d | --debug)
-            DEBUG=true
-            ;;
         -h | --help)
             echo "${help}"
             exit 0
             ;;
         -v | --verbose)
-            VERBOSE=true
+            VERBOSE=$((VERBOSE + 1))
             ;;
         --)
             shift
@@ -143,7 +156,7 @@ EOM
         shift
     done
 
-    if [[ "${DEBUG}" = true && "${VERBOSE}" = true ]]; then
+    if [[ "${VERBOSE}" -gt 1 ]]; then
         PS4='$LINENO: '
         set -x
     fi
@@ -157,17 +170,17 @@ EOM
 }
 
 function stow_it() {
-    src="$1"
+    local src="$1"
     shift
 
-    target="$1"
+    local target="$1"
     shift
 
-    dir="${src%/*}"
-    subdir="${src##*/}"
+    local dir="${src%/*}"
+    local subdir="${src##*/}"
 
     local stow_cmd="stow --dir=${dir} --target=${target} -${FLAG} ${subdir}"
-    printf "%s: %s\n" "${SCRIPTNAME}" "${stow_cmd}"
+    dmsg "${stow_cmd}"
 
     # shellcheck disable=SC2086
     # We use perl to filter out spurious warning output (see https://github.com/aspiers/stow/issues/65).
@@ -175,5 +188,5 @@ function stow_it() {
 }
 
 if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
-    main "$@"
+    run "$@"
 fi

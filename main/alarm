@@ -7,7 +7,7 @@
 # which counts down to the given time.                                                            #
 ###################################################################################################
 
-source gutils.sh
+source bugyi.sh
 
 # My Colors
 GREY="#D9D9D9"

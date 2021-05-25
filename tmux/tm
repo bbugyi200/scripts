@@ -4,7 +4,7 @@ read -r -d '' doc << EOM
 Wrapper for Tmuxinator
 EOM
 
-source gutils.sh
+source bugyi.sh
 
 # ---------- Command-line Arguments ----------
 export USAGE_GRAMMAR=(

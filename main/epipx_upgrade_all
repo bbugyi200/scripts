@@ -26,6 +26,7 @@ PIPX_PACKAGES=(
     "pre-commit"
     "pyfunky"
     "pylint"
+    "tox"
     "trash-cli"
     "twine"
     "yq"

@@ -6,7 +6,7 @@
 
 # shellcheck disable=SC2154
 
-source gutils.sh
+source bugyi.sh
 
 LAST_WEATHER_REPORT_F="${HOME}"/.poll-weather.txt
 SCRIPTNAME="$(basename "$0")"

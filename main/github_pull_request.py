@@ -37,19 +37,12 @@ import subprocess as sp
 import sys
 import tempfile
 import time
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 from bugyi import cli, git_tools as git, subprocess as bsp, xdg
 from bugyi.core import main_factory
-from bugyi.errors import BErr, BResult, Err, Ok
+from bugyi.errors import BErr, BResult
+from bugyi.result import Err, Ok, return_lazy_result
 from bugyi.tools import xclip_copy
 from bugyi.types import PathLike, Protocol
 from loguru import logger as log
@@ -316,6 +309,7 @@ def fork_exists(
     return Ok(False)
 
 
+@return_lazy_result
 def create_fork(
     get: _RequestsGet,
     post: _RequestsPost,

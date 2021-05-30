@@ -6,10 +6,12 @@ import threading
 import time
 from typing import List, Union
 
-import gutils
+from bugyi.core import shell
+from bugyi.tools import notify
 from loguru import logger as log
 
 from .tracker import MagnetTracker
+
 
 _magnet_queue: "queue.Queue[str]" = queue.Queue()
 
@@ -40,7 +42,7 @@ def wait_for_first_magnet() -> None:
 def join_workers() -> None:
     wait_for_first_magnet()
     _magnet_queue.join()
-    gutils.notify("All torrents are complete.", title="torrent")
+    notify("All torrents are complete.", title="torrent")
 
 
 def kill_all_workers() -> None:
@@ -77,7 +79,7 @@ def _parse_info(field: str, ID: str = None) -> Union[str, List[str]]:
         "sudo -E deluge-console info --detailed --sort-reverse=time_added"
         f" {'' if ID is None else ID} | perl -nE 'print if /^{field}:/'"
     )
-    out = gutils.shell(cmd)
+    out = shell(cmd)
     ret = out.split("\n")
 
     if ret[0] == "":
@@ -174,7 +176,7 @@ class _TorrentWorker:
             elif state == "Seeding" or (
                 state == "Queued" and download_started
             ):
-                gutils.notify(
+                notify(
                     f'Finished Downloading "{self.title}".', title="torrent",
                 )
                 return

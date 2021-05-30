@@ -9,7 +9,7 @@ pyver="$1"
 shift
 
 if [[ -n "${pyver}" ]]; then
-    pyver="$(echo "${pyver}" | perl -nE 'print s/^([1-9])([1-9])$/\1.\2/gr')"
+    pyver="$(echo "${pyver}" | perl -nE 'print s/^([1-9])([1-9][0-9]*)$/\1.\2/gr')"
 
     python=python"${pyver}"
 

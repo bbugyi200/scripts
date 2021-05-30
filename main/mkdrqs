@@ -1,0 +1,39 @@
+#!/bin/bash
+
+source bugyi.sh
+
+function main() {
+    local template="$1"
+    shift
+
+    if ! [[ -f "${template}" ]]; then
+        die "The template file does not exist: %s" "${template}"
+    fi
+
+    local tmpf="$(mktemp /tmp/"${SCRIPTNAME}"-XXX.txt)"
+    trap 'rm -rf ${tmpf}' INT TERM EXIT
+
+    j2 "${template}" -o "${tmpf}"
+
+    imsg "Opening rendered template in editor: %s" "${tmpf}"
+    vim "${tmpf}"
+
+    if [[ -f "${tmpf}" ]]; then
+        local tmpf_base="$(basename "${tmpf}")"
+
+        imsg "Generating DRQS ticket using the contents from %s." "${tmpf}"
+        scp2farm "${tmpf}" tmp/
+        farm gendrqs \
+            --detail-from=\$HOME/tmp/"${tmpf_base}" \
+            -r "${MY_UUID}" \
+            -c "${MY_UUID}" \
+            "$@"
+        farm rm -rf \$HOME/tmp/"${tmpf_base}"
+    else
+        emsg "The rendered DRQS template file no longer exists: %s" "${tmpf}"
+    fi
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

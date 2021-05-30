@@ -2,7 +2,7 @@ from pathlib import Path
 import unittest
 
 from bs4 import BeautifulSoup
-from gutils.errors import Err
+from bugyi.result import Err
 from parameterized import parameterized
 import suntimes
 

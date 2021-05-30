@@ -8,23 +8,14 @@ import subprocess as sp
 import sys
 from typing import NamedTuple, Sequence
 
-import bugyi
 from dateutil.parser import parse as parse_dt
 from loguru import logger as log  # pylint: disable=unused-import
 
+from bugyi import cli
+from bugyi.core import main_factory
+
 
 scriptname = os.path.basename(os.path.realpath(__file__))
-
-
-@bugyi.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-    bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    return run(args)
 
 
 class Arguments(NamedTuple):
@@ -36,7 +27,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = bugyi.ArgumentParser()
+    parser = cli.ArgumentParser()
     parser.add_argument("start_time", help="Start-time of event.")
     parser.add_argument("event_name", nargs="*", help="Event name.")
     parser.add_argument(
@@ -79,5 +70,6 @@ def run(args: Arguments) -> int:
     return exit_code
 
 
+main = main_factory(parse_cli_args, run)
 if __name__ == "__main__":
     sys.exit(main())

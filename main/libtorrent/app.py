@@ -22,13 +22,15 @@ import time
 import types
 from typing import NamedTuple, Sequence
 
-import gutils
+import bugyi
+from bugyi import cli, xdg
+from bugyi.core import catch
 from loguru import logger as log
 
 from . import worker
 
 
-ARGS_FILE = gutils.xdg.init("data") / "args"
+ARGS_FILE = xdg.init_full_dir("data") / "args"
 
 
 class Arguments(NamedTuple):
@@ -43,13 +45,13 @@ class Arguments(NamedTuple):
     vpn: str
 
 
-@gutils.catch
+@catch
 def main(argv: Sequence[str] = None) -> None:
     if argv is None:
         argv = sys.argv
 
     args = parse_cli_args(argv)
-    gutils.logging.configure("torrent", debug=args.debug, verbose=args.verbose)
+    bugyi.logging.configure("torrent", debug=args.debug, verbose=args.verbose)
 
     if args.pudb:
         import pudb
@@ -73,7 +75,7 @@ def main(argv: Sequence[str] = None) -> None:
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser(description=__doc__)
+    parser = cli.ArgumentParser(description=__doc__)
     parser.add_argument("magnet", help="The torrent magnet file.")
     parser.add_argument(
         "-w",
@@ -159,8 +161,8 @@ def register_handlers() -> None:
 def create_pidfile(args: Arguments) -> None:
     """Duplicate Process Management"""
     try:
-        gutils.create_pidfile()
-    except gutils.StillAliveException as e:
+        bugyi.create_pidfile()
+    except bugyi.StillAliveException as e:
         with ARGS_FILE.open("wb") as f:
             pickle.dump(args, f)
 

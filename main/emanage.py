@@ -138,7 +138,7 @@ def run(args: Arguments) -> int:
     cmd_list.append(escript)
     cmd_list.extend(cmd_opts)
 
-    data_dir = xdg.init("data")
+    data_dir = xdg.init_full_dir("data")
     local_hostname = os.uname().nodename
 
     cmd_dir = "/{}/{}/{}".format(data_dir, local_hostname, escript)

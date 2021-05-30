@@ -1,8 +1,5 @@
 #!/usr/bin/python3
 
-from os.path import exists
-
-
 """
 This script emulates "unique application" functionality on Linux. When starting
 playback with this script, it will try to reuse an already running instance of
@@ -40,11 +37,12 @@ import os
 import string
 import subprocess as sp
 
-import gutils
+from bugyi import xdg
+from bugyi.core import catch
 from loguru import logger as log  # pylint: disable=unused-import
 
 
-FIFO = "{}/fifo".format(gutils.xdg.init("runtime"))
+FIFO = "{}/fifo".format(xdg.init_full_dir("runtime"))
 
 
 # this is the same method mpv uses to decide this
@@ -86,7 +84,7 @@ def make_abs(filename: str) -> str:
     return filename
 
 
-@gutils.catch
+@catch
 def main() -> int:
     append_help = "append video to playlist instead of starting immediately"
     files_help = "the video files to play with mpv"

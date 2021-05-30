@@ -5,19 +5,9 @@ import re
 import sys
 from typing import NamedTuple, Sequence
 
-import gutils
+from bugyi import cli
+from bugyi.core import main_factory
 from loguru import logger as log  # pylint: disable=unused-import
-
-
-@gutils.catch
-def main(argv: Sequence[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv
-
-    args = parse_cli_args(argv)
-    gutils.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
-
-    return run(args)
 
 
 class Arguments(NamedTuple):
@@ -26,7 +16,7 @@ class Arguments(NamedTuple):
 
 
 def parse_cli_args(argv: Sequence[str]) -> Arguments:
-    parser = gutils.ArgumentParser()
+    parser = cli.ArgumentParser()
 
     args = parser.parse_args(argv[1:])
     kwargs = dict(args._get_kwargs())
@@ -72,5 +62,6 @@ def run(_args: Arguments) -> int:
     return 0
 
 
+main = main_factory(parse_cli_args, run)
 if __name__ == "__main__":
     sys.exit(main())

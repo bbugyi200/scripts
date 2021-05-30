@@ -105,6 +105,7 @@ EOM
     shift
 
     if [[ -n "$1" ]]; then
+        emsg "Unexpected positional argument: '%s'" "$1"
         die "$(usage)" 2
     fi
 }

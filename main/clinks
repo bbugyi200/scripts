@@ -110,9 +110,6 @@ function run() {
     fi
 }
 
-STOW_IT_CMDS=()
-function stow_it_later() { STOW_IT_CMDS+=("stow_it $*"); }
-
 function parse_cli_args() {
     eval set -- "$("${GETOPT}" -o "h,v" -l "help,verbose" -- "$@")"
 
@@ -168,6 +165,9 @@ EOM
         FLAG=R
     fi
 }
+
+STOW_IT_CMDS=()
+function stow_it_later() { STOW_IT_CMDS+=("stow_it $*"); }
 
 function stow_it() {
     local src="$1"

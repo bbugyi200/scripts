@@ -15,7 +15,8 @@ from typing import Iterable, List, Optional, Sequence, Union
 
 from bugyi import cli, xdg
 from bugyi.core import main_factory, shell
-from bugyi.errors import BErr, BResult, Err, Ok
+from bugyi.errors import BErr, BResult
+from bugyi.result import Err, Ok
 from loguru import logger as log
 
 

@@ -8,16 +8,18 @@ import subprocess as sp
 import sys
 from typing import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
+import bugyi
+from bugyi import cli, xdg
+from bugyi.core import catch
 from loguru import logger as log
 
-import bugyi
 
-data_dir = bugyi.xdg.init('data')
+data_dir = xdg.init_full_dir('data')
 minutes_fp = data_dir / 'minutes'
 
 
 def parse_cli_args(argv: List[str]) -> argparse.Namespace:
-    parser = bugyi.ArgumentParser()
+    parser = cli.ArgumentParser()
 
     default = 50
     parser.add_argument(
@@ -51,7 +53,7 @@ def parse_cli_args(argv: List[str]) -> argparse.Namespace:
     return parser.parse_args(argv[1:])
 
 
-@bugyi.catch
+@catch
 def main(argv: List[str] = None) -> None:
     if argv is None:
         argv = sys.argv

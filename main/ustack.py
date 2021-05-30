@@ -3,14 +3,14 @@
 import os
 import pickle
 
-import gutils
+from bugyi import xdg
 
 
 class UStack:
     def __init__(self):
-        self.fpath = '{}/dirstack.pickle'.format(gutils.xdg.init('data'))
+        self.fpath = "{}/dirstack.pickle".format(xdg.init_full_dir("data"))
         if os.path.isfile(self.fpath):
-            with open(self.fpath, 'rb') as f:
+            with open(self.fpath, "rb") as f:
                 self.stack = pickle.load(f)
         else:
             self.stack = list()
@@ -28,5 +28,5 @@ class UStack:
             return os.getcwd()
 
     def _save(self):
-        with open(self.fpath, 'wb+') as f:
+        with open(self.fpath, "wb+") as f:
             pickle.dump(self.stack, f)

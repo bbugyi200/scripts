@@ -4,17 +4,15 @@
 
 import os
 import pickle
-import sys
-import typing as Type  # pylint: disable=unused-import
+import typing as Type
 
 import bugyi
-from bugyi import cli
+from bugyi import cli, xdg
 from bugyi.core import catch
-from loguru import logger as log
 
 
 @catch
-def main():
+def main() -> None:
     parser = cli.ArgumentParser()
     exgroup = parser.add_mutually_exclusive_group()
     exgroup.add_argument(
@@ -44,7 +42,7 @@ def main():
 
     bugyi.logging.configure(__file__, debug=args.debug, verbose=args.verbose)
 
-    fpath = '{}/default-dirs.pickle'.format(bugyi.xdg.init('data'))
+    fpath = '{}/default-dirs.pickle'.format(xdg.init_full_dir('data'))
 
     default_dirs: Type.Dict[str, str] = {}
     if not os.path.isfile(fpath):

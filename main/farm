@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# shellcheck disable=SC2029
+ssh devnjbvlt01.bloomberg.com PATH=/bb/bin/:/opt/bb/bin:\$PATH "$@" |& perl -nE 'print if not /^Shared connection to/'

@@ -1,0 +1,3 @@
+#!/bin/bash
+
+scp "$1" devnjbvlt01.bloomberg.com:/home/bbugyi/"$2"

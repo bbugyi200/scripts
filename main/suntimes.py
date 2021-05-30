@@ -5,14 +5,15 @@ import enum
 import os
 import re
 import sys
-from typing import NamedTuple, Sequence, TypeVar
+from typing import NamedTuple, Sequence
 
 from bs4 import BeautifulSoup
 import bugyi
 from bugyi import cli
 from bugyi.core import catch
-from bugyi.errors import Err, Ok, Result, init_err_helper
+from bugyi.errors import BErr, BResult
 from bugyi.io import eprint
+from bugyi.result import Err, Ok
 from loguru import logger as log  # pylint: disable=unused-import
 import requests
 
@@ -24,15 +25,6 @@ USER_AGENT = {
         ' like Gecko) Chrome/6.0.472.63 Safari/534.3'
     )
 }
-
-
-class WebScrapingError(Exception):
-    """Error occurred while attempting to scrape a web page."""
-
-
-_T = TypeVar("_T")
-WErr = init_err_helper(WebScrapingError)
-WResult = Result[_T, WebScrapingError]
 
 
 @catch
@@ -97,7 +89,7 @@ def run(args: Arguments) -> int:
     return 0
 
 
-def get_time_string(rise_or_set: RiseOrSet) -> WResult[str]:
+def get_time_string(rise_or_set: RiseOrSet) -> BResult[str]:
     url = 'https://www.google.com/search?q=sun{}+times'.format(rise_or_set)
     google_soup = _get_soup(url)
     return _get_ts_from_google_search(google_soup, rise_or_set)
@@ -111,14 +103,14 @@ def _get_soup(url: str) -> BeautifulSoup:
 
 def _get_ts_from_google_search(
     soup: BeautifulSoup, rise_or_set: RiseOrSet
-) -> WResult[str]:
+) -> BResult[str]:
     am_or_pm = 'AM' if rise_or_set is RiseOrSet.RISE else 'PM'
     pttrn = '[0-9][0-9]?:[0-9][0-9] {}'.format(am_or_pm)
 
     time_divs = soup.find_all(["div", "span"], text=re.compile(pttrn))
 
     if not time_divs:
-        return WErr(
+        return BErr(
             "Unable to find a match in the following HTML source using"
             f" pattern {pttrn!r}:\n\n{soup.prettify()}"
         )

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+source bugyi.sh
+
+function main() {
+    export cluster="$1"
+    shift
+    
+    export machines="$(farm bbhost -m "${cluster}")"
+    export machine_count="$(echo "${machines}" | wc -l)"
+    
+    mkdrqs ~/projects/work/bloomberg/tmp/drqs_oracle.txt \
+        -t OU \
+        -g 139 \
+        -b 3 \
+        -B 4905 \
+        -s "'Install Oracle Client on new ${cluster^^} Machines'"
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

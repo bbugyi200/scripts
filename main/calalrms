@@ -12,12 +12,12 @@ import sys
 import time
 
 import bugyi
-from bugyi import cli, subprocess as bsp
+from bugyi import cli, subprocess as bsp, xdg
 from bugyi.core import catch, mkfifo
 from loguru import logger as log
 
 
-RUNTIME_DIR = bugyi.xdg.init("runtime")
+RUNTIME_DIR = xdg.init_full_dir("runtime")
 PID_FILE = "{}/pid".format(RUNTIME_DIR)
 FIFO_PATH = "{}/fifo".format(RUNTIME_DIR)
 TOMORROW_MARKER = "@"

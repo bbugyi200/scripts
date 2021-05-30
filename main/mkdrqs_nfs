@@ -1,0 +1,34 @@
+#!/bin/bash
+
+source bugyi.sh
+
+function main() {
+    export parent="$1"
+    shift
+    
+    export child="$1"
+    shift
+    
+    if [[ -n "$1" ]]; then
+        export gist="$1"
+        shift
+    else
+        export gist="$(xclip -o -sel clip)"
+        imsg "GitHub gist collected from clipboard: '%s'" "${gist}"
+    fi
+    
+    if [[ "${gist}" != "https://bbgithub.dev.bloomberg.com/gist"* ]]; then
+        die "The provided GitHub gist is invalid: '%s'" "${gist}"
+    fi
+    
+    mkdrqs ~/projects/work/bloomberg/tmp/drqs_nfs.txt \
+        -t OU \
+        -g 651 \
+        -b 3 \
+        -B 5092 \
+        -s "'NFS Mount Configs for ${child^^} Cluster'"
+}
+
+if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
+    main "$@"
+fi

@@ -1,105 +1,231 @@
 #!/bin/bash
 
+read -r -d '' DOC <<EOM
+Used to break one or more tmux panes out of the current window and into their
+own, new window.
+EOM
+
+source bugyi.sh
+
 LAST_WINDOW_NAME_FILE=/tmp/tmux_break_join.last
-SCRIPTNAME="$(basename "$0")"
 
-function main() {
-    if [[ "${1}" == "-d" ]]; then
-        shift
-        PS4='$LINENO: '
-        set -x
+function run() {
+    local cli_args=("$@")
+    parse_cli_args "$@"
+    dmsg "Command-Line Arguments: (${cli_args[*]})"
+
+    dmsg "Saving '%s' window name to %s." "${WINDOW_NAME}" "${LAST_WINDOW_NAME_FILE}"
+    echo "${WINDOW_NAME}" >"${LAST_WINDOW_NAME_FILE}"
+
+    if [[ -n "${BULK_PANE_IDX}" ]]; then
+        tmux select-pane -t "${BULK_PANE_IDX}"
     fi
 
-    if [[ "$1" == "--bulk" ]]; then
-        shift
-
-        if [[ "$1" =~ ^[1-9][0-9]*$ ]]; then
-            bulk_idx="$1"
-            shift
-        else
-            bulk_idx="$(tmux display-message -p '#{pane_index}')"
-            if [[ "${bulk_idx}" -eq 1 ]]; then
-                bulk_idx=2
-            fi
-        fi
+    if [[ "${FOCUS_BREAK_WINDOW}" == true || -n "${SEND_WINDOW_IDX}" ]]; then
+        local focus_break_window=true
     fi
 
-    focus_break_window=false
-    if [[ "$1" == "--last" ]]; then
-        use_last=true
-        shift
-
-        [[ -f "${LAST_WINDOW_NAME_FILE}" ]] || exit 1
-        window_name="$(cat "${LAST_WINDOW_NAME_FILE}")"
-
-        if [[ "$1" == "--focus" ]]; then
-            focus_break_window=true
-            shift
-        fi
-    else
-        window_name="$1"
-        shift
-
-        if [[ "${window_name}" == *"@" ]]; then
-            window_name="${window_name%@}"
-            focus_break_window=true
-        fi
-
-        if [[ -z "${window_name}" ]]; then
-            window_name=zsh
-        fi
-
-        echo "${window_name}" >"${LAST_WINDOW_NAME_FILE}"
-    fi
-
-    if [[ -n "${bulk_idx}" ]]; then
-        tmux select-pane -t "${bulk_idx}"
-    fi
-
-    if [[ "${use_last}" = true ]]; then
-        if ! tmux move-pane -d -t "${window_name}"; then
-            "${SCRIPTNAME}" "${window_name}"
+    if [[ "${USE_LAST}" == true ]]; then
+        if ! tmux move-pane -d -t "${WINDOW_NAME}"; then
+            "${SCRIPTNAME}" "${WINDOW_NAME}"
         fi
 
         tm-fix-layout
-        tm-fix-layout "${window_name}"
+        tm-fix-layout "${WINDOW_NAME}"
     else
-        break_idx="$(tmux break-pane -d -F '#{window_index}' -P -n "${window_name}")"
-        curr_idx="$(tmux display-message -p '#{window_index}')"
+        local break_window_idx="$(tmux break-pane -d -F '#{window_index}' -P -n "${WINDOW_NAME}")"
 
         tm-fix-layout
 
-        if [[ "${curr_idx}" -lt "${break_idx}" ]]; then
-            while [[ "${break_idx}" -ne $((curr_idx + 1)) ]]; do
-                tmux swap-window -d -s "${break_idx}" -t $((break_idx - 1))
-                break_idx=$((break_idx - 1))
+        if [[ "${ORIG_WINDOW_IDX}" -lt "${break_window_idx}" ]]; then
+            while [[ "${break_window_idx}" -ne $((ORIG_WINDOW_IDX + 1)) ]]; do
+                tmux swap-window -d -s "${break_window_idx}" -t $((break_window_idx - 1))
+                break_window_idx=$((break_window_idx - 1))
             done
         fi
 
-        if [[ "${focus_break_window}" = true ]] && [[ -z "${bulk_idx}" ]]; then
-            focus_idx="${break_idx}"
+        local focus_window_idx
+        if [[ "${focus_break_window}" == true ]] && [[ -z "${BULK_PANE_IDX}" ]]; then
+            focus_window_idx="${break_window_idx}"
         else
-            focus_idx="${curr_idx}"
+            focus_window_idx="${ORIG_WINDOW_IDX}"
         fi
-        tmux select-window -t "${focus_idx}"
+
+        tmux select-window -t "${focus_window_idx}"
     fi
 
-    if [[ -n "${bulk_idx}" ]]; then
-        window_panes="$(tmux display-message -p '#{window_panes}')"
-        if [[ "${bulk_idx}" -le "${window_panes}" ]]; then
-            options=(--bulk "${bulk_idx}" --last)
+    if [[ -n "${BULK_PANE_IDX}" ]]; then
+        local window_panes="$(tmux display-message -p '#{window_panes}')"
+        if [[ "${BULK_PANE_IDX}" -le "${window_panes}" ]]; then
+            local options=(--bulk-idx "${BULK_PANE_IDX}" --last)
 
-            if [[ "${focus_break_window}" = true ]]; then
+            local i=0
+            while [[ "${i}" -lt "${VERBOSE}" ]]; do
+                options+=("-v")
+                i=$((i + 1))
+            done
+
+            if [[ "${focus_break_window}" == true ]]; then
                 options+=(--focus)
             fi
 
             "${SCRIPTNAME}" "${options[@]}"
-        elif [[ "${focus_break_window}" = true ]]; then
-            tmux select-window -t "${window_name}"
+        elif [[ "${focus_break_window}" == true ]]; then
+            tmux select-window -t "${WINDOW_NAME}"
+        fi
+    fi
+
+    if [[ -n "${SEND_WINDOW_IDX}" ]] && [[ "${HIDDEN_OPTIONS_USED}" != true ]]; then
+        tm-join-pane -t "${SEND_WINDOW_IDX}.bottom-right"
+
+        if [[ "${FOCUS_BREAK_WINDOW}" != true ]]; then
+            tmux select-window -t "${ORIG_WINDOW_IDX}"
         fi
     fi
 }
 
+function parse_cli_args() {
+    eval set -- "$(getopt -o "h,b,L,v" -l "help,bulk,bulk-idx:,focus,last,verbose" -- "$@")"
+
+    export USAGE_GRAMMAR=(
+        "[-v] [--bulk] [WINDOW_NAME]"
+        "[-v] [--bulk] --last"
+        "-h"
+    )
+
+    # shellcheck disable=SC2154
+    read -r -d '' HELP <<EOM || [[ -n "${HELP}" ]]
+$(usage)
+
+${DOC}
+
+Positional Arguments:
+    WINDOW_NAME
+        The name of the new window that the selected panes will be moved to.
+        The following special rules apply:
+
+           * If no WINDOW_NAME is provided, the window name defaults to 'zsh'.
+
+           * If WINDOW_NAME ends with '@', then the new window will be focused.
+             Otherwise, the original window will retain focus.
+
+           * If WINDOW_NAME is a number, say N, the selected panes are appended
+             to window number N instead of creating a new window.
+
+Optional Arguments:
+    -b | --bulk
+        Break multiple panes from the current window (the current pane plus all
+        panes on the current window with higher pane indices than the current
+        pane).
+
+    -h | --help
+        View this help message.
+
+    -L | --last
+        Use the last window name that was joined using tm-break-pane or
+        tm-join-pane instead of specifying WINDOW_NAME on the command-line.
+
+    -v | --verbose
+        Enable verbose output. This option can be specified multiple times (e.g. -v, -vv, ...).
+EOM
+
+    VERBOSE=0
+    while [[ -n "$1" ]]; do
+        case $1 in
+            -b | --bulk)
+                BULK_PANE_IDX="$(tmux display-message -p '#{pane_index}')"
+                ;;
+            --bulk-idx)
+                shift
+                BULK_PANE_IDX="$1"
+                HIDDEN_OPTIONS_USED=true
+                ;;
+            --focus)
+                FOCUS_BREAK_WINDOW=true
+                HIDDEN_OPTIONS_USED=true
+                ;;
+            -h | --help)
+                echo "${HELP}"
+                exit 0
+                ;;
+            -L | --last)
+                USE_LAST=true
+                ;;
+            -v | --verbose)
+                VERBOSE=$((VERBOSE + 1))
+                ;;
+            --)
+                shift
+                break
+                ;;
+        esac
+        shift
+    done
+
+    if [[ "${VERBOSE}" -gt 1 ]]; then
+        PS4='$LINENO: '
+        set -x
+    fi
+
+    # We can't break _all_ panes from this window. Use the tm-join-pane script
+    # for that.
+    if [[ "${BULK_PANE_IDX}" -eq 1 ]]; then
+        BULK_PANE_IDX=2
+    fi
+
+    ORIG_WINDOW_IDX="$(tmux display-message -p '#{window_index}')"
+
+    if [[ "${USE_LAST}" == true  ]]; then
+        if ! [[ -f "${LAST_WINDOW_NAME_FILE}" ]]; then
+            die "The --last option was used, but the last window name file does not exist: %s" \
+                "${LAST_WINDOW_NAME_FILE}"
+        fi
+
+        if [[ -n "$1" ]]; then
+            emsg "A window name cannot be provided on the command-line when the --last option is specified: '$1'"
+            die "$(usage)" 2
+        fi
+
+        WINDOW_NAME="$(cat "${LAST_WINDOW_NAME_FILE}")"
+    else
+        WINDOW_NAME="$1"
+        shift
+
+        if [[ "${WINDOW_NAME}" == *"@" ]]; then
+            # a window name of '@N' sends the selected panes to window 'N'...
+            WINDOW_NAME="${WINDOW_NAME%@}"
+            FOCUS_BREAK_WINDOW=true
+        fi
+
+        if [[ "${WINDOW_NAME}" =~ ^[1-9]+$ ]]; then
+            SEND_WINDOW_IDX="${WINDOW_NAME}"
+
+            if [[ "${SEND_WINDOW_IDX}" -lt 1 ]] || [[ "${SEND_WINDOW_IDX}" -gt "$(tmux list-windows | wc -l)" ]]; then
+                die "Bad window index provided: '${SEND_WINDOW_IDX}'"
+            fi
+
+            WINDOW_NAME=temp
+
+            if [[ "${SEND_WINDOW_IDX}" -gt "${ORIG_WINDOW_IDX}" ]]; then
+                SEND_WINDOW_IDX=$((SEND_WINDOW_IDX + 1))
+            fi
+        fi
+    fi
+
+    if [[ -z "${WINDOW_NAME}" ]]; then
+        WINDOW_NAME=zsh
+    fi
+
+    readonly BULK_PANE_IDX
+    readonly DOC
+    readonly FOCUS_BREAK_WINDOW
+    readonly HELP
+    readonly HIDDEN_OPTIONS_USED
+    readonly ORIG_WINDOW_IDX
+    readonly SEND_WINDOW_IDX
+    readonly VERBOSE
+}
+
 if [[ "${SCRIPTNAME}" == "$(basename "${BASH_SOURCE[0]}")" ]]; then
-    main "$@"
+    run "$@"
 fi

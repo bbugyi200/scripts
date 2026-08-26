@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ "$(id -u)" -ne 0 ]]; then
+    exec sudo "$0" "$@"
+fi
+
+out_dir=/var/lib/prometheus/node-exporter
+out_file="${out_dir}/athena_disk_space.prom"
+
+install -d -m 0755 "${out_dir}"
+tmp_file="$(mktemp "${out_dir}/athena_disk_space.prom.XXXXXX")"
+trap 'rm -f "${tmp_file}"' EXIT
+
+{
+    printf "# HELP athena_filesystem_size_bytes Filesystem size in bytes for athena guardrail mountpoints.\n"
+    printf "# TYPE athena_filesystem_size_bytes gauge\n"
+    printf "# HELP athena_filesystem_avail_bytes Filesystem bytes available to unprivileged users for athena guardrail mountpoints.\n"
+    printf "# TYPE athena_filesystem_avail_bytes gauge\n"
+
+    for mountpoint in / /mnt/hercules; do
+        read -r avail_blocks total_blocks block_size < <(
+            stat -f --format="%a %b %S" "${mountpoint}"
+        )
+        printf \
+            'athena_filesystem_size_bytes{mountpoint="%s"} %s\n' \
+            "${mountpoint}" \
+            "$((total_blocks * block_size))"
+        printf \
+            'athena_filesystem_avail_bytes{mountpoint="%s"} %s\n' \
+            "${mountpoint}" \
+            "$((avail_blocks * block_size))"
+    done
+} >"${tmp_file}"
+
+chmod 0644 "${tmp_file}"
+mv "${tmp_file}" "${out_file}"
+trap - EXIT

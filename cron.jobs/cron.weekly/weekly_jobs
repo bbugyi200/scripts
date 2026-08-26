@@ -8,8 +8,50 @@ function main() {
     unsafe_cmd "clean_recent_file_log"
     unsafe_cmd "clean_mpv_history"
     unsafe_cmd "cache_cheaders"
+    unsafe_cmd "disk_guardrail_docker_prune"
+    unsafe_cmd "disk_guardrail_apt_clean"
+    unsafe_cmd "disk_guardrail_uv_cache_prune"
+    unsafe_cmd "disk_guardrail_cargo_target_sweep"
 
     return "${EC}"
+}
+
+function disk_guardrail_docker_prune() {
+    if ! command -v docker >/dev/null 2>&1; then
+        printf "docker not found; skipping Docker prune\n"
+        return 0
+    fi
+
+    # Do not prune volumes here; named-volume data needs service-specific review.
+    sudo docker builder prune -af
+    sudo docker image prune -af
+}
+
+function disk_guardrail_apt_clean() {
+    sudo apt clean
+}
+
+function disk_guardrail_uv_cache_prune() {
+    if ! command -v uv >/dev/null 2>&1; then
+        printf "uv not found; skipping uv cache prune\n"
+        return 0
+    fi
+
+    uv cache prune
+}
+
+function disk_guardrail_cargo_target_sweep() {
+    if ! command -v cargo-sweep >/dev/null 2>&1; then
+        printf "cargo-sweep not found; skipping Cargo target sweep\n"
+        return 0
+    fi
+
+    if [[ ! -d /mnt/poseidon/cargo-target ]]; then
+        printf "/mnt/poseidon/cargo-target not found; skipping Cargo target sweep\n"
+        return 0
+    fi
+
+    CARGO_TARGET_DIR=/mnt/poseidon/cargo-target cargo-sweep -t 30
 }
 
 main "$@"

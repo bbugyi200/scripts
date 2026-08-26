@@ -1,3 +1,5 @@
 #!/usr/bin/bash
 
 set -e
+
+prometheus_disk_space_textfile
